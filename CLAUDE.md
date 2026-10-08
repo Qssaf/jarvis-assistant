@@ -19,6 +19,12 @@ jarvis --listen                       # tell a running instance to start listeni
   `requirements.txt`.
 - Running a second copy alongside an installed Jarvis: set `JARVIS_HUD_PORT` to another port and point the XDG dirs
   elsewhere, otherwise `main()` finds the running instance and just opens its window.
+- In a fresh config dir, write `{}` to `<config>/jarvis/plugins.json` first. Otherwise the default Composio plugin
+  starts an OAuth sign-in and opens the user's browser. Set `PYTHON_KEYRING_BACKEND=keyring.backends.fail.Keyring` to
+  keep test keys out of the real keychain.
+- The log uses `\r` progress bars on first start (wake-word model downloads), so read it with `tr '\r' '\n'`.
+- Tests should use the real objects (e.g. `jarvis.Speaker()`) rather than hand-made fakes: a fake with an old
+  attribute once hid a crash that killed voice after the first wake word.
 
 ## Architecture
 
