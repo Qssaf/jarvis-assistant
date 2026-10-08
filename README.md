@@ -34,8 +34,8 @@ app with a notch at the top of the screen and a native dashboard window.
   Accounts page or by voice) to *Ask before changes*, *Full access*, *Read only* or *Paused*, and reconnected or
   disconnected from there.
 - **Your desktop**: opens apps and presses their buttons by name through the accessibility interface (AT-SPI on Linux,
-  UI Automation on Windows). It reads the screen, clicks things it finds by description, types, uses shortcuts and
-  manages windows.
+  UI Automation on Windows), browsers and Electron apps such as Discord and VS Code included. It reads the screen,
+  clicks things it finds by description, types, uses shortcuts and manages windows.
 - **Shell**: runs commands for you (bash on Linux, PowerShell on Windows): volume, files, system info, the clipboard.
 - **Background agent**: long jobs (many-step websites, forms) run in the background while you keep talking.
 - **Memory and reminders**: *"Remember that I prefer short answers"*, *"Remind me in 20 minutes to stretch"*.
@@ -108,6 +108,9 @@ the top of the screen.
   **Wake word sensitivity** a little.
 - On speakers, Jarvis doesn't hear itself while it talks, so start talking a moment after it finishes, or use
   headphones. Linux with PipeWire can also turn on **Echo cancelling** (Settings, experimental).
+- On Linux, browsers and Electron apps (Discord, VS Code, Spotify...) only show their buttons to Jarvis when Jarvis
+  starts them. Ones you opened yourself still work, through the screen, which is a little slower. To always get the
+  fast way, start them with `--force-renderer-accessibility` and `ACCESSIBILITY_ENABLED=1`.
 - Everything is logged with timings in Jarvis's data folder (`jarvis.log`).
 
 ## Models

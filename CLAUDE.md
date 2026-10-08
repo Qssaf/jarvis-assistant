@@ -25,6 +25,9 @@ jarvis --listen                       # tell a running instance to start listeni
 - The log uses `\r` progress bars on first start (wake-word model downloads), so read it with `tr '\r' '\n'`.
 - Tests should use the real objects (e.g. `jarvis.Speaker()`) rather than hand-made fakes: a fake with an old
   attribute once hid a crash that killed voice after the first wake word.
+- GUI checks without touching the user's screen: render the window with `QT_QPA_PLATFORM=offscreen` and
+  `widget.grab()`, or run apps inside a hidden compositor (`kwin_wayland --virtual --socket NAME`, then start them with
+  `WAYLAND_DISPLAY=NAME`). Apps there still register on the session's AT-SPI bus, so accessibility can be tested too.
 
 ## Architecture
 
@@ -59,7 +62,10 @@ available tool at call time:
 - Input: wdotool/ydotool on Wayland, pynput otherwise.
 - Windows: kdotool on KDE Wayland, pywinctl otherwise.
 - Accessibility: AT-SPI on Linux via `atspi_helper.py` under `/usr/bin/python3` (it needs `gi`); pywinauto UIA on
-  Windows. Both share the same `ask({"cmd": ...})` protocol.
+  Windows. Both share the same `ask({"cmd": ...})` protocol. On Linux, Chromium and Electron apps only expose their
+  page contents when started with `--force-renderer-accessibility` plus `ACCESSIBILITY_ENABLED=1`, and only at
+  startup: `tool_launch` adds both when `system.chromium_based` says so. An app that's open but missing from the tree
+  never appears, so `a11y_wait` only waits for one Jarvis has just started.
 
 Supported targets are Windows and Linux only (no macOS).
 
