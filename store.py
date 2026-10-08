@@ -182,6 +182,68 @@ def sync_autostart(enabled):
     system.set_autostart(enabled, command)
 
 
+# ---------------------------------------------------------------- API keys: the OS keychain, or a private file without one
+KEYS_FILE = os.path.join(CONFIG, "keys.json")  # only used when there's no keychain (e.g. no Secret Service on Linux)
+
+
+def _keyring():
+    try:
+        import keyring
+        from keyring.backends import fail
+        return None if isinstance(keyring.get_keyring(), fail.Keyring) else keyring
+    except Exception:
+        return None
+
+
+def key_storage():
+    return "your system keychain" if _keyring() else f"a private file ({KEYS_FILE})"
+
+
+def secret(name):
+    """The API key saved for a provider, or ''."""
+    kr = _keyring()
+    try:
+        value = kr.get_password("jarvis", name) if kr else None
+    except Exception:  # keychain locked or unavailable right now
+        value = None
+    return value or read_json(KEYS_FILE, {}).get(name, "")
+
+
+def set_secret(name, value):
+    """Save (or with '' delete) a provider's key; never in settings.json."""
+    kr = _keyring()
+    with _lock:
+        if kr:
+            try:
+                kr.delete_password("jarvis", name)
+            except Exception:
+                pass
+            if value:
+                kr.set_password("jarvis", name, value)
+        keys = read_json(KEYS_FILE, {})
+        keys.pop(name, None)
+        if value and not kr:
+            keys[name] = value
+        if keys or os.path.exists(KEYS_FILE):
+            write_json(KEYS_FILE, keys, private=True)
+
+
+# ---------------------------------------------------------------- your own OpenAI-compatible providers (name -> base URL)
+PROVIDERS_FILE = os.path.join(CONFIG, "providers.json")
+
+
+def custom_providers():
+    return read_json(PROVIDERS_FILE, {})
+
+
+def save_custom_provider(name, url):
+    """Add a provider (or with url '' remove it)."""
+    with _lock:
+        p = custom_providers()
+        p.pop(name, None) if not url else p.update({name: url})
+        write_json(PROVIDERS_FILE, p)
+
+
 # ---------------------------------------------------------------- what Jarvis may do with each connected account
 CONNECTOR_MODES = ("ask", "full", "read_only", "paused")  # ask: confirm before changes (the default)
 CONNECTORS_FILE = os.path.join(CONFIG, "connectors.json")

@@ -176,9 +176,8 @@ class Live:
 
     def __init__(self, brain, speaker):
         from google import genai
-        from brain import api_key
         self.t = genai.types
-        self.client = genai.Client(api_key=api_key())
+        self.client = None  # made when a session opens, so Jarvis starts (and the key can be added in Settings) without one
         self.brain, self.speaker = brain, speaker
         self.loop = asyncio.new_event_loop()
         threading.Thread(target=self.loop.run_forever, daemon=True).start()
@@ -411,6 +410,10 @@ class Live:
     async def _run(self):
         opened = False
         try:
+            if self.client is None:
+                from google import genai
+                from brain import api_key
+                self.client = genai.Client(api_key=api_key())
             connecting = self.client.aio.live.connect(model=store.settings()["live_model"], config=self._config())
             async with asyncio.timeout(15):  # never hang on a connection that doesn't come up
                 s = await connecting.__aenter__()
@@ -841,6 +844,8 @@ def api_get(path, brain):
         return sessions.get(m[1])
     if path == "/api/settings":
         return {"settings": store.settings(), "voices": store.VOICES}
+    if path == "/api/models":
+        return models_info()
     if path == "/api/plugins":
         return brain.plugin_status()
     if path == "/api/workspaces":
@@ -879,6 +884,23 @@ def weather():
         except requests.RequestException:
             _weather[1] = time.time() - 540  # try again in a minute
     return _weather[0]
+
+
+PROVIDER_NAME = re.compile(r"^[a-z0-9_]{1,24}$")
+
+
+def models_info():
+    """Providers (never their keys: only whether one is saved), where keys are kept, and Ollama's local models."""
+    import brain as brain_mod
+    try:
+        gemini = bool(brain_mod.api_key())
+    except RuntimeError:
+        gemini = False
+    custom = store.custom_providers()
+    rows = [{"name": "aistudio", "url": "Google AI Studio (Gemini; also the voice)", "key": gemini, "custom": False, "local": False}]
+    rows += [{"name": n, "url": u, "key": bool(store.secret(n)), "custom": n in custom, "local": brain_mod.is_local(u)}
+             for n, u in brain_mod.providers().items()]
+    return {"providers": rows, "storage": store.key_storage(), "ollama": brain_mod.ollama_models()}
 
 
 def add_plugin(data):
@@ -936,6 +958,33 @@ def api_post(path, data, live, brain):
         new = store.update_settings(data)
         store.sync_autostart(new["start_at_login"])
         return {"settings": new}
+    elif m := re.fullmatch(r"/api/keys/(\w+)", path):
+        import brain as brain_mod
+        key = str(data.get("key", "")).strip()
+        if m[1] != "aistudio" and m[1] not in brain_mod.providers():
+            raise KeyError(m[1])
+        if len(key) > 500 or any(c.isspace() for c in key):
+            raise ValueError("that doesn't look like an API key")
+        store.set_secret(m[1], key)
+        brain.forget_backend(m[1])
+        if m[1] == "aistudio":
+            live.client = None  # the next voice session uses the new key
+        return models_info()
+    elif path == "/api/providers":
+        import brain as brain_mod
+        name, url = str(data.get("name", "")).strip().lower(), str(data.get("url", "")).strip().rstrip("/")
+        if not PROVIDER_NAME.match(name) or name in brain_mod.PROVIDERS or name in brain_mod.BACKENDS:
+            raise ValueError("pick a new name: lowercase letters, digits and _")
+        if not re.match(r"^https?://[^\s/]+", url):
+            raise ValueError("the address should look like https://host/v1")
+        store.save_custom_provider(name, url)
+        brain.forget_backend(name)
+        return models_info()
+    elif m := re.fullmatch(r"/api/providers/(\w+)/delete", path):
+        store.save_custom_provider(m[1], "")
+        store.set_secret(m[1], "")
+        brain.forget_backend(m[1])
+        return models_info()
     elif path == "/api/memory":
         store.set_memory(str(data.get("memory", "")))
     elif m := re.fullmatch(r"/api/reminders/(\w+)/cancel", path):

@@ -30,7 +30,7 @@ def http_error(r):
     if r.status_code == 429:
         return Overloaded("rate limited", retry_after=60)
     if r.status_code in (400, 413):
-        return BadRequest(f"Gemini {r.status_code}: {r.text[:300]}")
+        return BadRequest(f"HTTP {r.status_code}: {r.text[:300]}")
     return Overloaded(f"HTTP {r.status_code}: {r.text[:120]}")  # 5xx, auth problems...: probe until it works
 
 
@@ -43,12 +43,12 @@ class Overloaded(RuntimeError):
 
 
 def api_key():
-    key = os.environ.get("GEMINI_API_KEY")
+    key = os.environ.get("GEMINI_API_KEY") or store.secret("aistudio")
     if not key and os.path.exists(ENV_FILE):
         with open(ENV_FILE) as f:
             key = dict(l.strip().split("=", 1) for l in f if "=" in l).get("GEMINI_API_KEY", "").strip().strip("'\"")
     if not key:
-        raise RuntimeError(f"put GEMINI_API_KEY=... in {ENV_FILE}")
+        raise RuntimeError(f"add your Google AI Studio key in Settings → Models and keys (or GEMINI_API_KEY=... in {ENV_FILE})")
     return key
 
 
@@ -94,6 +94,107 @@ class AIStudio:
 
 # name -> class with generate(contents, model, thinking, tools=None, system=None, **options); local_backends.py may add more
 BACKENDS = {"aistudio": AIStudio}
+
+
+# ---------------------------------------------------------------- any OpenAI-compatible API, with your own key
+OLLAMA = (os.environ.get("OLLAMA_HOST") or "http://localhost:11434").rstrip("/")
+OLLAMA = OLLAMA if "://" in OLLAMA else "http://" + OLLAMA
+PROVIDERS = {"openai": "https://api.openai.com/v1", "anthropic": "https://api.anthropic.com/v1",
+             "openrouter": "https://openrouter.ai/api/v1", "groq": "https://api.groq.com/openai/v1",
+             "deepseek": "https://api.deepseek.com/v1", "mistral": "https://api.mistral.ai/v1", "xai": "https://api.x.ai/v1",
+             "ollama": OLLAMA + "/v1"}
+
+
+def providers():
+    return {**PROVIDERS, **store.custom_providers()}
+
+
+def is_local(url):
+    return urlparse(url).hostname in ("localhost", "127.0.0.1", "::1")
+
+
+def ollama_models():
+    """The models Ollama has downloaded, or None if it isn't running."""
+    try:
+        return [m["name"] for m in requests.get(OLLAMA + "/api/tags", timeout=2).json().get("models", [])]
+    except (requests.RequestException, ValueError):
+        return None
+
+
+def to_openai(contents, system=None, signatures=False):
+    """Gemini-style turns as OpenAI chat messages (tool calls paired with their results by id). signatures: send Gemini's
+    thought signatures back, as Google's own OpenAI-compatible endpoint requires (other services might reject the field)."""
+    msgs, pending = ([{"role": "system", "content": system}] if system else []), []
+    for n, turn in enumerate(contents):
+        parts = turn["parts"]
+        if turn["role"] == "model":
+            calls = [p for p in parts if "functionCall" in p]
+            pending = [p["functionCall"].get("id") or f"call_{n}_{i}" for i, p in enumerate(calls)]
+            msg = {"role": "assistant", "content": "".join(p.get("text", "") for p in parts if not p.get("thought")) or None}
+            if calls:
+                msg["tool_calls"] = [{"id": cid, "type": "function", "function": {
+                    "name": p["functionCall"]["name"], "arguments": json.dumps(p["functionCall"].get("args") or {})},
+                    **({"extra_content": {"google": {"thought_signature": p["thoughtSignature"]}}}
+                       if signatures and p.get("thoughtSignature") else {})} for cid, p in zip(pending, calls)]
+            msgs.append(msg)
+            continue
+        for p in parts:
+            if "functionResponse" in p:
+                r = p["functionResponse"]
+                cid = r.get("id") or (pending.pop(0) if pending else r["name"])
+                msgs.append({"role": "tool", "tool_call_id": cid, "content": json.dumps(r["response"], ensure_ascii=False, default=str)})
+        text = "".join(p["text"] for p in parts if "text" in p)
+        pics = [{"type": "image_url", "image_url": {"url": f"data:{p['inlineData']['mimeType']};base64,{p['inlineData']['data']}"}}
+                for p in parts if "inlineData" in p]
+        if pics:
+            msgs.append({"role": "user", "content": ([{"type": "text", "text": text}] if text else []) + pics})
+        elif text:
+            msgs.append({"role": "user", "content": text})
+    return msgs
+
+
+def from_openai(reply):
+    """An OpenAI chat reply as Gemini-style parts."""
+    msg = ((reply.get("choices") or [{}])[0]).get("message") or {}
+    reasoning = msg.get("reasoning_content") or msg.get("reasoning")
+    parts = ([{"text": reasoning, "thought": True}] if isinstance(reasoning, str) and reasoning.strip() else [])
+    parts += [{"text": msg["content"]}] if msg.get("content") else []
+    for c in msg.get("tool_calls") or []:
+        try:
+            args = json.loads(c["function"].get("arguments") or "{}")
+        except ValueError:
+            args = {}
+        sig = ((c.get("extra_content") or {}).get("google") or {}).get("thought_signature")
+        parts.append({"functionCall": {"name": c["function"]["name"], "args": args, "id": c.get("id")}, **({"thoughtSignature": sig} if sig else {})})
+    return parts
+
+
+class OpenAICompatible:
+    """OpenAI, Anthropic, OpenRouter, Groq, Ollama and anything else with an OpenAI-style /chat/completions."""
+
+    def __init__(self, name, url, key=""):
+        if key and urlparse(url).scheme != "https" and not is_local(url):
+            raise RuntimeError(f"{name}: refusing to send an API key over plain http to {urlparse(url).hostname}")
+        self.name, self.url, self.key, self.http = name, url.rstrip("/"), key, requests.Session()
+
+    def generate(self, contents, model, thinking, tools=None, system=None, images=False, **options):
+        if images:
+            raise BadRequest(f"{self.name} can't make pictures")
+        body = {"model": model, "messages": to_openai(contents, system, signatures=urlparse(self.url).hostname.endswith("googleapis.com"))}
+        fns = [d for t in tools or [] for d in t.get("functionDeclarations", [])]  # (Google Search grounding is Gemini-only)
+        if fns:
+            body["tools"] = [{"type": "function", "function": {"name": d["name"], "description": d.get("description", ""),
+                                                               "parameters": d.get("parametersJsonSchema") or obj()}} for d in fns]
+        try:
+            r = self.http.post(f"{self.url}/chat/completions", json=body, headers={"Authorization": f"Bearer {self.key}"} if self.key else {},
+                               timeout=(5, 300 if is_local(self.url) else READ_TIMEOUT.get(thinking, 60)))  # (local models load slowly)
+        except requests.Timeout:
+            raise Overloaded("timed out")
+        except requests.ConnectionError:
+            raise Overloaded(f"can't reach {self.url}" + (" (is Ollama running?)" if self.name == "ollama" else ""))
+        if not r.ok:
+            raise http_error(r)
+        return from_openai(r.json())
 
 
 # ---------------------------------------------------------------- PC tools (system.py does the OS-specific part)
@@ -1293,23 +1394,46 @@ class Brain:
                 out[0].setdefault("note", UNTRUSTED)
         return out
 
+    def backend(self, name):
+        """The backend called `name`, made on first use for providers from Settings; (None, why) if it can't be."""
+        if name not in self.backends:
+            url = providers().get(name)
+            if name not in BACKENDS and not url:
+                return None, "unknown backend (Settings → Models and keys)"
+            key = "" if name in BACKENDS else store.secret(name)
+            if name not in BACKENDS and not key and not is_local(url):
+                return None, "no API key (Settings → Models and keys)"
+            try:
+                self.backends[name] = BACKENDS[name]() if name in BACKENDS else OpenAICompatible(name, url, key)
+            except Exception as e:  # e.g. no Gemini key yet
+                return None, str(e)
+        return self.backends[name], ""
+
+    def forget_backend(self, name):
+        """After its key or address changed: rebuild it on next use, and try its models again."""
+        self.backends.pop(name, None)
+        self.down_until = {e: t for e, t in self.down_until.items() if e[0] != name}
+
     def _generate(self, contents, entries=None, **kw):
-        entries = entries or chain()
+        entries, why = entries or chain(), []
         for entry in entries:
             backend, model, thinking = entry
-            if backend not in self.backends or time.time() < self.down_until.get(entry, 0):
+            be, problem = self.backend(backend)
+            if not be or time.time() < self.down_until.get(entry, 0):
+                why.append(f"{backend}/{model}: {problem or 'busy'}")
                 continue
             t = time.time()
             try:
-                parts = self.backends[backend].generate(contents, model, thinking, **kw)
+                parts = be.generate(contents, model, thinking, **kw)
                 print(f"[brain] {backend}/{model} {time.time() - t:.1f}s", flush=True)
                 return parts
             except BadRequest:
                 raise
             except Exception as e:  # busy, rate-limited, auth or network trouble: next in line
                 print(f"[brain] {backend}/{model} {time.time() - t:.1f}s skipped: {e}", flush=True)
+                why.append(f"{backend}/{model}: {str(e)[:80]}")
                 self._mark_down(entry, e, entry == entries[0])
-        raise RuntimeError("every model is busy or rate-limited right now; try again in a minute")
+        raise RuntimeError("no model could answer (" + "; ".join(why[:4]) + "); try again in a minute or check Settings → Models and keys")
 
     def _mark_down(self, entry, e, is_main):
         if getattr(e, "retry_after", None):  # rate limit: skip it for a bit
@@ -1324,7 +1448,7 @@ class Brain:
             while True:
                 time.sleep(delay)
                 try:
-                    self.backends[backend].generate([{"role": "user", "parts": [{"text": "hi"}]}], model, thinking)
+                    self.backend(backend)[0].generate([{"role": "user", "parts": [{"text": "hi"}]}], model, thinking)
                     self.down_until[entry] = 0
                     if is_main:
                         self.notify(f"{model} is back.")

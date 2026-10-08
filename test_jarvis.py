@@ -2,7 +2,8 @@
 import os, tempfile
 
 _home = tempfile.mkdtemp()  # never the user's real settings, memory or reminders
-os.environ.update(XDG_CONFIG_HOME=os.path.join(_home, "config"), XDG_DATA_HOME=os.path.join(_home, "data"), APPDATA=_home)
+os.environ.update(XDG_CONFIG_HOME=os.path.join(_home, "config"), XDG_DATA_HOME=os.path.join(_home, "data"), APPDATA=_home,
+                  PYTHON_KEYRING_BACKEND="keyring.backends.fail.Keyring")  # (and never the real keychain)
 
 import brain
 import system
@@ -248,6 +249,60 @@ except ValueError:
     pass
 store.set_connector_mode("gmail", "ask")
 assert "gmail" not in store.connector_modes()
+
+# your own providers: keys stay out of settings, never go over plain http to another machine
+store.set_secret("openai", "sk-test-123")
+assert store.secret("openai") == "sk-test-123" and "sk-test" not in open(store.SETTINGS_FILE).read()
+assert os.stat(store.KEYS_FILE).st_mode & 0o077 == 0 or os.name == "nt"
+store.set_secret("openai", "")
+assert store.secret("openai") == ""
+try:
+    brain.OpenAICompatible("x", "http://example.com/v1", "sk-1"); raise AssertionError("key sent over http")
+except RuntimeError:
+    pass
+brain.OpenAICompatible("x", "http://localhost:1234/v1", "sk-1")  # (this machine is fine)
+b = brain.Brain.__new__(brain.Brain)
+b.backends, b.down_until = {}, {}
+assert b.backend("nosuch")[0] is None and "no API key" in b.backend("openai")[1]
+
+# OpenAI-style translation: tool calls and results paired by id, pictures as data URLs, Gemini signatures only when asked
+turns = [{"role": "user", "parts": [{"text": "hi"}, {"inlineData": {"mimeType": "image/png", "data": "QUJD"}}]},
+         {"role": "model", "parts": [{"text": "looking"}, {"functionCall": {"name": "look", "args": {"q": 1}}, "thoughtSignature": "sig"}]},
+         {"role": "user", "parts": [{"functionResponse": {"name": "look", "response": {"answer": "a cat"}}}]}]
+m = brain.to_openai(turns, "be brief")
+assert [x["role"] for x in m] == ["system", "user", "assistant", "tool"]
+assert m[1]["content"][1]["image_url"]["url"] == "data:image/png;base64,QUJD"
+assert m[3]["tool_call_id"] == m[2]["tool_calls"][0]["id"] and "extra_content" not in m[2]["tool_calls"][0]
+assert brain.to_openai(turns, signatures=True)[1]["tool_calls"][0]["extra_content"]["google"]["thought_signature"] == "sig"
+parts = brain.from_openai({"choices": [{"message": {"content": "ok", "reasoning_content": "hmm", "tool_calls": [
+    {"id": "c1", "function": {"name": "remember", "arguments": '{"fact": "x"}'}}]}}]})
+assert parts == [{"text": "hmm", "thought": True}, {"text": "ok"}, {"functionCall": {"name": "remember", "args": {"fact": "x"}, "id": "c1"}}]
+
+# a local keyless server (like Ollama): tools offered, no Authorization header, tool call then answer
+import json, threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+seen = []
+class Fake(BaseHTTPRequestHandler):
+    def do_POST(self):
+        body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        seen.append((self.headers.get("Authorization"), body))
+        msg = ({"content": None, "tool_calls": [{"id": "t1", "type": "function", "function": {"name": "list_reminders", "arguments": "{}"}}]}
+               if len(seen) == 1 else {"content": "You have no reminders."})
+        out = json.dumps({"choices": [{"message": msg}]}).encode()
+        self.send_response(200); self.send_header("Content-Length", str(len(out))); self.end_headers(); self.wfile.write(out)
+    def log_message(self, *a):
+        pass
+srv = HTTPServer(("127.0.0.1", 0), Fake)
+threading.Thread(target=srv.serve_forever, daemon=True).start()
+store.save_custom_provider("local", f"http://127.0.0.1:{srv.server_port}/v1")
+b = brain.Brain.__new__(brain.Brain)
+b.backends, b.down_until, b.contents, b.cancel, b.plugins, b.app_tools, b.notify = {}, {}, [], threading.Event(), {}, {}, print
+brain.chain = lambda: [("local", "tiny-model", "low")]
+assert b.ask("any reminders?") == "You have no reminders."
+assert seen[0][0] is None and any(t["function"]["name"] == "list_reminders" for t in seen[0][1]["tools"])
+last = seen[1][1]["messages"][-1]
+assert last["role"] == "tool" and last["tool_call_id"] == "t1" and '"reminders"' in last["content"]
+srv.shutdown()
 
 # the prompts describe this computer, and nothing personal or private ships
 prompt = brain.Brain._system(None)

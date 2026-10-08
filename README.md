@@ -30,7 +30,9 @@ app with a notch at the top of the screen and a native dashboard window.
 ### It does the work
 - **Web**: Google-grounded search, reading any public page, YouTube search, opening links in your browser.
 - **Your accounts** (through [Composio](https://composio.dev)): Gmail, Google Calendar, Classroom, Tasks, Drive,
-  GitHub, Trello, Slack, Notion, Discord and more, each connected with one click.
+  GitHub, Trello, Slack, Notion, Discord and more, each connected with one click. Each account can be set (on the
+  Accounts page or by voice) to *Ask before changes*, *Full access*, *Read only* or *Paused*, and reconnected or
+  disconnected from there.
 - **Your desktop**: opens apps and presses their buttons by name through the accessibility interface (AT-SPI on Linux,
   UI Automation on Windows). It reads the screen, clicks things it finds by description, types, uses shortcuts and
   manages windows.
@@ -52,8 +54,9 @@ weather, what's next and system load. Other pages: **Chats** (saved and searchab
 
 ## Install
 
-You need a free [Google AI Studio API key](https://aistudio.google.com/apikey). Image generation and some search
-features need a paid key; everything else works on the free tier.
+You need a free [Google AI Studio API key](https://aistudio.google.com/apikey) for the voice. Image generation and
+some search features need a paid key; everything else works on the free tier. You can paste the key in **Settings →
+Models and keys** instead of the env file below.
 
 ### Windows
 
@@ -120,7 +123,17 @@ the top of the screen.
 
 Busy or rate-limited models are skipped automatically.
 
-**Your own backends**: create `local_backends.py` next to `jarvis.py` (it's gitignored) to add another model provider.
+**Your own models**: in **Settings → Models and keys**, paste a key for OpenAI, Anthropic, OpenRouter, Groq, DeepSeek,
+Mistral or xAI, or add any other OpenAI-compatible service (LM Studio, vLLM, a proxy) by address. Then list the models
+in **Agent models**, e.g. `openai gpt-5 low` or `anthropic claude-sonnet-4-6 low`. Keys are kept in your system
+keychain (Windows Credential Manager, GNOME Keyring / KWallet), or in a private file if there's none. They're never
+saved in settings, never shown again, and never sent over plain http to another machine. The voice itself always uses
+Gemini Live.
+
+**Local models with [Ollama](https://ollama.com)**: install it, `ollama pull qwen3:8b` (pick a model that supports
+tools), then add `ollama qwen3:8b low` to **Agent models**. No key is needed; set `OLLAMA_HOST` if it runs elsewhere.
+
+**Your own backends in code**: create `local_backends.py` next to `jarvis.py` (it's gitignored) to add another model provider.
 It's imported at startup and can register itself:
 
 ```python

@@ -1484,10 +1484,12 @@ class Window(QMainWindow):
                  ("deadline_reminders", "Classroom deadlines: reminders a day and two hours before work is due"),
                  ("show_thinking", "Show Jarvis's thinking in the chat (its decisions and the background agent's reasoning)"),
                  ("start_at_login", "Start Jarvis when I log in")])
+        col.addWidget(self._models_card())
         box, v = card("Instructions and models")
         for key, text, height in (("extra_instructions", "Your instructions for Jarvis (how to behave, things to know about you)", 90),
-                                  ("agent_models", "Background agent models, tried top to bottom: backend model thinking. backend is "
-                                                   "aistudio (your API key) or one added in local_backends.py.", 130)):
+                                  ("agent_models", "Background agent models, tried top to bottom: backend model thinking, e.g. "
+                                                   "'aistudio gemini-3.8-flash low', 'openai gpt-5 low', 'ollama qwen3:8b low'. "
+                                                   "backend is any provider above (thinking only matters for aistudio).", 130)):
             v.addWidget(label(text, "small", wrap=True))
             self.fields[key] = QPlainTextEdit()
             self.fields[key].setFixedHeight(height)
@@ -1504,6 +1506,60 @@ class Window(QMainWindow):
         col.addWidget(tip)
         col.addStretch()
         return page
+
+    def _models_card(self):
+        """Your own providers and keys (kept in the keychain), and Ollama's local models."""
+        box, v = card("Models and keys")
+        self.keys_note = label("", "small", wrap=True)
+        v.addWidget(self.keys_note)
+        row = QHBoxLayout()
+        self.key_provider, self.key_value = QComboBox(), QLineEdit()
+        self.key_provider.setMinimumWidth(220)
+        self.key_value.setEchoMode(QLineEdit.Password)
+        self.key_value.setPlaceholderText("Paste an API key")
+        row.addWidget(self.key_provider)
+        row.addWidget(self.key_value, 1)
+        row.addWidget(button("Save key", lambda: self._save_key(self.key_value.text().strip()), "primary"))
+        row.addWidget(button("Remove", lambda: self._save_key("")))
+        v.addLayout(row)
+        self.ollama_note = label("", "small", wrap=True)
+        v.addWidget(self.ollama_note)
+        v.addWidget(label("Another OpenAI-compatible service (LM Studio, vLLM, Together, a proxy...):", "small", wrap=True))
+        row = QHBoxLayout()
+        self.prov_name, self.prov_url = QLineEdit(), QLineEdit()
+        self.prov_name.setPlaceholderText("name, e.g. lmstudio")
+        self.prov_url.setPlaceholderText("address, e.g. http://localhost:1234/v1")
+        row.addWidget(self.prov_name)
+        row.addWidget(self.prov_url, 1)
+        row.addWidget(button("Add", lambda: self.call("/api/providers", {"name": self.prov_name.text(), "url": self.prov_url.text()},
+                                                      lambda d: (self.prov_name.clear(), self.prov_url.clear(), self.show_models(d)))))
+        row.addWidget(button("Remove", lambda: self.call(f"/api/providers/{self.prov_name.text().strip().lower() or '_'}/delete", {},
+                                                         self.show_models), tip="Remove the provider named on the left, and its key"))
+        v.addLayout(row)
+        return box
+
+    def _save_key(self, key):
+        name = self.key_provider.currentData()
+        if name:
+            self.call(f"/api/keys/{name}", {"key": key}, lambda d: (self.key_value.clear(), self.show_models(d),
+                                                                    self.toast(f"{name}: key {'saved' if key else 'removed'}")))
+
+    def show_models(self, d):
+        current = self.key_provider.currentData()
+        self.key_provider.clear()
+        for p in d["providers"]:
+            if not p["local"]:
+                self.key_provider.addItem(f"{'✓ ' if p['key'] else ''}{p['name']}", p["name"])
+        self.key_provider.setCurrentIndex(max(0, self.key_provider.findData(current)))
+        saved = [p["name"] for p in d["providers"] if p["key"]]
+        custom = [f"{p['name']} ({p['url']})" for p in d["providers"] if p["custom"]]
+        self.keys_note.setText(f"Keys are kept in {d['storage']}, never in settings.json, and never shown again. "
+                               f"Saved: {', '.join(saved) or 'none'}." + (f" Your providers: {', '.join(custom)}." if custom else ""))
+        self.ollama_note.setText(
+            "Ollama isn't running: install it from ollama.com and pull a model (ollama pull qwen3:8b) to use local models."
+            if d["ollama"] is None else
+            f"Ollama is running with {', '.join(d['ollama'][:8]) or 'no models yet (ollama pull qwen3:8b)'}. "
+            "Pick models that support tools.")
 
     def load_settings(self):
         def show(d):
@@ -1522,6 +1578,7 @@ class Window(QMainWindow):
                     f.setText(str(value))
             self.set_result.setText("")
         self.call("/api/settings", then=show)
+        self.call("/api/models", then=self.show_models)
 
     def save_settings(self):
         data = {}

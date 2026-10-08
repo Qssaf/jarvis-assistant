@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.1.0 — 2026-10-08
+
+### Added
+- **Your own models**: keys for OpenAI, Anthropic, OpenRouter, Groq, DeepSeek, Mistral, xAI or any OpenAI-compatible
+  service, set in **Settings → Models and keys** and kept in the system keychain. Any of them can run the background
+  agent.
+- **Ollama** for local models, with no key; Settings shows which models it has.
+- **Per-account controls** on the Accounts page and by voice: ask before changes, full access, read only or paused,
+  plus Reconnect and Disconnect. Paused accounts and changes to read-only ones are refused before anything is sent.
+- MIT license.
+
+### Changed
+- The Gemini key can be added in Settings; Jarvis starts without one.
+
 ## 1.0.0 — 2026-10-08
 
 First public release.

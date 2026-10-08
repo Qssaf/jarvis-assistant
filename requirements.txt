@@ -16,4 +16,5 @@ sounddevice
 mss
 pynput
 pywinctl
+keyring
 pywinauto; sys_platform == "win32"

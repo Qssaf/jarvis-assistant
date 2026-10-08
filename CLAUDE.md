@@ -74,6 +74,18 @@ screenshot. The voice model can't see images, so `act` from voice refuses coordi
 to `api_get`/`api_post` in jarvis.py, and receives events through `emit()` → `clients` queues. Over real HTTP,
 `serve_app` only accepts `/api/listen` and `/api/show`, and only with the per-run token and a matching Host header.
 
-**Backends.** Only `AIStudio` (`GEMINI_API_KEY`) ships. A gitignored `local_backends.py`, imported at the end of
+**Backends.** `AIStudio` (Gemini's native API) plus `OpenAICompatible` for every provider in `brain.providers()`
+(built-ins, the user's `providers.json`, Ollama). `Brain.backend(name)` builds them lazily, and `forget_backend` runs
+after a key changes. `to_openai`/`from_openai` translate between the Gemini-format history the agent keeps and the
+OpenAI chat format; Gemini thought signatures ride along as `thoughtSignature` parts and are only sent to Google hosts.
+Keys live in the OS keychain via `store.secret`/`set_secret`, falling back to a 0600 `keys.json`; tests force the file
+fallback with `PYTHON_KEYRING_BACKEND`. The voice always uses Gemini Live.
+
+**Account modes.** `store.connector_modes()` (connectors.json) holds ask/full/read_only/paused per Composio toolkit.
+`account_block` enforces paused and read-only in `run_app_tool` and on `COMPOSIO_MULTI_EXECUTE_TOOL` calls;
+`is_read_action` is a verb heuristic on the slug, and unknown verbs count as changes. `account_policy()` feeds both
+prompts.
+
+**Backends in code.** A gitignored `local_backends.py`, imported at the end of
 brain.py, may register more classes in `brain.BACKENDS` and prepend entries to the model lists (`LOOK_MODELS`,
 `POINT_MODELS`, `SEARCH_MODELS`, `IMAGE_MODELS`).
