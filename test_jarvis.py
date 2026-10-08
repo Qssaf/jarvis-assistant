@@ -124,7 +124,7 @@ import numpy as np
 import jarvis
 live = jarvis.Live.__new__(jarvis.Live)
 live.mic, live.session, live.floor, live.voice_at = True, None, 100.0, 0.0
-live.speaker, live.backlog = types.SimpleNamespace(until=0.0, target=None), collections.deque(maxlen=125)
+live.speaker, live.backlog = jarvis.Speaker(), collections.deque(maxlen=125)  # the real one: a fake hid a renamed attribute
 frame = lambda rms: (np.random.default_rng(1).normal(0, rms, 1280)).astype(np.int16)
 for _ in range(50):
     live.feed(frame(60))  # quiet room

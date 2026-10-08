@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1 — 2026-10-08
+
+### Fixed
+- Voice stopped after the first "Hey Jarvis" of every start (the microphone loop crashed on a renamed speaker setting).
+
 ## 1.1.0 — 2026-10-08
 
 ### Added

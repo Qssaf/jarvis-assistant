@@ -231,7 +231,7 @@ class Live:
         self._go(self._send(f"(Reminder time. Tell the user now, out loud and briefly: {text})"))
 
     def feed(self, frame):
-        if not self.mic or (not self.speaker.target and time.time() <= self.speaker.until + 0.5):  # half-duplex without echo cancelling
+        if not self.mic or (not self.speaker.out.target and time.time() <= self.speaker.until + 0.5):  # half-duplex without echo cancelling
             return
         level = float(np.sqrt(np.mean(frame.astype(np.float32) ** 2)))
         self.floor = min(level, self.floor * 1.002) + 0.05  # background noise: drops at once, creeps up slowly
