@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.3.0 — 2026-10-08
+
+### Changed
+- Jarvis understands names better: it matches the name it heard against the names on screen by sound, uses them
+  exactly as written there, and asks which one when none clearly fits instead of picking the top or newest chat.
+- "Reply to him" without the words: Jarvis reads his newest messages, tells you what he wrote and suggests a reply,
+  and sends it once you agree. Messages you dictate are still sent straight away; Jarvis never sends words you didn't
+  say or approve.
+- Before typing into a chat, Jarvis checks the right one is open: a new `expect` step stops the plan when the screen
+  isn't as expected. Clicking a name now needs a clear match, not just the closest one.
+- Jarvis uses the name you asked to be called (from what it remembers) instead of slipping back into "sir", and
+  remembers names you correct it on.
+- The pause that ends your turn is 0.6 s instead of 0.45 s, so pausing mid-sentence cuts you off less (Settings → Pause
+  before Jarvis answers).
+
 ## 1.2.0 — 2026-10-08
 
 ### Added

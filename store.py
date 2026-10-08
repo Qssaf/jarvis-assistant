@@ -19,7 +19,7 @@ DEFAULT_SETTINGS = {
     "home_city": "",               # for the weather on the Chat page; empty = guess from your network
     "speak_typed_replies": True,   # off: typed messages get text-only answers
     "fast_voice": False,           # on: the voice model answers without thinking first (~0.3 s quicker, but less sharp)
-    "end_of_speech_ms": 450,       # pause that counts as "finished talking"; lower = snappier, higher = fewer cut-offs
+    "end_of_speech_ms": 600,       # pause that counts as "finished talking"; lower = snappier, higher = fewer cut-offs
     "start_at_login": False,
     "show_thinking": False,        # the chat shows the agent's thinking and the voice model's decisions (never the notch)
     "morning_briefing": True,      # the first time Jarvis starts in a morning, it gives the day's briefing out loud

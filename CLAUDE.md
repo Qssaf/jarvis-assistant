@@ -76,7 +76,10 @@ screenshot. The voice model can't see images, so `act` from voice refuses coordi
 **Prompts.**
 - Voice persona: `LIVE_PROMPT` in jarvis.py. The agent's instructions: `prompt.md`.
 - Both contain `{SYSTEM}`, replaced at runtime with `system.describe()` (OS-specific hints). Keep them generic:
-  nothing about a particular user, machine or distro.
+  nothing about a particular user, machine or distro. `LIVE_PROMPT` also has `{ADDRESS}`, filled from
+  `preferred_name(memory)` (the persona otherwise drifts back to "sir").
+- Messaging on screen relies on `act`'s `expect` step (a vision yes/no that stops the plan) and on `locate` refusing
+  near-miss names: together they keep a misheard name from sending a message to the wrong chat.
 
 **State.** `store.py` keeps settings (unknown keys dropped, types coerced, `agent_models` validated), plugins,
 `memory.md`, reminders and sessions under `system.CONFIG` / `system.DATA`. Files holding tokens are written with

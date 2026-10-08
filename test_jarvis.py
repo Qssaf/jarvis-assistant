@@ -167,6 +167,24 @@ if not system.IS_WINDOWS:
     # only an app Jarvis has just started is worth waiting for: one that's open but not in the tree never shows up
     assert brain.a11y_wait("calc") == 3 and brain.a11y_wait("discord") == 0
 
+# what the user asked to be called, read from memory; negations and "sir" don't count
+for note, name in [("- User prefers to be called Q.", "Q"), ("- likes tea\n- Call me Captain, not sir", "Captain"),
+                   ("- Don't call me sir", ""), ("- Never call him by his full name", ""), ("- likes tea", "")]:
+    assert jarvis.preferred_name(note) == name, (note, jarvis.preferred_name(note))
+
+# a failed expect step stops the plan before anything is typed (the wrong chat is open); a passed one carries on
+typed, real = [], (brain.tool_screenshot, brain.tool_type_text)
+brain.tool_screenshot = lambda: ({"result": "screenshot"}, b"\xff\xd8")  # (never the real screen in a test)
+brain.tool_type_text = lambda text: typed.append(text) or {"result": "typed"}
+brain.pointer[0] = lambda contents: [{"text": "No, the open chat is with Alex."}]
+out = brain.tool_act([{"expect": "the open chat is with Sam"}, {"type": "hi"}], screenshot_after=False)
+assert "Alex" in out["error"] and typed == [], out
+brain.pointer[0] = lambda contents: [{"text": "Yes, it is."}]
+assert brain.tool_act([{"expect": "the open chat is with Sam"}, {"type": "hi"}], screenshot_after=False)["result"] == \
+    ["checked: the open chat is with Sam", "typed"] and typed == ["hi"]
+brain.tool_screenshot, brain.tool_type_text = real
+brain.pointer[0] = None
+
 # the voice model can't see, so a coordinate click is refused before anything runs
 import asyncio
 refused = asyncio.run(live._tool(types.SimpleNamespace(name="act", args={"steps": [{"type": "hi"}, {"click": [500, 500]}]})))
@@ -335,6 +353,16 @@ assert seen[0][0] is None and any(t["function"]["name"] == "list_reminders" for 
 last = seen[1][1]["messages"][-1]
 assert last["role"] == "tool" and last["tool_call_id"] == "t1" and '"reminders"' in last["content"]
 srv.shutdown()
+
+# the voice session's whole config builds (tool schemas included), with the name the user asked for
+from google import genai
+store.set_memory("- User prefers to be called Q.")
+live.t, live.skip_app_tools, live.resume_handle, live.resume_next = genai.types, False, None, False
+live.brain = types.SimpleNamespace(accounts={}, app_tools_for=set(), connected=set(), plugin_status=lambda: [], active_app_tools=lambda: {})
+config = live._config()
+assert 'Call the user "Q"' in config.system_instruction and "{ADDRESS}" not in config.system_instruction
+assert any(d.name == "act" and "expect" in str(d.parameters_json_schema) for d in config.tools[0].function_declarations)
+store.set_memory("")
 
 # the prompts describe this computer, and nothing personal or private ships
 prompt = brain.Brain._system(None)

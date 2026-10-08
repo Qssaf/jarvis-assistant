@@ -331,6 +331,12 @@ def tool_act(steps, screenshot_after=True):
             image = tool_screenshot()[1]
             captured = image
             r = {"result": f"looked: {tool_look(step['look'], image)['answer']}"}
+        elif step.get("expect"):  # a check that stops the plan, e.g. before typing into what might be the wrong chat
+            time.sleep(0.15)  # let the last input render
+            answer = tool_look(f"Is this so: {step['expect']}? Start your answer with yes or no, then say in a few words what the "
+                               "screen shows instead.", model=pointer[0])["answer"]
+            r = {"result": f"checked: {step['expect']}"} if re.match(r"\W*yes\b", answer, re.I) else \
+                {"error": f"stopped here: expected {step['expect']}, but {re.sub(r'^\W*no\b\W*', '', answer, flags=re.I)}"}
         elif step.get("screenshot"):
             time.sleep(0.15)  # let the last input render
             captured = tool_screenshot()[1]
@@ -388,8 +394,9 @@ def tool_look(question, image=None, model=None):
 def locate(what, strong=False):
     """Find something on screen by description; (x, y) on the 0-1000 grid, or None."""
     answer = tool_look(f"Where is {what}? Reply only as x=<n>, y=<n> on a 0-1000 grid over the whole image (x from the "
-                       "left, y from the top), aiming at its centre. Names may be shortened, use emoji or other scripts: match "
-                       "the closest one. If it isn't visible, reply: not found.", model=pointer[1] if strong else pointer[0])["answer"]
+                       "left, y from the top), aiming at its centre. Names may be shortened or decorated (emoji, symbols, other "
+                       "scripts): pick one only if it's clearly the same name, never just the closest. If it isn't visible, "
+                       "reply: not found.", model=pointer[1] if strong else pointer[0])["answer"]
     m = re.search(r"x\s*=\s*(\d+).*?y\s*=\s*(\d+)", answer, re.S)
     return (int(m[1]), int(m[2])) if m else None
 
@@ -612,14 +619,16 @@ TOOLS = {
     "act": (tool_act, ("Do a whole job in one go, in order, then get a screenshot. Each step is one of: "
             "{launch: 'kcalc'} (open an app and wait for its window), {press: ['One', 'Two', 'Equals']} (press controls by their "
             "accessible names; optional app), {set_text: 'hello', field: 'Search'} (fill a text field), {look: 'what does the "
-            "display show?'} (read the screen at this point; the answer comes back as text), {click_on: 'the Send button'} (find "
+            "display show?'} (read the screen at this point; the answer comes back as text), {expect: 'the open chat is with Sam'} "
+            "(check the screen: the steps after it only run if it's so), {click_on: 'the Send button'} (find "
             "something by description and click it: for web pages and apps without named controls), {screenshot: true} "
             "(capture at this point, e.g. to read a result before closing), {close: 'kcalc'}, {click: [x, y]} (0-1000 grid of "
             "the latest screenshot; optional button, double), {type: 'text'}, {keys: 'ctrl+t'}, {scroll: 3}, {wait: seconds}."
             ).replace("kcalc", system.CALC),
             obj(steps={"type": "array", "items": {"type": "object", "properties": {
                 "launch": {"type": "string"}, "press": {"type": "array", "items": {"type": "string"}}, "app": {"type": "string"},
-                "set_text": {"type": "string"}, "field": {"type": "string"}, "look": {"type": "string"}, "click_on": {"type": "string"},
+                "set_text": {"type": "string"}, "field": {"type": "string"}, "look": {"type": "string"}, "expect": {"type": "string"},
+                "click_on": {"type": "string"},
                 "screenshot": {"type": "boolean"},
                 "close": {"type": "string"},
                 "click": {"type": "array", "items": {"type": "integer"}}, "button": {"type": "string", "enum": ["left", "right", "middle"]},
@@ -695,7 +704,8 @@ def tool_forget(text):
 
 
 TOOLS.update({
-    "remember": (tool_remember, "Save a lasting fact about the user or their preferences (when they say 'remember...').", obj(fact={"type": "string"})),
+    "remember": (tool_remember, "Save a lasting fact about the user or their preferences (when they say 'remember...'), or a "
+                 "name you misheard and were corrected on (a friend, a chat, an app), spelled as on screen.", obj(fact={"type": "string"})),
     "forget": (tool_forget, "Delete remembered notes that contain this text.", obj(text={"type": "string"})),
     "set_reminder": (tool_set_reminder, "Remind the user later (desktop notification + spoken). Give in_minutes, or at as local 'YYYY-MM-DD HH:MM' or 'HH:MM'.",
                      obj(text={"type": "string"}, in_minutes={"type": "number"}, at={"type": "string"}, optional=("in_minutes", "at"))),
