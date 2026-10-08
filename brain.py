@@ -851,10 +851,13 @@ TOOLS["briefing"] = (None, "Today's briefing in one call: weather, upcoming Clas
 
 # ---------------------------------------------------------------- plugins: MCP servers
 CALLBACK_PORT = 4850
+REFRESH_EARLY = 1800  # seconds: more than a kept connection lives (1500), so none ever holds an expired token
+refreshing = threading.Lock()  # ponytail: one global lock; refreshes are rare
 
 
-def oauth_provider(name, url, notify):
-    """OAuth for a remote MCP server, with the token kept in ~/.local/share/jarvis/mcp/<name>.json."""
+def oauth_provider(name, url, notify, signing=lambda waiting: None):
+    """OAuth for a remote MCP server, with the token kept in ~/.local/share/jarvis/mcp/<name>.json. signing(True) while
+    a sign-in page is waiting in the browser."""
     from mcp.client.auth import OAuthClientProvider, TokenStorage
     from mcp.shared.auth import AuthorizationCodeResult, OAuthClientInformationFull, OAuthClientMetadata, OAuthToken
     path = os.path.join(DATA, "mcp", f"{name}.json")
@@ -872,8 +875,15 @@ def oauth_provider(name, url, notify):
         store.write_json(path, d, private=True)
 
     def refresh(d):
-        """Refresh an expired token ourselves: the SDK neither persists expiry nor finds a token
+        """Refresh an expiring token ourselves: the SDK neither persists expiry nor finds a token
         endpoint on another host (Composio's) when tokens come from storage."""
+        with refreshing:  # (two connections at once: the second uses the first's result, not a spent refresh token)
+            now = dict(load().get("tokens") or {})
+            if now.pop("expires_at", 0) - REFRESH_EARLY > time.time():
+                return OAuthToken.model_validate(now)
+            return renew(d)
+
+    def renew(d):
         base = f"{urlparse(url).scheme}://{urlparse(url).netloc}"
         meta = requests.get(f"{base}/.well-known/oauth-authorization-server", timeout=10).json()
         r = requests.post(meta["token_endpoint"], timeout=15, data={
@@ -889,12 +899,16 @@ def oauth_provider(name, url, notify):
             d = dict(load().get("tokens") or {})
             if not d:
                 return None
-            if time.time() > d.pop("expires_at", 0) - 60 and d.get("refresh_token"):
+            expires_at = d.pop("expires_at", 0)
+            # well before it expires: the SDK counts a stored token's lifetime from when it's loaded, so one that
+            # runs out mid-connection gets refused, and the SDK answers that with a whole new browser sign-in
+            if time.time() > expires_at - REFRESH_EARLY and d.get("refresh_token"):
                 try:
                     return await asyncio.to_thread(refresh, d)
                 except Exception as e:  # refresh token no longer valid: the SDK falls back to a browser sign-in
                     print(f"[{name}] token refresh failed: {e}", flush=True)
                     d["access_token"] = ""
+            d["expires_in"] = max(0, int(expires_at - time.time()))  # what's left of it, not its original lifetime
             return OAuthToken.model_validate(d)
 
         async def set_tokens(self, tokens):
@@ -907,6 +921,7 @@ def oauth_provider(name, url, notify):
             save("client", info)
 
     async def open_browser(auth_url):
+        signing(True)
         notify(f"Sign in to {name} so I can use it:\n{auth_url}")
         system.open_target(auth_url)
 
@@ -930,6 +945,7 @@ def oauth_provider(name, url, notify):
         while "code" not in got and time.time() < deadline:
             await asyncio.to_thread(srv.handle_request)
         srv.server_close()
+        signing(False)
         if "code" not in got:
             raise RuntimeError(f"{name} sign-in timed out")
         return AuthorizationCodeResult(code=got["code"], state=got.get("state"), iss=got.get("iss"))
@@ -953,6 +969,7 @@ class McpServer:
     def __init__(self, name, cfg, loop, notify):
         self.name, self.cfg, self.loop, self.notify = name, cfg, loop, notify
         self.tools, self.status, self.error = [], "connecting", ""
+        self.signing_in = False  # a sign-in page is open in the browser, waiting for the user
         self.session = self.stopped = None
         self.opened_at = 0.0
         self.busy = 0  # calls on the kept connection right now
@@ -969,7 +986,8 @@ class McpServer:
         async def remote():
             from mcp.client.streamable_http import create_mcp_http_client, streamable_http_client
             async with create_mcp_http_client(headers=self.cfg.get("headers") or None,
-                                              auth=oauth_provider(self.name, self.cfg["url"], self.notify)) as http, \
+                                              auth=oauth_provider(self.name, self.cfg["url"], self.notify,
+                                                                  lambda waiting: setattr(self, "signing_in", waiting))) as http, \
                     streamable_http_client(self.cfg["url"], http_client=http) as streams, \
                     ClientSession(streams[0], streams[1]) as s:
                 await s.initialize()
@@ -1076,7 +1094,8 @@ APP_TOOLS = {
     "youtube": ["YOUTUBE_SEARCH_YOU_TUBE"],
     "slack": ["SLACK_SEND_MESSAGE", "SLACK_FETCH_CONVERSATION_HISTORY"],
     "notion": ["NOTION_SEARCH_NOTION_PAGE", "NOTION_CREATE_NOTION_PAGE"],
-    "google_classroom": ["GOOGLE_CLASSROOM_COURSES_LIST", "GOOGLE_CLASSROOM_COURSE_WORK_LIST"],
+    "google_classroom": ["GOOGLE_CLASSROOM_COURSES_LIST", "GOOGLE_CLASSROOM_COURSE_WORK_LIST",
+                         "GOOGLE_CLASSROOM_COURSE_WORK_STUDENT_SUBMISSIONS_LIST"],
     "github": ["GITHUB_GET_THE_AUTHENTICATED_USER", "GITHUB_LIST_NOTIFICATIONS", "GITHUB_LIST_REPOSITORIES_FOR_THE_AUTHENTICATED_USER", "GITHUB_SEARCH_ISSUES_AND_PULL_REQUESTS"],
     "trello": ["TRELLO_GET_MEMBERS_BOARDS_BY_ID_MEMBER", "TRELLO_GET_BOARDS_CARDS_BY_ID_BOARD", "TRELLO_GET_SEARCH"],
     "discord": ["DISCORD_LIST_MY_GUILDS", "DISCORD_GET_MY_USER"],  # (Discord never lets apps read or send a user's messages)
@@ -1262,13 +1281,23 @@ class Brain:
         except (ValueError, KeyError, IndexError, TypeError):
             return None
 
-    def classroom_due(self, days=7):
-        """Classroom work due in the next `days` days, soonest first: {id, course, title, due (epoch), link}."""
+    def classroom_work(self, days=7):
+        """Classroom work due in the next `days` days, soonest first: {id, course, title, due (epoch), link, done}, done
+        meaning the user turned it in (or it came back graded). Raises if Classroom can't be reached, so that's never
+        mistaken for "nothing due"."""
         if "google_classroom" not in self.connected:
             return []
-        courses = (self.app_data("GOOGLE_CLASSROOM_COURSES_LIST", {"courseStates": ["ACTIVE"]}) or {}).get("courses") or []
-        with ThreadPoolExecutor(max(1, len(courses))) as pool:
-            works = list(pool.map(lambda c: (c, self.app_data("GOOGLE_CLASSROOM_COURSE_WORK_LIST", {"courseId": c["id"]}) or {}), courses))
+        courses = self.app_data("GOOGLE_CLASSROOM_COURSES_LIST", {"courseStates": ["ACTIVE"]})
+        if courses is None:
+            raise RuntimeError("couldn't reach Google Classroom")
+        courses = courses.get("courses") or []
+        with ThreadPoolExecutor(max(1, 2 * len(courses))) as pool:  # each course's work and the user's submissions, all at once
+            works = [pool.submit(self.app_data, "GOOGLE_CLASSROOM_COURSE_WORK_LIST", {"courseId": c["id"]}) for c in courses]
+            subs = [pool.submit(self.app_data, "GOOGLE_CLASSROOM_COURSE_WORK_STUDENT_SUBMISSIONS_LIST",
+                                {"courseId": c["id"], "courseWorkId": "-", "userId": "me", "pageSize": 100}) for c in courses]
+            works = [(c, w.result() or {}) for c, w in zip(courses, works)]
+            done = {x.get("courseWorkId") for f in subs for x in (f.result() or {}).get("studentSubmissions") or []
+                    if x.get("state") in ("TURNED_IN", "RETURNED")}
         import calendar
         out, now = [], time.time()
         for course, data in works:
@@ -1280,35 +1309,50 @@ class Brain:
                 due = calendar.timegm((d["year"], d["month"], d["day"], t.get("hours", 23 if not t else 0), t.get("minutes", 59 if not t else 0), 0))
                 if now < due < now + days * 86400:
                     out.append({"id": w.get("id"), "course": course.get("name", ""), "title": w.get("title", ""), "due": due,
-                                "link": w.get("alternateLink", "")})
+                                "link": w.get("alternateLink", ""), "done": w.get("id") in done})
         return sorted(out, key=lambda x: x["due"])
 
+    def sign_in_note(self):
+        """Which plugins wait for the user to sign in again in the browser ('' if none): why their tools hang."""
+        waiting = [name for name, srv in self.plugins.items() if srv.signing_in]
+        return f"{' and '.join(waiting)} needs a new sign-in: a sign-in page is open in the browser" if waiting else ""
+
     def briefing(self):
-        """Everything for a morning briefing, gathered at once."""
+        """Everything for a morning briefing, gathered at once. A part that couldn't be checked says so, so it's never
+        taken for "nothing there"."""
         def weather():
             city = store.settings()["home_city"].strip()
             return requests.get(f"https://wttr.in/{quote(city)}", params={"format": "%l: %C, %t (feels %f), wind %w"}, timeout=8).text.strip()
 
         def unread():
+            if "gmail" not in self.connected:
+                return "not connected"
             return (self.app_data("GMAIL_GET_LABEL", {"user_id": "me", "id": "INBOX"}) or {}).get("messagesUnread")
 
         def calendar_today():
             if "googlecalendar" not in self.connected:
-                return None
+                return "not connected"
             day = time.strftime("%Y-%m-%dT00:00:00%z")
             day = day[:-2] + ":" + day[-2:]
             end = time.strftime("%Y-%m-%dT23:59:59%z")
             end = end[:-2] + ":" + end[-2:]
-            data = self.app_data("GOOGLECALENDAR_EVENTS_LIST", {"calendarId": "primary", "timeMin": day, "timeMax": end, "singleEvents": True}) or {}
+            data = self.app_data("GOOGLECALENDAR_EVENTS_LIST", {"calendarId": "primary", "timeMin": day, "timeMax": end, "singleEvents": True})
+            if data is None:
+                return None
             return [f"{(e.get('start') or {}).get('dateTime', 'all day')[11:16] or 'all day'} {e.get('summary', '')}" for e in data.get("items") or []]
 
         def due():
-            return [f"{x['title']} ({x['course']}), due {time.strftime('%a %d %b %H:%M', time.localtime(x['due']))}" for x in self.classroom_due(7)]
+            if "google_classroom" not in self.connected:
+                return "not connected"
+            return [f"{x['title']} ({x['course']}), due {time.strftime('%a %d %b %H:%M', time.localtime(x['due']))}"
+                    for x in self.classroom_work(7) if not x["done"]]
 
-        w, u, c, d = in_parallel(weather, unread, calendar_today, due, timeout=20)
+        parts = in_parallel(weather, unread, calendar_today, due, timeout=20)
+        unknown = "couldn't check right now" + (f" ({self.sign_in_note()})" if self.sign_in_note() else "")
+        w, u, c, d = (unknown if part is None else part for part in parts)
         now = time.time()
         return {"date": time.strftime("%A %d %B %Y, %H:%M"), "weather": w, "unread_emails": u, "calendar_today": c,
-                "classroom_due_this_week": d,
+                "classroom_due_this_week_not_turned_in": d,
                 "reminders_today": [r["text"] + time.strftime(" at %H:%M", time.localtime(r["at"])) for r in store.reminders()
                                     if r["at"] < now + 86400]}
 

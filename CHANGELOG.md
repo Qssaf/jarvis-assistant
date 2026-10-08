@@ -14,6 +14,17 @@
   remembers names you correct it on.
 - The pause that ends your turn is 0.6 s instead of 0.45 s, so pausing mid-sentence cuts you off less (Settings → Pause
   before Jarvis answers).
+- When an account can do more than Jarvis's direct tools for it, the voice hands the job to the background agent
+  instead of saying it can't.
+
+### Fixed
+- Classroom work you already turned in no longer shows up as due: the briefing and "what's due" skip it, deadline
+  reminders aren't set for it, and ones set before you turned it in are cancelled. Jarvis can also check your
+  submissions directly.
+- The briefing said "nothing" for parts it couldn't check (an account that didn't answer): it now says it couldn't
+  check, and why when a plugin is waiting for you to sign in again.
+- Composio (and other remote plugins) could suddenly open a new sign-in page: an expiring login was handed to a
+  connection that outlived it. Logins are now renewed half an hour early, one renewal at a time.
 
 ## 1.2.0 — 2026-10-08
 

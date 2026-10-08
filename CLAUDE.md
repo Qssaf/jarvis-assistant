@@ -53,7 +53,10 @@ in `LIVE_TOOLS` if the voice model should run it directly, and in `TOOL_LABELS` 
 **Accounts and plugins.** Plugins are MCP servers (`McpServer`: streamable HTTP with OAuth, or a stdio command). Each
 keeps one connection, and concurrent calls open their own. Composio is the default plugin. For connected toolkits,
 `APP_TOOLS` slugs are loaded as direct tools via `COMPOSIO_GET_TOOL_SCHEMAS` and run through
-`COMPOSIO_MULTI_EXECUTE_TOOL`; `app_data` unwraps Composio's double-wrapped results.
+`COMPOSIO_MULTI_EXECUTE_TOOL`; `app_data` unwraps Composio's double-wrapped results (None when a call failed: keep
+that distinct from "nothing there", as `briefing` and `classroom_work` do). Remote logins are renewed `REFRESH_EARLY`
+before they expire: the MCP SDK counts a stored token's lifetime from when it's loaded, and a token refused
+mid-connection makes it start a whole new browser sign-in.
 
 **OS layer.** Everything platform-specific goes in `system.py`, never in the other modules. It picks the best
 available tool at call time:

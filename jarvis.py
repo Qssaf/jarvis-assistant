@@ -39,6 +39,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 
 # Being right
 - Never deny a capability you have; the list of what you can do right now is below. "Can you see my screen?" Yes: use look.
+- A connected account can do more than your direct tools for it (e.g. Classroom submissions, Gmail labels, Drive sharing): when none of your tools fits, hand it to do_task, which can find and run any action of a connected account, instead of saying you can't.
 - Never say something is or isn't there, or that you did something, unless a tool just showed it. Browser tabs aren't windows: to check what's open in the browser, look at the screen.
 - Facts, numbers and names come from your tools or things you're certain of. If a tool fails or you're unsure, say so plainly, quoting what the error said. Only mention the desktop's input permission prompt if an error explicitly asks for it.
 - When asked for your opinion or to pick something (the best profile picture, a name, which is better), name your pick and give a short, specific reason ("the astronaut one: it's the only one with any personality"); look at the screen for anything visual. Never refuse or dodge because you're an AI.
@@ -600,7 +601,8 @@ class Live:
             try:  # never let a stuck tool freeze the conversation (images aren't usable here: look returns text)
                 result = (await asyncio.wait_for(asyncio.to_thread(self.brain._run_tool, fc.name, args), 60))[0]
             except TimeoutError:
-                result = {"error": "that took over 60 seconds and was abandoned; check the screen or try another way"}
+                note = self.brain.sign_in_note()
+                result = {"error": "that took over 60 seconds and was abandoned; " + (note or "check the screen or try another way")}
             except Exception as e:
                 result = {"error": str(e)[:500]}
             problem = f" error: {str(result['error'])[:200]}" if isinstance(result, dict) and "error" in result else ""
@@ -695,22 +697,32 @@ def morning_briefing(live):
                         "then sum it up in three or four short sentences.)"))
 
 
-def deadline_loop(brain):
-    """Reminders a day and two hours before Google Classroom work is due; checked every half hour."""
+def deadline_pass(brain):
+    """Reminders a day and two hours before Google Classroom work is due, and none for work already turned in (ones set
+    before it was are cancelled)."""
     seen_file = os.path.join(store.DATA, "deadlines.json")
+    seen = store.read_json(seen_file, {})  # "<work id>-<seconds before>" -> its reminder's id
+    seen = dict.fromkeys(seen) if isinstance(seen, list) else seen  # (it used to be a list)
+    for item in brain.classroom_work(days=3):
+        at_time = time.strftime("%H:%M", time.localtime(item["due"]))
+        for before, when in ((86400, "tomorrow"), (7200, "in two hours")):
+            key = f"{item['id']}-{before}"
+            if item["done"]:
+                if seen.get(key):
+                    store.cancel_reminder(seen[key])
+                    seen[key] = None
+            elif key not in seen and item["due"] - before > time.time():
+                seen[key] = store.add_reminder(item["due"] - before, f"📚 {item['title']} ({item['course']}) is due {when}, at {at_time}")["id"]
+    store.write_json(seen_file, seen, private=True)
+
+
+def deadline_loop(brain):
+    """Classroom deadlines, checked every half hour."""
     brain.tools_ready.wait(60)
     while True:
         if store.settings()["deadline_reminders"] and "google_classroom" in brain.connected:
             try:
-                seen = set(store.read_json(seen_file, []))
-                for item in brain.classroom_due(days=3):
-                    at_time = time.strftime("%H:%M", time.localtime(item["due"]))
-                    for before, when in ((86400, "tomorrow"), (7200, "in two hours")):
-                        key = f"{item['id']}-{before}"
-                        if key not in seen and item["due"] - before > time.time():
-                            store.add_reminder(item["due"] - before, f"📚 {item['title']} ({item['course']}) is due {when}, at {at_time}")
-                            seen.add(key)
-                store.write_json(seen_file, sorted(seen), private=True)
+                deadline_pass(brain)
             except Exception as e:
                 print(f"[deadlines] couldn't check Classroom: {e}", flush=True)
         time.sleep(1800)

@@ -295,6 +295,64 @@ except ValueError:
 store.set_connector_mode("gmail", "ask")
 assert "gmail" not in store.connector_modes()
 
+import json, threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+# Classroom: work already turned in is never "due"; when Classroom can't be reached the briefing says so, not "nothing"
+def due_in(seconds):
+    g = time.gmtime(time.time() + seconds)
+    return {"dueDate": {"year": g.tm_year, "month": g.tm_mon, "day": g.tm_mday}, "dueTime": {"hours": g.tm_hour, "minutes": g.tm_min}}
+CLASS = {"GOOGLE_CLASSROOM_COURSES_LIST": {"courses": [{"id": "c1", "name": "Maths"}]},
+         "GOOGLE_CLASSROOM_COURSE_WORK_LIST": {"courseWork": [{"id": "w1", "title": "Quiz", **due_in(5 * 3600)},
+                                                              {"id": "w2", "title": "Lab", **due_in(2 * 86400)}]},
+         "GOOGLE_CLASSROOM_COURSE_WORK_STUDENT_SUBMISSIONS_LIST": {"studentSubmissions": [
+             {"courseWorkId": "w1", "state": "TURNED_IN"}, {"courseWorkId": "w2", "state": "CREATED"}]}}
+b = brain.Brain.__new__(brain.Brain)
+b.connected, b.plugins = {"google_classroom"}, {}
+b.app_data = lambda slug, args: CLASS.get(slug)  # (stands in for Composio: nothing may reach a real account)
+assert [(w["id"], w["done"]) for w in b.classroom_work(3)] == [("w1", True), ("w2", False)]
+real_get = brain.requests.get
+brain.requests.get = lambda *a, **k: (_ for _ in ()).throw(brain.requests.ConnectionError("offline"))  # (no weather)
+day = b.briefing()
+assert day["weather"].startswith("couldn't check") and day["unread_emails"] == "not connected"
+assert [x.split(" (")[0] for x in day["classroom_due_this_week_not_turned_in"]] == ["Lab"]
+b.app_data = lambda slug, args: None
+assert b.briefing()["classroom_due_this_week_not_turned_in"].startswith("couldn't check")
+brain.requests.get = real_get
+# deadline reminders: set for work not turned in, cancelled once it is
+b.app_data = lambda slug, args: CLASS.get(slug)
+jarvis.deadline_pass(b)
+assert sum("Lab" in r["text"] for r in store.reminders()) == 2 and not any("Quiz" in r["text"] for r in store.reminders())
+CLASS["GOOGLE_CLASSROOM_COURSE_WORK_STUDENT_SUBMISSIONS_LIST"]["studentSubmissions"][1]["state"] = "TURNED_IN"
+jarvis.deadline_pass(b)
+assert not any("Lab" in r["text"] for r in store.reminders())
+
+# a remote plugin's login is refreshed half an hour early: the SDK takes a stored token for a fresh one, and a token
+# that expires mid-connection gets refused, which the SDK answers with a whole new browser sign-in
+refreshes = []
+class Auth(BaseHTTPRequestHandler):
+    def reply(self, data):
+        out = json.dumps(data).encode()
+        self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(out)))
+        self.end_headers(); self.wfile.write(out)
+    def do_GET(self):
+        self.reply({"issuer": base, "authorization_endpoint": base + "/authorize", "token_endpoint": base + "/token"})
+    def do_POST(self):
+        refreshes.append(self.rfile.read(int(self.headers["Content-Length"])))
+        self.reply({"access_token": f"new{len(refreshes)}", "token_type": "Bearer", "expires_in": 3600, "refresh_token": "r2"})
+    def log_message(self, *a):
+        pass
+auth = HTTPServer(("127.0.0.1", 0), Auth)
+base = f"http://127.0.0.1:{auth.server_port}"
+threading.Thread(target=auth.serve_forever, daemon=True).start()
+store.write_json(os.path.join(store.DATA, "mcp", "acme.json"), {"client": {"client_id": "jarvis", "redirect_uris": [f"{base}/cb"]},
+    "tokens": {"access_token": "old", "token_type": "Bearer", "refresh_token": "r1", "expires_in": 3600, "expires_at": time.time() + 600}})
+tokens = brain.oauth_provider("acme", base + "/mcp", print).context.storage
+assert asyncio.run(tokens.get_tokens()).access_token == "new1" and b"r1" in refreshes[0]  # 10 minutes left: renewed now
+again = asyncio.run(tokens.get_tokens())
+assert again.access_token == "new1" and 3500 < again.expires_in <= 3600 and len(refreshes) == 1  # fresh: kept, with what's left
+auth.shutdown()
+
 # your own providers: keys stay out of settings, never go over plain http to another machine
 store.set_secret("openai", "sk-test-123")
 assert store.secret("openai") == "sk-test-123" and "sk-test" not in open(store.SETTINGS_FILE).read()
@@ -329,8 +387,6 @@ parts = brain.from_openai({"choices": [{"message": {"content": "ok", "reasoning_
 assert parts == [{"text": "hmm", "thought": True}, {"text": "ok"}, {"functionCall": {"name": "remember", "args": {"fact": "x"}, "id": "c1"}}]
 
 # a local keyless server (like Ollama): tools offered, no Authorization header, tool call then answer
-import json, threading
-from http.server import BaseHTTPRequestHandler, HTTPServer
 seen = []
 class Fake(BaseHTTPRequestHandler):
     def do_POST(self):
