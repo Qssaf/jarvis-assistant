@@ -146,6 +146,27 @@ assert "result" in brain.tool_press_keys("ctrl+l") and pressed == ["ctrl+l"]
 assert "Remote Control" not in brain.input_result("", "unknown keysym 'Foo'")["error"]
 assert "Remote Control" in brain.input_result("", "portal dialog denied or failed: cancelled")["error"]
 
+# browsers and Electron apps (found through their launcher scripts) get the accessibility switch; other apps don't
+if not system.IS_WINDOWS:
+    d = tempfile.mkdtemp()
+    os.makedirs(f"{d}/lib/chat"); os.makedirs(f"{d}/bin")
+    open(f"{d}/lib/chat/resources.pak", "w").close()  # what every Chromium build ships next to its binary
+    for path, body in ((f"{d}/lib/chat/chat", "#!/bin/sh\n"), (f"{d}/bin/chatapp", f'#!/bin/sh\nexec {d}/lib/chat/chat "$@"\n'),
+                       (f"{d}/bin/calc", "#!/bin/sh\nexec /bin/true\n")):
+        open(path, "w").write(body); os.chmod(path, 0o755)
+    os.environ["PATH"] = f"{d}/bin" + os.pathsep + os.environ["PATH"]
+    assert system.chromium_based("chatapp") and not system.chromium_based("calc") and not system.chromium_based("no-such-app")
+    real = system.launch, system.window_ids, system.active_window
+    started = []
+    system.launch, system.window_ids, system.active_window = (lambda command, env=None: started.append((command, env))), set, str
+    brain.tool_launch("chatapp https://example.com", wait=0, screenshot=False)
+    brain.tool_launch("calc", wait=0, screenshot=False)
+    system.launch, system.window_ids, system.active_window = real
+    assert [c for c, _ in started] == ["chatapp --force-renderer-accessibility https://example.com", "calc"], started
+    assert started[0][1]["ACCESSIBILITY_ENABLED"] == "1"
+    # only an app Jarvis has just started is worth waiting for: one that's open but not in the tree never shows up
+    assert brain.a11y_wait("calc") == 3 and brain.a11y_wait("discord") == 0
+
 # the voice model can't see, so a coordinate click is refused before anything runs
 import asyncio
 refused = asyncio.run(live._tool(types.SimpleNamespace(name="act", args={"steps": [{"type": "hi"}, {"click": [500, 500]}]})))
@@ -176,6 +197,10 @@ assert live.muted is False
 live.spoke = True
 live.barge_in()
 assert live.muted is True
+
+# parallel parts share one deadline: three that hang cost the timeout once, not three times
+t = time.time()
+assert brain.in_parallel(*[lambda: time.sleep(1)] * 3, timeout=0.3) == [None] * 3 and time.time() - t < 0.7
 
 # the page reader never fetches this PC or the local network
 for url in ("http://127.0.0.1:4849/", "http://192.168.1.1/", "http://[::1]/", "file:///etc/passwd", "http://169.254.169.254/"):
@@ -228,6 +253,8 @@ assert brain.tool_read_file(os.path.join(t, "notes.txt"))["text"] == "buy milk"
 assert sorted(brain.tool_read_file(t)["folder"]) == ["blob.bin", "notes.txt"] and "error" in brain.tool_read_file(os.path.join(t, "blob.bin"))
 # account permissions: reads vs changes, paused and read-only accounts refused before anything is sent
 assert brain.toolkit_of("GOOGLE_CLASSROOM_COURSES_LIST") == "google_classroom" and brain.toolkit_of("GMAIL_SEND_EMAIL") == "gmail"
+assert [brain.workspace_slug(a) for a in ("Google Tasks", "google_drive", "google classroom", "GitHub", "fax")] == \
+    ["googletasks", "googledrive", "google_classroom", "github", None]  # however the voice model spells the app
 assert all(map(brain.is_read_action, ["GMAIL_FETCH_EMAILS", "GOOGLECALENDAR_EVENTS_LIST", "GITHUB_GET_THE_AUTHENTICATED_USER",
                                       "GOOGLE_CLASSROOM_COURSE_WORK_LIST", "TRELLO_GET_SEARCH"]))
 assert not any(map(brain.is_read_action, ["GMAIL_SEND_EMAIL", "SLACK_ADD_TO_LIST", "GOOGLETASKS_INSERT_TASK", "GMAIL_REPLY_TO_THREAD",
@@ -264,6 +291,11 @@ brain.OpenAICompatible("x", "http://localhost:1234/v1", "sk-1")  # (this machine
 b = brain.Brain.__new__(brain.Brain)
 b.backends, b.down_until = {}, {}
 assert b.backend("nosuch")[0] is None and "no API key" in b.backend("openai")[1]
+brain.chain = lambda: [("openai", "gpt-a", "low"), ("openai", "gpt-b", "low")]
+try:
+    b._generate([]); raise AssertionError("no key, yet it answered")
+except RuntimeError as e:
+    assert str(e).count("no API key") == 1, e  # a missing key is said once, not once per model
 
 # OpenAI-style translation: tool calls and results paired by id, pictures as data URLs, Gemini signatures only when asked
 turns = [{"role": "user", "parts": [{"text": "hi"}, {"inlineData": {"mimeType": "image/png", "data": "QUJD"}}]},

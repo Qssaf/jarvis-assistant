@@ -315,24 +315,25 @@ class Sessions:
             s["updated"] = time.time()
             write_json(self._path(s["id"]), s, private=True)
 
-    def list(self):
-        out = []
+    def _all(self):
+        """Every saved conversation, as (its summary for the list, the whole thing)."""
         for name in os.listdir(self.dir):
-            s = read_json(os.path.join(self.dir, name), None)
+            s = read_json(os.path.join(self.dir, name), None) if name.endswith(".json") else None
             if s:
-                out.append({"id": s["id"], "title": s["title"], "updated": s["updated"],
-                            "count": sum(m.get("who") in ("you", "jarvis") for m in s["messages"])})
-        return sorted(out, key=lambda s: -s["updated"])
+                yield {"id": s["id"], "title": s["title"], "updated": s["updated"],
+                       "count": sum(m.get("who") in ("you", "jarvis") for m in s["messages"])}, s
+
+    def list(self):
+        return sorted((summary for summary, _ in self._all()), key=lambda s: -s["updated"])
 
     def search(self, query):
         """Saved conversations whose title or messages contain the query (case-insensitive), newest first."""
         q, out = query.lower().strip(), []
-        for s in self.list():
-            full = read_json(self._path(s["id"]), {})
-            hits = [m["text"] for m in full.get("messages", []) if q in str(m.get("text", "")).lower()]
+        for summary, s in self._all():
+            hits = [m["text"] for m in s["messages"] if q in str(m.get("text", "")).lower()]
             if q in s["title"].lower() or hits:
-                out.append({**s, "match": (hits[0] if hits else s["title"])[:160]})
-        return out
+                out.append({**summary, "match": (hits[0] if hits else s["title"])[:160]})
+        return sorted(out, key=lambda s: -s["updated"])
 
     def get(self, sid):
         s = read_json(self._path(sid), None)

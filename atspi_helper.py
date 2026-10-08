@@ -21,15 +21,26 @@ def apps():
     return [a for a in (d.get_child_at_index(i) for i in range(d.get_child_count())) if a]
 
 
+def names(app):
+    """An app's accessible name and its process's name: Chromium browsers may call themselves something else."""
+    try:
+        with open(f"/proc/{app.get_process_id()}/comm") as f:
+            return f"{app.get_name() or ''} {f.read().strip()}".lower()
+    except Exception:
+        return (app.get_name() or "").lower()
+
+
 def find_app(name, wait=0.0):
     end = time.time() + wait
+    want = name.lower().split(".")[-1]  # "org.kde.kcalc" -> "kcalc"
     while True:
-        want = name.lower().split(".")[-1]  # "org.kde.kcalc" -> "kcalc"
         for a in apps():
-            if want in (a.get_name() or "").lower():
+            if want in names(a):
                 return a
         if time.time() >= end:
-            raise LookupError(f"no accessible app named '{name}'. Running: {', '.join(sorted({a.get_name() for a in apps() if a.get_name()}))}")
+            raise LookupError(f"no accessible app named '{name}': it isn't open, or it doesn't show its controls (browsers and "
+                              "Electron apps like Discord or VS Code only do when Jarvis starts them), so use look and click_on "
+                              f"instead. Apps with named controls: {', '.join(sorted({a.get_name() for a in apps() if a.get_name()}))}")
         time.sleep(0.1)
 
 

@@ -819,7 +819,7 @@ def voice_loop(live, mic_target=None):
                 print(f"[voice] wake word ({score:.2f}): already listening", flush=True)
                 live.feed(f)  # same conversation, same session: nothing to restart
                 continue
-            print(f"[voice] wake word ({score:.2f})", flush=True)
+            print("[voice] listening (Talk or jarvis --listen)" if listen_now.is_set() else f"[voice] wake word ({score:.2f})", flush=True)
             if not listen_now.is_set():
                 learner.woke(np.concatenate(recent))
             listen_now.clear()
@@ -1288,13 +1288,12 @@ def main():
             sys.exit("Jarvis isn't running")
 
     os.makedirs(store.DATA, mode=0o700, exist_ok=True)  # conversations, logs and tokens: this user only
-    if not sys.stdout or not sys.stdout.isatty():  # (pythonw on Windows has no stdout at all)  # started from the app menu: keep a log
+    if not sys.stdout or not sys.stdout.isatty():  # started from the app menu (pythonw on Windows has no stdout at all): keep a log
         log = os.path.join(store.DATA, "jarvis.log")
         if os.path.exists(log) and os.path.getsize(log) > 5_000_000:
             os.replace(log, log + ".old")
         sys.stdout = sys.stderr = os.fdopen(os.open(log, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600), "a", buffering=1)
         print(f"--- started {time.strftime('%Y-%m-%d %H:%M:%S')}", flush=True)
-    os.makedirs(store.DATA, exist_ok=True)
     fd = os.open(TOKEN_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w") as f:
         f.write(TOKEN)

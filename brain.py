@@ -277,7 +277,7 @@ def tool_scroll(amount):
 
 
 a11y = system.accessibility  # presses and fills app controls by name (AT-SPI on Linux, UI Automation on Windows)
-last_app = [""]  # the app most recently launched, for steps that don't name one
+last_app = ["", 0.0]  # the app most recently launched (for steps that don't name one), and when
 last_window = [""]  # its window id: typing goes there, never into whatever else happens to have focus
 
 
@@ -285,8 +285,15 @@ def active_app():
     return system.active_app() or last_app[0]
 
 
+def a11y_wait(app):
+    """How long to wait for an app's controls to appear: only one Jarvis has just started may still be loading (an app
+    that's open but not in the accessibility tree never will be, so it shouldn't cost seconds)."""
+    return 3 if app == last_app[0] and time.time() - last_app[1] < 20 else 0
+
+
 def tool_ui_controls(app=""):
-    return a11y.ask({"cmd": "controls", "app": app or active_app(), "wait": 3})
+    app = app or active_app()
+    return a11y.ask({"cmd": "controls", "app": app, "wait": a11y_wait(app)})
 
 
 def tool_act(steps, screenshot_after=True):
@@ -300,11 +307,12 @@ def tool_act(steps, screenshot_after=True):
                 r["result"] += "; its controls: " + ", ".join(c.split(": ", 1)[-1] for c in seen["controls"][:60])
         elif "press" in step:
             names = step["press"] if isinstance(step["press"], list) else [step["press"]]
-            r = a11y.ask({"cmd": "press", "app": step.get("app") or last_app[0] or active_app(), "names": names, "wait": 3})
+            app = step.get("app") or last_app[0] or active_app()
+            r = a11y.ask({"cmd": "press", "app": app, "names": names, "wait": a11y_wait(app)})
             r = {"result": f"pressed {', '.join(r['pressed'])}"} if "pressed" in r and "error" not in r else {"error": json.dumps(r)[:3000]}
         elif "set_text" in step:
-            r = a11y.ask({"cmd": "set_text", "app": step.get("app") or last_app[0] or active_app(),
-                          "field": step.get("field", ""), "text": step["set_text"], "wait": 3})
+            app = step.get("app") or last_app[0] or active_app()
+            r = a11y.ask({"cmd": "set_text", "app": app, "field": step.get("field", ""), "text": step["set_text"], "wait": a11y_wait(app)})
             if "set" in r:
                 r = {"result": f"filled {r['set']}"}
             elif "no accessible app" in r.get("error", "") or "can't be edited" in r.get("error", ""):
@@ -393,9 +401,11 @@ def tool_launch(command, wait=8, screenshot=True):
         similar = system.similar_programs(words[0])
         return {"error": f"there's no program called {words[0]}" + (f"; similar: {', '.join(similar)}" if similar else "")}
     before, focused = system.window_ids(), system.active_window()
+    if words and system.chromium_based(words[0]):  # browsers and Electron apps (Discord, VS Code...) need a switch too
+        command = re.sub(rf"(?:^|\s){re.escape(words[0])}(?=\s|$)", lambda m: m[0] + " --force-renderer-accessibility", command, count=1)
     # accessibility on for this app only, so its controls can be pressed by name
-    system.launch(command, env=dict(os.environ, QT_LINUX_ACCESSIBILITY_ALWAYS_ON="1", QT_ACCESSIBILITY="1"))
-    last_app[0] = os.path.basename(words[0]) if words else ""
+    system.launch(command, env=dict(os.environ, QT_LINUX_ACCESSIBILITY_ALWAYS_ON="1", QT_ACCESSIBILITY="1", ACCESSIBILITY_ENABLED="1"))
+    last_app[:] = [os.path.basename(words[0]) if words else "", time.time()]
     end, appeared, new = time.time() + min(max(float(wait), 0.5), 15), False, set()
     if not before and not focused:  # this desktop doesn't let apps see windows: give it a moment instead
         time.sleep(min(float(wait), 2))
@@ -447,14 +457,13 @@ BROWSER_UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Ge
 
 
 def in_parallel(*fns, timeout=12):
-    """Run functions at once; each result, or None if it failed or ran over time."""
-    from concurrent.futures import ThreadPoolExecutor
+    """Run functions at once; each result, or None if it failed or ran over time (one deadline for them all)."""
     pool = ThreadPoolExecutor(len(fns))
     futures = [pool.submit(f) for f in fns]
-    out = []
+    out, end = [], time.time() + timeout
     for f in futures:
         try:
-            out.append(f.result(timeout=timeout))
+            out.append(f.result(timeout=max(0, end - time.time())))
         except Exception as e:
             print(f"[tool] parallel part failed: {describe(e)}", flush=True)
             out.append(None)
@@ -473,7 +482,6 @@ def tool_web_search(query):
 
     def links():
         return [{"title": r["title"], "url": r["href"], "snippet": r["body"][:200]} for r in DDGS().text(query, max_results=5)]
-    from concurrent.futures import ThreadPoolExecutor
     pool = ThreadPoolExecutor(2)
     g = pool.submit(grounded) if grounder[0] else None
     l = pool.submit(links)
@@ -1073,6 +1081,12 @@ WORKSPACES = [  # Composio toolkits shown on the Connections page
 ]
 
 
+def workspace_slug(app):
+    """'Google Tasks', 'google_tasks' or 'googletasks' -> 'googletasks' (None if it isn't one of WORKSPACES)."""
+    squash = lambda s: re.sub(r"[^a-z]", "", s.lower())
+    return next((slug for slug, label in WORKSPACES if squash(app) in (squash(slug), squash(label))), None)
+
+
 # ---------------------------------------------------------------- per-account permissions (Accounts page)
 WRITE_VERBS = {"SEND", "CREATE", "INSERT", "UPDATE", "DELETE", "REMOVE", "ADD", "POST", "REPLY", "MOVE", "PATCH", "SET", "ARCHIVE",
                "TRASH", "MODIFY", "INVITE", "UPLOAD", "SHARE", "EDIT", "PUT", "MARK", "STAR", "LABEL", "ASSIGN", "CLOSE", "MERGE",
@@ -1154,6 +1168,8 @@ class Brain:
         grounder[0] = lambda contents: self._generate(contents, entries=SEARCH_MODELS, tools=[{"googleSearch": {}}])
 
         def warm_up():  # token + TLS connection ready before the first real question
+            if not any(self.backend(entry[0])[0] for entry in chain()):
+                return  # no key yet: nothing to warm up, and the first request says what's missing
             try:
                 self._generate([{"role": "user", "parts": [{"text": "hi"}]}])
             except Exception as e:
@@ -1309,7 +1325,7 @@ class Brain:
 
     def account_settings(self, app, mode="", action=""):
         """The voice and agent tool: change an account's mode, reconnect it or disconnect it."""
-        app = app.lower().replace(" ", "_").replace("google_calendar", "googlecalendar")
+        app = workspace_slug(app) or app
         if app not in dict(WORKSPACES):
             return {"error": f"unknown app {app}; known: {', '.join(dict(WORKSPACES))}"}
         if action == "reconnect":
@@ -1420,7 +1436,7 @@ class Brain:
             backend, model, thinking = entry
             be, problem = self.backend(backend)
             if not be or time.time() < self.down_until.get(entry, 0):
-                why.append(f"{backend}/{model}: {problem or 'busy'}")
+                why.append(f"{backend}: {problem}" if problem else f"{backend}/{model}: busy")  # (a missing key: once)
                 continue
             t = time.time()
             try:
@@ -1433,7 +1449,8 @@ class Brain:
                 print(f"[brain] {backend}/{model} {time.time() - t:.1f}s skipped: {e}", flush=True)
                 why.append(f"{backend}/{model}: {str(e)[:80]}")
                 self._mark_down(entry, e, entry == entries[0])
-        raise RuntimeError("no model could answer (" + "; ".join(why[:4]) + "); try again in a minute or check Settings → Models and keys")
+        raise RuntimeError("no model could answer (" + "; ".join(list(dict.fromkeys(why))[:4]) + "); try again in a minute or check "
+                           "Settings → Models and keys")
 
     def _mark_down(self, entry, e, is_main):
         if getattr(e, "retry_after", None):  # rate limit: skip it for a bit

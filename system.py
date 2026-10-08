@@ -1,7 +1,7 @@
 """Everything that depends on the operating system, behind one small interface: where files live, the microphone and
 speaker, screenshots, mouse and keyboard, windows, apps, the shell, notifications, media and starting at login.
 Windows and Linux (X11 or Wayland; KDE Plasma gets faster paths). Each function picks the best tool that's installed."""
-import json, os, shutil, subprocess, sys, tempfile, threading, time
+import json, os, re, shutil, subprocess, sys, tempfile, threading, time
 
 IS_WINDOWS = sys.platform == "win32"
 WAYLAND = not IS_WINDOWS and os.environ.get("XDG_SESSION_TYPE") == "wayland"
@@ -361,7 +361,6 @@ def _find_windows(name):
 def focus_window(name, wid=None):
     """Bring a window to the front by (part of) its title or app name, or by id."""
     if KDE and WAYLAND and have("kdotool"):
-        import re
         return _kdo("windowactivate", wid) if wid else _kdo("search", re.escape(name.split(": ", 1)[-1]), "windowactivate")
     if WAYLAND:
         return "switching windows isn't possible on this Wayland desktop; use keyboard shortcuts (alt+tab)"
@@ -375,7 +374,6 @@ def focus_window(name, wid=None):
 
 def close_window(name):
     if KDE and WAYLAND and have("kdotool"):
-        import re
         return _kdo("search", re.escape(name.split(": ", 1)[-1]), "windowclose")
     if WAYLAND:
         return "closing windows by name isn't possible on this Wayland desktop; use alt+F4 on the focused window"
@@ -437,9 +435,41 @@ def similar_programs(name):
     return (sorted(found, key=len) + sorted(entries, key=len))[:12]
 
 
+CHROMIUM_BROWSERS = ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable", "brave", "msedge", "chrome")
+
+
+def chromium_based(program):
+    """Whether a program is a Chromium browser or an Electron app (Discord, VS Code, Spotify...), following launcher
+    scripts to what they start. On Linux those only show their controls to accessibility tools when started with
+    --force-renderer-accessibility (Windows' UI Automation needs nothing)."""
+    path = shutil.which(os.path.expanduser(program))
+    if IS_WINDOWS or not path:
+        return False
+    if os.path.basename(path) in CHROMIUM_BROWSERS:
+        return True
+    for _ in range(3):  # e.g. a /usr/bin script that runs /usr/lib/app/app, which sits next to Chromium's resources.pak
+        path = os.path.realpath(path)
+        if os.path.exists(os.path.join(os.path.dirname(path), "resources.pak")):
+            return True
+        try:
+            with open(path, "rb") as f:
+                script = f.read(65536)
+        except OSError:
+            return False
+        if not script.startswith(b"#!"):
+            return False
+        body = script.decode(errors="ignore").split("\n", 1)[-1]  # (not the #! line's interpreter)
+        if re.search(r"(?i)\belectron", body):  # runs the system's Electron, or says it's one
+            return True
+        path = next((p for p in re.findall(r"(?<![\w$}])/[\w.+/-]+", body) if os.path.isfile(p) and os.access(p, os.X_OK)), None)
+        if not path:
+            return False
+    return False
+
+
 def headless_browser():
     """A Chromium-family browser for rendering JavaScript-heavy pages, or None."""
-    for name in ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable", "brave", "msedge", "chrome"):
+    for name in CHROMIUM_BROWSERS:
         if have(name):
             return shutil.which(name)
     if IS_WINDOWS:
