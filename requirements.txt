@@ -1,0 +1,19 @@
+# Installed by install.sh (Linux) or install.ps1 (Windows). openwakeword itself is installed with --no-deps
+# (its tflite dependency has no wheels for current Python; Jarvis uses its ONNX models).
+requests
+numpy
+onnxruntime
+scipy
+scikit-learn
+tqdm
+google-genai
+mcp
+ddgs
+PySide6-Essentials
+psutil
+pypdf
+sounddevice
+mss
+pynput
+pywinctl
+pywinauto; sys_platform == "win32"
