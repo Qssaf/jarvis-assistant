@@ -8,12 +8,12 @@ import requests
 from PySide6.QtCore import QObject, QRectF, QSize, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QColor, QDesktopServices, QImage, QKeySequence, QPainter, QPainterPath, QPen, QPixmap, QRadialGradient, QShortcut
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QCompleter, QDoubleSpinBox, QFileDialog, QFrame, QGridLayout,
-                               QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMainWindow, QMessageBox, QPlainTextEdit,
+                               QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMainWindow, QPlainTextEdit,
                                QProgressBar, QPushButton, QScrollArea, QSizePolicy, QSpinBox, QStackedWidget, QTextBrowser, QToolButton,
                                QVBoxLayout, QWidget)
 
 import store
-from icons import svg_icon
+from icons import svg_icon, svg_pixmap
 
 # ---------------------------------------------------------------- the look: the first Jarvis UI's colours (cyan, orange, deep navy)
 BG, RAIL, SURFACE, RAISED, BORDER = "#04080d", "#050b11", "#0a1621", "#0e1e2b", "#16364a"
@@ -26,14 +26,15 @@ PAGES = [("home", "Home", "home"), ("sessions", "Chats", "chats"), ("activity", 
          ("connections", "Accounts", "accounts"), ("plugins", "Plugins", "plugins"), ("memory", "Memory", "memory"),
          ("settings", "Settings", "settings")]
 QUICK = [("sun", "Good morning", "Your day at a glance"), ("calendar", "What's due this week?", "From Google Classroom"),
-         ("mail", "How many unread emails do I have?", "Gmail"), ("screen", "What's on my screen?", "Jarvis looks for you"),
-         ("timer", "Set a 10 minute timer", "With a notification"), ("image", "Make a picture of a cozy rainy city at night", "Image generation")]
+         ("mail", "How many unread emails?", "Gmail"), ("screen", "What's on my screen?", "Jarvis looks for you"),
+         ("timer", "Set a 10 minute timer", "With a notification"), ("image", "Paint a rainy city at night", "Image generation")]
 ACCOUNT_MODES = [("ask", "Ask before changes"), ("full", "Full access"), ("read_only", "Read only"), ("paused", "Paused")]
 PRESETS = [("Notion (official)", "notion", "url", "https://mcp.notion.com/mcp"),
            ("Docs lookup (Context7)", "context7", "url", "https://mcp.context7.com/mcp"),
            ("Files in my home folder", "files", "command", "npx -y @modelcontextprotocol/server-filesystem ~"),
            ("Headless browser (Playwright)", "playwright", "command", "npx -y @playwright/mcp@latest --headless")]
 CARD_BG = "qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(12,32,46,.85), stop:1 rgba(8,20,30,.85))"
+ARROW = os.path.join(store.DATA, "ui", "chevron.png").replace("\\", "/")  # drop-down arrow (stylesheets take images from files)
 
 QSS = f"""
 QMainWindow, #root, #page {{ background: {BG}; }}
@@ -80,9 +81,9 @@ QPushButton#link {{ background: transparent; border: none; color: {DIM}; padding
 QPushButton#link:hover {{ color: {CYAN}; }}
 QPushButton#chip {{ text-align: left; background: rgba(63,216,255,.05); border: 1px solid rgba(63,216,255,.22); border-radius: 12px; padding: 8px 12px; color: {TEXT}; }}
 QPushButton#chip:hover {{ border-color: {CYAN}; color: {CYAN}; }}
-QPushButton#suggest {{ text-align: left; background: {CARD_BG}; border: 1px solid rgba(63,216,255,.16); border-radius: 16px;
-                       padding: 14px 16px; font-size: 10pt; color: {TEXT}; }}
+QPushButton#suggest {{ background: {CARD_BG}; border: 1px solid rgba(63,216,255,.16); border-radius: 16px; padding: 0; }}
 QPushButton#suggest:hover {{ border-color: {CYAN}; background: rgba(63,216,255,.08); }}
+#suggestHint {{ color: {DIM}; font-size: 8.5pt; }}
 QToolButton#icon {{ border: none; border-radius: 18px; background: transparent; }}
 QToolButton#icon:hover {{ background: {RAISED}; }}
 QToolButton#send {{ border: none; border-radius: 18px; background: {CYAN}; }}
@@ -95,6 +96,8 @@ QLineEdit:focus, QPlainTextEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QCo
 QLineEdit#search {{ border-radius: 17px; padding: 8px 16px; background: rgba(4,16,24,.7); border: 1px solid rgba(63,216,255,.18); }}
 QLineEdit#search:focus {{ border-color: {CYAN}; }}
 QAbstractSpinBox::up-button, QAbstractSpinBox::down-button {{ width: 0; border: none; }}
+QComboBox::drop-down {{ border: none; width: 30px; }}
+QComboBox::down-arrow {{ image: url({ARROW}); width: 14px; height: 14px; }}
 QComboBox QAbstractItemView {{ background: {SURFACE}; selection-background-color: rgba(63,216,255,.20); border: 1px solid {BORDER}; }}
 QTextBrowser, QListWidget, QScrollArea {{ background: transparent; border: none; }}
 #chatInner, #todayInner, #pageInner, #heroBox {{ background: transparent; }}
@@ -111,7 +114,6 @@ QCheckBox::indicator {{ width: 18px; height: 18px; border-radius: 6px; border: 1
 QCheckBox::indicator:checked {{ background: {CYAN}; border-color: {CYAN}; }}
 QCheckBox::indicator:hover {{ border-color: {CYAN}; }}
 QToolTip {{ background: {SURFACE}; color: {TEXT}; border: 1px solid {BORDER}; padding: 4px; }}
-QMessageBox {{ background: {SURFACE}; }}
 """
 PREVIEW_CSS = f"""p {{ margin: 0; }} .who {{ color: {CYAN}; font-size: 8pt; margin-top: 12px; }} .you {{ color: {GOLD}; font-size: 8pt;
 margin-top: 12px; }} .sys {{ color: {FAINT}; font-size: 9pt; margin-top: 8px; }} .tool {{ color: {DIM}; font-size: 9pt; margin-top: 4px; }}
@@ -156,6 +158,20 @@ def button(text, fn, name=None, tip=None):
         b.setToolTip(tip)
     b.setCursor(Qt.PointingHandCursor)
     b.clicked.connect(lambda *_: fn())
+    return b
+
+
+def confirm_button(text, fn, ask, name=None, tip=None):
+    """A button for something that can't be undone: the first click turns it into `ask`, a second click within 4 s
+    does it (no dialog in the way)."""
+    def clicked():
+        if b.text() == text:
+            b.setText(ask)
+            QTimer.singleShot(4000, b, lambda: b.setText(text))
+        else:
+            b.setText(text)
+            fn()
+    b = button(text, clicked, name, tip)
     return b
 
 
@@ -319,6 +335,16 @@ class Orb(QWidget):
         p.setBrush(glow)
         p.setPen(Qt.NoPen)
         p.drawEllipse(QRectF(0, 0, s, s))
+
+
+class CardButton(QPushButton):
+    """A button laid out like a card (icon, title, hint): sized by its layout, which QPushButton itself ignores."""
+
+    def sizeHint(self):
+        return self.layout().sizeHint()
+
+    def minimumSizeHint(self):
+        return self.layout().minimumSize()
 
 
 class Clickable(QLabel):
@@ -504,6 +530,8 @@ class Window(QMainWindow):
         self.setAcceptDrops(True)  # drop files on the window to attach them
         room = QApplication.primaryScreen().availableGeometry()
         self.resize(min(1400, int(room.width() * 0.92)), min(880, int(room.height() * 0.92)))
+        os.makedirs(os.path.dirname(ARROW), exist_ok=True)
+        svg_pixmap("chevron", DIM, 14).save(ARROW)
         self.setStyleSheet(QSS)
 
         root = QWidget()
@@ -832,13 +860,26 @@ class Window(QMainWindow):
         grid = QGridLayout()
         grid.setSpacing(12)
         for i, (glyph, text, sub) in enumerate(QUICK):
-            b = QPushButton(f"  {text}\n  {sub}")
+            b = CardButton()
             b.setObjectName("suggest")
-            b.setIcon(svg_icon(glyph, CYAN, 20))
-            b.setIconSize(QSize(20, 20))
+            b.setAccessibleName(text)
+            b.setToolTip(f'Ask "{text}"')
             b.setCursor(Qt.PointingHandCursor)
             b.clicked.connect(lambda _=False, t=text: self.send(t))
+            row = QHBoxLayout(b)
+            row.setContentsMargins(16, 12, 16, 12)
+            row.setSpacing(12)
+            ico, words = QLabel(), QVBoxLayout()
+            ico.setPixmap(svg_pixmap(glyph, CYAN, 20))
+            words.setSpacing(1)
+            words.addWidget(label(text))
+            words.addWidget(label(sub, "suggestHint"))
+            row.addWidget(ico)
+            row.addLayout(words, 1)
+            for part in (ico, words.itemAt(0).widget(), words.itemAt(1).widget()):
+                part.setAttribute(Qt.WA_TransparentForMouseEvents)  # the click is the card's
             grid.addWidget(b, i // 3, i % 3)
+            grid.setColumnMinimumWidth(i % 3, 232)  # equal columns
         holder = QWidget()
         holder.setMaximumWidth(860)
         holder.setLayout(grid)
@@ -941,7 +982,9 @@ class Window(QMainWindow):
         top.setSpacing(12)
         self.art = QLabel()
         self.art.setFixedSize(56, 56)
+        self.art.setAlignment(Qt.AlignCenter)
         self.art.setStyleSheet(f"background: {RAISED}; border-radius: 10px;")
+        self.no_art()
         top.addWidget(self.art)
         info = QVBoxLayout()
         info.setSpacing(2)
@@ -1019,17 +1062,22 @@ class Window(QMainWindow):
         if not self.isVisible():
             return
         def media(d):
+            art = (d or {}).get("art", "")
+            if art != self.art_url:
+                self.art_url = art
+                if art.startswith("https://"):
+                    run(lambda: requests.get(art, timeout=8).content, self.show_art)
+                elif art.startswith("file://"):  # (local players)
+                    run(lambda: open(QUrl(art).toLocalFile(), "rb").read(), self.show_art)
+                else:
+                    self.no_art()
             if not d:
                 self.track.setText("Nothing playing")
                 self.artist.setText("Start Spotify or any player")
-                self.art.clear()
                 return
             self.track.setText(d["title"] or "Unknown track")
             self.artist.setText(f"{d['artist']}  ·  {d['app']}" if d["artist"] else d["app"])
             self.play_btn.setIcon(svg_icon("pause" if d["status"] == "Playing" else "play", TEXT, 18))
-            if d["art"].startswith("https://") and d["art"] != self.art_url:
-                self.art_url = d["art"]
-                run(lambda: requests.get(d["art"], timeout=8).content, self.show_art)
         def system(d):
             gib = 1024 ** 3
             for name, used, total, text in (("CPU", d["cpu"], 100, f"{d['cpu']:.0f}%"),
@@ -1042,9 +1090,14 @@ class Window(QMainWindow):
         self.call("/api/system", then=system)
 
     def show_art(self, data):
-        if isinstance(data, bytes):
-            pix = QPixmap.fromImage(QImage.fromData(data)).scaled(56, 56, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
-            self.art.setPixmap(rounded(pix, 10))
+        img = QImage.fromData(data) if isinstance(data, bytes) else QImage()
+        if img.isNull():
+            return self.no_art()
+        pix = QPixmap.fromImage(img).scaled(56, 56, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+        self.art.setPixmap(rounded(pix, 10))
+
+    def no_art(self):
+        self.art.setPixmap(svg_pixmap("music", FAINT, 22))
 
     def load_reminders(self):
         def show(items):
@@ -1095,7 +1148,7 @@ class Window(QMainWindow):
         self.sess_title.setStyleSheet("font-weight: 700; font-size: 11pt;")
         head.addWidget(self.sess_title, 1)
         self.sess_open = button("Continue", self.open_session, "primary")
-        self.sess_del = button("Delete", self.delete_session, "danger")
+        self.sess_del = confirm_button("Delete", self.delete_session, "Click again to delete", "danger")
         for b in (self.sess_open, self.sess_del):
             b.setEnabled(False)
             head.addWidget(b)
@@ -1127,6 +1180,8 @@ class Window(QMainWindow):
             if not items:
                 self.sess_list.addItem("Nothing found." if query else "No saved conversations yet.")
             self.sess_list.blockSignals(False)
+            if items and self.sess_list.currentItem() is None:
+                self.sess_list.setCurrentRow(0)
         self.call(f"/api/search?q={quote(query)}" if query else "/api/sessions", then=show)
 
     def preview(self, sid):
@@ -1144,8 +1199,6 @@ class Window(QMainWindow):
         self.call(f"/api/sessions/{self.selected}/open", {}, lambda _: (self.reload_chat(), self.go("home")))
 
     def delete_session(self):
-        if QMessageBox.question(self, "Delete conversation", "Delete this conversation? This can't be undone.") != QMessageBox.Yes:
-            return
         def deleted(_):
             self.sess_view.clear()
             self.sess_title.setText("Pick a conversation")
@@ -1188,7 +1241,7 @@ class Window(QMainWindow):
 
     # ---- accounts
     def _connections(self):
-        page, col = self.page("Accounts", "Your accounts, through Composio: connect one and Jarvis can use it right away")
+        page, col = self.page("Accounts", "Connect an account and Jarvis can use it right away")
         top = QHBoxLayout()
         self.ws_msg = label("", "small")
         top.addWidget(self.ws_msg, 1)
@@ -1242,7 +1295,8 @@ class Window(QMainWindow):
             for i, w in enumerate(sorted(items, key=lambda w: not w["connected"])):
                 b = self._ws_controls(w) if w["connected"] else button("Connect", lambda w=w: self.connect_ws(w), "primary")
                 status = (w["account"] or "Connected") if w["connected"] else "Not connected"
-                self.ws_grid.addWidget(self._ws_card(w["name"][0], w["name"], status, w["connected"], action=b), i // 3, i % 3)
+                badge = "".join(c for c in w["name"] if c.isupper())[:2] or w["name"][0]
+                self.ws_grid.addWidget(self._ws_card(badge, w["name"], status, w["connected"], action=b), i // 3, i % 3)
         run(lambda: self.get("/api/workspaces"), show)
 
     def _ws_controls(self, w):
@@ -1259,15 +1313,9 @@ class Window(QMainWindow):
         lay.addWidget(mode)
         row = QHBoxLayout()
         row.addWidget(button("Reconnect", lambda: self.connect_ws(w)))
-        def disconnect():
-            if drop.text() == "Disconnect":  # a second click confirms
-                drop.setText("Click again to remove")
-                QTimer.singleShot(4000, lambda: drop.setText("Disconnect"))
-                return
-            self.call(f"/api/workspaces/{w['slug']}/disconnect", {}, lambda _: (self.toast(f"{w['name']} disconnected"),
-                                                                                self.load_connections()))
-        drop = button("Disconnect", disconnect)
-        row.addWidget(drop)
+        row.addWidget(confirm_button("Disconnect", lambda: self.call(
+            f"/api/workspaces/{w['slug']}/disconnect", {}, lambda _: (self.toast(f"{w['name']} disconnected"), self.load_connections())),
+            "Click again to remove"))
         lay.addLayout(row)
         return box
 
@@ -1373,17 +1421,14 @@ class Window(QMainWindow):
                 h.addLayout(info, 1)
                 h.addWidget(button("Disable" if p["enabled"] else "Enable",
                                    lambda n=p["name"]: self.call(f"/api/plugins/{n}/toggle", {}, lambda _: self.load_plugins())))
-                h.addWidget(button("Remove", lambda n=p["name"]: self.remove_plugin(n), "danger"))
+                h.addWidget(confirm_button("Remove", lambda n=p["name"]: self.call(f"/api/plugins/{n}/delete", {}, lambda _: self.load_plugins()),
+                                           "Click again to remove", "danger",
+                                           "The Accounts page depends on this plugin" if p["name"] == "composio" else None))
                 c.addLayout(h)
                 self.plug_box.addWidget(frame)
             if any(p["status"] == "connecting" for p in items) and self.current == "plugins":
                 QTimer.singleShot(2500, self.load_plugins)
         self.call("/api/plugins", then=show)
-
-    def remove_plugin(self, name):
-        extra = " The Accounts page depends on it." if name == "composio" else ""
-        if QMessageBox.question(self, "Remove plugin", f"Remove the {name} plugin?{extra}") == QMessageBox.Yes:
-            self.call(f"/api/plugins/{name}/delete", {}, lambda _: self.load_plugins())
 
     # ---- memory and reminders
     def _memory(self):
@@ -1439,7 +1484,7 @@ class Window(QMainWindow):
 
     # ---- settings
     def _settings(self):
-        page, col = self.page("Settings", "Saved to " + os.path.join(store.CONFIG, "settings.json") + "; voice changes apply from the next conversation")
+        page, col = self.page("Settings", "Voice changes apply from the next conversation")
         self.fields = {"voice": QComboBox(), "live_model": QLineEdit(), "home_city": QLineEdit()}
         self.fields["voice"].setMinimumWidth(220)
         for key, lo, hi, step in (("follow_up_seconds", 0, 120, 1), ("keep_session_seconds", 0, 600, 10), ("end_of_speech_ms", 200, 2000, 50)):
@@ -1451,6 +1496,8 @@ class Window(QMainWindow):
         wake.setRange(0.05, 0.99)
         wake.setSingleStep(0.05)
         self.fields["wake_threshold"] = wake
+        for key in ("follow_up_seconds", "keep_session_seconds", "end_of_speech_ms", "wake_threshold"):
+            self.fields[key].findChild(QLineEdit).setTextMargins(10, 0, 0, 0)  # (spin boxes ignore the stylesheet's padding)
         self.fields["home_city"].setPlaceholderText("e.g. London (empty = detect)")
 
         def section(title, rows, checks=()):
@@ -1496,7 +1543,7 @@ class Window(QMainWindow):
             v.addWidget(self.fields[key])
         col.addWidget(box)
         row = QHBoxLayout()
-        row.addWidget(button("Save settings", self.save_settings, "primary"))
+        row.addWidget(button("Save settings", self.save_settings, "primary", "Saved to " + os.path.join(store.CONFIG, "settings.json")))
         self.set_result = label("", "small")
         row.addWidget(self.set_result, 1)
         col.addLayout(row)

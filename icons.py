@@ -36,10 +36,12 @@ PATHS = {
     "calendar": STROKE.format('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'),
     "screen": STROKE.format('<rect x="3" y="4" width="18" height="12.5" rx="2"/><path d="M8.5 20.5h7M12 16.5v4"/>'),
     "timer": STROKE.format('<circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 2M9.5 2.5h5"/>'),
+    "music": STROKE.format('<path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>'),
+    "chevron": STROKE.format('<path d="m6.5 9.5 5.5 5.5 5.5-5.5"/>'),
 }
 
 
-def svg_icon(name, color, size=24):
+def svg_pixmap(name, color, size=24):
     """A crisp icon in the given colour (rendered at twice the size for HiDPI)."""
     svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">{PATHS[name].replace("currentColor", color)}</svg>'
     renderer = QSvgRenderer(QByteArray(svg.encode()))
@@ -50,4 +52,8 @@ def svg_icon(name, color, size=24):
     renderer.render(p, QRectF(0, 0, size * 2, size * 2))
     p.end()
     pix.setDevicePixelRatio(2)
-    return QIcon(pix)
+    return pix
+
+
+def svg_icon(name, color, size=24):
+    return QIcon(svg_pixmap(name, color, size))
