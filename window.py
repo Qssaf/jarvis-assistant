@@ -28,6 +28,7 @@ PAGES = [("home", "Home", "home"), ("sessions", "Chats", "chats"), ("activity", 
 QUICK = [("sun", "Good morning", "Your day at a glance"), ("calendar", "What's due this week?", "From Google Classroom"),
          ("mail", "How many unread emails do I have?", "Gmail"), ("screen", "What's on my screen?", "Jarvis looks for you"),
          ("timer", "Set a 10 minute timer", "With a notification"), ("image", "Make a picture of a cozy rainy city at night", "Image generation")]
+ACCOUNT_MODES = [("ask", "Ask before changes"), ("full", "Full access"), ("read_only", "Read only"), ("paused", "Paused")]
 PRESETS = [("Notion (official)", "notion", "url", "https://mcp.notion.com/mcp"),
            ("Docs lookup (Context7)", "context7", "url", "https://mcp.context7.com/mcp"),
            ("Files in my home folder", "files", "command", "npx -y @modelcontextprotocol/server-filesystem ~"),
@@ -1239,11 +1240,36 @@ class Window(QMainWindow):
             self.ws_msg.setText(f"{sum(w['connected'] for w in items)} connected")
             clear(self.ws_grid)
             for i, w in enumerate(sorted(items, key=lambda w: not w["connected"])):
-                b = button("Add another account" if w["connected"] else "Connect", lambda w=w: self.connect_ws(w),
-                           None if w["connected"] else "primary")
+                b = self._ws_controls(w) if w["connected"] else button("Connect", lambda w=w: self.connect_ws(w), "primary")
                 status = (w["account"] or "Connected") if w["connected"] else "Not connected"
                 self.ws_grid.addWidget(self._ws_card(w["name"][0], w["name"], status, w["connected"], action=b), i // 3, i % 3)
         run(lambda: self.get("/api/workspaces"), show)
+
+    def _ws_controls(self, w):
+        """A connected account's controls: what Jarvis may do with it, reconnect, disconnect (click twice)."""
+        box = QWidget()
+        lay = QVBoxLayout(box)
+        lay.setContentsMargins(0, 0, 0, 0)
+        mode = QComboBox()
+        for key, text in ACCOUNT_MODES:
+            mode.addItem(text, key)
+        mode.setCurrentIndex(max(0, mode.findData(w.get("mode", "ask"))))
+        mode.currentIndexChanged.connect(lambda _: self.call(f"/api/workspaces/{w['slug']}/mode", {"mode": mode.currentData()},
+                                                             lambda _: self.toast(f"{w['name']}: {mode.currentText()}")))
+        lay.addWidget(mode)
+        row = QHBoxLayout()
+        row.addWidget(button("Reconnect", lambda: self.connect_ws(w)))
+        def disconnect():
+            if drop.text() == "Disconnect":  # a second click confirms
+                drop.setText("Click again to remove")
+                QTimer.singleShot(4000, lambda: drop.setText("Disconnect"))
+                return
+            self.call(f"/api/workspaces/{w['slug']}/disconnect", {}, lambda _: (self.toast(f"{w['name']} disconnected"),
+                                                                                self.load_connections()))
+        drop = button("Disconnect", disconnect)
+        row.addWidget(drop)
+        lay.addLayout(row)
+        return box
 
     def connect_ws(self, w):
         self.toast(f"Opening the {w['name']} sign-in…")

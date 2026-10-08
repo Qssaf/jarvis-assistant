@@ -182,6 +182,24 @@ def sync_autostart(enabled):
     system.set_autostart(enabled, command)
 
 
+# ---------------------------------------------------------------- what Jarvis may do with each connected account
+CONNECTOR_MODES = ("ask", "full", "read_only", "paused")  # ask: confirm before changes (the default)
+CONNECTORS_FILE = os.path.join(CONFIG, "connectors.json")
+
+
+def connector_modes():
+    return read_json(CONNECTORS_FILE, {})
+
+
+def set_connector_mode(slug, mode):
+    if mode not in CONNECTOR_MODES:
+        raise ValueError(f"mode must be one of {', '.join(CONNECTOR_MODES)}")
+    with _lock:
+        modes = connector_modes()
+        modes.pop(slug, None) if mode == "ask" else modes.update({slug: mode})
+        write_json(CONNECTORS_FILE, modes)
+
+
 # ---------------------------------------------------------------- plugins (MCP servers)
 PLUGINS_FILE = os.path.join(CONFIG, "plugins.json")
 

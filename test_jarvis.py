@@ -225,6 +225,30 @@ open(os.path.join(t, "notes.txt"), "w").write("buy milk")
 open(os.path.join(t, "blob.bin"), "wb").write(b"\0\1\2" * 100)
 assert brain.tool_read_file(os.path.join(t, "notes.txt"))["text"] == "buy milk"
 assert sorted(brain.tool_read_file(t)["folder"]) == ["blob.bin", "notes.txt"] and "error" in brain.tool_read_file(os.path.join(t, "blob.bin"))
+# account permissions: reads vs changes, paused and read-only accounts refused before anything is sent
+assert brain.toolkit_of("GOOGLE_CLASSROOM_COURSES_LIST") == "google_classroom" and brain.toolkit_of("GMAIL_SEND_EMAIL") == "gmail"
+assert all(map(brain.is_read_action, ["GMAIL_FETCH_EMAILS", "GOOGLECALENDAR_EVENTS_LIST", "GITHUB_GET_THE_AUTHENTICATED_USER",
+                                      "GOOGLE_CLASSROOM_COURSE_WORK_LIST", "TRELLO_GET_SEARCH"]))
+assert not any(map(brain.is_read_action, ["GMAIL_SEND_EMAIL", "SLACK_ADD_TO_LIST", "GOOGLETASKS_INSERT_TASK", "GMAIL_REPLY_TO_THREAD",
+                                          "NOTION_SOMETHING_UNKNOWN"]))
+store.set_connector_mode("gmail", "read_only"); store.set_connector_mode("github", "paused"); store.set_connector_mode("trello", "full")
+assert brain.account_block("GMAIL_FETCH_EMAILS") is None and "read-only" in brain.account_block("GMAIL_SEND_EMAIL")
+assert "paused" in brain.account_block("GITHUB_LIST_NOTIFICATIONS") and brain.account_block("SLACK_SEND_MESSAGE") is None
+assert "trello: full access" in brain.account_policy() and "github: paused" in brain.account_policy()
+b = brain.Brain.__new__(brain.Brain)
+b.plugins = {}  # (any real call would fail on this: nothing may reach Composio)
+b.app_tools = {"GMAIL_SEND_EMAIL": {}, "GMAIL_FETCH_EMAILS": {}, "GITHUB_LIST_NOTIFICATIONS": {}}
+assert list(b.active_app_tools()) == ["GMAIL_FETCH_EMAILS"] and "error" in b.run_app_tool("GMAIL_SEND_EMAIL", {})
+srv = types.SimpleNamespace(call=lambda *a: 1 / 0)
+b.tool_owner = {"COMPOSIO_MULTI_EXECUTE_TOOL": (srv, "COMPOSIO_MULTI_EXECUTE_TOOL")}
+assert "paused" in b._run_tool("COMPOSIO_MULTI_EXECUTE_TOOL", {"tools": [{"tool_slug": "GITHUB_CREATE_AN_ISSUE"}]})[0]["error"]
+try:
+    store.set_connector_mode("gmail", "yolo"); raise AssertionError("bad mode accepted")
+except ValueError:
+    pass
+store.set_connector_mode("gmail", "ask")
+assert "gmail" not in store.connector_modes()
+
 # the prompts describe this computer, and nothing personal or private ships
 prompt = brain.Brain._system(None)
 assert "{SYSTEM}" not in prompt and ("Windows" in prompt or "Linux" in prompt)

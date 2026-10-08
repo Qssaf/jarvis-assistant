@@ -86,7 +86,7 @@ VOICE_RESULT_LIMIT = 12000  # characters of one tool result the voice model gets
 # tools the voice model runs itself (no screen involved); the agent handles everything else
 LIVE_TOOLS = ["run_command", "web_search", "read_webpage", "youtube_search", "open_url", "remember", "forget", "set_reminder", "list_reminders",
               "cancel_reminder", "list_windows", "focus_window", "close_window", "act", "look", "ui_controls", "make_image",
-              "show_image", "read_file", "briefing"]
+              "show_image", "read_file", "briefing", "account_settings"]
 
 # ---------------------------------------------------------------- app events
 clients: list[queue.Queue] = []
@@ -102,7 +102,8 @@ TOOL_LABELS = {"run_command": "Running a command", "web_search": "Searching the 
                "look": "Looking at the screen", "list_windows": "Checking windows", "focus_window": "Switching windows",
                "close_window": "Closing a window", "forget": "Forgetting", "list_reminders": "Checking reminders",
                "cancel_reminder": "Cancelling a reminder", "make_image": "Making a picture", "show_image": "Showing a picture",
-               "read_file": "Reading a file", "briefing": "Preparing your briefing"}
+               "read_file": "Reading a file", "briefing": "Preparing your briefing",
+               "account_settings": "Changing account settings"}
 
 
 def tool_label(name):
@@ -358,12 +359,14 @@ class Live:
                 desc, schema = VOICE_ACT, {"type": "object", "required": ["steps"], "properties": {
                     "steps": {"type": "array", "items": {"type": "object", "properties": steps}}}}
             decls.append(t.FunctionDeclaration(name=name, description=desc, parameters_json_schema=schema))
-        for slug, tool in ({} if self.skip_app_tools else self.brain.app_tools).items():  # direct account tools for connected apps
+        for slug, tool in ({} if self.skip_app_tools else self.brain.active_app_tools()).items():  # direct account tools for connected apps
             decls.append(t.FunctionDeclaration(name=slug, description=tool["description"], parameters_json_schema=tool["schema"]))
         return [t.Tool(function_declarations=decls)]  # (Google Search grounding needs a paid key)
 
     def _abilities(self):
         """What Jarvis is connected to right now, so it never denies (or invents) a capability."""
+        import brain as brain_mod
+
         def named(slugs):  # "github (octocat)": the account itself, so "what's my username?" needs no tool
             return ", ".join(f"{s} ({self.brain.accounts[s]})" if self.brain.accounts.get(s) else s for s in slugs)
         apps = named(sorted(self.brain.app_tools_for)) or "none"
@@ -377,7 +380,8 @@ class Live:
                 + (f" Also connected (use do_task for these): {others}." if others else "")
                 + " Others (Slack, Notion, Google Tasks, Drive, YouTube, WhatsApp...) can be connected in Jarvis's Connections "
                 "page, or ask do_task to connect them.\n"
-                f"- Plugins (MCP servers): {', '.join(plugins) or 'none'}; more can be added in Jarvis's Plugins page.\n"
+                + (f"- {brain_mod.account_policy()}\n" if brain_mod.account_policy() else "")
+                + f"- Plugins (MCP servers): {', '.join(plugins) or 'none'}; more can be added in Jarvis's Plugins page.\n"
                 "- A background agent (do_task) for long jobs. You run on Google Gemini; the user built and develops you.")
 
     def _config(self):
@@ -571,7 +575,7 @@ class Live:
             if any("click" in step for step in args.get("steps") or []):
                 return {"error": "nothing was done: you can't see the screen, so positions are guesses. Use click_on with a description."}
             args = {**args, "screenshot_after": False}  # (it couldn't see that screenshot either: saves a second per act)
-        if fc.name in LIVE_TOOLS or fc.name in self.brain.app_tools:  # quick tools: run them right here
+        if fc.name in LIVE_TOOLS or fc.name in self.brain.app_tools:  # quick tools (paused accounts are refused inside): run them right here
             emit("tool", name=fc.name)
             t = time.time()
             try:  # never let a stuck tool freeze the conversation (images aren't usable here: look returns text)
@@ -953,6 +957,13 @@ def api_post(path, data, live, brain):
             del plugins[m[1]]
         store.save_plugins(plugins)
         brain.load_plugins()
+    elif m := re.fullmatch(r"/api/workspaces/([\w-]+)/mode", path):
+        import brain as brain_mod
+        if m[1] not in dict(brain_mod.WORKSPACES):
+            raise KeyError(m[1])
+        store.set_connector_mode(m[1], str(data.get("mode", "")))
+    elif m := re.fullmatch(r"/api/workspaces/([\w-]+)/disconnect", path):
+        return {"removed": brain.disconnect_workspace(m[1])}
     elif m := re.fullmatch(r"/api/workspaces/([\w-]+)/connect", path):
         url = brain.connect_workspace(m[1])
         system.open_target(url)
