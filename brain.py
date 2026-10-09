@@ -70,7 +70,7 @@ def reply_parts(response):
 
 
 # ---------------------------------------------------------------- Gemini via your AI Studio key
-READ_TIMEOUT = {"high": 90, "medium": 45}  # seconds a reply may take: deep thinking is slow, not stuck
+READ_TIMEOUT = {"high": 90, "medium": 45, "low": 20, "minimal": 15}  # seconds a reply may take: deep thinking is slow, not stuck
 
 
 class AIStudio:
@@ -236,14 +236,17 @@ def to_pixels(x, y):
     return round(min(max(x, 0), 1000) / 1000 * (w - 1)), round(min(max(y, 0), 1000) / 1000 * (h - 1))
 
 
-def tool_click(x, y, button="left", double=False):
-    px, py = to_pixels(x, y)
-    hide_overlays()
-    problem = system.move_pointer(px, py)
-    if problem:
-        return input_result("", f"couldn't move the pointer to {px},{py}: {problem}")
+def tool_click(x=None, y=None, button="left", double=False):
     button = button if button in ("left", "middle", "right") else "left"
-    return input_result(f"{'double-' if double else ''}clicked {button} at pixel {px},{py}", system.click(button, double))
+    if x is not None and y is not None:
+        px, py = to_pixels(x, y)
+        hide_overlays()
+        problem = system.move_pointer(px, py)
+        if problem:
+            return input_result("", f"couldn't move the pointer to {px},{py}: {problem}")
+        return input_result(f"{'double-' if double else ''}clicked {button} at pixel {px},{py}", system.click(button, double))
+    hide_overlays()
+    return input_result(f"{'double-' if double else ''}clicked {button}", system.click(button, double))
 
 
 def input_result(done, out):
@@ -291,6 +294,17 @@ def a11y_wait(app):
     return 3 if app == last_app[0] and time.time() - last_app[1] < 20 else 0
 
 
+_interrupted = threading.Event()
+
+
+def interrupt_act():
+    _interrupted.set()
+
+
+def reset_interrupt_act():
+    _interrupted.clear()
+
+
 def tool_ui_controls(app=""):
     app = app or active_app()
     return a11y.ask({"cmd": "controls", "app": app, "wait": a11y_wait(app)})
@@ -300,6 +314,9 @@ def tool_act(steps, screenshot_after=True, fast=False):
     """Several screen actions from one plan, in order, then a fresh screenshot."""
     done, captured = [], None
     for i, step in enumerate(steps):
+        if _interrupted.is_set():
+            out = {"error": "interrupted", "done": done}
+            return (out, tool_screenshot()[1]) if screenshot_after else out
         if "launch" in step:
             r = tool_launch(step["launch"], step.get("wait", 8), screenshot=False)
             seen = {} if "error" in r else a11y.ask({"cmd": "controls", "app": last_app[0], "wait": 1}, timeout=5)  # for the next step
@@ -344,8 +361,11 @@ def tool_act(steps, screenshot_after=True, fast=False):
         elif "close" in step:
             r = tool_close_window(step["close"])
         elif "click" in step:
-            x, y = step["click"]
+            val = step["click"]
+            x, y = (val[0], val[1]) if isinstance(val, (list, tuple)) and len(val) >= 2 else (None, None)
             r = tool_click(x, y, step.get("button", "left"), step.get("double", False))
+        elif "button" in step and not step.get("click_on"):
+            r = tool_click(button=step["button"], double=step.get("double", False))
         elif "type" in step:
             r = tool_type_text(step["type"])
         elif "keys" in step:
@@ -762,7 +782,8 @@ TOOLS = {
             "(check the screen: the steps after it only run if it's so), {click_on: 'the Send button'} (find "
             "something by description and click it: for web pages and apps without named controls), {screenshot: true} "
             "(capture at this point, e.g. to read a result before closing), {close: 'kcalc'}, {click: [x, y]} (0-1000 grid of "
-            "the latest screenshot; optional button, double), {type: 'text'}, {keys: 'ctrl+t'}, {scroll: 3}, {wait: seconds}."
+            "the latest screenshot; optional button, double), {button: 'left'} (click right where mouse is), {type: 'text'}, {keys: 'ctrl+t'}, "
+            "{scroll: 3} (positive = down, negative = up), {wait: seconds}."
             ).replace("kcalc", system.CALC),
             obj(steps={"type": "array", "items": {"type": "object", "properties": {
                 "launch": {"type": "string"}, "press": {"type": "array", "items": {"type": "string"}}, "app": {"type": "string"},
@@ -772,7 +793,7 @@ TOOLS = {
                 "close": {"type": "string"},
                 "click": {"type": "array", "items": {"type": "integer"}}, "button": {"type": "string", "enum": ["left", "right", "middle"]},
                 "double": {"type": "boolean"}, "type": {"type": "string"}, "keys": {"type": "string"},
-                "scroll": {"type": "integer"}, "wait": {"type": "number"}}}},
+                "scroll": {"type": "integer", "description": "positive scrolls down (newer), negative scrolls up (older)"}, "wait": {"type": "number"}}}},
                 screenshot_after={"type": "boolean"}, optional=("screenshot_after",))),
     "look": (tool_look, "Look at the screen and answer a question about it (what's open, text, a result, where something is). "
              "Fast, returns text.", obj(question={"type": "string"})),
@@ -1244,7 +1265,6 @@ APP_TOOLS = {
                          "GOOGLE_CLASSROOM_COURSE_WORK_STUDENT_SUBMISSIONS_LIST"],
     "github": ["GITHUB_GET_THE_AUTHENTICATED_USER", "GITHUB_LIST_NOTIFICATIONS", "GITHUB_LIST_REPOSITORIES_FOR_THE_AUTHENTICATED_USER", "GITHUB_SEARCH_ISSUES_AND_PULL_REQUESTS"],
     "trello": ["TRELLO_GET_MEMBERS_BOARDS_BY_ID_MEMBER", "TRELLO_GET_BOARDS_CARDS_BY_ID_BOARD", "TRELLO_GET_SEARCH"],
-    "discord": ["DISCORD_LIST_MY_GUILDS", "DISCORD_GET_MY_USER"],  # (Discord never lets apps read or send a user's messages)
 }
 
 WORKSPACES = [  # Composio toolkits shown on the Connections page
@@ -1690,6 +1710,7 @@ class Brain:
 
     def ask(self, text, on_tool=lambda name: None, on_thought=None):
         self.cancel.clear()
+        reset_interrupt_act()
         msgs = self.contents  # reset() swaps in a new list; this turn keeps writing to its own
         start = len(msgs)
         msgs.append({"role": "user", "parts": [{"text": f"[{time.strftime('%A %d %B %Y, %H:%M')}] {text}"}]})
@@ -1752,9 +1773,17 @@ class Brain:
 
     def interrupt(self):
         self.cancel.set()
+        interrupt_act()
+
+    def interrupt_act(self):
+        interrupt_act()
+
+    def reset_interrupt_act(self):
+        reset_interrupt_act()
 
     def reset(self):
         self.cancel.set()
+        interrupt_act()
         self.contents = []
 
 

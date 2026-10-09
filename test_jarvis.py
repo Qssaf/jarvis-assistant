@@ -189,6 +189,13 @@ brain.pointer[0] = None
 import asyncio
 refused = asyncio.run(live._tool(types.SimpleNamespace(name="act", args={"steps": [{"type": "hi"}, {"click": [500, 500]}]})))
 assert "click_on" in refused["error"]
+# clicking where the mouse is (button without coordinates) works in-place
+clicked = []
+real_click = system.click
+system.click = lambda btn, dbl=False: clicked.append((btn, dbl)) or ""
+accepted = brain.tool_act([{"button": "left"}], screenshot_after=False)
+assert accepted["result"] == ["clicked left"] and clicked == [("left", False)]
+system.click = real_click
 
 # one voice session at a time, even when "Hey Jarvis" and a reminder arrive together right after startup
 import threading
@@ -486,4 +493,57 @@ while time.time() < end:
     qt.processEvents()
     time.sleep(0.02)
 assert not warnings, warnings
+
+# quick tools: silent responses to prevent duplicate replies, interruptions, and superseded turns
+sent_responses = []
+class FakeSession:
+    async def send_tool_response(self, **kwargs):
+        sent_responses.append(kwargs["function_responses"])
+
+fake_session = FakeSession()
+live.quick_tasks = set()
+live.quick_gen = 1
+live.stopped = False
+live.user_spoke_at = live.interrupted_at = live.gemini_spoke_at = 0.0
+live.running = 0
+live.t = genai.types
+live.brain = brain.Brain.__new__(brain.Brain)
+live.brain.cancel = threading.Event()
+live._tool = lambda fc: asyncio.sleep(0.001, result={"result": "ok"})
+
+# 1. query tool with no prior speech -> scheduling is None (speaks answer)
+sent_responses.clear()
+asyncio.run(live._quick(fake_session, [types.SimpleNamespace(name="look", id="1", args={})], gen=1, spoke_before=False))
+assert sent_responses[0][0].scheduling is None
+
+# 2. action tool where model already spoke -> scheduling is SILENT (no double reply)
+sent_responses.clear()
+asyncio.run(live._quick(fake_session, [types.SimpleNamespace(name="act", id="2", args={})], gen=1, spoke_before=True))
+assert sent_responses[0][0].scheduling == "SILENT"
+
+# 3. user spoke while tool was running -> scheduling is SILENT
+sent_responses.clear()
+live.user_spoke_at = time.time() + 10.0
+asyncio.run(live._quick(fake_session, [types.SimpleNamespace(name="look", id="3", args={})], gen=1, spoke_before=False))
+assert sent_responses[0][0].scheduling == "SILENT"
+live.user_spoke_at = 0.0
+
+# 4. superseded tool call -> scheduling is SILENT
+sent_responses.clear()
+live.quick_gen = 2
+asyncio.run(live._quick(fake_session, [types.SimpleNamespace(name="look", id="4", args={})], gen=1, spoke_before=False))
+assert sent_responses[0][0].scheduling == "SILENT"
+live.quick_gen = 1
+
+# 5. stop_listening is always SILENT
+sent_responses.clear()
+asyncio.run(live._quick(fake_session, [types.SimpleNamespace(name="stop_listening", id="5", args={})], gen=1, spoke_before=False))
+assert sent_responses[0][0].scheduling == "SILENT"
+
+# 6. act immediately aborts when interrupted
+brain.interrupt_act()
+res = brain.tool_act([{"wait": 5}], screenshot_after=False)
+assert res["error"] == "interrupted"
+brain.reset_interrupt_act()
+
 print("ok")
