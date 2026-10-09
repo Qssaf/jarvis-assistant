@@ -46,7 +46,7 @@ app with a notch at the top of the screen and a native dashboard window.
   its tools.
 
 ### The window
-A native Qt app. **Home** is the conversation under the animated arc reactor, with a **Today** column: now playing,
+Qt Quick, drawn on the GPU. **Home** is the conversation under the animated arc reactor, with a **Today** column: now playing,
 weather, what's next and system load. Other pages: **Chats** (saved and searchable), **Activity**, **Accounts**,
 **Plugins**, **Memory** and **Settings**. Press **Ctrl+K** to jump anywhere or ask anything.
 
@@ -168,7 +168,7 @@ Then write `mine some-model low` in **Settings → Agent models**.
 jarvis.py        tray app, wake word, Gemini Live session, notch, local API
 brain.py         the agent: models, tools, accounts (Composio), plugins (MCP), Photopea
 system.py        everything OS-specific: audio, screenshots, input, windows, apps, notifications
-window.py        the native app window      icons.py   its line icons
+window.py        the window's bridge to Python, its icons   qml/  the window (Qt Quick)   assets/  its font
 store.py         settings, plugins, memory, reminders and sessions on disk
 atspi_helper.py  presses app controls by name on Linux (runs under the system Python)
 jarvis-shot.c    the fast KDE screenshot helper (built by install.sh)

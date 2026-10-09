@@ -123,7 +123,7 @@ import collections, types
 import numpy as np
 import jarvis
 live = jarvis.Live.__new__(jarvis.Live)
-live.mic, live.session, live.floor, live.voice_at = True, None, 100.0, 0.0
+live.mic, live.session, live.floor, live.voice_at, live.level = True, None, 100.0, 0.0, 0.0
 live.speaker, live.backlog = jarvis.Speaker(), collections.deque(maxlen=125)  # the real one: a fake hid a renamed attribute
 frame = lambda rms: (np.random.default_rng(1).normal(0, rms, 1280)).astype(np.int16)
 for _ in range(50):
@@ -426,4 +426,64 @@ assert "{SYSTEM}" not in prompt and ("Windows" in prompt or "Linux" in prompt)
 assert "{SYSTEM}" not in jarvis.LIVE_PROMPT.replace("{SYSTEM}", system.describe())
 assert "kcalc" not in jarvis.VOICE_ACT or system.CALC == "kcalc"
 assert list(brain.BACKENDS)[0] == "aistudio"
+# the web guard: every fetch (Larry's own and the headless browser's) refuses this PC and the local network, redirects included
+import http.server
+class Local(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200); self.end_headers(); self.wfile.write(b"LOCAL SECRET")
+    def log_message(self, *a):
+        pass
+local = http.server.HTTPServer(("127.0.0.1", 0), Local)
+threading.Thread(target=local.serve_forever, daemon=True).start()
+guard = brain.guard_proxy()
+sess = brain.requests.Session(); sess.trust_env = False
+assert sess.get(f"http://127.0.0.1:{local.server_port}/", proxies={"http": guard, "https": guard}, timeout=5).status_code == 403
+assert "error" in brain.tool_read_webpage(f"http://127.0.0.1:{local.server_port}/") and "error" in brain.tool_show_image("http://[::1]/x.png")
+local.shutdown()
+
+# a model can make an account stricter but never looser or disconnect it (that's for the user, on the Accounts page)
+b = brain.Brain.__new__(brain.Brain)
+b.connected = set()
+store.set_connector_mode("gmail", "read_only")
+assert "error" in b.account_settings("gmail", mode="full") and "error" in b.account_settings("gmail", action="disconnect")
+assert store.connector_modes()["gmail"] == "read_only" and "result" in b.account_settings("gmail", mode="paused")
+store.set_connector_mode("gmail", "ask")
+
+# weather needs no model or search: a place name in, today and the next days out
+real_get = brain.requests.get
+brain.requests.get = lambda url, **k: types.SimpleNamespace(ok=True, text="", json=lambda: (
+    {"results": [{"name": "Rome", "country": "Italy", "latitude": 41.9, "longitude": 12.5}]} if "geocoding" in url else
+    {"current": {"time": "2026-10-09T10:00", "weather_code": 3, "temperature_2m": 18.4, "apparent_temperature": 17, "relative_humidity_2m": 60,
+                 "wind_speed_10m": 9}, "daily": {"weather_code": [61, 3, 0], "temperature_2m_max": [20, 21, 22], "temperature_2m_min": [12, 13, 14],
+                 "precipitation_probability_max": [40, 10, None], "sunrise": ["2026-10-09T06:50"] * 3, "sunset": ["2026-10-09T18:10"] * 3}}))
+w = brain.tool_weather("Rome")
+assert w["place"] == "Rome, Italy" and w["now"].startswith("overcast, 18") and w["forecast"][0].startswith("today: light rain") and "0% chance" in w["forecast"][2]
+brain.requests.get = real_get
+
+# the window: line icons draw, and every page loads against the real API without a single QML warning
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
+from PySide6.QtCore import QtMsgType, qInstallMessageHandler
+from PySide6.QtGui import QColor
+from PySide6.QtQuick import QQuickWindow
+from PySide6.QtWidgets import QApplication
+QQuickWindow.setDefaultAlphaBuffer(True)
+qt = QApplication([])
+import window
+pix = window.icon_pixmap("home", QColor("#9c9ab0"), 48).toImage()
+assert any(pix.pixelColor(x, y).alpha() > 0 for x in range(48) for y in range(48)), "the line icons came out empty"
+warnings = []
+qInstallMessageHandler(lambda kind, ctx, msg: warnings.append(msg) if kind != QtMsgType.QtDebugMsg and "portal" not in msg else None)
+stub = types.SimpleNamespace(plugin_status=lambda: [], workspaces=lambda: [], app_tools={})
+live.mic = False
+win = window.Window(get=lambda path: jarvis.api_get(path, stub), post=lambda path, data: {"ok": True}, tool_label=jarvis.tool_label,
+                    live=live, shown_state=jarvis.shown_state, version="test", show=True)
+root = win.engine.rootObjects()[0]
+for page in ("chats", "activity", "accounts", "plugins", "memory", "settings", "home"):
+    root.setProperty("page", page)
+    qt.processEvents()
+end = time.time() + 1.5
+while time.time() < end:
+    qt.processEvents()
+    time.sleep(0.02)
+assert not warnings, warnings
 print("ok")

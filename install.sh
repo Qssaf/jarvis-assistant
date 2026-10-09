@@ -57,7 +57,7 @@ Exec=$DATA/bin/jarvis-shot
 NoDisplay=true
 X-KDE-DBUS-Restricted-Interfaces=org.kde.KWin.ScreenShot2
 EOF
-        kbuildsycoca6 >/dev/null 2>&1 || kbuildsycoca5 >/dev/null 2>&1 || true
+        kbuildsycoca6 --noincremental >/dev/null 2>&1 || kbuildsycoca5 --noincremental >/dev/null 2>&1 || true  # (KWin only trusts the helper once it sees this file)
     else
         echo "(optional) install gcc and glib's development headers, then run this again, for 30 ms screenshots on KDE"
     fi

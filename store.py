@@ -13,7 +13,7 @@ DEFAULT_SETTINGS = {
     "voice": "Charon",
     "live_model": "gemini-3.8-live",
     "follow_up_seconds": 8,
-    "keep_session_seconds": 120,   # after that, the voice session stays connected (mic off) for an instant next "Hey Jarvis"
+    "keep_session_seconds": 300,   # after that, the voice session stays connected (mic off) for an instant next "Hey Jarvis"
     "wake_threshold": 0.5,
     "extra_instructions": "",
     "home_city": "",               # for the weather on the Chat page; empty = guess from your network
@@ -280,6 +280,8 @@ class Sessions:
     """Each conversation is a JSON file: what was said (for the app) plus the agent's own history."""
 
     def __init__(self):
+        os.makedirs(DATA, mode=0o700, exist_ok=True)
+        os.chmod(DATA, 0o700)  # conversations, logs, voice clips and tokens: this user only
         self.dir = os.path.join(DATA, "sessions")
         os.makedirs(self.dir, exist_ok=True)
         self.new()

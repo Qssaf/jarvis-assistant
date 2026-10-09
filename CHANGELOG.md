@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.4.0 — 2026-10-09
+
+### Changed
+- **A new window**, drawn on the GPU with Qt Quick (QML), in Jarvis's cyan and orange: a rounded frameless window with an
+  orb that follows your voice while listening and spins while working, Markdown chat with clickable links and a copy
+  button, a Today column, an Activity page with Jarvis's reply speed, and settings that save as you change them.
+  Shortcuts: Ctrl+N new chat, Ctrl+1/2 Home/Chats, Ctrl+, Settings, Esc stop.
+- Faster: Jarvis starts connecting while you're still saying "Hey Jarvis" (and hangs up if it wasn't a wake-up), keeps the
+  line open five minutes after a conversation, reads the screen for the voice with the quickest model, lists windows in one
+  call (0.6 s instead of 3.3 s) and has a direct `weather` tool (0.7 s instead of a 7 s shell call). The log is timed.
+- New `classroom_due` tool: all courses in one call, with what's been turned in.
+
+### Fixed (security)
+- The page reader could be sent to this PC or the local network after six redirects, by DNS rebinding, or through the
+  headless browser. Every fetch, redirects and the browser's own requests included, now goes through a guard that checks
+  each address once and connects only to public ones.
+- A model (talked into it by an email or web page) could lift an account's Read only / Paused limit or disconnect it.
+  Models can now only make an account stricter; loosening and disconnecting are on the Accounts page.
+- Reminders built from Classroom titles (written by teachers) are read out as quoted text, never as an instruction.
+  `read_file` and `ui_controls` results are marked as outside content, and memory can no longer override the Safety rules.
+- The data folder is always private (0700), and links in the window only open as http, https or mail.
+- Input permission: when the desktop's permission prompt is still unanswered, mouse and keyboard fail fast with a clear
+  message instead of hanging for minutes; a failed screenshot says so.
+- The fast KDE screenshot helper works after install (the desktop's cache is rebuilt in full).
+
 ## 1.3.0 — 2026-10-08
 
 ### Changed

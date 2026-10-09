@@ -141,7 +141,7 @@ def _jpeg(raw, w, h, stride, fmt):
 
 def _from_file(args, suffix=".png"):
     path = os.path.join(tempfile.mkdtemp(prefix="jarvis-"), "screen" + suffix)
-    run(args + [path] if "{}" not in " ".join(args) else [a.replace("{}", path) for a in args], timeout=20)
+    run(args + [path] if "{}" not in " ".join(args) else [a.replace("{}", path) for a in args], timeout=10)
     try:
         from PySide6.QtCore import QBuffer, QByteArray, QIODevice
         from PySide6.QtGui import QImage
@@ -159,6 +159,13 @@ def _from_file(args, suffix=".png"):
 
 def screenshot():
     """A JPEG of the whole screen, by the fastest way this desktop allows."""
+    shot = _screenshot()
+    if not shot:
+        raise RuntimeError("couldn't take a screenshot: no screenshot tool on this desktop answered")
+    return shot
+
+
+def _screenshot():
     if KDE and WAYLAND and os.path.exists(SHOT_HELPER):  # ~30 ms through KWin
         try:
             raw = subprocess.run([SHOT_HELPER], capture_output=True, timeout=5).stdout
@@ -202,9 +209,24 @@ def _wayland_tool():
     return "wdotool" if have("wdotool") else "ydotool" if have("ydotool") else None
 
 
+PERMISSION_PENDING = ("timed out: the desktop is still waiting for the user to allow Larry's input control in its permission "
+                      "prompt (Remote Control)")
+_input_blocked_until = [0.0]  # after a timed-out permission prompt, fail fast for a minute instead of waiting again
+
+
 def _wdo(*args, timeout=15):
+    if time.time() < _input_blocked_until[0]:
+        return PERMISSION_PENDING
     with _input_lock:
-        return run(["wdotool", *map(str, args)], timeout=timeout, env=WDOTOOL_ENV)
+        try:
+            r = subprocess.run(["wdotool", *map(str, args)], capture_output=True, text=True, timeout=timeout, env=WDOTOOL_ENV)
+        except subprocess.TimeoutExpired:
+            _input_blocked_until[0] = time.time() + 60
+            return PERMISSION_PENDING
+        except OSError as e:
+            return str(e)
+    _input_blocked_until[0] = 0.0
+    return (r.stdout + r.stderr).strip()
 
 
 def _pynput_key(name):
@@ -231,7 +253,7 @@ def move_pointer(px, py):
         if _wayland_tool() != "wdotool":
             return "moving the pointer on Wayland needs wdotool"
         for _ in range(3):  # wdotool makes a fresh virtual device per call: the first event is occasionally dropped
-            out = _wdo("mousemove", px, py, timeout=40)
+            out = _wdo("mousemove", px, py, timeout=30)  # (the first call waits while the user answers the permission prompt)
             if out:
                 return out
             at = _wdo("getmouselocation")
@@ -344,8 +366,12 @@ def active_app():
 
 
 def list_windows():
-    if KDE and WAYLAND and have("kdotool"):
-        return [f"{_kdo('getwindowclassname', wid)}: {_kdo('getwindowname', wid)}" for wid in _kdo("search", ".").split()]
+    if KDE and WAYLAND and have("kdotool"):  # one call for all of them (each kdotool call costs ~0.3 s)
+        out = _kdo("search", ".", "getwindowclassname", "%@", "getwindowname", "%@").splitlines()
+        if len(out) % 2 == 0:
+            n = len(out) // 2
+            return [f"{app}: {title}" for app, title in zip(out[:n], out[n:])]
+        return [f"{_kdo('getwindowclassname', wid)}: {_kdo('getwindowname', wid)}" for wid in _kdo("search", ".").split()]  # (a title with a line break)
     if WAYLAND:
         return ["(listing windows isn't possible on this Wayland desktop; look at the screen instead)"]
     import pywinctl

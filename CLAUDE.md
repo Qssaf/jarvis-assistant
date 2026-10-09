@@ -88,8 +88,13 @@ screenshot. The voice model can't see images, so `act` from voice refuses coordi
 `memory.md`, reminders and sessions under `system.CONFIG` / `system.DATA`. Files holding tokens are written with
 `private=True`.
 
-**Window and API.** `window.py` doesn't touch the brain directly. It calls `get(path)`/`post(path, data)`, which map
-to `api_get`/`api_post` in jarvis.py, and receives events through `emit()` → `clients` queues. Over real HTTP,
+**Window and API.** The window is Qt Quick: `window.py` registers a `Backend` QObject as the QML singleton `Jarvis.Backend`
+(`qml/*.qml`, theme tokens in `qml/Theme.qml`). QML calls `Api.get/post` → `Backend.request` (thread pool) → `get(path)`/`post(path,
+data)`, which map to `api_get`/`api_post` in jarvis.py, and events from `emit()` reach it because `Backend` sits in `clients` (it has
+`put()`). Polled values (state, mic level) refresh at 30 fps. QML gotchas: `AbstractButton` has a FINAL `icon` (ours is `symbol`); local
+`Label.qml`/`Page.qml` get shadowed by QtQuick.Controls (ours are `Txt`, `ScrollPage`); `#AARRGGBB` colours; whole-number
+`pixelSize`; QtSvg only reads `#rrggbb`. Never start apps on a private `dbus-run-session` here: its AT-SPI launcher takes over the
+session's accessibility socket. Web fetches (`fetch`, the headless browser, `show_image`) go through the `Guard` proxy in brain.py. Over real HTTP,
 `serve_app` only accepts `/api/listen` and `/api/show`, and only with the per-run token and a matching Host header.
 
 **Backends.** `AIStudio` (Gemini's native API) plus `OpenAICompatible` for every provider in `brain.providers()`
