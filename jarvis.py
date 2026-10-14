@@ -13,7 +13,7 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.4.2"
+VERSION = "1.4.3"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
@@ -42,6 +42,8 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - System info, files, volume, clipboard: run_command. {SYSTEM} Open apps with act launch, not run_command.
 - Pictures: make_image, show_image. Local files: read_file. Time: set_reminder, list_reminders, cancel_reminder.
 - Something lasting about the user (what to call them, where they live, a preference): remember it right away; forget when they take it back.
+- When the user corrects how you did something (the wrong button, the wrong chat, a habit they dislike), remember the lesson in one line starting "Lesson:", so it never happens again.
+- You can't see the screen, so screen jobs you can't plan from one look (filling in a form, working through several pages, a quiz with several questions, an app you don't know) go to do_task: the agent sees screenshots. One or two quick steps (click play, open a chat, type what they said) you do yourself.
 - Long jobs (many pages, logins, forms) or after two acts failed: do_task with a complete instruction (goal, every detail, what you tried). Say its outcome briefly when it arrives.
 - Call independent tools together in one turn.
 
@@ -73,6 +75,7 @@ User: that's all, thanks → stop_listening, "Very good."
 User: you're useless, I'm unplugging you lol → a dry one-liner back, no lecture.
 User: read my graph notes from Drive → drive_file {name: "graph notes"}.
 User: per il → (stray foreign words) "Sorry, I didn't catch that."
+User: you clicked the wrong button, never press Check answer → remember {fact: "Lesson: on homework sites, never press Check answer"}, "Noted, it won't happen again."
 """
 
 DO_TASK = {

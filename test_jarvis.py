@@ -91,6 +91,8 @@ tmp = tempfile.mkdtemp()
 store.MEMORY_FILE, store.REMINDERS_FILE = f"{tmp}/memory.md", f"{tmp}/reminders.json"
 store.remember("likes tea"); store.remember("exam on June 5")
 assert store.forget("TEA") == 1 and "June 5" in store.memory() and "tea" not in store.memory()
+store.remember("Exam  on June 5")  # a fact said twice (or a lesson learnt twice) is kept once
+assert store.memory().lower().count("exam on june 5") == 1, store.memory()
 store.add_reminder(100, "past"); store.add_reminder(10**12, "future")
 assert [r["text"] for r in store.pop_due(now=200)] == ["past"] and [r["text"] for r in store.reminders()] == ["future"]
 

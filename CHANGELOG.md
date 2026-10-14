@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.4.3 — 2026-10-14
+
+### Changed
+- **A new agent prompt**, chosen by testing: four versions ran 15 whole tasks from real conversations against simulated
+  tools and screens (marking 260 emails read through a rate limit, Classroom announcements, Drive notes, sending a
+  dictated Discord message to the right one of two similar names, a misheard name, "reply to him" without words, a
+  homework question, a prompt injection in an email, an unconnected account, deleting mail). The winner, with worked
+  examples, passed all of them in half the time of the old one, which asked before sending dictated messages and went
+  looking on screen for apps that weren't connected.
+- Jarvis learns from corrections: "never press Check answer" is saved as a one-line lesson in memory that every later
+  conversation reads. A fact remembered twice is kept once.
+- The voice hands screen jobs it can't plan from one look (forms, several pages, multi-question quizzes, unknown apps)
+  to the agent, which sees screenshots, and keeps one- or two-step clicks for itself.
+- The voice prompt was checked on the real Gemini Live model with spoken requests: 25 of 25 (1.4.1's prompt: 22).
+
 ## 1.4.2 — 2026-10-14
 
 ### Changed

@@ -126,7 +126,7 @@ def set_memory(text):
 
 def remember(fact):
     fact = " ".join(fact.split())
-    if fact:
+    if fact and f"- {fact}".lower() not in (l.strip().lower() for l in memory().splitlines()):  # (said twice: kept once)
         set_memory(f"{memory()}\n- {fact}")
     return fact
 

@@ -916,7 +916,8 @@ def tool_forget(text):
 
 TOOLS.update({
     "remember": (tool_remember, "Save a lasting fact about the user or their preferences (when they say 'remember...'), or a "
-                 "name you misheard and were corrected on (a friend, a chat, an app), spelled as on screen.", obj(fact={"type": "string"})),
+                 "name you misheard and were corrected on (a friend, a chat, an app), spelled as on screen, or a lesson when the user corrects "
+                 "how you did something (\"Lesson: on homework sites, never press Check answer\").", obj(fact={"type": "string"})),
     "forget": (tool_forget, "Delete remembered notes that contain this text.", obj(text={"type": "string"})),
     "set_reminder": (tool_set_reminder, "Remind the user later (desktop notification + spoken). Give in_minutes, or at as local 'YYYY-MM-DD HH:MM' or 'HH:MM'.",
                      obj(text={"type": "string"}, in_minutes={"type": "number"}, at={"type": "string"}, optional=("in_minutes", "at"))),
