@@ -340,13 +340,15 @@ def tool_ui_controls(app=""):
     return a11y.ask({"cmd": "controls", "app": app, "wait": a11y_wait(app)})
 
 
-def tool_act(steps, screenshot_after=True, fast=False):
-    """Several screen actions from one plan, in order, then a fresh screenshot."""
+def tool_act(steps, screenshot_after=True, fast=False, halt=None):
+    """Several screen actions from one plan, in order, then a fresh screenshot. halt: the voice's own stop signal for this
+    plan; the agent's plans stop on interrupt_act instead, so cutting the voice off never stops the agent's work."""
     done, captured, sent = [], None, False
+    stopped = (halt or _interrupted).is_set
     for i, step in enumerate(steps):
         if step.get("type") in step and step["type"] != "type":  # {type: "keys", keys: "Return"}: a label, not text to type
             step = {k: v for k, v in step.items() if k != "type"}
-        if _interrupted.is_set():
+        if stopped():
             out = {"error": "interrupted", "done": done}
             return (out, tool_screenshot()[1]) if screenshot_after else out
         if "launch" in step:
@@ -510,11 +512,13 @@ def tool_list_windows():
 
 
 def tool_focus_window(name):
-    return {"result": system.focus_window(name) or f"focused {name}"}
+    problem = system.focus_window(name)
+    return {"error": problem} if problem else {"result": f"focused {name}"}
 
 
 def tool_close_window(name):
-    return {"result": system.close_window(name) or f"closed {name}"}
+    problem = system.close_window(name)
+    return {"error": problem} if problem else {"result": f"closed {name}"}
 
 
 def tool_run_command(command, timeout=30):
@@ -1643,19 +1647,18 @@ class Brain:
         if "googledrive" not in self.connected:
             return {"error": "Google Drive isn't connected (Jarvis's Accounts page)"}
         name = name.strip()
-        if re.fullmatch(r"[\w-]{25,}", name):  # already an id
-            files = [{"id": name, "name": name, "mimeType": ""}]
-        else:
-            q = name.replace("\\", "").replace("'", "\\'")
-            found = self.app_data("GOOGLEDRIVE_FIND_FILE", {
-                "q": f"name contains '{q}' and trashed = false and mimeType != 'application/vnd.google-apps.folder'",
-                "fields": "files(id,name,mimeType,modifiedTime)", "orderBy": "modifiedTime desc", "pageSize": 10})
-            if found is None:
-                return {"error": "couldn't reach Google Drive"}
-            files = found.get("files") or []
-            if not files:
-                return {"error": f"no Drive file with '{name}' in its name"}
-            files.sort(key=lambda f: os.path.splitext(f["name"])[0].lower() != name.lower())  # an exact name first, else newest
+        q = name.replace("\\", "").replace("'", "\\'")
+        found = self.app_data("GOOGLEDRIVE_FIND_FILE", {
+            "q": f"name contains '{q}' and trashed = false and mimeType != 'application/vnd.google-apps.folder'",
+            "fields": "files(id,name,mimeType,modifiedTime)", "orderBy": "modifiedTime desc", "pageSize": 10})
+        if found is None:
+            return {"error": "couldn't reach Google Drive"}
+        files = found.get("files") or []
+        files.sort(key=lambda f: os.path.splitext(f["name"])[0].lower() != name.lower())  # an exact name first, else newest
+        if not files and re.fullmatch(r"[\w-]{25,}", name):  # no file by that name: it may be an id (names come first:
+            files = [{"id": name, "name": name, "mimeType": ""}]  # "Lab_Report_Final_Version_2" looks like one too)
+        if not files:
+            return {"error": f"no Drive file with '{name}' in its name"}
         f = files[0]
         export = self.DRIVE_EXPORTS.get(f.get("mimeType", ""))
         data = self.app_data("GOOGLEDRIVE_DOWNLOAD_FILE", {"fileId": f["id"], **({"mime_type": export[0]} if export else {})})
@@ -1848,10 +1851,17 @@ class Brain:
 
     def _generate(self, contents, entries=None, **kw):
         entries, why = entries or chain(), []
+        # every one marked down (a network blip marks them all at once): a "not answering" mark is only a guess, so the
+        # first such model is tried anyway rather than refusing everything until a probe gets through (minutes); one try,
+        # so a network that's really down doesn't cost a timeout per model; rate limits are always kept
+        anyway = all(time.time() < self.down_until.get(e, 0) for e in entries)
         for entry in entries:
             backend, model, thinking = entry
             be, problem = self.backend(backend)
-            if not be or time.time() < self.down_until.get(entry, 0):
+            down = self.down_until.get(entry, 0)
+            if be and anyway and down == float("inf"):
+                anyway = False
+            elif not be or time.time() < down:
                 why.append(f"{backend}: {problem}" if problem else f"{backend}/{model}: busy")  # (a missing key: once)
                 continue
             t = time.time()
@@ -1872,7 +1882,10 @@ class Brain:
         if getattr(e, "retry_after", None):  # rate limit: skip it for a bit
             self.down_until[entry] = time.time() + e.retry_after
             return
+        probing = self.down_until.get(entry) == float("inf")  # (tried anyway while down: its probe is already running)
         self.down_until[entry] = float("inf")  # otherwise skip it until a background probe gets an answer
+        if probing:
+            return
         backend, model, thinking = entry
         if is_main:
             self.notify(f"{model} via {backend} isn't answering; using backup models until it's back.")
@@ -1956,12 +1969,6 @@ class Brain:
     def interrupt(self):
         self.cancel.set()
         interrupt_act()
-
-    def interrupt_act(self):
-        interrupt_act()
-
-    def reset_interrupt_act(self):
-        reset_interrupt_act()
 
     def reset(self):
         self.cancel.set()

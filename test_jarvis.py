@@ -633,7 +633,7 @@ class FakeSession:
         sent_responses.append(kwargs["function_responses"])
 
 fake_session = FakeSession()
-live.quick_tasks = set()
+live.quick_tasks = {}
 live.quick_gen = 1
 live.stopped = False
 live.user_spoke_at = live.interrupted_at = live.gemini_spoke_at = 0.0
@@ -641,7 +641,7 @@ live.running = 0
 live.t = genai.types
 live.brain = brain.Brain.__new__(brain.Brain)
 live.brain.cancel = threading.Event()
-live._tool = lambda fc: asyncio.sleep(0.001, result={"result": "ok"})
+live._tool = lambda fc, halt=None: asyncio.sleep(0.001, result={"result": "ok"})
 
 # 1. query tool with no prior speech -> scheduling is None (speaks answer)
 sent_responses.clear()
@@ -681,5 +681,144 @@ brain.interrupt_act()
 res = brain.tool_act([{"wait": 5}], screenshot_after=False)
 assert res["error"] == "interrupted"
 brain.reset_interrupt_act()
+
+
+# a newer voice call replacing one mid-act stops only the old act: the old call's cancel never reaches the new one
+# (it did: "act 2.1s (voice) error: interrupted" right after "just type the message")
+del live._tool  # the real one, which hands each act its own halt
+live.brain = brain.Brain.__new__(brain.Brain)
+live.brain.cancel, live.brain.tool_owner, live.brain.app_tools = threading.Event(), {}, {}
+live.inflight, live.heard, live.said, live.quick_tasks, live.running, live.turn_spoke = None, "", "", {}, 0, False
+live.user_spoke_at = live.interrupted_at = live.gemini_spoke_at = 0.0
+brain.reset_interrupt_act()
+sent_responses.clear()
+def call(fc):
+    return types.SimpleNamespace(server_content=None, session_resumption_update=None, go_away=None,
+                                 tool_call=types.SimpleNamespace(function_calls=[fc]))
+async def replaced():
+    await live._handle(fake_session, call(types.SimpleNamespace(name="act", id="old", args={"steps": [{"wait": 0.4}, {"wait": 0.4}]})))
+    await asyncio.sleep(0.1)
+    await live._handle(fake_session, call(types.SimpleNamespace(name="act", id="new", args={"steps": [{"wait": 0.3}, {"wait": 0.3}]})))
+    await asyncio.sleep(1.2)
+asyncio.run(replaced())
+got = {r.id: r.response for batch in sent_responses for r in batch}
+assert got["new"].get("result") == ["waited 0.3s", "waited 0.3s"] and got["old"] == {"error": "cancelled"}, got
+
+# cutting the voice off stops its own quick calls, never the background agent's screen work
+async def barge_in():
+    await live._handle(fake_session, types.SimpleNamespace(session_resumption_update=None, go_away=None, tool_call=None,
+        server_content=types.SimpleNamespace(interrupted=True, input_transcription=None, output_transcription=None,
+                                             model_turn=None, turn_complete=False)))
+asyncio.run(barge_in())
+assert brain.tool_act([{"wait": 0}], screenshot_after=False) == {"result": ["waited 0s"]}
+
+# KDE: kdotool says nothing when no window matches, which must not count as focused or closed
+real_window = system.KDE, system.WAYLAND, system.have, system._kdo
+system.KDE = system.WAYLAND = True
+system.have = lambda program: True
+system._kdo = lambda *args: ""
+assert brain.tool_focus_window("Discord") == {"error": "no window matching Discord"}
+assert brain.tool_close_window("kcalc") == {"error": "no window matching kcalc"}
+system._kdo = lambda *args: "org.kde.kcalc"
+assert brain.tool_focus_window("kcalc") == {"result": "focused kcalc"}
+assert brain.tool_close_window(" ") == {"error": "no window name given"}  # (an empty name would match every window)
+assert system._find_windows("") == []  # (X11 and Windows: close_window("") closed every window)
+system.KDE, system.WAYLAND, system.have, system._kdo = real_window
+
+# forget with nothing (or a letter) would match every line: it's refused, and the memory stays
+kept = store.memory()
+for text in ("", "  ", "a"):
+    try:
+        store.forget(text)
+        raise AssertionError(f"forget({text!r}) was allowed")
+    except ValueError:
+        pass
+assert store.memory() == kept
+
+# the microphone keeps going when pw-record quits (PipeWire restarted): a new one takes over
+import io
+class Recorder:
+    def __init__(self, data):
+        self.stdout = io.BytesIO(data)
+
+    def wait(self):
+        return 0
+recorders = [Recorder(b"\1\0" * 1280), Recorder(b"\2\0" * 1280)]
+real_mic = system.subprocess, system.time, system.have
+system.subprocess = types.SimpleNamespace(Popen=lambda *a, **k: recorders.pop(0), PIPE=-1, DEVNULL=-3)
+system.time = types.SimpleNamespace(time=time.time, sleep=lambda seconds: None)
+system.have = lambda program: program == "pw-record"
+mic = system.mic_frames()
+assert next(mic)[0] == 1 and next(mic)[0] == 2
+system.subprocess, system.time, system.have = real_mic
+
+# a long name with underscores is looked up by name; only when no file has it is it taken for an id
+db.connected, calls = {"googledrive"}, []
+db.app_data = lambda slug, args: calls.append((slug, args)) or (
+    ({"files": [{"id": "c", "name": "Lab_Report_Final_Version_2.txt", "mimeType": "text/plain"}]} if "Lab_Report" in args["q"] else {"files": []})
+    if slug == "GOOGLEDRIVE_FIND_FILE" else {"downloaded_file_content": {"s3url": "https://files.example.com/x"}})
+brain.fetch = lambda url, **k: types.SimpleNamespace(ok=True, status_code=200, content=b"Results: it works.")
+assert db.drive_file("Lab_Report_Final_Version_2")["file"] == "Lab_Report_Final_Version_2.txt" and calls[1][1]["fileId"] == "c", calls
+calls.clear()
+assert "it works" in db.drive_file("1AbCdEfGhIjKlMnOpQrStUvWxYz012345")["text"]
+assert calls[1] == ("GOOGLEDRIVE_DOWNLOAD_FILE", {"fileId": "1AbCdEfGhIjKlMnOpQrStUvWxYz012345"}), calls
+brain.fetch = real_fetch
+
+# a network blip marks every model down at once: they're still tried (not refused for minutes until a probe gets through)
+gb, tried = brain.Brain.__new__(brain.Brain), []
+gb.notify = lambda text: None
+gb.backends = {"fake": types.SimpleNamespace(generate=lambda contents, model, thinking, **k: tried.append(model) or [{"text": model}])}
+gb.down_until = {("fake", "m1", None): float("inf"), ("fake", "m2", None): float("inf")}
+assert gb._generate([], entries=[("fake", "m1", None), ("fake", "m2", None)]) == [{"text": "m1"}] and tried == ["m1"]
+def still_down(contents, model, thinking, **k):
+    tried.append(model)
+    raise ConnectionError("network down")
+gb.backends["fake"].generate, tried[:] = still_down, []  # still down: one try, not a timeout per model
+try:
+    gb._generate([], entries=[("fake", "m1", None), ("fake", "m2", None)])
+    raise AssertionError("no model answered, yet nothing was raised")
+except RuntimeError:
+    assert tried == ["m1"], tried
+gb.backends["fake"].generate = lambda contents, model, thinking, **k: tried.append(model) or [{"text": model}]
+gb.down_until, tried[:] = {("fake", "m1", None): float("inf")}, []  # one is up: the down one is skipped, as before
+assert gb._generate([], entries=[("fake", "m1", None), ("fake", "m2", None)]) == [{"text": "m2"}] and tried == ["m2"]
+
+# ...but a rate limit is kept even then: those models aren't hammered
+gb.down_until, tried[:] = {("fake", "m1", None): time.time() + 60, ("fake", "m2", None): float("inf")}, []
+assert gb._generate([], entries=[("fake", "m1", None), ("fake", "m2", None)]) == [{"text": "m2"}] and tried == ["m2"]
+gb.down_until = {("fake", "m1", None): time.time() + 60}
+try:
+    gb._generate([], entries=[("fake", "m1", None)])
+    raise AssertionError("a rate-limited model was tried")
+except RuntimeError:
+    pass
+
+# a reminder after Stop is a new turn: Stop doesn't silence it or switch off its recovery
+live._go = lambda coro: coro.close()
+live.stopped = True
+live.announce("Take the bins out")
+assert live.stopped is False
+
+# after Stop, an unanswered request doesn't end the watchdog (it used to hand over to a _recover that did nothing, and
+# then nothing hung up idle sessions or closed the mic for the rest of that session)
+async def watch_after_stop():
+    now = time.time()
+    live.primed, live.stopped, live.working, live.running, live.question, live.waiting, live.mic = False, True, False, 0, None, False, False
+    live.last = live.last_msg = live.voice_at = now - 20
+    live.speaker = types.SimpleNamespace(until=0.0, busy=lambda: False, stop=lambda: None)
+    live.inflight = {"text": None, "heard": "hello", "since": now - 20, "tool": False, "answered": False, "recovered": False}
+    watcher = asyncio.create_task(live._watch())
+    await asyncio.sleep(0.6)
+    alive = not watcher.done()
+    watcher.cancel()
+    return alive
+assert asyncio.run(watch_after_stop()) and live.inflight is None
+
+# Stop pressed just as the task asks its question: it isn't asked, and the mic stays off
+asked_voice.clear()
+live._go = lambda coro: asked_voice.append(coro) or coro.close()
+live.stopped, live.mic, cancelled = True, False, threading.Event()
+cancelled.set()
+assert live.ask_from_task("Which Sam?", cancelled) is None and asked_voice == [] and live.stopped and not live.mic
 
 print("ok")

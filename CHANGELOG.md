@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.5.1 — 2026-10-14
+
+### Fixed
+- Saying "that's all" could get a late "Very good" ten seconds after the mic closed (sometimes "Gemini didn't answer
+  that"): the goodbye's request stayed open, so the watchdog reconnected and asked again. Ending the conversation now
+  closes it.
+- A new request said over a screen action stopped the new action too ("act ... error: interrupted" right after "just type
+  the message"): the old action's cancel arrived after the new one had started. Each voice action now has its own stop
+  signal.
+- Talking over Jarvis stopped the background task's screen work, and every screen step it tried after that failed until
+  the voice used a tool again. Cutting the voice off now only stops the voice's own actions.
+- Focusing or closing a window on KDE said it worked even when no window had that name.
+- `forget` with an empty or one-letter text could wipe the whole memory; it now asks for a few words from the note.
+- The microphone stream restarts on its own when PipeWire restarts (an update, a new device), instead of Jarvis going
+  deaf until it's restarted.
+- After a reconnect that dropped the account tools or an expired session, Jarvis kept listening only if it was told to
+  again; it now goes on listening, keeping what was said meanwhile.
+- Pressing app controls with no app named (the focused one unknown) could press them in another app; it now asks which.
+- A Drive file with a long name made of underscores (`Lab_Report_Final_Version_2`) was taken for a file id; names are
+  looked up first now.
+- The voice picker no longer offers the extended-thinking Live models: their tool calls never reach Jarvis.
+- After Stop, a later reminder that went unanswered switched off the voice watchdog for the rest of that session (no
+  more idle hang-up or mic timeout); reminders now start fresh, and the watchdog keeps going.
+- Stop pressed just as the background task asked you something could still ask it and reopen the mic.
+- One network blip marked every model as not answering, so Jarvis refused everything ("no model could answer") until a
+  background probe got through, up to minutes later. The first model is now tried anyway (rate limits are still kept).
+- Closing a window with an empty name closed every window on X11 and Windows; it's refused now.
+
 ## 1.5.0 — 2026-10-14
 
 ### Changed

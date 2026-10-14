@@ -32,7 +32,9 @@ def names(app):
 
 def find_app(name, wait=0.0):
     end = time.time() + wait
-    want = name.lower().split(".")[-1]  # "org.kde.kcalc" -> "kcalc"
+    want = name.lower().split(".")[-1].strip()  # "org.kde.kcalc" -> "kcalc"
+    if not want:  # (it would match the first app of all, and press its controls)
+        raise LookupError("which app? Name it: the focused one couldn't be told")
     while True:
         for a in apps():
             if want in names(a):

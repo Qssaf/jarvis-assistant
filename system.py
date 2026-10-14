@@ -51,12 +51,15 @@ def mic_frames(target=None):
     otherwise PortAudio through sounddevice (Windows, PulseAudio/ALSA systems)."""
     import numpy as np
     if not IS_WINDOWS and have("pw-record"):
-        p = subprocess.Popen(["pw-record", *(["--target", target] if target else []), "--rate", "16000", "--channels", "1",
-                              "--format", "s16", "-"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        while chunk := p.stdout.read(2560):
-            if len(chunk) == 2560:
-                yield np.frombuffer(chunk, np.int16)
-        return
+        while True:  # pw-record quits when PipeWire restarts (an update, a new device): start it again, or Jarvis goes deaf
+            p = subprocess.Popen(["pw-record", *(["--target", target] if target else []), "--rate", "16000", "--channels", "1",
+                                  "--format", "s16", "-"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            started = time.time()
+            while chunk := p.stdout.read(2560):
+                if len(chunk) == 2560:
+                    yield np.frombuffer(chunk, np.int16)
+            print(f"[voice] the microphone stream stopped (pw-record exit {p.wait()}): starting it again", flush=True)
+            time.sleep(1 if time.time() - started > 10 else 10)  # (failing at once: wait longer, don't spin)
     import sounddevice as sd
     with sd.InputStream(samplerate=16000, channels=1, dtype="int16", blocksize=1280) as stream:
         while True:
@@ -380,15 +383,26 @@ def list_windows():
 
 
 def _find_windows(name):
-    import pywinctl
     want = name.split(": ", 1)[-1].lower()
+    if not want.strip():  # an empty name matches every window (close_window would close them all)
+        return []
+    import pywinctl
     return [w for w in pywinctl.getAllWindows() if want in w.title.lower() or want in (w.getAppName() or "").lower()]
 
 
+def _kde_window(name, action):
+    """kdotool's action on the first window matching name: '' when done, else the problem. (kdotool says nothing when no
+    window matches, so the match's class name is printed first to tell.)"""
+    if not name.split(": ", 1)[-1].strip():  # (an empty name matches every window)
+        return "no window name given"
+    found = _kdo("search", re.escape(name.split(": ", 1)[-1]), "getwindowclassname", action)
+    return "" if found else f"no window matching {name}"
+
+
 def focus_window(name, wid=None):
-    """Bring a window to the front by (part of) its title or app name, or by id."""
+    """Bring a window to the front by (part of) its title or app name, or by id; '' when done, else the problem."""
     if KDE and WAYLAND and have("kdotool"):
-        return _kdo("windowactivate", wid) if wid else _kdo("search", re.escape(name.split(": ", 1)[-1]), "windowactivate")
+        return _kdo("windowactivate", wid) if wid else _kde_window(name, "windowactivate")
     if WAYLAND:
         return "switching windows isn't possible on this Wayland desktop; use keyboard shortcuts (alt+tab)"
     import pywinctl
@@ -401,7 +415,7 @@ def focus_window(name, wid=None):
 
 def close_window(name):
     if KDE and WAYLAND and have("kdotool"):
-        return _kdo("search", re.escape(name.split(": ", 1)[-1]), "windowclose")
+        return _kde_window(name, "windowclose")
     if WAYLAND:
         return "closing windows by name isn't possible on this Wayland desktop; use alt+F4 on the focused window"
     found = _find_windows(name)

@@ -135,6 +135,9 @@ def remember(fact):
 
 def forget(text):
     """Drop remembered lines containing text; returns how many."""
+    text = text.strip()
+    if len(text) < 3:  # "" or a letter is in nearly every line: that would wipe the memory
+        raise ValueError("give a few words from the note to forget")
     lines = memory().splitlines()
     keep = [l for l in lines if text.lower() not in l.lower()]
     set_memory("\n".join(keep))
