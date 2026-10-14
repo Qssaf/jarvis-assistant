@@ -2101,6 +2101,6 @@ def trim(msgs, keep=80):
 
 
 try:  # optional and gitignored: your own model backends and model lists (see the README)
-    import local_backends  # noqa: F401  (it registers itself in BACKENDS)
+    __import__("local_backends")  # (it registers itself in BACKENDS)
 except ImportError:
     pass

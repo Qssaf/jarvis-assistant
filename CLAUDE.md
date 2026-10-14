@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 ./install.sh                          # Linux: .venv (uv, Python 3.13), deps, `jarvis` launcher, app-menu entry
 .venv/bin/python test_jarvis.py       # all self-checks; prints "ok" (Windows: .venv\Scripts\python)
-.venv/bin/python -m pyflakes *.py     # lint (the "local_backends imported but unused" warning is expected)
+.venv/bin/python -m pyflakes *.py     # lint (CI runs it and the tests on Linux and Windows)
 .venv/bin/python jarvis.py --no-voice # run without the microphone; the window opens
 jarvis --listen                       # tell a running instance to start listening
 ```
