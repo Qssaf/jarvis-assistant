@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.8.0 — 2026-10-15
+
+### Added
+- **Languages** (Settings): Jarvis speaks and listens for one of 19 languages (Arabic, French, Spanish, Hindi...),
+  still expecting English names mixed in.
+- **Recall**: "what was that site you told me about?", "what did I ask you yesterday?": past conversations are
+  searched, with the lines around the match.
+- **Your selection**: "summarise this", "translate what I selected", "explain what I copied" read the selected text
+  (or the clipboard).
+- **Music**: play/pause, next, previous and what's playing, by voice.
+- **Calendar heads-up** (Settings, on): a reminder ten minutes before each Google Calendar event. Moved events move
+  their reminder, cancelled ones lose it.
+- **CI**: the tests and lint run on Linux and Windows for every push.
+- **Delete my data** (Settings → Your data): memory, conversations, reminders, routines, voice clips and the log in
+  one go (press twice). Keys, account sign-ins and settings stay.
+- `PRIVACY.md` (what stays on the PC and what goes where) and `CONTRIBUTING.md`.
+
+### Fixed
+- On Windows, text fields, drop-downs and sliders lost Jarvis's look (Qt's native Windows style ignores it); the window
+  now uses Qt's Basic style everywhere. Found by the new Windows CI.
+
 ## 1.7.0 — 2026-10-15
 
 ### Added
@@ -10,14 +31,6 @@
 - **Copy a report** (Health page): version, system, the health checks, settings and the end of the log, with what was
   said, tool arguments, email addresses and link parameters taken out, ready to paste into a bug report. A *Report a
   problem* button opens a new GitHub issue.
-- **Recall**: "what was that site you told me about?", "what did I ask you yesterday?": past conversations are
-  searched, with the lines around the match.
-- **Your selection**: "summarise this", "translate what I selected", "explain what I copied" read the selected text
-  (or the clipboard).
-- **Music**: play/pause, next, previous and what's playing, by voice.
-- **Calendar heads-up** (Settings, on): a reminder ten minutes before each Google Calendar event. Moved events move
-  their reminder, cancelled ones lose it.
-- **CI**: the tests and lint run on Linux and Windows for every push.
 - **Updates** (Settings): checks GitHub for a newer version; a clean git checkout updates itself (pull, packages) and
   restarts.
 

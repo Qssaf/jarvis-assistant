@@ -9,8 +9,15 @@ APP_PORT = int(os.environ.get("JARVIS_HUD_PORT", 4849))  # the app's local serve
 VOICES = ["Charon", "Orus", "Fenrir", "Puck", "Kore", "Zephyr", "Aoede", "Leda", "Enceladus", "Iapetus", "Umbriel",
           "Algieba", "Algenib", "Rasalgethi", "Alnilam", "Schedar", "Gacrux", "Achird", "Sadaltager", "Sulafat"]
 
+# languages Gemini Live speaks (code -> name)
+LANGUAGES = {"en-US": "English", "en-GB": "English (UK)", "ar-XA": "Arabic", "fr-FR": "French", "de-DE": "German",
+             "es-US": "Spanish", "it-IT": "Italian", "pt-BR": "Portuguese", "tr-TR": "Turkish", "hi-IN": "Hindi",
+             "ja-JP": "Japanese", "ko-KR": "Korean", "cmn-CN": "Chinese (Mandarin)", "ru-RU": "Russian", "nl-NL": "Dutch",
+             "pl-PL": "Polish", "id-ID": "Indonesian", "vi-VN": "Vietnamese", "th-TH": "Thai"}
+
 DEFAULT_SETTINGS = {
     "voice": "Charon",
+    "language": "en-US",           # what Jarvis speaks and expects to hear (store.LANGUAGES)
     "live_model": "gemini-3.8-live",
     "follow_up_seconds": 8,
     "keep_session_seconds": 300,   # after that, the voice session stays connected (mic off) for an instant next "Hey Jarvis"
@@ -101,6 +108,8 @@ def update_settings(changes):
             raise ValueError("follow-up must be 0-120 seconds")
         if key == "keep_session_seconds" and not 0 <= value <= 600:
             raise ValueError("keep the session 0-600 seconds")
+        if key == "language" and value not in LANGUAGES:
+            raise ValueError(f"language is one of {', '.join(LANGUAGES)}")
         if key == "safety" and value not in ("ask", "full"):
             raise ValueError("safety is ask or full")
         if key == "end_of_speech_ms" and not 200 <= value <= 2000:
@@ -223,6 +232,28 @@ def delete_routine(name):
         found = rs.pop(name, None) is not None
         write_json(ROUTINES_FILE, rs, private=True)
     return found
+
+
+# ---------------------------------------------------------------- deleting what Jarvis keeps
+def delete_data():
+    """Delete everything Jarvis keeps about the user on this PC: memory, conversations, reminders, routines, voice clips
+    and the files behind Classroom and calendar reminders, model use and the log. Keys, account sign-ins and settings stay
+    (they're removed on their own pages)."""
+    import shutil
+    with _lock:
+        for path in (MEMORY_FILE, REMINDERS_FILE, ROUTINES_FILE, *(os.path.join(DATA, name) for name in (
+                "usage.json", "deadlines.json", "calendar.json", "briefing.json", "jarvis.log.old"))):
+            try:
+                os.remove(path)
+            except FileNotFoundError:
+                pass
+        for folder in ("sessions", "wake"):
+            shutil.rmtree(os.path.join(DATA, folder), ignore_errors=True)
+        os.makedirs(SESSIONS_DIR, exist_ok=True)
+        try:
+            open(os.path.join(DATA, "jarvis.log"), "w").close()  # (emptied, not removed: it's open for writing)
+        except OSError:
+            pass
 
 
 # ---------------------------------------------------------------- start at login

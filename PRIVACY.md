@@ -1,0 +1,36 @@
+# Privacy
+
+Jarvis runs on your computer. It has no server of its own and collects nothing for its authors. This page says what it
+keeps, and what it sends to the services it uses.
+
+## What stays on your computer
+
+In Jarvis's data folder (`~/.local/share/jarvis` on Linux, `%APPDATA%\Jarvis\data` on Windows), readable only by your
+user:
+
+- **Memory**: the facts you asked it to remember (editable on the Memory page).
+- **Conversations**: what you and Jarvis said, and the agent's working history (the Chats page).
+- **Reminders and routines.**
+- **Wake word clips**: a few seconds of audio around each "Hey Jarvis", used only on this computer to learn your voice
+  (Settings → *Learn my voice*).
+- **A log** of what Jarvis did, for troubleshooting.
+
+API keys are kept in your system keychain (or, without one, a file only your user can read). Settings → *Delete
+everything Jarvis keeps about me* removes memory, conversations, reminders, routines, voice clips and the log.
+
+## What leaves your computer
+
+- **Google Gemini** (with your Google AI Studio key, under Google's terms): what you say after the wake word (or type),
+  your memory and recent conversation as context, screenshots when a task needs the screen, files you ask Jarvis to
+  read, and web search questions. Audio before the wake word never leaves your computer.
+- **Composio** (only for accounts you connect): the account actions Jarvis runs for you, like reading or sending email.
+- **Other model providers** you add on the Models page: the same as Gemini, for the jobs you give them.
+- **The web**: pages Jarvis reads for you, the weather (Open-Meteo, wttr.in), YouTube and DuckDuckGo searches, and an
+  update check that reads Jarvis's version from GitHub.
+- **Bug reports** are never sent by themselves: *Copy a report* puts one on your clipboard, with what you said, tool
+  arguments, email addresses and link parameters removed, for you to look over and paste.
+
+## Safety
+
+Jarvis treats web pages, emails and the screen as information, never as instructions. With *Ask before risky actions*
+on (the default), commands that delete, install or shut down, and changes to your accounts, wait for your yes.

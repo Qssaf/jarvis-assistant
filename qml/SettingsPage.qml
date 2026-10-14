@@ -10,6 +10,8 @@ ScrollPage {
     hint: "Changes are saved at once. Voice changes apply from the next conversation."
     property var s: ({})
     property var voices: []
+    property var languages: ({})
+    property bool confirmDelete: false
     property var avail: ({ backends: [], live: [] })  // for the voice models (asked for separately: it's slower)
     property bool looking: false
     signal setupAgain()
@@ -22,7 +24,7 @@ ScrollPage {
     }
 
     function load() {
-        Api.get("/api/settings", d => { s = d.settings; voices = d.voices })
+        Api.get("/api/settings", d => { s = d.settings; voices = d.voices; languages = d.languages })
         lookUp()
     }
     function lookUp() {
@@ -51,6 +53,9 @@ ScrollPage {
                 Field { Layout.fillWidth: true; visible: !page.avail.live.length; text: page.s.live_model || ""
                         onEditingFinished: if (text !== page.s.live_model) page.set("live_model", text) } }
         }
+        Setting { label: "Language Jarvis speaks and listens for"
+            Select { Layout.fillWidth: true; model: Object.keys(page.languages).map(k => ({ value: k, label: page.languages[k] }))
+                     value: page.s.language || "en-US"; onPicked: v => page.set("language", v) } }
         Toggle { Layout.fillWidth: true; text: "Fast voice"; hint: "Answer without thinking first: about 0.3 s quicker, a little less sharp"
                  checked: !!page.s.fast_voice; onToggled: page.set("fast_voice", checked) }
         Toggle { Layout.fillWidth: true; text: "Speak replies to typed messages"; checked: !!page.s.speak_typed_replies
@@ -103,6 +108,26 @@ ScrollPage {
         Txt { kind: "small"; Layout.fillWidth: true; text: "Models for everything else, and your API keys, are on the Models page." }
         Txt { kind: "small"; Layout.fillWidth: true
               text: "Push to talk: bind the command  jarvis --listen  to a keyboard shortcut (KDE: System Settings → Keyboard → Shortcuts → Add New → Command)." }
+    }
+
+    Section {
+        title: "Your data"
+        Txt { kind: "small"; Layout.fillWidth: true
+              text: "On this PC Jarvis keeps what it remembers about you, your conversations, reminders and routines, short clips "
+                    + "of your wake word (to learn your voice) and a log. What you say after the wake word, and screenshots when a "
+                    + "task needs the screen, go to Google Gemini; account actions go through Composio." }
+        RowLayout {
+            spacing: 10
+            Pill { kind: "danger"; symbol: "trash"; text: page.confirmDelete ? "Press again to delete it all" : "Delete everything Jarvis keeps about me"
+                   onClicked: {
+                       if (!page.confirmDelete) { page.confirmDelete = true; disarm.restart(); return }
+                       page.confirmDelete = false
+                       Api.post("/api/data/delete", {}, () => Backend.toast("Deleted. Keys, accounts and settings are kept.", false),
+                                e => Backend.toast(e.error, true))
+                   } }
+            Txt { kind: "small"; text: "Keys, account sign-ins and settings stay." }
+        }
+        Timer { id: disarm; interval: 4000; onTriggered: page.confirmDelete = false }
     }
 
     RowLayout {

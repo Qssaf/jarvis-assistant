@@ -13,7 +13,7 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.7.0"
+VERSION = "1.8.0"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
@@ -22,7 +22,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 # Hearing the user
 - You hear the user through speech recognition, which garbles names and technical words. Act on what they most plausibly meant in context; ask briefly only when plausible readings lead to different actions. "It", "that" and "them" mean what was just discussed.
 - Names are what it gets wrong most: match the name you heard by sound against names on screen (look first) and in memory. One clear match: use it, spelled as on screen. Otherwise say the closest names and ask; never pick the top or newest one.
-- Always speak English. A transcript in another language is mishearing or background noise: don't switch language or act on it.
+- {LANGUAGE}
 - Casual talk, thanks, jokes and swearing are conversation: reply in kind, briefly. The user trash-talks for fun (games, friends, you): give a short witty comeback, never a lecture or refusal speech. Only if they seem genuinely in distress, answer with care.
 - Your microphone stays on until you call stop_listening. When the user clearly ends the conversation ("that's all", "stop listening", "bye", "go to sleep"), call it with a two-word goodbye. A stray word ("so", "you", "sir") or a garbled phrase is not an ending: just reply briefly.
 
@@ -480,7 +480,12 @@ class Live:
         name = preferred_name(store.memory())
         address = (f'Call the user "{name}" whenever you address them, never "sir".' if name else
                    'Address the user the way they asked in what you remember above; only if nothing is there, "sir".')
-        prompt = LIVE_PROMPT.replace("{SYSTEM}", system.describe()).replace("{ADDRESS}", address) + f"\n\nIt is now {time.strftime('%A %d %B %Y, %H:%M')}." + "\n\n" + self._abilities()
+        language = store.LANGUAGES[cfg["language"]].split(" (")[0]
+        rule = (f"Always speak {language}. A transcript in another language is mishearing or background noise: don't switch "
+                f"language or act on it.") if language == "English" else (
+                f"Always speak {language}, the user's language. They may mix in English words and names: that's normal. A "
+                f"transcript in a language that is neither is mishearing or background noise: don't act on it.")
+        prompt = LIVE_PROMPT.replace("{SYSTEM}", system.describe()).replace("{ADDRESS}", address).replace("{LANGUAGE}", rule) + f"\n\nIt is now {time.strftime('%A %d %B %Y, %H:%M')}." + "\n\n" + self._abilities()
         if cfg["extra_instructions"].strip():
             prompt += f"\n\nThe user's own instructions:\n{cfg['extra_instructions'].strip()}"
         if store.memory():  # first, so the user's preferences (like what to call them) win over the defaults below
@@ -490,8 +495,9 @@ class Live:
             prompt += f"\n\nEarlier conversation, for context:\n{recent}"
         return t.LiveConnectConfig(
             response_modalities=["AUDIO"], system_instruction=prompt,
-            speech_config=t.SpeechConfig(language_code="en-US", voice_config=t.VoiceConfig(prebuilt_voice_config=t.PrebuiltVoiceConfig(voice_name=cfg["voice"]))),
-            input_audio_transcription=t.AudioTranscriptionConfig(language_hints=t.LanguageHints(language_codes=["en-US"])),
+            speech_config=t.SpeechConfig(language_code=cfg["language"], voice_config=t.VoiceConfig(prebuilt_voice_config=t.PrebuiltVoiceConfig(voice_name=cfg["voice"]))),
+            input_audio_transcription=t.AudioTranscriptionConfig(language_hints=t.LanguageHints(
+                language_codes=list(dict.fromkeys([cfg["language"], "en-US"])))),
             output_audio_transcription={},
             **({"thinking_config": t.ThinkingConfig(thinking_budget=0)} if cfg["fast_voice"] else {}),
             realtime_input_config=t.RealtimeInputConfig(automatic_activity_detection=t.AutomaticActivityDetection(
@@ -1109,7 +1115,7 @@ def api_get(path, brain):
     if m := re.fullmatch(r"/api/sessions/([\w-]+)", path):
         return sessions.get(m[1])
     if path == "/api/settings":
-        return {"settings": store.settings(), "voices": store.VOICES}
+        return {"settings": store.settings(), "voices": store.VOICES, "languages": store.LANGUAGES}
     if path == "/api/models":
         return models_info()
     if path == "/api/models/jobs":
@@ -1429,6 +1435,12 @@ def api_post(path, data, live, brain):
         store.set_memory(str(data.get("memory", "")))
     elif m := re.fullmatch(r"/api/reminders/(\w+)/cancel", path):
         store.cancel_reminder(m[1])
+    elif path == "/api/data/delete":
+        live.barge_in()
+        live.close()
+        brain.reset()
+        store.delete_data()
+        sessions.new()
     elif path == "/api/update":
         out = update_now()
         restart_soon()

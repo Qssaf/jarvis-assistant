@@ -164,6 +164,7 @@ brain.LOOK_MODELS.insert(0, ("mine", "some-model", "low"))
 Then write `mine some-model low` in **Settings → Agent models**.
 
 ## Privacy and security
+The full picture is in [PRIVACY.md](PRIVACY.md); contributing: [CONTRIBUTING.md](CONTRIBUTING.md).
 - Audio only leaves your PC after the wake word (or Talk / push-to-talk), and goes to Google's Gemini API.
 - The local server only opens the window or starts listening, and only for Jarvis itself: a secret token per run plus a
   Host check.

@@ -988,4 +988,29 @@ events["items"] = []  # cancelled
 jarvis.calendar_pass(cal, now)
 assert store.reminders() == []
 
+# the language: Jarvis speaks the one picked, and still expects English names mixed in
+live.brain = types.SimpleNamespace(accounts={}, app_tools_for=set(), connected=set(), plugin_status=lambda: [], active_app_tools=lambda: {})
+store.update_settings({"language": "ar-XA"})
+cfg = live._config()
+assert cfg.speech_config.language_code == "ar-XA" and cfg.input_audio_transcription.language_hints.language_codes == ["ar-XA", "en-US"]
+assert "Always speak Arabic" in cfg.system_instruction and "{LANGUAGE}" not in cfg.system_instruction
+store.update_settings({"language": "en-US"})
+assert "Always speak English. A transcript in another language is mishearing" in live._config().system_instruction
+try:
+    store.update_settings({"language": "xx-XX"})
+    raise AssertionError("an unknown language was accepted")
+except ValueError:
+    pass
+
+# delete everything Jarvis keeps about the user: memory, conversations, reminders, routines, voice clips; settings stay
+store.remember("The user likes tea")
+store.add_reminder(time.time() + 600, "tea")
+store.save_routine("tea time", "boil the kettle")
+os.makedirs(os.path.join(store.DATA, "wake", "yes"), exist_ok=True)
+store.update_settings({"voice": "Puck"})
+store.delete_data()
+assert (store.memory(), store.reminders(), store.routines(), os.listdir(store.SESSIONS_DIR)) == ("", [], {}, []), (store.memory(), store.reminders(), store.routines(), os.listdir(store.SESSIONS_DIR))
+assert not os.path.exists(os.path.join(store.DATA, "wake")) and store.settings()["voice"] == "Puck"
+store.update_settings({"voice": "Charon"})
+
 print("ok")
