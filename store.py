@@ -262,7 +262,9 @@ def delete_data():
 # ---------------------------------------------------------------- start at login
 def sync_autostart(enabled):
     here = os.path.dirname(os.path.abspath(__file__))
-    if system.IS_WINDOWS:  # pythonw: no console window
+    if getattr(sys, "frozen", False):  # the packaged app (Jarvis.exe): it starts itself
+        command = f'"{sys.executable}"'
+    elif system.IS_WINDOWS:  # pythonw: no console window
         command = f'"{os.path.join(os.path.dirname(sys.executable), "pythonw.exe")}" "{os.path.join(here, "jarvis.py")}"'
     else:
         command = os.path.expanduser("~/.local/bin/jarvis")  # made by install.sh

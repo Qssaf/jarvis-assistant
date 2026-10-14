@@ -1290,7 +1290,8 @@ def update_check():
     clean = git and not subprocess.run(["git", "-C", HERE, "status", "--porcelain", "--untracked-files=no"],
                                        capture_output=True, text=True).stdout.strip()
     return {"current": VERSION, "latest": latest, "available": newer, "can_update": bool(newer and clean),
-            "how": "" if not newer or clean else "this copy has local changes or isn't a git checkout: update it by hand"}
+            "how": "" if not newer or clean else "download it from github.com/Qssaf/jarvis-assistant/releases" if getattr(sys, "frozen", False)
+            else "this copy has local changes or isn't a git checkout: update it by hand"}
 
 
 def update_now():
