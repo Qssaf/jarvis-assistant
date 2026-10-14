@@ -12,7 +12,7 @@ ScrollPage {
     property string kind: "url"
 
     function load() { Api.get("/api/plugins", d => items = d) }
-    function preset(name, how, value) { pname.text = name; kind = how; target.text = value }
+    function preset(name, how, value, more) { pname.text = name; kind = how; target.text = value; extra.text = more || "" }
     Component.onCompleted: load()
     Timer { interval: 4000; running: page.visible && page.items.some(p => p.status === "connecting"); repeat: true; onTriggered: page.load() }
 
@@ -74,11 +74,13 @@ ScrollPage {
                 spacing: 8
                 Txt { kind: "small"; text: "Quick picks:"; height: 32; verticalAlignment: Text.AlignVCenter }
                 Repeater {
-                    model: [["Notion (official)", "notion", "url", "https://mcp.notion.com/mcp"],
+                    model: [["Smart home (Home Assistant)", "homeassistant", "url", "http://homeassistant.local:8123/api/mcp",
+                             "{\"Authorization\": \"Bearer PASTE-A-LONG-LIVED-TOKEN (your profile → Security)\"}"],
+                            ["Notion (official)", "notion", "url", "https://mcp.notion.com/mcp"],
                             ["Docs lookup (Context7)", "context7", "url", "https://mcp.context7.com/mcp"],
                             ["Files in my home folder", "files", "command", "npx -y @modelcontextprotocol/server-filesystem ~"],
                             ["Headless browser (Playwright)", "playwright", "command", "npx -y @playwright/mcp@latest --headless"]]
-                    Pill { required property var modelData; implicitHeight: 32; text: modelData[0]; onClicked: page.preset(modelData[1], modelData[2], modelData[3]) }
+                    Pill { required property var modelData; implicitHeight: 32; text: modelData[0]; onClicked: page.preset(modelData[1], modelData[2], modelData[3], modelData[4]) }
                 }
             }
             RowLayout {

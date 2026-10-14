@@ -58,6 +58,10 @@ ScrollPage {
                 Field { Layout.fillWidth: true; visible: !page.avail.live.length; text: page.s.live_model || ""
                         onEditingFinished: if (text !== page.s.live_model) page.set("live_model", text) } }
         }
+        Setting { label: "Personality"
+            Select { Layout.fillWidth: true; value: page.s.personality || "jarvis"; onPicked: v => page.set("personality", v)
+                     model: [{ value: "jarvis", label: "Jarvis: refined, dry wit" }, { value: "friendly", label: "Friendly: warm and casual" },
+                             { value: "brief", label: "Brief: just the answer" }] } }
         Setting { label: "Language Jarvis speaks and listens for"
             Select { Layout.fillWidth: true; model: Object.keys(page.languages).map(k => ({ value: k, label: page.languages[k] }))
                      value: page.s.language || "en-US"; onPicked: v => page.set("language", v) } }

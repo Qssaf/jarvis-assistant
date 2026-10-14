@@ -997,6 +997,10 @@ assert cfg.speech_config.language_code == "ar-XA" and cfg.input_audio_transcript
 assert "Always speak Arabic" in cfg.system_instruction and "{LANGUAGE}" not in cfg.system_instruction
 store.update_settings({"language": "en-US"})
 assert "Always speak English. A transcript in another language is mishearing" in live._config().system_instruction
+assert "refined British accent and dry wit" in live._config().system_instruction  # (the default personality)
+store.update_settings({"personality": "brief"})
+assert "as briefly as possible" in live._config().system_instruction and "{PERSONA}" not in live._config().system_instruction
+store.update_settings({"personality": "jarvis"})
 try:
     store.update_settings({"language": "xx-XX"})
     raise AssertionError("an unknown language was accepted")

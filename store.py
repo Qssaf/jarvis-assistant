@@ -18,6 +18,7 @@ LANGUAGES = {"en-US": "English", "en-GB": "English (UK)", "ar-XA": "Arabic", "fr
 DEFAULT_SETTINGS = {
     "voice": "Charon",
     "language": "en-US",           # what Jarvis speaks and expects to hear (store.LANGUAGES)
+    "personality": "jarvis",       # how it talks: jarvis (British, dry wit), friendly or brief
     "live_model": "gemini-3.8-live",
     "follow_up_seconds": 8,
     "keep_session_seconds": 300,   # after that, the voice session stays connected (mic off) for an instant next "Hey Jarvis"
@@ -108,6 +109,8 @@ def update_settings(changes):
             raise ValueError("follow-up must be 0-120 seconds")
         if key == "keep_session_seconds" and not 0 <= value <= 600:
             raise ValueError("keep the session 0-600 seconds")
+        if key == "personality" and value not in ("jarvis", "friendly", "brief"):
+            raise ValueError("personality is jarvis, friendly or brief")
         if key == "language" and value not in LANGUAGES:
             raise ValueError(f"language is one of {', '.join(LANGUAGES)}")
         if key == "safety" and value not in ("ask", "full"):

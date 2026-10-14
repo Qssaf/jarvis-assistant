@@ -13,11 +13,17 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.9.1"
+VERSION = "1.10.0"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
-LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, who built you. You speak out loud with a refined British accent and dry wit. {ADDRESS} Keep replies to one or two short sentences unless asked for more, and match the user's relaxed tone.
+PERSONAS = {  # Settings → Personality: how Jarvis talks (what it does is the same)
+    "jarvis": "You speak out loud with a refined British accent and dry wit.",
+    "friendly": "You speak out loud like a warm, upbeat friend: casual, encouraging, the odd light joke.",
+    "brief": "You speak out loud plainly and as briefly as possible: the answer, no small talk or jokes.",
+}
+
+LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, who built you. {PERSONA} {ADDRESS} Keep replies to one or two short sentences unless asked for more, and match the user's relaxed tone.
 
 # Hearing the user
 - You hear the user through speech recognition, which garbles names and technical words. Act on what they most plausibly meant in context; ask briefly only when plausible readings lead to different actions. "It", "that" and "them" mean what was just discussed.
@@ -485,7 +491,8 @@ class Live:
                 f"language or act on it.") if language == "English" else (
                 f"Always speak {language}, the user's language. They may mix in English words and names: that's normal. A "
                 f"transcript in a language that is neither is mishearing or background noise: don't act on it.")
-        prompt = LIVE_PROMPT.replace("{SYSTEM}", system.describe()).replace("{ADDRESS}", address).replace("{LANGUAGE}", rule) + f"\n\nIt is now {time.strftime('%A %d %B %Y, %H:%M')}." + "\n\n" + self._abilities()
+        prompt = (LIVE_PROMPT.replace("{SYSTEM}", system.describe()).replace("{ADDRESS}", address).replace("{LANGUAGE}", rule)
+                  .replace("{PERSONA}", PERSONAS.get(cfg["personality"], PERSONAS["jarvis"]))) + f"\n\nIt is now {time.strftime('%A %d %B %Y, %H:%M')}." + "\n\n" + self._abilities()
         if cfg["extra_instructions"].strip():
             prompt += f"\n\nThe user's own instructions:\n{cfg['extra_instructions'].strip()}"
         if store.memory():  # first, so the user's preferences (like what to call them) win over the defaults below

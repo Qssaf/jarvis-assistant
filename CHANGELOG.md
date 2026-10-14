@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.10.0 — 2026-10-15
+
+### Added
+- **Personality** (Settings): classic Jarvis (refined, dry wit), friendly (warm and casual) or brief (just the answer).
+  What Jarvis does doesn't change, only how it talks.
+- **Smart home**: a Home Assistant quick pick on the Plugins page (its MCP address and where to paste a token).
+
 ## 1.9.1 — 2026-10-15
 
 ### Added
