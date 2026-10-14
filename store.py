@@ -240,6 +240,21 @@ def delete_routine(name):
     return found
 
 
+# ---------------------------------------------------------------- what Jarvis changed (for "undo that")
+CHANGES_FILE = os.path.join(DATA, "changes.json")
+
+
+def log_change(what):
+    with _lock:
+        write_json(CHANGES_FILE, (read_json(CHANGES_FILE, []) + [{"at": time.time(), "what": str(what)[:500]}])[-200:], private=True)
+
+
+def changes(limit=15):
+    """The latest changes Jarvis made, newest first."""
+    return [{"when": time.strftime("%a %d %b %H:%M", time.localtime(c["at"])), "what": c["what"]}
+            for c in reversed(read_json(CHANGES_FILE, [])[-limit:])]
+
+
 # ---------------------------------------------------------------- deleting what Jarvis keeps
 def delete_data():
     """Delete everything Jarvis keeps about the user on this PC: memory, conversations, reminders, routines, voice clips
@@ -247,7 +262,7 @@ def delete_data():
     (they're removed on their own pages)."""
     import shutil
     with _lock:
-        for path in (MEMORY_FILE, REMINDERS_FILE, ROUTINES_FILE, *(os.path.join(DATA, name) for name in (
+        for path in (MEMORY_FILE, REMINDERS_FILE, ROUTINES_FILE, CHANGES_FILE, *(os.path.join(DATA, name) for name in (
                 "usage.json", "deadlines.json", "calendar.json", "briefing.json", "jarvis.log.old"))):
             try:
                 os.remove(path)

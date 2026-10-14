@@ -7,6 +7,10 @@
   class in person), transcribes it every five minutes as it goes, and on "stop the notes" writes a summary, key points,
   dates and homework plus the full transcript to Documents/Jarvis Notes, then says it's ready. Silent stretches aren't
   sent (models invent words for silence). Linux (PipeWire).
+- **Undo**: everything Jarvis changes (commands that change things, account actions) is logged and shown in Activity;
+  "undo that" or "what did you change?" reads the log and reverses it. Files it deletes go to the trash (a plain `rm`
+  becomes `gio trash`), so they come back; only "delete permanently" really deletes.
+- **Plans**: a long task's steps show in the chat as it starts, so a wrong turn can be stopped early.
 - **Text size** (Settings): the whole window's text, from 0.9 to 1.5 times the normal size.
 - **A Windows build** for new releases: `Jarvis.exe` in a zip, attached to each GitHub release (built and started
   headless in CI first).

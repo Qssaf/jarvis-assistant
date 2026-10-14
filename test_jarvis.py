@@ -1106,4 +1106,32 @@ def wav(samples):
 assert not brain.audible(wav(np.zeros(16000))) and brain.audible(wav(np.sin(np.arange(16000) / 3) * 5000))  # (silence isn't sent)
 brain.NOTES_DIR = real_dir
 
+# what Jarvis changed is logged (for "undo that"); reads aren't; a long task's plan reaches the chat
+shown, planned, real_shell = [], [], system.shell
+brain.on_change[0], brain.on_plan[0] = shown.append, planned.append
+system.shell = lambda command, timeout: (0, "")
+brain.tool_run_command("gio trash ~/Downloads/a.tmp", confirmed=True)
+brain.tool_run_command("ls ~/Downloads")
+assert not brain.risky_command("gio trash --list")
+executed.clear()
+ab.run_app_tool("GMAIL_CREATE_EMAIL_DRAFT", {"to": "a@b.c", "confirmed": True})
+ab.run_app_tool("GMAIL_FETCH_EMAILS", {"query": "x"})
+latest = brain.tool_recent_changes()["changes"]
+assert [c["what"] for c in latest[:2]] == ['GMAIL_CREATE_EMAIL_DRAFT: {"to": "a@b.c"}', "ran: gio trash ~/Downloads/a.tmp"], latest
+assert len(shown) == 2 and "gio trash --restore" in brain.tool_recent_changes()["undo"]
+assert brain.tool_plan(["open the site", "log in", "fill the form", "submit"])["result"].startswith("the plan is shown") and planned[0][2] == "fill the form"
+system.shell = real_shell
+
+# a plain rm goes to the trash (restorable) unless it's meant to be permanent; anything fancier runs as written
+real_have = system.have
+system.have = lambda program: program == "gio" or real_have(program)
+assert brain.to_trash("rm -rf ~/old notes.txt") == "gio trash -- ~/old notes.txt" and brain.to_trash("rm a; ls") is None
+ran.clear()
+system.shell = lambda command, timeout: ran.append(command) or (0, "")
+out = brain.tool_run_command("rm ~/Downloads/a.tmp", confirmed=True)
+assert ran == ["gio trash -- ~/Downloads/a.tmp"] and "trash" in out["note"]
+brain.tool_run_command("rm ~/Downloads/b.tmp", confirmed=True, permanent=True)
+assert ran[-1] == "rm ~/Downloads/b.tmp"
+system.shell, system.have = real_shell, real_have
+
 print("ok")

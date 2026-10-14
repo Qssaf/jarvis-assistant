@@ -540,7 +540,7 @@ def tool_close_window(name):
 RISKY_COMMAND = re.compile(
     r"(?:^|[;&|(`$]\s*|\b(?:sudo|doas|xargs|exec)\s+)(?:rm|rmdir|shred|unlink|dd|mkfs\S*|fdisk|parted|wipefs|mv|cp|truncate|chmod|"
     r"chown|kill|pkill|killall|shutdown|reboot|poweroff|halt|systemctl|loginctl|pacman|paru|yay|apt|apt-get|dnf|yum|zypper|"
-    r"flatpak|snap|pip|pip3|npm|crontab|sudo|doas|su|git\s+(?:push|reset|clean|checkout|rebase)|Remove-Item|Move-Item|"
+    r"flatpak|snap|pip|pip3|npm|crontab|sudo|doas|su|trash-put|gio\s+trash(?!\s+--list)|git\s+(?:push|reset|clean|checkout|rebase)|Remove-Item|Move-Item|"
     r"Stop-Process|Stop-Computer|Restart-Computer|Format-Volume|Clear-Content|Set-Content|del|rd|erase|format)\b"
     r"|(?<![0-9&<>])>(?![&>]?\s*/dev/null)|\|\s*(?:ba|z)?sh\b", re.I | re.M)
 
@@ -549,7 +549,19 @@ def risky_command(command):
     return bool(RISKY_COMMAND.search(command))
 
 
-def tool_run_command(command, timeout=30, confirmed=False):
+PLAIN_RM = re.compile(r"^\s*rm\s+((?:-[a-zA-Z]+\s+)*)(--\s+)?([^;&|`$()<>\n]+?)\s*$")
+
+
+def to_trash(command):
+    """A plain `rm [options] paths` as the same paths moved to the trash (restorable), or None if it isn't one."""
+    m = PLAIN_RM.match(command)
+    return f"gio trash -- {m[3]}" if m and not system.IS_WINDOWS and system.have("gio") else None
+
+
+def tool_run_command(command, timeout=30, confirmed=False, permanent=False):
+    trashed = None if permanent else to_trash(command)
+    if trashed:
+        command = trashed  # (deleting files: to the trash, so "undo that" can bring them back)
     if not confirmed and store.settings()["safety"] == "ask" and risky_command(command):
         return {"error": "not run: this command changes or removes things. Tell the user in a few words what it will do, and run "
                          "it again with confirmed: true only once they say yes (or if they asked for exactly this)."}
@@ -557,7 +569,29 @@ def tool_run_command(command, timeout=30, confirmed=False):
         code, out = system.shell(command, timeout)
     except subprocess.TimeoutExpired:
         return {"error": f"timed out after {timeout}s (open apps with act launch instead)"}
-    return {"exit_code": code, "output": out[-4000:]}
+    if risky_command(command):
+        changed(f"ran: {command}")
+    return {"exit_code": code, "output": out[-4000:], **({"note": "moved to the trash, so it can be restored (permanent: true deletes for good)"} if trashed else {})}
+
+
+on_change = [lambda what: None]  # set by the app: shows a change in the Activity page
+on_plan = [lambda steps: None]  # set by the app: shows a long task's plan in the chat
+
+
+def changed(what):
+    store.log_change(what)
+    on_change[0](what)
+
+
+def tool_recent_changes():
+    return {"changes": store.changes(), "undo": "reverse the one meant: restore trashed files with gio trash --restore "
+            "trash:///<name> (gio trash --list shows them), cancel a reminder, delete a draft or event you made, move a file back. "
+            "Sent messages and emails can't be unsent: say so."}
+
+
+def tool_plan(steps):
+    on_plan[0]([str(s) for s in steps][:12])
+    return {"result": "the plan is shown to the user; carry on with it now"}
 
 
 grounder = [None]  # set by Brain: answers with Google Search grounding
@@ -899,8 +933,10 @@ TOOLS = {
     "close_window": (tool_close_window, "Close a window by (part of) its title or app name.", obj(name={"type": "string"})),
     "run_command": (tool_run_command, f"Run a {'PowerShell' if system.IS_WINDOWS else 'bash'} command on the user's PC and get its output. "
                     "confirmed: true only when the user asked for exactly this or said yes to it (commands that change or remove "
-                    "things are refused without it).", obj(
-        command={"type": "string"}, timeout={"type": "integer"}, confirmed={"type": "boolean"}, optional=("timeout", "confirmed"))),
+                    "things are refused without it). A plain rm moves the files to the trash unless permanent: true (only when the "
+                    "user says permanently).", obj(
+        command={"type": "string"}, timeout={"type": "integer"}, confirmed={"type": "boolean"}, permanent={"type": "boolean"},
+        optional=("timeout", "confirmed", "permanent"))),
     "web_search": (tool_web_search, "Search the web: returns a Google-grounded answer with the key facts plus result links. "
                    "One search is usually enough.", obj(query={"type": "string"})),
     "read_webpage": (tool_read_webpage, "Fetch a web page's text (works for JavaScript-heavy pages too). Long pages: put the "
@@ -1112,6 +1148,10 @@ TOOLS.update({
               "microphone, for a class in person; a title), stop (the summary and transcript are saved to Documents/Jarvis "
               "Notes and announced when ready), or status.", obj(action={"type": "string", "enum": ["start", "stop", "status"]},
               title={"type": "string"}, source={"type": "string", "enum": ["pc", "room"]}, optional=("title", "source"))),
+    "recent_changes": (tool_recent_changes, "What Jarvis changed lately (commands that changed things, account actions), newest "
+                       "first, and how to reverse each: for \"undo that\" or \"what did you change?\".", obj()),
+    "plan": (tool_plan, "Show the user your plan for a long task (more than three steps), before or alongside your first "
+             "action; then carry on without waiting.", obj(steps={"type": "array", "items": {"type": "string"}})),
     "routine": (tool_routine, "The user's routines: named sets of steps they can start with a phrase (\"study mode\", \"I'm going "
                 "to bed\"). action: save (name + steps, in their words), run (name: get the steps, then do them), list, delete.",
                 obj(action={"type": "string", "enum": ["save", "run", "list", "delete"]}, name={"type": "string"},
@@ -1937,6 +1977,8 @@ class Brain:
         args.pop("confirmed", None)
         out = self.plugins["composio"].call("COMPOSIO_MULTI_EXECUTE_TOOL", {
             "tools": [{"tool_slug": slug, "arguments": args}], "sync_response_to_workbench": False})
+        if not is_read_action(slug) and "error" not in out:
+            changed(f"{slug}: {json.dumps(args, ensure_ascii=False)[:300]}")
         return out
 
     def disconnect_workspace(self, slug):
