@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.9.1 — 2026-10-15
+
+### Added
+- `evals/agent_eval.py`: 15 real tasks (email, files, Discord, Classroom, Drive, a quiz, a prompt injection, reminders,
+  routines...) run by the real agent on your models against simulated tools, checking the moves it makes. Nothing on the
+  PC or in your accounts is touched. 15/15 on Gemini 3.8 Flash.
+
+### Changed
+- Asking for exactly an action is now the yes for it: "delete the .tmp files in Downloads" deletes them at once instead
+  of asking "are you sure?" (and, with no one answering, doing nothing). Vague requests ("clean up my Downloads") still
+  ask first. Found by the eval.
+
 ## 1.9.0 — 2026-10-15
 
 ### Added

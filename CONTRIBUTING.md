@@ -13,6 +13,8 @@ Thanks for helping. Jarvis is a small codebase on purpose: a few Python modules 
 
 CI runs the same lint and tests on Linux and Windows for every push and pull request.
 
+Prompt or tool changes: run `evals/agent_eval.py` before and after (it uses your models: see its first lines).
+
 ## Where things live
 
 | File | What it does |
