@@ -1123,8 +1123,8 @@ assert brain.tool_plan(["open the site", "log in", "fill the form", "submit"])["
 system.shell = real_shell
 
 # a plain rm goes to the trash (restorable) unless it's meant to be permanent; anything fancier runs as written
-real_have = system.have
-system.have = lambda program: program == "gio" or real_have(program)
+real_have, real_windows = system.have, system.IS_WINDOWS
+system.have, system.IS_WINDOWS = (lambda program: program == "gio" or real_have(program)), False  # (the Linux path)
 assert brain.to_trash("rm -rf ~/old notes.txt") == "gio trash -- ~/old notes.txt" and brain.to_trash("rm a; ls") is None
 ran.clear()
 system.shell = lambda command, timeout: ran.append(command) or (0, "")
@@ -1132,7 +1132,7 @@ out = brain.tool_run_command("rm ~/Downloads/a.tmp", confirmed=True)
 assert ran == ["gio trash -- ~/Downloads/a.tmp"] and "trash" in out["note"]
 brain.tool_run_command("rm ~/Downloads/b.tmp", confirmed=True, permanent=True)
 assert ran[-1] == "rm ~/Downloads/b.tmp"
-system.shell, system.have = real_shell, real_have
+system.shell, system.have, system.IS_WINDOWS = real_shell, real_have, real_windows
 
 # jarvis --region: the picked part of the screen is read carefully, shown in the chat, and Jarvis listens for the question
 real_region, real_look_fn, real_emit = system.capture_region, brain.tool_look, jarvis.emit
