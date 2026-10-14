@@ -2,9 +2,6 @@
 
 ## 1.10.1 — 2026-10-15
 
-### Added
-- **A Windows build**: `Jarvis.exe` in a zip, attached to each GitHub release (built and started headless in CI).
-
 ### Fixed
 - Listening, reminders, the calendar and Classroom checks and the phone link start again by themselves if they ever
   stop (they used to stay stopped until Jarvis was restarted).
