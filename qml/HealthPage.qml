@@ -78,8 +78,8 @@ ScrollPage {
                 RowLayout {
                     required property string modelData
                     Layout.fillWidth: true
-                    Txt { text: modelData; Layout.fillWidth: true; font.family: Theme.mono; font.pixelSize: 12 }
-                    Txt { text: page.usage[modelData] + " requests"; color: Theme.accent; font.pixelSize: 13 }
+                    Txt { text: modelData; Layout.fillWidth: true; font.family: Theme.mono; font.pixelSize: Theme.px(12) }
+                    Txt { text: page.usage[modelData] + " requests"; color: Theme.accent; font.pixelSize: Theme.px(13) }
                 }
             }
             Txt { kind: "small"; visible: !Object.keys(page.usage).length; text: "No requests yet today." }

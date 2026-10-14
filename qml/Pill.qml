@@ -28,7 +28,7 @@ AbstractButton {
                    color: b.kind === "primary" ? Theme.ink : b.kind === "danger" ? Theme.red : Theme.text }
             Text {
                 text: b.text
-                font.family: Theme.font; font.pixelSize: 14; font.weight: Font.DemiBold
+                font.family: Theme.font; font.pixelSize: Theme.px(14); font.weight: Font.DemiBold
                 color: b.kind === "primary" ? Theme.ink : b.kind === "danger" ? Theme.red : Theme.text
                 anchors.verticalCenter: parent.verticalCenter
             }

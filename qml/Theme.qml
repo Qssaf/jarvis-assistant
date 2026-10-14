@@ -26,6 +26,8 @@ QtObject {
     readonly property string font: "Inter Variable"
     readonly property string mono: "JetBrainsMono Nerd Font"
     readonly property int radius: 14
+    property real scale: 1.0  // Settings → Text size
+    function px(n) { return Math.round(n * scale) }  // (font sizes stay whole pixels)
     readonly property int radiusSmall: 10
 
     function stateColor(s) {

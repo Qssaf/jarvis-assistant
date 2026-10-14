@@ -67,12 +67,12 @@ Item {
                         id: line
                         Layout.fillWidth: true
                         text: who === "tool" ? Backend.toolLabel(parent.text) + "  ·  " + parent.text : parent.text
-                        font.pixelSize: 13
+                        font.pixelSize: Theme.px(13)
                         color: who === "thinking" ? Theme.dim : Theme.text
                         maximumLineCount: 4
                         elide: Text.ElideRight
                     }
-                    Txt { Layout.rightMargin: 14; kind: "small"; text: Qt.formatTime(new Date(time * 1000), "HH:mm:ss"); font.family: Theme.mono; font.pixelSize: 11 }
+                    Txt { Layout.rightMargin: 14; kind: "small"; text: Qt.formatTime(new Date(time * 1000), "HH:mm:ss"); font.family: Theme.mono; font.pixelSize: Theme.px(11) }
                 }
                 Txt { anchors.centerIn: parent; kind: "small"; visible: steps.count === 0; text: "Nothing yet: ask Jarvis something" }
             }
@@ -86,7 +86,7 @@ Item {
                 Txt { kind: "caps"; text: "Reply speed" }
                 Txt {
                     text: page.speeds.length ? (page.speeds.reduce((a, b) => a + b, 0) / page.speeds.length).toFixed(2) + " s" : "–"
-                    font.pixelSize: 34; font.weight: Font.Bold
+                    font.pixelSize: Theme.px(34); font.weight: Font.Bold
                 }
                 Txt { kind: "small"; Layout.fillWidth: true
                       text: page.speeds.length ? `on average, from the end of what you said to Jarvis's first word (last ${page.speeds.length})`

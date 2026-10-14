@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.11.0 — 2026-10-15
+
+### Added
+- **Text size** (Settings): the whole window's text, from 0.9 to 1.5 times the normal size.
+- **A Windows build** for new releases: `Jarvis.exe` in a zip, attached to each GitHub release (built and started
+  headless in CI first).
+
 ## 1.10.1 — 2026-10-15
 
 ### Added

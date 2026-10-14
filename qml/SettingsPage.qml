@@ -43,7 +43,7 @@ ScrollPage {
     function set(key, value) {
         const change = {}
         change[key] = value
-        Api.post("/api/settings", change, d => s = d.settings, e => { Backend.toast(e.error, true); load() })
+        Api.post("/api/settings", change, d => { s = d.settings; Theme.scale = d.settings.text_size || 1 }, e => { Backend.toast(e.error, true); load() })
     }
     Component.onCompleted: load()
 
@@ -105,6 +105,8 @@ ScrollPage {
 
     Section {
         title: "Jarvis"
+        Slide { label: "Text size"; key: "text_size"; from: 0.9; to: 1.5; step: 0.05; unit: "×"; decimals: 2
+                hint: "Bigger text across the window" }
         Toggle { Layout.fillWidth: true; text: "Show Jarvis's thinking in the chat"; checked: !!page.s.show_thinking
                  onToggled: page.set("show_thinking", checked) }
         Toggle { Layout.fillWidth: true; text: "Start Jarvis when I log in"; checked: !!page.s.start_at_login
@@ -213,8 +215,8 @@ ScrollPage {
         spacing: 4
         RowLayout {
             Layout.fillWidth: true
-            Txt { text: sl.label; Layout.fillWidth: true; font.pixelSize: 13 }
-            Txt { text: slider.value.toFixed(sl.decimals) + sl.unit; font.family: Theme.mono; font.pixelSize: 12; color: Theme.accent }
+            Txt { text: sl.label; Layout.fillWidth: true; font.pixelSize: Theme.px(13) }
+            Txt { text: slider.value.toFixed(sl.decimals) + sl.unit; font.family: Theme.mono; font.pixelSize: Theme.px(12); color: Theme.accent }
         }
         Slider {
             id: slider
@@ -253,7 +255,7 @@ ScrollPage {
             anchors.fill: parent
             color: Theme.text
             font.family: area.mono ? Theme.mono : Theme.font
-            font.pixelSize: area.mono ? 12 : 14
+            font.pixelSize: Theme.px(area.mono ? 12 : 14)
             wrapMode: TextEdit.Wrap
             selectionColor: Theme.alpha(Theme.accent, 0.45)
             background: null

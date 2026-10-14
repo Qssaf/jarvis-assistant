@@ -22,7 +22,7 @@ Window {
 
     function present() { show(); raise(); requestActivate() }
     function go(key) { page = key }
-    Component.onCompleted: Api.get("/api/settings", d => win.needsSetup = !d.settings.setup_done)
+    Component.onCompleted: Api.get("/api/settings", d => { win.needsSetup = !d.settings.setup_done; Theme.scale = d.settings.text_size || 1 })
 
     Connections {
         target: Backend
@@ -201,7 +201,7 @@ Window {
             topPadding: 8
             Icon { anchors.horizontalCenter: parent.horizontalCenter; name: rb.symbol; size: 21
                    color: rb.current ? Theme.accent : rb.hovered ? Theme.text : Theme.dim }
-            Text { anchors.horizontalCenter: parent.horizontalCenter; text: rb.label; font.family: Theme.font; font.pixelSize: 11
+            Text { anchors.horizontalCenter: parent.horizontalCenter; text: rb.label; font.family: Theme.font; font.pixelSize: Theme.px(11)
                    font.weight: rb.current ? Font.DemiBold : Font.Medium; color: rb.current ? Theme.text : Theme.dim }
         }
     }

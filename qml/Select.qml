@@ -10,7 +10,7 @@ ComboBox {
     valueRole: "value"
     implicitHeight: 40
     font.family: Theme.font
-    font.pixelSize: 14
+    font.pixelSize: Theme.px(14)
     // (not a binding: it wouldn't re-run when the list arrives after the value, and picking an item would break it)
     function sync() { currentIndex = Math.max(0, indexOfValue(value)) }
     onValueChanged: sync()

@@ -40,7 +40,7 @@ ScrollPage {
                 placeholderTextColor: Theme.faint
                 color: Theme.text
                 font.family: Theme.font
-                font.pixelSize: 14
+                font.pixelSize: Theme.px(14)
                 wrapMode: TextEdit.Wrap
                 selectionColor: Theme.alpha(Theme.accent, 0.45)
                 background: null

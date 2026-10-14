@@ -88,7 +88,7 @@ Item {
                     Txt {
                         anchors.horizontalCenter: parent.horizontalCenter
                         kind: "title"
-                        font.pixelSize: 30
+                        font.pixelSize: Theme.px(30)
                         text: Backend.state === "idle" ? greeting() : Theme.stateName(Backend.state) + "…"
                         function greeting() {
                             const h = new Date().getHours()
@@ -98,7 +98,7 @@ Item {
                     Txt {
                         anchors.horizontalCenter: parent.horizontalCenter
                         kind: "small"
-                        font.pixelSize: 14
+                        font.pixelSize: Theme.px(14)
                         text: Backend.state === "idle" ? `Say “${home.wake}”, tap the orb, or type below`
                             : Backend.state === "listening" ? (Backend.listening ? "Go ahead, I'm listening" : "Paused")
                             : Backend.state === "speaking" ? `Say “${home.wake}” to cut in` : "On it"
@@ -198,7 +198,7 @@ Item {
             Column {
                 anchors { left: badge.right; leftMargin: 12; right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
                 spacing: 3
-                Txt { text: s.title; width: parent.width; font.weight: Font.DemiBold; font.pixelSize: 14; elide: Text.ElideRight; wrapMode: Text.NoWrap }
+                Txt { text: s.title; width: parent.width; font.weight: Font.DemiBold; font.pixelSize: Theme.px(14); elide: Text.ElideRight; wrapMode: Text.NoWrap }
                 Txt { text: s.hint; kind: "small"; width: parent.width; elide: Text.ElideRight; wrapMode: Text.NoWrap }
             }
         }

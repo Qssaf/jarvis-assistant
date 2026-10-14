@@ -54,7 +54,7 @@ Item {
                 Layout.topMargin: 12
                 text: m.linkify(m.text)
                 textFormat: Text.MarkdownText
-                font.pixelSize: 15
+                font.pixelSize: Theme.px(15)
                 lineHeight: 1.18
                 HoverHandler { id: hover }
                 IconButton {

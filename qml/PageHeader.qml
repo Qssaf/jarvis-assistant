@@ -11,7 +11,7 @@ RowLayout {
         Layout.fillWidth: true
         spacing: 4
         Txt { kind: "title"; text: title }
-        Txt { kind: "small"; text: hint; visible: hint !== ""; font.pixelSize: 14; Layout.fillWidth: true }
+        Txt { kind: "small"; text: hint; visible: hint !== ""; font.pixelSize: Theme.px(14); Layout.fillWidth: true }
     }
     Row { id: actionRow; spacing: 8; Layout.alignment: Qt.AlignBottom }
 }

@@ -53,7 +53,7 @@ Rectangle {
                     placeholderTextColor: Theme.faint
                     color: Theme.text
                     font.family: Theme.font
-                    font.pixelSize: 15
+                    font.pixelSize: Theme.px(15)
                     wrapMode: TextEdit.Wrap
                     selectionColor: Theme.alpha(Theme.accent, 0.45)
                     verticalAlignment: TextEdit.AlignVCenter

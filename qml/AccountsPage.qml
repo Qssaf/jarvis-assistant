@@ -56,7 +56,7 @@ ScrollPage {
                             Txt {
                                 anchors.centerIn: parent
                                 text: card.modelData.name.split(/[ (]/).filter(w => w).slice(0, 2).map(w => w[0]).join("").toUpperCase()
-                                font.weight: Font.Bold; font.pixelSize: 14
+                                font.weight: Font.Bold; font.pixelSize: Theme.px(14)
                                 color: card.modelData.connected ? Theme.accent : Theme.dim
                             }
                         }

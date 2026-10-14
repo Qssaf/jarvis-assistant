@@ -41,8 +41,8 @@ ScrollView {
         ColumnLayout {
             Layout.leftMargin: 20; Layout.rightMargin: 20
             spacing: 0
-            Txt { text: Qt.formatTime(today.now, "HH:mm"); font.pixelSize: 44; font.weight: Font.Bold; font.letterSpacing: -1.5 }
-            Txt { text: Qt.formatDate(today.now, "dddd, d MMMM"); kind: "small"; font.pixelSize: 13 }
+            Txt { text: Qt.formatTime(today.now, "HH:mm"); font.pixelSize: Theme.px(44); font.weight: Font.Bold; font.letterSpacing: -1.5 }
+            Txt { text: Qt.formatDate(today.now, "dddd, d MMMM"); kind: "small"; font.pixelSize: Theme.px(13) }
         }
         Card {
             Layout.fillWidth: true; Layout.leftMargin: 14; Layout.rightMargin: 14
@@ -50,7 +50,7 @@ ScrollView {
             RowLayout {
                 width: parent.width
                 spacing: 12
-                Text { text: (today.info.weather || {}).icon || ""; font.pixelSize: 30 }
+                Text { text: (today.info.weather || {}).icon || ""; font.pixelSize: Theme.px(30) }
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 1
@@ -117,7 +117,7 @@ ScrollView {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 0
-                            Txt { text: modelData.text; Layout.fillWidth: true; elide: Text.ElideRight; wrapMode: Text.NoWrap; font.pixelSize: 14 }
+                            Txt { text: modelData.text; Layout.fillWidth: true; elide: Text.ElideRight; wrapMode: Text.NoWrap; font.pixelSize: Theme.px(14) }
                             Txt { kind: "small"; text: modelData.when }
                         }
                         IconButton { symbol: "close"; size: 28; glyph: 13; tip: "Cancel this reminder"
@@ -163,7 +163,7 @@ ScrollView {
         spacing: 5
         RowLayout {
             Layout.fillWidth: true
-            Txt { text: label; font.pixelSize: 13; Layout.fillWidth: true }
+            Txt { text: label; font.pixelSize: Theme.px(13); Layout.fillWidth: true }
             Txt { kind: "small"; text: detail }
         }
         Rectangle {

@@ -5,7 +5,7 @@ import QtQuick.Controls
 TextField {
     id: f
     font.family: Theme.font
-    font.pixelSize: 14
+    font.pixelSize: Theme.px(14)
     color: Theme.text
     placeholderTextColor: Theme.faint
     selectionColor: Theme.alpha(Theme.accent, 0.45)
