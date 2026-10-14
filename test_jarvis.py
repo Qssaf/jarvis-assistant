@@ -1134,4 +1134,19 @@ brain.tool_run_command("rm ~/Downloads/b.tmp", confirmed=True, permanent=True)
 assert ran[-1] == "rm ~/Downloads/b.tmp"
 system.shell, system.have = real_shell, real_have
 
+# jarvis --region: the picked part of the screen is read carefully, shown in the chat, and Jarvis listens for the question
+real_region, real_look_fn, real_emit = system.capture_region, brain.tool_look, jarvis.emit
+said, logged, looked = [], [], []
+system.capture_region = lambda: b"\xff\xd8jpeg"
+brain.tool_look = lambda question, image=None, careful=False, **k: looked.append((image, careful)) or {"answer": "a chart of rainfall by month"}
+jarvis.emit = lambda kind, **data: logged.append(data)
+fake_live = types.SimpleNamespace(wake=lambda: said.append("wake"), _go=lambda coro: said.append(coro), _send=lambda text, track=True: text)
+jarvis.ask_about_region(fake_live)
+assert looked == [(b"\xff\xd8jpeg", True)] and said[0] == "wake" and "rainfall" in said[1] and logged[0]["who"] == "image"
+system.capture_region = lambda: None  # (cancelled: nothing happens)
+said.clear()
+jarvis.ask_about_region(fake_live)
+assert said == []
+system.capture_region, brain.tool_look, jarvis.emit = real_region, real_look_fn, real_emit
+
 print("ok")

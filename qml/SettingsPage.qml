@@ -118,7 +118,8 @@ ScrollPage {
             Area { text: page.s.extra_instructions || ""; onDone: v => page.set("extra_instructions", v) } }
         Txt { kind: "small"; Layout.fillWidth: true; text: "Models for everything else, and your API keys, are on the Models page." }
         Txt { kind: "small"; Layout.fillWidth: true
-              text: "Push to talk: bind the command  jarvis --listen  to a keyboard shortcut (KDE: System Settings → Keyboard → Shortcuts → Add New → Command)." }
+              text: "Push to talk: bind the command  jarvis --listen  to a keyboard shortcut (KDE: System Settings → Keyboard → Shortcuts → Add New → Command). "
+                    + "Bind  jarvis --region  too, to drag over part of the screen and ask about it." }
     }
 
     Section {

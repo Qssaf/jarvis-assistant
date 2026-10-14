@@ -162,9 +162,9 @@ def _jpeg(raw, w, h, stride, fmt):
     return bytes(out)
 
 
-def _from_file(args, suffix=".png"):
+def _from_file(args, suffix=".png", timeout=10):
     path = os.path.join(tempfile.mkdtemp(prefix="jarvis-"), "screen" + suffix)
-    run(args + [path] if "{}" not in " ".join(args) else [a.replace("{}", path) for a in args], timeout=10)
+    run(args + [path] if "{}" not in " ".join(args) else [a.replace("{}", path) for a in args], timeout=timeout)
     try:
         from PySide6.QtCore import QBuffer, QByteArray, QIODevice
         from PySide6.QtGui import QImage
@@ -211,6 +211,18 @@ def _screenshot():
     with mss.mss() as m:
         shot = m.grab(m.monitors[0])
         return _jpeg(bytes(shot.bgra), shot.width, shot.height, shot.width * 4, QImage.Format_ARGB32)
+
+
+def capture_region():
+    """Let the user drag over part of the screen; that part as a JPEG, or None if they cancelled (or nothing here can)."""
+    if WAYLAND and KDE and have("spectacle"):
+        return _from_file(["spectacle", "-b", "-n", "-r", "-o"], timeout=120)
+    if WAYLAND and have("grim") and have("slurp"):
+        area = run(["slurp"], 120)
+        return _from_file(["grim", "-g", area]) if re.fullmatch(r"\d+,\d+ \d+x\d+", area) else None
+    if not WAYLAND and not IS_WINDOWS and have("maim"):
+        return _from_file(["maim", "-s"], timeout=120)
+    return None
 
 
 # ---------------------------------------------------------------- mouse and keyboard

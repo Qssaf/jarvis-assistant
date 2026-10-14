@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.11.0 — 2026-10-15
+## 1.12.0 — 2026-10-15
 
 ### Added
 - **Lecture and meeting notes**: "take notes of this lecture" records what the PC plays (or the room's microphone, for a
@@ -11,6 +11,13 @@
   "undo that" or "what did you change?" reads the log and reverses it. Files it deletes go to the trash (a plain `rm`
   becomes `gio trash`), so they come back; only "delete permanently" really deletes.
 - **Plans**: a long task's steps show in the chat as it starts, so a wrong turn can be stopped early.
+- **Ask about part of the screen**: `jarvis --region` (bind it to a key) lets you drag over a chart, an error or a
+  question; Jarvis reads it carefully, shows it in the chat and listens for your question.
+- README: the new features, and Health and Settings screenshots.
+
+## 1.11.0 — 2026-10-15
+
+### Added
 - **Text size** (Settings): the whole window's text, from 0.9 to 1.5 times the normal size.
 - **A Windows build** for new releases: `Jarvis.exe` in a zip, attached to each GitHub release (built and started
   headless in CI first).

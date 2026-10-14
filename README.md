@@ -13,6 +13,10 @@ app with a notch at the top of the screen and a native dashboard window.
 
 ![The notch: listening, working, speaking](docs/notch.png)
 
+![Health: what works and how to fix what doesn't](docs/health.png)
+
+![Settings](docs/settings.png)
+
 ---
 
 ## Features
@@ -26,6 +30,8 @@ app with a notch at the top of the screen and a native dashboard window.
   button, or say *"that's all"*) ends everything. Saying **"Hey Jarvis"** while it talks cuts it short.
 - **Learns your voice**: real wake-ups and dismissed ones train a small verifier, so the TV stops waking it.
 - **Push-to-talk**: bind `jarvis --listen` to a key. Or just type in the window.
+- **Ask about part of the screen**: bind `jarvis --region` to a key, drag over a chart, an error or a question, and ask.
+- **19 languages** and three personalities (classic Jarvis, friendly, brief), in Settings.
 
 ### It does the work
 - **Web**: Google-grounded search, reading any public page, YouTube search, opening links in your browser.
@@ -38,7 +44,13 @@ app with a notch at the top of the screen and a native dashboard window.
   clicks things it finds by description, types, uses shortcuts and manages windows.
 - **Shell**: runs commands for you (bash on Linux, PowerShell on Windows): volume, files, system info, the clipboard.
 - **Background agent**: long jobs (many-step websites, forms) run in the background while you keep talking.
-- **Memory and reminders**: *"Remember that I prefer short answers"*, *"Remind me in 20 minutes to stretch"*.
+- **Memory and reminders**: *"Remember that I prefer short answers"*, *"Remind me in 20 minutes to stretch"*,
+  *"every weekday at 8"*. *"What was that site you told me about?"* searches past conversations.
+- **Notes**: *"Take notes of this lecture"* records what's playing (or the room), transcribes it as it goes, and saves a
+  summary with key points, dates and homework when you say *"stop the notes"*.
+- **Your selection and music**: *"Summarise what I selected"*, *"translate this"*, *"next song"*, *"what's playing?"*.
+- **Undo**: everything Jarvis changes is logged; *"undo that"* reverses it. Deleted files go to the trash.
+- **Heads-ups**: a reminder ten minutes before calendar events, and a day and two hours before Classroom work is due.
 - **Pictures and files**: *"Make a picture of a rainy city at night"*. You can also drop a PDF, picture or text file on
   the window and ask about it.
 - **Your day**: *"Good morning"* gives a briefing (weather, work due, calendar, unread email, reminders). Tell Jarvis
