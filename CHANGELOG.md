@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0 — 2026-10-14
+
+### Changed
+- **A Models page**: pick the models for each job (background tasks, reading the screen carefully, quick looks and clicks,
+  the second try at finding a target, web search answers, making pictures), each as an ordered list of drop-downs that
+  falls back down the list when one is busy. Jobs you haven't changed show Jarvis's own choice, and "Use Jarvis's choice"
+  goes back to it. Providers and API keys moved here from Settings.
+
 ## 1.4.5 — 2026-10-14
 
 ### Fixed

@@ -27,6 +27,8 @@ DEFAULT_SETTINGS = {
     "echo_cancel": False,          # PipeWire echo cancelling (Linux): talk over Jarvis on speakers (experimental)
     "learn_my_voice": True,        # learn from real wake-ups to ignore things that aren't you saying "Hey Jarvis"
     # "backend model thinking-level", tried top to bottom; busy or rate-limited ones are skipped
+    # the same for the other jobs (see brain.MODEL_JOBS); empty = Jarvis's built-in choice
+    "look_models": [], "point_models": [], "point_strong_models": [], "search_models": [], "image_models": [],
     "agent_models": [
         "aistudio gemini-3.8-flash medium",
         "aistudio gemini-3.7-flash low",
@@ -79,12 +81,12 @@ def update_settings(changes):
             value = value is True or str(value).lower() in ("true", "on", "1", "yes")
         elif isinstance(default, list):
             value = [l.strip() for l in (value.splitlines() if isinstance(value, str) else value) if l.strip()]
-            if key == "agent_models":
+            if key.endswith("_models"):
                 for line in value:
                     parts = line.split()
                     if len(parts) != 3 or not parts[0].isidentifier():
                         raise ValueError(f"model line '{line}' should be: <backend> <model> <thinking>, e.g. aistudio gemini-3.8-flash low")
-                if not value:
+                if not value and key == "agent_models":
                     raise ValueError("keep at least one agent model")
         elif isinstance(default, (int, float)):
             value = type(default)(value)

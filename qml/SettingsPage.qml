@@ -10,13 +10,11 @@ ScrollPage {
     hint: "Changes are saved at once. Voice changes apply from the next conversation."
     property var s: ({})
     property var voices: []
-    property var info: ({ providers: [], ollama: null })
-    property var avail: ({ backends: [], live: [] })  // the models each provider offers (asked for separately: it's slower)
+    property var avail: ({ backends: [], live: [] })  // for the voice models (asked for separately: it's slower)
     property bool looking: false
 
     function load() {
         Api.get("/api/settings", d => { s = d.settings; voices = d.voices })
-        Api.get("/api/models", d => info = d)
         lookUp()
     }
     function lookUp() {
@@ -26,24 +24,6 @@ ScrollPage {
     function options(list, current) {  // [{value, label}] for a Select, keeping the current choice even if it isn't listed
         const all = current && list.indexOf(current) < 0 ? [current].concat(list) : list
         return all.map(v => ({ value: v, label: v }))
-    }
-    function backendOf(name) { return page.avail.backends.find(b => b.name === name) }
-    function usableBackends() { return page.avail.backends.filter(b => !b.error || b.models.length).map(b => b.name) }
-    function modelsOf(name) { const b = backendOf(name); return b ? b.models : [] }
-    function setAgentModel(i, parts) { const all = (s.agent_models || []).slice(); all[i] = parts.join(" "); set("agent_models", all) }
-    function moveAgentModel(i) { const all = (s.agent_models || []).slice(); all.splice(i - 1, 0, all.splice(i, 1)[0]); set("agent_models", all) }
-    function removeAgentModel(i) { const all = (s.agent_models || []).slice(); all.splice(i, 1); set("agent_models", all) }
-    function addAgentModel() {
-        const name = usableBackends()[0] || "aistudio"
-        set("agent_models", (s.agent_models || []).concat([[name, modelsOf(name)[0] || "gemini-3.8-flash", "low"].join(" ")]))
-    }
-    readonly property string modelStatus: looking ? "Looking up the models you can use…" : avail.backends
-        .filter(b => b.models.length || (b.error && !/no API key|unknown backend/.test(b.error)))
-        .map(b => b.models.length ? `${b.name}: ${b.models.length} models` : `${b.name}: ${b.error}`).join(" · ")
-    function set(key, value) {
-        const change = {}
-        change[key] = value
-        Api.post("/api/settings", change, d => s = d.settings, e => { Backend.toast(e.error, true); load() })
     }
     Component.onCompleted: load()
 
@@ -102,85 +82,11 @@ ScrollPage {
                  onToggled: page.set("start_at_login", checked) }
         Setting { label: "Your instructions for Jarvis (how to behave, things to know about you)"
             Area { text: page.s.extra_instructions || ""; onDone: v => page.set("extra_instructions", v) } }
+        Txt { kind: "small"; Layout.fillWidth: true; text: "Models for everything else, and your API keys, are on the Models page." }
         Txt { kind: "small"; Layout.fillWidth: true
               text: "Push to talk: bind the command  jarvis --listen  to a keyboard shortcut (KDE: System Settings → Keyboard → Shortcuts → Add New → Command)." }
     }
 
-    Section {
-        title: "Models and keys"
-        Txt { kind: "small"; Layout.fillWidth: true; text: "Keys are kept in " + (page.info.storage || "your keychain") + ", never in the settings file." }
-        Repeater {
-            model: page.info.providers
-            RowLayout {
-                required property var modelData
-                Layout.fillWidth: true
-                spacing: 12
-                Rectangle { Layout.preferredWidth: 8; Layout.preferredHeight: 8; radius: 4
-                            color: modelData.key || modelData.local ? Theme.green : Theme.faint }
-                ColumnLayout {
-                    Layout.preferredWidth: 250
-                    spacing: 0
-                    Txt { text: modelData.name; font.weight: Font.DemiBold }
-                    Txt { kind: "small"; text: modelData.url; elide: Text.ElideRight; wrapMode: Text.NoWrap; Layout.fillWidth: true }
-                }
-                Field {
-                    id: key
-                    Layout.fillWidth: true
-                    visible: !modelData.local
-                    echoMode: TextInput.Password
-                    placeholderText: modelData.key ? "Key saved · paste a new one to replace it" : "Paste an API key"
-                    onAccepted: if (text) Api.post(`/api/keys/${modelData.name}`, { key: text }, d => { page.info = d; text = ""; Backend.toast("Key saved", false); page.lookUp() })
-                }
-                Txt { kind: "small"; visible: !!modelData.local; Layout.fillWidth: true
-                      text: page.info.ollama === null ? "Ollama isn't running" : (page.info.ollama.length ? page.info.ollama.join(", ") : "No models downloaded yet") }
-                IconButton { visible: !!modelData.custom; symbol: "trash"; tip: "Remove this provider"
-                             onClicked: Api.post(`/api/providers/${modelData.name}/delete`, {}, d => { page.info = d; page.lookUp() }) }
-            }
-        }
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 10
-            Field { id: pname; Layout.preferredWidth: 160; placeholderText: "new provider name" }
-            Field { id: purl; Layout.fillWidth: true; placeholderText: "https://host/v1 (any OpenAI-compatible service)" }
-            Pill { text: "Add"; symbol: "plus"; enabled: pname.text && purl.text
-                   onClicked: Api.post("/api/providers", { name: pname.text, url: purl.text }, d => { page.info = d; pname.text = purl.text = ""; page.lookUp() }) }
-        }
-        Setting {
-            label: "Background agent models, tried top to bottom: when one is busy or down, the next takes over. Thinking: how hard it thinks first (higher is smarter, slower)."
-            Repeater {
-                model: page.s.agent_models || []
-                RowLayout {
-                    id: row
-                    required property string modelData
-                    required property int index
-                    readonly property var parts: modelData.split(/\s+/)
-                    Layout.fillWidth: true
-                    spacing: 8
-                    Txt { text: (row.index + 1) + "."; color: Theme.dim; Layout.preferredWidth: 20 }
-                    Select { Layout.preferredWidth: 150; model: page.options(page.usableBackends(), row.parts[0]); value: row.parts[0]
-                             onPicked: v => page.setAgentModel(row.index, [v, page.modelsOf(v)[0] || row.parts[1], row.parts[2]]) }
-                    Select { Layout.fillWidth: true; visible: page.modelsOf(row.parts[0]).length > 0
-                             model: page.options(page.modelsOf(row.parts[0]), row.parts[1]); value: row.parts[1]
-                             onPicked: v => page.setAgentModel(row.index, [row.parts[0], v, row.parts[2]]) }
-                    Field { Layout.fillWidth: true; visible: !page.modelsOf(row.parts[0]).length; text: row.parts[1]; placeholderText: "model name"
-                            onEditingFinished: if (text && text !== row.parts[1]) page.setAgentModel(row.index, [row.parts[0], text.trim(), row.parts[2]]) }
-                    Select { Layout.preferredWidth: 120; model: page.options(["minimal", "low", "medium", "high"], row.parts[2]); value: row.parts[2]
-                             onPicked: v => page.setAgentModel(row.index, [row.parts[0], row.parts[1], v]) }
-                    IconButton { symbol: "chevron"; rotation: 180; tip: "Try this one sooner"; enabled: row.index > 0; opacity: enabled ? 1 : 0.3
-                                 onClicked: page.moveAgentModel(row.index) }
-                    IconButton { symbol: "trash"; tip: "Remove"; enabled: (page.s.agent_models || []).length > 1; opacity: enabled ? 1 : 0.3
-                                 onClicked: page.removeAgentModel(row.index) }
-                }
-            }
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 10
-                Pill { text: "Add a model"; symbol: "plus"; onClicked: page.addAgentModel() }
-                Pill { text: "Refresh"; symbol: "refresh"; enabled: !page.looking; onClicked: page.lookUp() }
-                Txt { kind: "small"; text: page.modelStatus; elide: Text.ElideRight; wrapMode: Text.NoWrap; Layout.fillWidth: true }
-            }
-        }
-    }
     Txt { kind: "small"; text: "Jarvis " + Backend.version; Layout.topMargin: 6 }
     Item { Layout.preferredHeight: 24 }
 

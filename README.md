@@ -58,8 +58,8 @@ weather, what's next and system load. Other pages: **Chats** (saved and searchab
 ## Install
 
 You need a free [Google AI Studio API key](https://aistudio.google.com/apikey) for the voice. Image generation and
-some search features need a paid key; everything else works on the free tier. You can paste the key in **Settings →
-Models and keys** instead of the env file below.
+some search features need a paid key; everything else works on the free tier. You can paste the key on the **Models**
+page instead of the env file below.
 
 ### Windows
 
@@ -125,11 +125,11 @@ the top of the screen.
 | Finding where to click | Gemini 3.5 Flash Lite (trained on Gemini's 0–1000 grid; fast and accurate) |
 | Web search | Gemini 3.5 Flash Lite with Google Search grounding |
 | Pictures | Gemini 3.1 Flash Image (paid key) |
-| Background agent | Gemini 3.8 Flash, then fallbacks: pick them and their order in **Settings → Models and keys** |
+| Background agent | Gemini 3.8 Flash, then fallbacks: pick them and their order on the **Models** page |
 
 Busy or rate-limited models are skipped automatically.
 
-**Your own models**: in **Settings → Models and keys**, paste a key for OpenAI, Anthropic, OpenRouter, Groq, DeepSeek,
+**Your own models**: on the **Models** page, paste a key for OpenAI, Anthropic, OpenRouter, Groq, DeepSeek,
 Mistral or xAI, or add any other OpenAI-compatible service (LM Studio, vLLM, a proxy) by address. Jarvis then asks each
 provider which models your key can use, so you pick the agent's models (and how hard each thinks) from drop-downs, and
 the voice model from Gemini's real-time ones. Keys are kept in your system

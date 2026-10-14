@@ -553,6 +553,19 @@ brain.fetch = real_fetch
 db.connected = set()
 assert "isn't connected" in db.drive_file("x")["error"]
 
+# each job's models: the setting when set ("none" thinking for picture models), else the built-in list; bad lines are refused
+store.update_settings({"point_models": ["aistudio quick-model low"], "image_models": ["aistudio paint-model none"]})
+assert brain.models_for("point") == [("aistudio", "quick-model", "low")] and brain.models_for("image") == [("aistudio", "paint-model", None)]
+jobs = {j["job"]: j for j in brain.Brain.model_jobs()}
+assert jobs["point"]["custom"] and jobs["point"]["models"] == ["aistudio quick-model low"] and not jobs["look"]["custom"], jobs
+store.update_settings({"point_models": [], "image_models": []})
+assert brain.models_for("point") == brain.POINT_MODELS and brain.models_for("agent") == brain.chain()
+try:
+    store.update_settings({"look_models": ["just-a-model"]})
+    raise AssertionError("a model line without backend and thinking was accepted")
+except ValueError:
+    pass
+
 # Settings lists the models each backend offers: from its own list, or (without one) the ones Jarvis already uses with it
 class Listed:
     def models(self):
@@ -591,14 +604,14 @@ pix = window.icon_pixmap("home", QColor("#9c9ab0"), 48).toImage()
 assert any(pix.pixelColor(x, y).alpha() > 0 for x in range(48) for y in range(48)), "the line icons came out empty"
 warnings = []
 qInstallMessageHandler(lambda kind, ctx, msg: warnings.append(msg) if kind != QtMsgType.QtDebugMsg and "portal" not in msg else None)
-stub = types.SimpleNamespace(plugin_status=lambda: [], workspaces=lambda: [], app_tools={}, available_models=lambda: {
+stub = types.SimpleNamespace(plugin_status=lambda: [], workspaces=lambda: [], app_tools={}, model_jobs=brain.Brain.model_jobs, available_models=lambda: {
     "backends": [{"name": "aistudio", "models": ["gemini-3.8-flash", "gemini-3.7-flash"]},
                  {"name": "openai", "models": [], "error": "no API key"}], "live": ["gemini-3.8-live"]})
 live.mic = False
 win = window.Window(get=lambda path: jarvis.api_get(path, stub), post=lambda path, data: {"ok": True}, tool_label=jarvis.tool_label,
                     live=live, shown_state=jarvis.shown_state, version="test", show=True)
 root = win.engine.rootObjects()[0]
-for page in ("chats", "activity", "accounts", "plugins", "memory", "settings", "home"):
+for page in ("chats", "activity", "accounts", "plugins", "models", "memory", "settings", "home"):
     root.setProperty("page", page)
     qt.processEvents()
 end = time.time() + 1.5

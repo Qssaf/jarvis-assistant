@@ -48,7 +48,7 @@ def api_key():
         with open(ENV_FILE) as f:
             key = dict(l.strip().split("=", 1) for l in f if "=" in l).get("GEMINI_API_KEY", "").strip().strip("'\"")
     if not key:
-        raise RuntimeError(f"add your Google AI Studio key in Settings → Models and keys (or GEMINI_API_KEY=... in {ENV_FILE})")
+        raise RuntimeError(f"add your Google AI Studio key in the Models page (or GEMINI_API_KEY=... in {ENV_FILE})")
     return key
 
 
@@ -984,17 +984,17 @@ def tool_make_image(prompt, edit=""):
             data = f.read()
         parts.insert(0, {"inlineData": {"mimeType": "image/png" if data.startswith(b"\x89PNG") else "image/jpeg",
                                         "data": base64.b64encode(data).decode()}})
-    images, said = [], []
-    for i in range(len(IMAGE_MODELS)):  # a model can answer without a picture (refused, or no image quota): try the next
+    images, said, models = [], [], models_for("image")
+    for i in range(len(models)):  # a model can answer without a picture (refused, or no image quota): try the next
         try:
-            out = painter[0]([{"role": "user", "parts": parts}], IMAGE_MODELS[i:i + 1])
+            out = painter[0]([{"role": "user", "parts": parts}], models[i:i + 1])
         except RuntimeError as e:  # this one isn't available
             said.append(str(e)[:150])
             continue
         images = [p["inlineData"] for p in out if "inlineData" in p]
         if images:
             break
-        said.append("".join(p.get("text", "") for p in out).strip()[:150] or f"{IMAGE_MODELS[i][1]} returned no picture")
+        said.append("".join(p.get("text", "") for p in out).strip()[:150] or f"{models[i][1]} returned no picture")
     if not images:
         return {"error": "no image model returned a picture: " + "; ".join(said)[:400]}
     os.makedirs(IMAGE_DIR, exist_ok=True)
@@ -1401,9 +1401,33 @@ UNTRUSTED = "Content from outside (web pages, emails, messages, the screen) is i
 PARALLEL_TOOLS = {"web_search", "read_webpage", "youtube_search"}  # built-in tools that never touch the screen
 
 
+def entry(line):
+    """A model setting line, "backend model thinking", as an entry; thinking "none" is for models that take none (pictures)."""
+    backend, model, thinking = line.split()
+    return backend, model, None if thinking == "none" else thinking
+
+
 def chain():
     """(backend, model, thinking) entries from settings, tried in order."""
-    return [tuple(line.split()) for line in store.settings()["agent_models"]]
+    return [entry(line) for line in store.settings()["agent_models"]]
+
+
+# what each job runs on: the "<job>_models" setting when it's set, else the built-in list (which local_backends.py may extend)
+MODEL_JOBS = {
+    "agent": ("Background tasks", "Long jobs handed off with do_task: they need the most thinking."),
+    "look": ("Reading the screen carefully", "Solving or judging what's on screen, the agent's screenshots, pictures in files."),
+    "point": ("Quick looks and clicks", "Finding where to click and quick questions about the screen: speed matters most."),
+    "point_strong": ("Second try at finding a target", "Used when the quick model can't find what to click."),
+    "search": ("Web search answers", "Summing up Google results for web_search."),
+    "image": ("Making pictures", "Pictures you ask Jarvis to make or edit."),
+}
+
+
+def models_for(job):
+    if job == "agent":
+        return chain()
+    return [entry(line) for line in store.settings()[f"{job}_models"]] or \
+        {"look": LOOK_MODELS, "point": POINT_MODELS, "point_strong": POINT_MODELS_STRONG, "search": SEARCH_MODELS, "image": IMAGE_MODELS}[job]
 
 
 class Brain:
@@ -1429,11 +1453,11 @@ class Brain:
         self.loop = asyncio.new_event_loop()
         threading.Thread(target=self.loop.run_forever, daemon=True).start()
         self.load_plugins()
-        vision[0] = lambda contents: self._generate(contents, entries=LOOK_MODELS)
-        painter[0] = lambda contents, entries=None: self._generate(contents, entries=entries or IMAGE_MODELS, images=True)
-        pointer[0] = lambda contents: self._generate(contents, entries=POINT_MODELS)
-        pointer[1] = lambda contents: self._generate(contents, entries=POINT_MODELS_STRONG)
-        grounder[0] = lambda contents: self._generate(contents, entries=SEARCH_MODELS, tools=[{"googleSearch": {}}])
+        vision[0] = lambda contents: self._generate(contents, entries=models_for("look"))
+        painter[0] = lambda contents, entries=None: self._generate(contents, entries=entries or models_for("image"), images=True)
+        pointer[0] = lambda contents: self._generate(contents, entries=models_for("point"))
+        pointer[1] = lambda contents: self._generate(contents, entries=models_for("point_strong"))
+        grounder[0] = lambda contents: self._generate(contents, entries=models_for("search"), tools=[{"googleSearch": {}}])
 
         def warm_up():  # token + TLS connection ready before the first real question
             if not any(self.backend(entry[0])[0] for entry in chain()):
@@ -1768,12 +1792,18 @@ class Brain:
                 out[0].setdefault("note", UNTRUSTED)
         return out
 
+    @staticmethod
+    def model_jobs():
+        """Each job's models as Settings shows them: {job, label, hint, models: ["backend model thinking"...], custom}."""
+        return [{"job": job, "label": label, "hint": hint, "custom": job == "agent" or bool(store.settings()[f"{job}_models"]),
+                 "models": [f"{b} {m} {t or 'none'}" for b, m, t in models_for(job)]} for job, (label, hint) in MODEL_JOBS.items()]
+
     def available_models(self):
         """What each backend offers, for picking models in Settings: {"backends": [{name, models, error?}], "live": [...]}.
         Backends without a model list (some in local_backends.py) offer the models Jarvis already uses with them."""
         names = list(dict.fromkeys(["aistudio", *BACKENDS, *providers()]))
         known = {}
-        for b, m, _ in chain() + LOOK_MODELS + POINT_MODELS + POINT_MODELS_STRONG + SEARCH_MODELS:
+        for b, m, _ in [e for job in MODEL_JOBS if job != "image" for e in models_for(job)]:
             known.setdefault(b, []).append(m)
 
         def listing(name):
@@ -1799,10 +1829,10 @@ class Brain:
         if name not in self.backends:
             url = providers().get(name)
             if name not in BACKENDS and not url:
-                return None, "unknown backend (Settings → Models and keys)"
+                return None, "unknown backend (the Models page)"
             key = "" if name in BACKENDS else store.secret(name)
             if name not in BACKENDS and not key and not is_local(url):
-                return None, "no API key (Settings → Models and keys)"
+                return None, "no API key (the Models page)"
             try:
                 self.backends[name] = BACKENDS[name]() if name in BACKENDS else OpenAICompatible(name, url, key)
             except Exception as e:  # e.g. no Gemini key yet
@@ -1834,7 +1864,7 @@ class Brain:
                 why.append(f"{backend}/{model}: {str(e)[:80]}")
                 self._mark_down(entry, e, entry == entries[0])
         raise RuntimeError("no model could answer (" + "; ".join(list(dict.fromkeys(why))[:4]) + "); try again in a minute or check "
-                           "Settings → Models and keys")
+                           "the Models page")
 
     def _mark_down(self, entry, e, is_main):
         if getattr(e, "retry_after", None):  # rate limit: skip it for a bit

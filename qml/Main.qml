@@ -93,7 +93,8 @@ Window {
 
                     Repeater {
                         model: [["home", "Home", "home"], ["chats", "Chats", "chats"], ["activity", "Activity", "activity"],
-                                ["accounts", "Accounts", "accounts"], ["plugins", "Plugins", "plugins"], ["memory", "Memory", "memory"]]
+                                ["accounts", "Accounts", "accounts"], ["plugins", "Plugins", "plugins"], ["models", "Models", "cpu"],
+                                ["memory", "Memory", "memory"]]
                         RailButton { required property var modelData; key: modelData[0]; label: modelData[1]; symbol: modelData[2] }
                     }
                     Item { Layout.fillHeight: true }
@@ -126,12 +127,13 @@ Window {
 
                 StackLayout {
                     anchors.fill: parent
-                    currentIndex: ["home", "chats", "activity", "accounts", "plugins", "memory", "settings"].indexOf(win.page)
+                    currentIndex: ["home", "chats", "activity", "accounts", "plugins", "models", "memory", "settings"].indexOf(win.page)
                     HomePage { id: home }
                     Loader { active: win.page === "chats" || item; sourceComponent: ChatsPage { onOpened: { home.reload(); win.go("home") } } }
                     Loader { active: win.page === "activity" || item; sourceComponent: ActivityPage {} }
                     Loader { active: win.page === "accounts" || item; sourceComponent: AccountsPage {} }
                     Loader { active: win.page === "plugins" || item; sourceComponent: PluginsPage {} }
+                    Loader { active: win.page === "models" || item; sourceComponent: ModelsPage {} }
                     Loader { active: win.page === "memory" || item; sourceComponent: MemoryPage {} }
                     Loader { active: win.page === "settings" || item; sourceComponent: SettingsPage {} }
                 }

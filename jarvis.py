@@ -13,7 +13,7 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.4.5"
+VERSION = "1.5.0"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
@@ -1044,6 +1044,8 @@ def api_get(path, brain):
         return {"settings": store.settings(), "voices": store.VOICES}
     if path == "/api/models":
         return models_info()
+    if path == "/api/models/jobs":
+        return brain.model_jobs()
     if path == "/api/models/available":  # (asks each provider: slower, so the page loads it separately)
         return brain.available_models()
     if path == "/api/plugins":
