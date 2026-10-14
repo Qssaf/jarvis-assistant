@@ -760,13 +760,14 @@ class Recorder:
     def wait(self):
         return 0
 recorders = [Recorder(b"\1\0" * 1280), Recorder(b"\2\0" * 1280)]
-real_mic = system.subprocess, system.time, system.have
+real_mic = system.subprocess, system.time, system.have, system.IS_WINDOWS
+system.IS_WINDOWS = False  # (the pw-record path; Windows uses sounddevice)
 system.subprocess = types.SimpleNamespace(Popen=lambda *a, **k: recorders.pop(0), PIPE=-1, DEVNULL=-3)
 system.time = types.SimpleNamespace(time=time.time, sleep=lambda seconds: None)
 system.have = lambda program: program == "pw-record"
 mic = system.mic_frames()
 assert next(mic)[0] == 1 and next(mic)[0] == 2
-system.subprocess, system.time, system.have = real_mic
+system.subprocess, system.time, system.have, system.IS_WINDOWS = real_mic
 
 # a long name with underscores is looked up by name; only when no file has it is it taken for an id
 db.connected, calls = {"googledrive"}, []
