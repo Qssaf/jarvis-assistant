@@ -531,6 +531,19 @@ def notify(title, text):
         notifier[0](title, text)
 
 
+def selected_text():
+    """(the text selected right now, the clipboard): Linux has both; Windows has only the clipboard, so selected is ''."""
+    if IS_WINDOWS:
+        return "", run(["powershell", "-NoProfile", "-Command", "Get-Clipboard"], 5)
+    if WAYLAND and have("wl-paste"):
+        get = lambda *flags: run(["wl-paste", "--no-newline", *flags], 3)
+        return get("--primary"), get()
+    if have("xclip"):
+        get = lambda which: run(["xclip", "-o", "-selection", which], 3)
+        return get("primary"), get("clipboard")
+    return "", ""
+
+
 def now_playing():
     """The media player that's playing (or the first one): {player, app, status, title, artist, art}. Linux (MPRIS) only."""
     if IS_WINDOWS or not have("busctl"):

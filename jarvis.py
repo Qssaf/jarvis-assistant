@@ -41,6 +41,8 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - Messaging: [{click_on: "the chat named 'Sam Lee' in the left list"}, {expect: "the open conversation is with Sam Lee"}, {click_on: "the message box at the bottom"}, {type: "..."}, {keys: "Return"}, {look: "Is the message in the conversation?"}].
 - System info, files, volume, clipboard: run_command. {SYSTEM} Open apps with act launch, not run_command.
 - Pictures: make_image, show_image. Local files: read_file. Time: set_reminder (repeat for "every day/weekday/week"), list_reminders, cancel_reminder.
+- "This"/"what I selected"/"what I copied" with summarise, translate, explain or rewrite: selection. Music: media (play_pause, next, previous, now_playing).
+- Something from an earlier conversation ("what was that site you told me about?", "what did I ask you yesterday?"): recall.
 - Routines: when the user says one of their routines' names (listed under what you can do), routine run, then do its steps. "When I say X, do Y": routine save.
 - Something lasting about the user (what to call them, where they live, a preference): remember it right away; forget when they take it back.
 - When the user corrects how you did something (the wrong button, the wrong chat, a habit they dislike), remember the lesson in one line starting "Lesson:", so it never happens again.
@@ -114,12 +116,14 @@ VOICE_ACT = ("Do a whole job on screen in one go, in order. Each step is one of:
              "{look: 'did the message appear in the chat?'} (reads the screen; the answer comes back as text), {expect: 'the open chat is with Sam'} (checks the screen and stops before the next steps if it isn't so: use it before typing into a chat), {close: 'kcalc'}, "
              "{scroll: 3} (scroll under mouse: positive = down toward newer messages, negative = up toward older messages), {wait: seconds}.").replace("kcalc", system.CALC)
 SCREEN_TOOLS = {"act", "look", "show_image", "ui_controls", "list_windows", "focus_window", "close_window", "open_url", "run_command"}
-QUERY_TOOLS = {"look", "web_search", "read_webpage", "youtube_search", "read_file", "briefing", "ui_controls", "list_windows", "list_reminders"}
+QUERY_TOOLS = {"look", "web_search", "read_webpage", "youtube_search", "read_file", "briefing", "ui_controls", "list_windows", "list_reminders",
+               "recall", "selection"}
 VOICE_RESULT_LIMIT = 12000  # characters of one tool result the voice model gets
 # tools the voice model runs itself (no screen involved); the agent handles everything else
 LIVE_TOOLS = ["run_command", "web_search", "read_webpage", "youtube_search", "open_url", "remember", "forget", "set_reminder", "list_reminders",
               "cancel_reminder", "list_windows", "focus_window", "close_window", "act", "look", "ui_controls", "make_image",
-              "show_image", "read_file", "briefing", "account_settings", "weather", "classroom_due", "drive_file", "routine"]
+              "show_image", "read_file", "briefing", "account_settings", "weather", "classroom_due", "drive_file", "routine",
+              "recall", "selection", "media"]
 
 # what the user asked to be called, from what Jarvis remembers ("prefers to be called Q", "call me Sam, not sir")
 # ponytail: a pattern over remember()'s usual wording, not understanding; unmatched memory falls back to the prompt's rule
@@ -149,7 +153,8 @@ TOOL_LABELS = {"run_command": "Running a command", "web_search": "Searching the 
                "read_file": "Reading a file", "briefing": "Preparing your briefing",
                "account_settings": "Changing account settings", "weather": "Checking the weather",
                "classroom_due": "Checking Classroom", "drive_file": "Reading from Drive", "ask_user": "Asking you",
-               "routine": "Running a routine"}
+               "routine": "Running a routine", "recall": "Searching past conversations", "selection": "Reading your selection",
+               "media": "Controlling the music"}
 
 
 def tool_label(name):
@@ -895,16 +900,65 @@ def deadline_pass(brain):
     store.write_json(seen_file, seen, private=True)
 
 
+HEADS_UP = 600  # seconds before a calendar event that its reminder goes off
+
+
+def calendar_pass(brain, now=None):
+    """A reminder ten minutes before each Google Calendar event in the next three hours. A moved event's reminder moves
+    with it; a cancelled one's is cancelled."""
+    from datetime import datetime
+    now = now or time.time()
+    stamp = lambda t: datetime.fromtimestamp(t).astimezone().isoformat(timespec="seconds")
+    data = brain.app_data("GOOGLECALENDAR_EVENTS_LIST", {"calendarId": "primary", "timeMin": stamp(now), "timeMax": stamp(now + 3 * 3600),
+                                                         "singleEvents": True, "orderBy": "startTime"})
+    if data is None:
+        raise RuntimeError("couldn't reach Google Calendar")
+    seen_file = os.path.join(store.DATA, "calendar.json")
+    seen = store.read_json(seen_file, {})  # event id -> {"at": its start, "reminder": the reminder's id}
+    current = set()
+    for e in data.get("items") or []:
+        start = (e.get("start") or {}).get("dateTime")  # (all-day events have only a date: no heads-up)
+        if not start or e.get("status") == "cancelled":
+            continue
+        at = datetime.fromisoformat(start.replace("Z", "+00:00")).timestamp()
+        current.add(e["id"])
+        old = seen.get(e["id"])
+        if old and old["at"] == at:
+            continue
+        if old:
+            store.cancel_reminder(old["reminder"])
+        if at - HEADS_UP > now:
+            where = f" ({e['location']})" if e.get("location") else ""
+            r = store.add_reminder(at - HEADS_UP, f"📅 {e.get('summary', 'An event')}{where} starts in 10 minutes, at "
+                                                  f"{time.strftime('%H:%M', time.localtime(at))}")
+            seen[e["id"]] = {"at": at, "reminder": r["id"]}
+    for eid, old in list(seen.items()):
+        if eid not in current and now < old["at"] < now + 3 * 3600:  # gone from the calendar: cancelled or moved away
+            store.cancel_reminder(old["reminder"])
+            del seen[eid]
+        elif old["at"] < now - 86400:
+            del seen[eid]  # (long past)
+    store.write_json(seen_file, seen, private=True)
+
+
 def deadline_loop(brain):
-    """Classroom deadlines, checked every half hour."""
+    """Classroom deadlines every half hour, the calendar every five minutes."""
     brain.tools_ready.wait(60)
+    classroom_at = 0.0
     while True:
-        if store.settings()["deadline_reminders"] and "google_classroom" in brain.connected:
+        cfg = store.settings()
+        if cfg["deadline_reminders"] and "google_classroom" in brain.connected and time.time() - classroom_at > 1800:
+            classroom_at = time.time()
             try:
                 deadline_pass(brain)
             except Exception as e:
                 print(f"[deadlines] couldn't check Classroom: {e}", flush=True)
-        time.sleep(1800)
+        if cfg["calendar_reminders"] and "googlecalendar" in brain.connected:
+            try:
+                calendar_pass(brain)
+            except Exception as e:
+                print(f"[deadlines] couldn't check the calendar: {e}", flush=True)
+        time.sleep(300)
 
 
 # ---------------------------------------------------------------- microphone + wake word

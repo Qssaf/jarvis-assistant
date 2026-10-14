@@ -93,7 +93,7 @@ store.remember("likes tea"); store.remember("exam on June 5")
 assert store.forget("TEA") == 1 and "June 5" in store.memory() and "tea" not in store.memory()
 store.remember("Exam  on June 5")  # a fact said twice (or a lesson learnt twice) is kept once
 assert store.memory().lower().count("exam on june 5") == 1, store.memory()
-store.add_reminder(100, "past"); store.add_reminder(10**12, "future")
+store.add_reminder(100, "past"); store.add_reminder(4e9, "future")  # (2096: Windows can't show dates past 3000)
 assert [r["text"] for r in store.pop_due(now=200)] == ["past"] and [r["text"] for r in store.reminders()] == ["future"]
 
 # "announced instead of acted" detection: promises get nudged, finished answers don't
@@ -943,5 +943,47 @@ jarvis.requests.get = lambda url, timeout: types.SimpleNamespace(ok=True, text=f
 same = jarvis.update_check()
 jarvis.requests.get = real_get
 assert newer["available"] and newer["latest"] == "99.0.0" and (newer["can_update"] or newer["how"]) and not same["available"]
+
+# recall finds past conversations by their words, with the lines around them
+os.makedirs(store.SESSIONS_DIR, exist_ok=True)
+store.write_json(os.path.join(store.SESSIONS_DIR, "20261001-100000-aaaaaa.json"), {"id": "20261001-100000-aaaaaa", "title": "Photo editors",
+    "updated": 1.0e9, "messages": [{"who": "you", "text": "what's a free photoshop?"}, {"who": "jarvis", "text": "Try Photopea, photopea.com"},
+                                   {"who": "you", "text": "thanks"}], "agent": []})
+got = brain.tool_recall("photopea")["conversations"]
+assert got[0]["title"] == "Photo editors" and any("photoshop" in l for l in got[0]["lines"]) and any("Photopea" in l for l in got[0]["lines"])
+assert "nothing about" in brain.tool_recall("quantum flux")["result"]
+
+# selection: what's selected, else what's copied; neither is an error the model can explain
+real_sel = system.selected_text
+system.selected_text = lambda: ("the selected words", "older copied text")
+assert brain.tool_selection() == {"selected": "the selected words", "clipboard": "older copied text"}
+system.selected_text = lambda: ("", "")
+assert "nothing is selected" in brain.tool_selection()["error"]
+system.selected_text = real_sel
+
+# media keys go to the player
+pressed, real_media = [], system.media
+system.media = lambda action: pressed.append(action)
+assert brain.tool_media("next")["result"] == "pressed next" and pressed == ["Next"]
+system.media = real_media
+
+# calendar heads-up: ten minutes before each timed event; a moved event's reminder moves, a cancelled one's goes
+for r in store.reminders():
+    store.cancel_reminder(r["id"])
+now = time.mktime((2026, 10, 16, 9, 0, 0, 0, 0, -1))
+iso = lambda t: time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(t)) + time.strftime("%z")[:3] + ":" + time.strftime("%z")[3:]
+events = {"items": [{"id": "e1", "summary": "Physics lab", "start": {"dateTime": iso(now + 3600)}},
+                    {"id": "e2", "summary": "Holiday", "start": {"date": "2026-10-16"}}]}
+cal = types.SimpleNamespace(app_data=lambda slug, args: events)
+jarvis.calendar_pass(cal, now)
+rs = store.reminders()
+assert len(rs) == 1 and abs(rs[0]["at"] - (now + 3000)) < 1 and rs[0]["text"].startswith("📅 Physics lab starts in 10 minutes"), rs
+events["items"][0]["start"]["dateTime"] = iso(now + 7200)  # moved an hour later
+jarvis.calendar_pass(cal, now)
+rs = store.reminders()
+assert len(rs) == 1 and abs(rs[0]["at"] - (now + 6600)) < 1, rs
+events["items"] = []  # cancelled
+jarvis.calendar_pass(cal, now)
+assert store.reminders() == []
 
 print("ok")

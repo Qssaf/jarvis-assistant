@@ -85,6 +85,8 @@ ScrollPage {
                  checked: !!page.s.morning_briefing; onToggled: page.set("morning_briefing", checked) }
         Toggle { Layout.fillWidth: true; text: "Classroom deadlines"; hint: "Reminders a day and two hours before work is due (skipped once you've turned it in)"
                  checked: !!page.s.deadline_reminders; onToggled: page.set("deadline_reminders", checked) }
+        Toggle { Layout.fillWidth: true; text: "Calendar heads-up"; hint: "A reminder ten minutes before each Google Calendar event"
+                 checked: !!page.s.calendar_reminders; onToggled: page.set("calendar_reminders", checked) }
     }
 
     Section {

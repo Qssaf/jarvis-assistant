@@ -10,6 +10,14 @@
 - **Copy a report** (Health page): version, system, the health checks, settings and the end of the log, with what was
   said, tool arguments, email addresses and link parameters taken out, ready to paste into a bug report. A *Report a
   problem* button opens a new GitHub issue.
+- **Recall**: "what was that site you told me about?", "what did I ask you yesterday?": past conversations are
+  searched, with the lines around the match.
+- **Your selection**: "summarise this", "translate what I selected", "explain what I copied" read the selected text
+  (or the clipboard).
+- **Music**: play/pause, next, previous and what's playing, by voice.
+- **Calendar heads-up** (Settings, on): a reminder ten minutes before each Google Calendar event. Moved events move
+  their reminder, cancelled ones lose it.
+- **CI**: the tests and lint run on Linux and Windows for every push.
 - **Updates** (Settings): checks GitHub for a newer version; a clean git checkout updates itself (pull, packages) and
   restarts.
 

@@ -24,6 +24,7 @@ DEFAULT_SETTINGS = {
     "show_thinking": False,        # the chat shows the agent's thinking and the voice model's decisions (never the notch)
     "morning_briefing": True,      # the first time Jarvis starts in a morning, it gives the day's briefing out loud
     "deadline_reminders": True,    # reminders a day and two hours before Google Classroom work is due
+    "calendar_reminders": True,    # a reminder ten minutes before each Google Calendar event
     "echo_cancel": False,          # PipeWire echo cancelling (Linux): talk over Jarvis on speakers (experimental)
     "learn_my_voice": True,        # learn from real wake-ups to ignore things that aren't you saying "Hey Jarvis"
     "safety": "ask",               # ask: risky commands and account changes wait for your yes; full: Jarvis just does them
@@ -328,13 +329,35 @@ def save_plugins(p):
 
 
 # ---------------------------------------------------------------- sessions
+SESSIONS_DIR = os.path.join(DATA, "sessions")
+
+
+def recall(query, limit=5):
+    """Past conversations about something, newest first: when, the title, and the lines that mention it (with what was
+    said just before and after, so a reply makes sense)."""
+    words = [w for w in query.lower().split() if len(w) > 2] or [query.lower().strip()]
+    found = []
+    for name in os.listdir(SESSIONS_DIR) if os.path.isdir(SESSIONS_DIR) else []:
+        s = read_json(os.path.join(SESSIONS_DIR, name), None) if name.endswith(".json") else None
+        if not s:
+            continue
+        talk = [m for m in s.get("messages", []) if m.get("who") in ("you", "jarvis")]
+        hits = [i for i, m in enumerate(talk) if all(w in str(m.get("text", "")).lower() for w in words)]
+        if hits:
+            near = sorted({j for i in hits[:3] for j in (i - 1, i, i + 1) if 0 <= j < len(talk)})
+            found.append({"when": time.strftime("%a %d %b %Y, %H:%M", time.localtime(s.get("updated", 0))), "updated": s.get("updated", 0),
+                          "title": s.get("title", ""), "lines": [f"{talk[j]['who']}: {str(talk[j]['text'])[:300]}" for j in near]})
+    found.sort(key=lambda f: -f["updated"])
+    return [{k: v for k, v in f.items() if k != "updated"} for f in found[:limit]]
+
+
 class Sessions:
     """Each conversation is a JSON file: what was said (for the app) plus the agent's own history."""
 
     def __init__(self):
         os.makedirs(DATA, mode=0o700, exist_ok=True)
         os.chmod(DATA, 0o700)  # conversations, logs, voice clips and tokens: this user only
-        self.dir = os.path.join(DATA, "sessions")
+        self.dir = SESSIONS_DIR
         os.makedirs(self.dir, exist_ok=True)
         self.new()
 
