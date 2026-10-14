@@ -26,6 +26,10 @@ ScrollPage {
         spacing: 10
         Txt { kind: "small"; Layout.fillWidth: true
               text: page.running ? "Checking…" : page.problems ? `${page.problems} thing${page.problems > 1 ? "s" : ""} to fix` : "Everything works" }
+        Pill { text: "Copy a report"; symbol: "copy"
+               onClicked: Api.get("/api/report", d => { Backend.copy(d.text); Backend.toast("Copied. Look it over, then paste it into a bug report", false) },
+                                  e => Backend.toast(e.error, true)) }
+        Pill { text: "Report a problem"; symbol: "external"; onClicked: Qt.openUrlExternally("https://github.com/Qssaf/jarvis-assistant/issues/new") }
         Pill { text: "Check again"; symbol: "refresh"; enabled: !page.running; onClicked: page.run() }
     }
 

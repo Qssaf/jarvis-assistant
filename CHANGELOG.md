@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.7.0 — 2026-10-15
+
+### Added
+- **Repeating reminders**: "every morning at 8", "every weekday", "every week". Each moves on to its next time when it
+  goes off; days Jarvis was off don't pile up.
+- **Routines**: "when I say *study mode*, close Discord, open my notes and set a 50-minute timer". Say the name later
+  and Jarvis runs the steps. They're listed on the Memory page, where you can delete them.
+- **Copy a report** (Health page): version, system, the health checks, settings and the end of the log, with what was
+  said, tool arguments, email addresses and link parameters taken out, ready to paste into a bug report. A *Report a
+  problem* button opens a new GitHub issue.
+- **Updates** (Settings): checks GitHub for a newer version; a clean git checkout updates itself (pull, packages) and
+  restarts.
+
 ## 1.6.0 — 2026-10-14
 
 ### Added

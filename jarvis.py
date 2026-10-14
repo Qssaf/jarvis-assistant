@@ -13,7 +13,7 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.6.0"
+VERSION = "1.7.0"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
@@ -40,7 +40,8 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - Websites and chat apps: act with click_on (describe the target exactly) and look. Browser tabs: focus_window the browser, then [{keys: "ctrl+shift+a"}, {type: "tab name"}, {keys: "Return"}].
 - Messaging: [{click_on: "the chat named 'Sam Lee' in the left list"}, {expect: "the open conversation is with Sam Lee"}, {click_on: "the message box at the bottom"}, {type: "..."}, {keys: "Return"}, {look: "Is the message in the conversation?"}].
 - System info, files, volume, clipboard: run_command. {SYSTEM} Open apps with act launch, not run_command.
-- Pictures: make_image, show_image. Local files: read_file. Time: set_reminder, list_reminders, cancel_reminder.
+- Pictures: make_image, show_image. Local files: read_file. Time: set_reminder (repeat for "every day/weekday/week"), list_reminders, cancel_reminder.
+- Routines: when the user says one of their routines' names (listed under what you can do), routine run, then do its steps. "When I say X, do Y": routine save.
 - Something lasting about the user (what to call them, where they live, a preference): remember it right away; forget when they take it back.
 - When the user corrects how you did something (the wrong button, the wrong chat, a habit they dislike), remember the lesson in one line starting "Lesson:", so it never happens again.
 - You can't see the screen, so screen jobs you can't plan from one look (filling in a form, working through several pages, a quiz with several questions, an app you don't know) go to do_task: the agent sees screenshots. One or two quick steps (click play, open a chat, type what they said) you do yourself.
@@ -118,7 +119,7 @@ VOICE_RESULT_LIMIT = 12000  # characters of one tool result the voice model gets
 # tools the voice model runs itself (no screen involved); the agent handles everything else
 LIVE_TOOLS = ["run_command", "web_search", "read_webpage", "youtube_search", "open_url", "remember", "forget", "set_reminder", "list_reminders",
               "cancel_reminder", "list_windows", "focus_window", "close_window", "act", "look", "ui_controls", "make_image",
-              "show_image", "read_file", "briefing", "account_settings", "weather", "classroom_due", "drive_file"]
+              "show_image", "read_file", "briefing", "account_settings", "weather", "classroom_due", "drive_file", "routine"]
 
 # what the user asked to be called, from what Jarvis remembers ("prefers to be called Q", "call me Sam, not sir")
 # ponytail: a pattern over remember()'s usual wording, not understanding; unmatched memory falls back to the prompt's rule
@@ -147,7 +148,8 @@ TOOL_LABELS = {"run_command": "Running a command", "web_search": "Searching the 
                "cancel_reminder": "Cancelling a reminder", "make_image": "Making a picture", "show_image": "Showing a picture",
                "read_file": "Reading a file", "briefing": "Preparing your briefing",
                "account_settings": "Changing account settings", "weather": "Checking the weather",
-               "classroom_due": "Checking Classroom", "drive_file": "Reading from Drive", "ask_user": "Asking you"}
+               "classroom_due": "Checking Classroom", "drive_file": "Reading from Drive", "ask_user": "Asking you",
+               "routine": "Running a routine"}
 
 
 def tool_label(name):
@@ -457,7 +459,8 @@ class Live:
                 f"- This PC ({'Windows' if system.IS_WINDOWS else 'Linux'}): shell commands, files, apps, windows; the screen: look at it, click, type, and press app controls by name.\n"
                 "- The web: Google-grounded search, reading pages, YouTube search, opening links in the user's browser.\n"
                 "- Memory and reminders (with desktop notifications).\n"
-                f"- Connected accounts with direct tools: {apps}."
+                + (f"- The user's routines (say one and you run it): {', '.join(store.routines())}.\n" if store.routines() else "")
+                + f"- Connected accounts with direct tools: {apps}."
                 + (f" Also connected (use do_task for these): {others}." if others else "")
                 + " Others (Slack, Notion, Google Tasks, Drive, YouTube, WhatsApp...) can be connected in Jarvis's Connections "
                 "page, or ask do_task to connect them.\n"
@@ -1066,7 +1069,10 @@ def api_get(path, brain):
     if path == "/api/memory":
         return {"memory": store.memory()}
     if path == "/api/reminders":
-        return [{**r, "when": time.strftime("%a %d %b, %H:%M", time.localtime(r["at"]))} for r in store.reminders()]
+        return [{**r, "when": time.strftime("%a %d %b, %H:%M", time.localtime(r["at"])) + (f" · {r['repeat']}" if r.get("repeat") else "")}
+                for r in store.reminders()]
+    if path == "/api/routines":
+        return [{"name": k, "steps": v} for k, v in sorted(store.routines().items())]
     if path == "/api/conversation":
         return sessions.current
     if path.startswith("/api/search?q="):
@@ -1077,6 +1083,10 @@ def api_get(path, brain):
         return system.now_playing()
     if path == "/api/health":
         return health(live_ref[0], brain)
+    if path == "/api/report":
+        return {"text": diagnostics(brain)}
+    if path == "/api/update":
+        return update_check()
     if path == "/api/setup/key":  # (the setup screen: does the Gemini key work? A model listing costs no quota)
         import brain as brain_mod
         try:
@@ -1164,6 +1174,81 @@ def health(live, brain):
             check(f"Models: {label}", False, "none can answer right now" + (f" (back in about {min(waits) / 60:.0f} min)" if waits and min(waits) < 1e9 else ""),
                   "add a fallback model or a key on the Models page", "models")
     return {"checks": out, "usage": brain_mod.usage_today()}
+
+
+def diagnostics(brain):
+    """A report to attach to a bug report: version, system, the Health checks and the end of the log, with what was said,
+    tool arguments, email addresses and link parameters taken out."""
+    import platform
+    checks = health(live_ref[0], brain)["checks"]
+    log = os.path.join(store.DATA, "jarvis.log")
+    try:
+        with open(log, errors="replace") as f:
+            lines = f.read().replace("\r", "\n").splitlines()[-300:]
+    except OSError:
+        lines = ["(no log file: Jarvis was started from a terminal)"]
+    private = re.compile(r"\[(you|jarvis|thinking|image)\]|The task needs you|Reminder:")
+    clean = []
+    for line in lines:
+        if private.search(line):
+            line = re.sub(r"(\[(?:you|jarvis|thinking|image)\]|The task needs you|Reminder:).*", r"\1 (removed)", line)
+        line = re.sub(r"(tool call: \w+) .*", r"\1 (arguments removed)", line)
+        line = re.sub(r"[\w.+-]+@[\w-]+\.[\w.-]+", "(email)", line)
+        line = re.sub(r"(https?://[^\s?]+)\?\S*", r"\1?(removed)", line)
+        clean.append(line)
+    settings = {k: v for k, v in store.settings().items() if k not in ("extra_instructions", "home_city")}  # (personal)
+    return "\n".join([
+        f"Jarvis {VERSION} on {platform.system()} {platform.release()} ({os.environ.get('XDG_CURRENT_DESKTOP', '')} "
+        f"{'Wayland' if system.WAYLAND else ''}), Python {platform.python_version()}",
+        "", "## Health", *[f"- [{'ok' if c['ok'] else 'PROBLEM' if c['ok'] is False else 'n/a'}] {c['name']}: {c['detail']}" for c in checks],
+        "", "## Settings", json.dumps(settings, indent=1),
+        "", "## Log (last 300 lines; what was said and tool arguments removed)", *clean])
+
+
+REPO = "Qssaf/jarvis-assistant"
+
+
+def update_check():
+    """Whether a newer Jarvis is on GitHub, and whether this copy can update itself (a clean git checkout)."""
+    try:
+        r = requests.get(f"https://raw.githubusercontent.com/{REPO}/main/jarvis.py", timeout=8)
+        latest = re.search(r'^VERSION = "([\d.]+)"', r.text, re.M)[1] if r.ok else None
+    except (requests.RequestException, TypeError):
+        latest = None
+    newer = bool(latest) and tuple(map(int, latest.split("."))) > tuple(map(int, VERSION.split(".")))
+    git = os.path.isdir(os.path.join(HERE, ".git")) and system.have("git")
+    clean = git and not subprocess.run(["git", "-C", HERE, "status", "--porcelain", "--untracked-files=no"],
+                                       capture_output=True, text=True).stdout.strip()
+    return {"current": VERSION, "latest": latest, "available": newer, "can_update": bool(newer and clean),
+            "how": "" if not newer or clean else "this copy has local changes or isn't a git checkout: update it by hand"}
+
+
+def update_now():
+    """Pull the newest Jarvis and its packages; the app restarts itself afterwards."""
+    if not update_check()["can_update"]:
+        raise ValueError("there's no update this copy can install by itself")
+    pull = subprocess.run(["git", "-C", HERE, "pull", "--ff-only"], capture_output=True, text=True, timeout=120)
+    if pull.returncode:
+        raise RuntimeError(f"git pull failed: {(pull.stderr or pull.stdout)[-300:]}")
+    pip = ([shutil_which("uv"), "pip", "install", "-q", "--python", sys.executable] if shutil_which("uv") else
+           [sys.executable, "-m", "pip", "install", "-q"])
+    deps = subprocess.run(pip + ["-r", os.path.join(HERE, "requirements.txt")], capture_output=True, text=True, timeout=600)
+    if deps.returncode:
+        raise RuntimeError(f"installing packages failed: {(deps.stderr or deps.stdout)[-300:]}")
+    return {"result": "updated; restarting"}
+
+
+def shutil_which(program):
+    import shutil
+    return shutil.which(program)
+
+
+def restart_soon():
+    """Start this Jarvis again in place (same process, so it stays in the launcher's scope), a moment from now."""
+    def go():
+        time.sleep(0.5)
+        os.execv(sys.executable, [sys.executable, os.path.abspath(__file__), *sys.argv[1:]])
+    threading.Thread(target=go, daemon=True).start()
 
 
 def _importable(module):
@@ -1290,6 +1375,12 @@ def api_post(path, data, live, brain):
         store.set_memory(str(data.get("memory", "")))
     elif m := re.fullmatch(r"/api/reminders/(\w+)/cancel", path):
         store.cancel_reminder(m[1])
+    elif path == "/api/update":
+        out = update_now()
+        restart_soon()
+        return out
+    elif path == "/api/routines/delete":
+        store.delete_routine(str(data.get("name", "")))
     elif path == "/api/listen":
         listen_now.set()
     elif path == "/api/show":

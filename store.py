@@ -156,8 +156,24 @@ def reminders():
     return sorted(read_json(REMINDERS_FILE, []), key=lambda r: r["at"])
 
 
-def add_reminder(at, text):
-    r = {"id": uuid.uuid4().hex[:8], "at": float(at), "text": " ".join(str(text).split())}
+REPEATS = ("daily", "weekdays", "weekly")
+
+
+def next_time(at, repeat, now=None):
+    """The next time a repeating reminder is due after now (the same clock time, whatever daylight saving does)."""
+    now, t = now or time.time(), time.localtime(at)
+    days = 0
+    while True:
+        days += 7 if repeat == "weekly" else 1
+        when = time.mktime((t.tm_year, t.tm_mon, t.tm_mday + days, t.tm_hour, t.tm_min, t.tm_sec, 0, 0, -1))
+        if when > now and not (repeat == "weekdays" and time.localtime(when).tm_wday >= 5):
+            return when
+
+
+def add_reminder(at, text, repeat=""):
+    if repeat and repeat not in REPEATS:
+        raise ValueError(f"repeat is one of {', '.join(REPEATS)}")
+    r = {"id": uuid.uuid4().hex[:8], "at": float(at), "text": " ".join(str(text).split()), **({"repeat": repeat} if repeat else {})}
     with _lock:
         write_json(REMINDERS_FILE, read_json(REMINDERS_FILE, []) + [r], private=True)
     return r
@@ -171,14 +187,41 @@ def cancel_reminder(rid):
 
 
 def pop_due(now=None):
-    """Remove and return reminders whose time has come."""
+    """Remove and return reminders whose time has come (repeating ones move on to their next time instead)."""
     now = now or time.time()
     with _lock:
         rs = read_json(REMINDERS_FILE, [])
         due = [r for r in rs if r["at"] <= now]
         if due:
-            write_json(REMINDERS_FILE, [r for r in rs if r["at"] > now], private=True)
+            later = [r for r in rs if r["at"] > now] + [{**r, "at": next_time(r["at"], r["repeat"], now)} for r in due if r.get("repeat")]
+            write_json(REMINDERS_FILE, later, private=True)
     return due
+
+
+# ---------------------------------------------------------------- routines: named sets of steps ("study mode")
+ROUTINES_FILE = os.path.join(DATA, "routines.json")
+
+
+def routines():
+    return read_json(ROUTINES_FILE, {})
+
+
+def save_routine(name, steps):
+    name, steps = " ".join(str(name).lower().split()), str(steps).strip()
+    if not name or not steps:
+        raise ValueError("a routine needs a name and its steps")
+    with _lock:
+        write_json(ROUTINES_FILE, {**routines(), name: steps}, private=True)
+    return name
+
+
+def delete_routine(name):
+    name = " ".join(str(name).lower().split())
+    with _lock:
+        rs = routines()
+        found = rs.pop(name, None) is not None
+        write_json(ROUTINES_FILE, rs, private=True)
+    return found
 
 
 # ---------------------------------------------------------------- start at login

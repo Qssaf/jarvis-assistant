@@ -9,11 +9,13 @@ ScrollPage {
     title: "Memory"
     hint: "Jarvis reads this before every conversation. Tell it “remember…” or edit it here."
     property var reminders: []
+    property var routines: []
     property string saved: ""
 
     function load() {
         Api.get("/api/memory", d => { notes.text = d.memory; saved = d.memory })
         Api.get("/api/reminders", d => reminders = d)
+        Api.get("/api/routines", d => routines = d)
     }
     Component.onCompleted: load()
     onVisibleChanged: if (visible) load()
@@ -65,6 +67,33 @@ ScrollPage {
                     Txt { kind: "small"; text: modelData.when }
                     IconButton { symbol: "close"; size: 30; glyph: 14; tip: "Cancel"
                                  onClicked: Api.post(`/api/reminders/${modelData.id}/cancel`, {}, page.load) }
+                }
+            }
+        }
+    }
+    Txt { kind: "heading"; text: "Routines"; Layout.topMargin: 10 }
+    Card {
+        Layout.fillWidth: true
+        ColumnLayout {
+            width: parent.width
+            spacing: 8
+            Txt { kind: "small"; Layout.fillWidth: true; visible: !page.routines.length
+                  text: "None yet. Say “when I say study mode, close Discord, open my notes and set a 50-minute timer”." }
+            Repeater {
+                model: page.routines
+                RowLayout {
+                    required property var modelData
+                    Layout.fillWidth: true
+                    spacing: 12
+                    Icon { name: "bolt"; size: 17; color: Theme.accent }
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+                        Txt { text: modelData.name; font.weight: Font.DemiBold }
+                        Txt { kind: "small"; text: modelData.steps; Layout.fillWidth: true }
+                    }
+                    IconButton { symbol: "trash"; size: 30; glyph: 14; tip: "Delete"
+                                 onClicked: Api.post("/api/routines/delete", { name: modelData.name }, page.load) }
                 }
             }
         }

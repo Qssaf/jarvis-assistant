@@ -894,4 +894,54 @@ assert got["Accounts (Composio)"]["ok"] is False and got["Accounts (Composio)"][
 assert "aistudio gemini-x" in report["usage"]
 brain.AIStudio, system.screenshot = real_health
 
+# repeating reminders move on to their next time instead of disappearing; weekdays skip the weekend
+friday8 = time.mktime((2026, 10, 16, 8, 0, 0, 0, 0, -1))
+assert time.localtime(store.next_time(friday8, "daily", friday8)).tm_mday == 17
+assert time.localtime(store.next_time(friday8, "weekdays", friday8)).tm_mday == 19
+assert time.localtime(store.next_time(friday8, "weekly", friday8)).tm_mday == 23
+assert time.localtime(store.next_time(friday8, "weekdays", friday8 + 4 * 86400)).tm_mday == 21  # (off for days: the next one, not a backlog)
+for r in store.reminders():
+    store.cancel_reminder(r["id"])
+store.add_reminder(friday8, "stretch", "daily")
+store.add_reminder(friday8, "once")
+due = store.pop_due(friday8 + 60)
+assert sorted(r["text"] for r in due) == ["once", "stretch"]
+left = store.reminders()
+assert [r["text"] for r in left] == ["stretch"] and time.localtime(left[0]["at"]).tm_mday == 17 and left[0]["repeat"] == "daily"
+store.cancel_reminder(left[0]["id"])
+try:
+    store.add_reminder(friday8, "x", "hourly")
+    raise AssertionError("a bad repeat was accepted")
+except ValueError:
+    pass
+
+# routines: saved under a plain name, run by name, listed to the voice, deleted
+assert brain.tool_routine("save", "Study  Mode", "close Discord, open my notes, set a 50-minute timer")["result"] == "saved the routine 'study mode'"
+assert brain.tool_routine("run", "study mode")["steps"].startswith("close Discord")
+assert "error" in brain.tool_routine("run", "gaming mode") and brain.tool_routine("list")["routines"] == {"study mode": store.routines()["study mode"]}
+assert brain.tool_routine("delete", "study mode")["result"] == "deleted" and store.routines() == {}
+
+# the diagnostics report leaves out what was said, tool arguments, email addresses and link parameters
+log_path = os.path.join(store.DATA, "jarvis.log")
+with open(log_path, "w") as f:
+    f.write("10:00 [you] text my friend that I'm late\n10:00 [voice] tool call: act {\"steps\": [{\"type\": \"secret words\"}]}\n"
+            "10:01 [jarvis] Sent: 'I'm late'\n10:02 [system] mail from someone@example.com at https://x.example/a?token=abc\n10:03 [brain] fine\n")
+real_health_fn = jarvis.health
+jarvis.health = lambda live, brain_: {"checks": [{"name": "Microphone", "ok": True, "detail": "ok"}], "usage": {}}
+report = jarvis.diagnostics(None)
+jarvis.health = real_health_fn
+os.remove(log_path)
+for private in ("late", "secret words", "someone@example.com", "token=abc"):
+    assert private not in report, private
+assert "[brain] fine" in report and "[ok] Microphone" in report and jarvis.VERSION in report
+
+# updates: a newer version on GitHub is offered; this copy only updates itself from a clean git checkout
+real_get = jarvis.requests.get
+jarvis.requests.get = lambda url, timeout: types.SimpleNamespace(ok=True, text='VERSION = "99.0.0"\n')
+newer = jarvis.update_check()
+jarvis.requests.get = lambda url, timeout: types.SimpleNamespace(ok=True, text=f'VERSION = "{jarvis.VERSION}"\n')
+same = jarvis.update_check()
+jarvis.requests.get = real_get
+assert newer["available"] and newer["latest"] == "99.0.0" and (newer["can_update"] or newer["how"]) and not same["available"]
+
 print("ok")

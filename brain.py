@@ -934,15 +934,30 @@ def parse_when(in_minutes=None, at=None, now=None):
     return when if when > now else when + 86400
 
 
-def tool_set_reminder(text, in_minutes=None, at=None):
+def tool_set_reminder(text, in_minutes=None, at=None, repeat=""):
     when = parse_when(in_minutes, at)
-    r = store.add_reminder(when, text)
-    return {"result": f"Reminder set for {time.strftime('%A %H:%M', time.localtime(when))}", "id": r["id"]}
+    r = store.add_reminder(when, text, repeat)
+    return {"result": f"Reminder set for {time.strftime('%A %H:%M', time.localtime(when))}" + (f", then {repeat}" if repeat else ""), "id": r["id"]}
 
 
 def tool_list_reminders():
-    return {"reminders": [{"id": r["id"], "when": time.strftime("%a %d %b %H:%M", time.localtime(r["at"])), "text": r["text"]}
-                          for r in store.reminders()]}
+    return {"reminders": [{"id": r["id"], "when": time.strftime("%a %d %b %H:%M", time.localtime(r["at"])), "text": r["text"],
+                           **({"repeat": r["repeat"]} if r.get("repeat") else {})} for r in store.reminders()]}
+
+
+def tool_routine(action, name="", steps=""):
+    """The user's routines: named sets of steps ("study mode": close Discord, open my notes, a 50-minute timer)."""
+    if action == "save":
+        return {"result": f"saved the routine '{store.save_routine(name, steps)}'"}
+    if action == "delete":
+        return {"result": "deleted" if store.delete_routine(name) else f"there's no routine called {name}"}
+    found = store.routines()
+    if action == "run":
+        key = " ".join(name.lower().split())
+        if key in found:
+            return {"routine": key, "steps": found[key], "next": "do these steps now, in order (do_task if they need the screen for long)"}
+        return {"error": f"no routine called {name}", "routines": list(found)}
+    return {"routines": found}
 
 
 def tool_cancel_reminder(id):
@@ -962,8 +977,14 @@ TOOLS.update({
                  "name you misheard and were corrected on (a friend, a chat, an app), spelled as on screen, or a lesson when the user corrects "
                  "how you did something (\"Lesson: on homework sites, never press Check answer\").", obj(fact={"type": "string"})),
     "forget": (tool_forget, "Delete remembered notes that contain this text.", obj(text={"type": "string"})),
-    "set_reminder": (tool_set_reminder, "Remind the user later (desktop notification + spoken). Give in_minutes, or at as local 'YYYY-MM-DD HH:MM' or 'HH:MM'.",
-                     obj(text={"type": "string"}, in_minutes={"type": "number"}, at={"type": "string"}, optional=("in_minutes", "at"))),
+    "set_reminder": (tool_set_reminder, "Remind the user later (desktop notification + spoken). Give in_minutes, or at as local "
+                     "'YYYY-MM-DD HH:MM' or 'HH:MM'; repeat it daily, on weekdays or weekly if they ask (\"every morning at 8\").",
+                     obj(text={"type": "string"}, in_minutes={"type": "number"}, at={"type": "string"},
+                         repeat={"type": "string", "enum": ["daily", "weekdays", "weekly"]}, optional=("in_minutes", "at", "repeat"))),
+    "routine": (tool_routine, "The user's routines: named sets of steps they can start with a phrase (\"study mode\", \"I'm going "
+                "to bed\"). action: save (name + steps, in their words), run (name: get the steps, then do them), list, delete.",
+                obj(action={"type": "string", "enum": ["save", "run", "list", "delete"]}, name={"type": "string"},
+                    steps={"type": "string"}, optional=("name", "steps"))),
     "list_reminders": (tool_list_reminders, "List upcoming reminders.", obj()),
     "cancel_reminder": (tool_cancel_reminder, "Cancel a reminder by id (see list_reminders).", obj(id={"type": "string"})),
 })

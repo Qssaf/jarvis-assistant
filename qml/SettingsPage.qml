@@ -13,6 +13,13 @@ ScrollPage {
     property var avail: ({ backends: [], live: [] })  // for the voice models (asked for separately: it's slower)
     property bool looking: false
     signal setupAgain()
+    property var update: ({})
+    property bool updating: false
+    function checkUpdate() { Api.get("/api/update", d => update = d, e => Backend.toast(e.error, true)) }
+    function installUpdate() {
+        updating = true
+        Api.post("/api/update", {}, () => Backend.toast("Updated: Jarvis is restarting", false), e => { updating = false; Backend.toast(e.error, true) })
+    }
 
     function load() {
         Api.get("/api/settings", d => { s = d.settings; voices = d.voices })
@@ -98,7 +105,13 @@ ScrollPage {
 
     RowLayout {
         Layout.topMargin: 6
-        Txt { kind: "small"; text: "Jarvis " + Backend.version; Layout.fillWidth: true }
+        spacing: 10
+        Txt { kind: "small"; Layout.fillWidth: true
+              text: "Jarvis " + Backend.version + (page.update.available ? ` · ${page.update.latest} is out` + (page.update.how ? ` (${page.update.how})` : "")
+                    : page.update.latest ? " · up to date" : "") }
+        Pill { text: page.updating ? "Updating…" : page.update.can_update ? "Update and restart" : "Check for updates"
+               kind: page.update.can_update ? "primary" : ""; enabled: !page.updating
+               onClicked: page.update.can_update ? page.installUpdate() : page.checkUpdate() }
         Pill { text: "Run the setup again"; onClicked: page.setupAgain() }
     }
     Item { Layout.preferredHeight: 24 }

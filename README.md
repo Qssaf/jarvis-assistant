@@ -48,6 +48,10 @@ app with a notch at the top of the screen and a native dashboard window.
 - **Plugins**: add any [MCP](https://modelcontextprotocol.io) server, by URL or as a local command, and Jarvis gains
   its tools.
 
+### Routines and reminders
+Say *"when I say study mode, close Discord, open my notes and set a 50-minute timer"*, then just *"study mode"*.
+Reminders can repeat: *"remind me every weekday at 8 to check Classroom"*.
+
 ### The window
 Qt Quick, drawn on the GPU. **Home** is the conversation under the animated arc reactor, with a **Today** column: now playing,
 weather, what's next and system load. Other pages: **Chats** (saved and searchable), **Activity**, **Accounts**,
