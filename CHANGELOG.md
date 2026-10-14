@@ -13,6 +13,8 @@
 - **Plans**: a long task's steps show in the chat as it starts, so a wrong turn can be stopped early.
 - **Ask about part of the screen**: `jarvis --region` (bind it to a key) lets you drag over a chart, an error or a
   question; Jarvis reads it carefully, shows it in the chat and listens for your question.
+- **Calendar by voice**: "add the dentist tomorrow at 2" (quick add), "move my physics lab to 4", "cancel tomorrow's
+  meeting" (asks first) and "when am I free on Friday?".
 - README: the new features, and Health and Settings screenshots.
 
 ## 1.11.0 — 2026-10-15
