@@ -1,0 +1,34 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      QT_QPA_PLATFORM: offscreen
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Qt's system libraries
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libfontconfig1 libdbus-1-3 libportaudio2
+      - name: Packages
+        run: |
+          uv venv --python 3.13 .venv
+          uv pip install --python .venv -r requirements.txt pyflakes
+          uv pip install --python .venv --no-deps openwakeword
+      - name: Lint
+        shell: bash
+        run: .venv/${{ runner.os == 'Windows' && 'Scripts/python.exe' || 'bin/python' }} -m pyflakes *.py
+      - name: Tests
+        shell: bash
+        run: .venv/${{ runner.os == 'Windows' && 'Scripts/python.exe' || 'bin/python' }} test_jarvis.py
