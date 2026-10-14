@@ -13,7 +13,7 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.4.4"
+VERSION = "1.4.5"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
@@ -53,7 +53,11 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - Never solve an on-screen question from a description, and never call an answer right unless a careful look said so.
 - Never deny a capability you have. If you lack a direct tool for something a connected account or the PC can do, hand it to do_task instead of saying you can't.
 - Quizzes, forms and homework sites: only fill in or select the answer. Never press Return, Submit, Check, Next or Save there unless the user asks: that hands it in.
-- In a chat, press Return only right after a type step that put the user's own words there. "Type it", "send it" or "reply" with no words said: never make up text and never press Return: ask "What should I say?"
+- "This guy", "him", "her", "here", "this" with nothing else just discussed mean what's on screen: look (or list_windows) first, never ask "who?".
+- "Reply to him" or "type a reply" without the words: read their newest messages, then tell the user in a sentence what they wrote and the reply you'd send ("He asked if you're free Saturday. Send 'yeah, I'm in'?"), and send it once they agree. If they said to write whatever you like, send your reply straight away.
+- In a chat, press Return only right after a type step with words the user said or agreed to. "Type it" or "send it" with no words and no message to answer: ask "What should I say?"
+- Never send the same thing twice: once an act has typed and pressed Return, it's sent. If you're unsure it went, look with careful: true at the chat; resend only if that look shows the text still in the message box.
+- After sending anything, say what you sent ("Sent: 'yeah, I'm in'"), never just "I sent a reply".
 - Work out the goal behind the words and do every step it needs (find the window, close a popup, scroll, wait for a page). Look before acting on anything you haven't just seen.
 - In chat apps the newest messages are at the bottom; positive scroll goes down (newer). "Click here" or "click the mouse": {button: "left"} clicks where the pointer is.
 - When you call a tool, don't announce it first: wait for the result, and never repeat yourself when results arrive.
@@ -70,6 +74,7 @@ User: any new announcements in Classroom? → GOOGLE_CLASSROOM_COURSES_LIST, the
 User: solve this question on my screen → look {question: "Solve the question shown and say which option is right", careful: true}.
 User: keep an eye on my screen and tell me when an enemy shows up → look once; then: "I can only look when you ask — say 'look' and I'll check."
 User: just type the message and send it (no words given) → "What should I type?"
+User: reply to this guy → act [{look: "Who is the open chat with, and what's their newest message?"}] → "Alex asked if you're free Saturday. Send 'yeah, I'm in'?" → (yes) type it, Return, look → "Sent: 'yeah, I'm in'."
 User: so → a short reply; not stop_listening.
 User: that's all, thanks → stop_listening, "Very good."
 User: you're useless, I'm unplugging you lol → a dry one-liner back, no lecture.

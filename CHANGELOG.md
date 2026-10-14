@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.5 — 2026-10-14
+
+### Fixed
+- A chat message could be sent twice: the check after Return looked before the app had drawn the message, so the voice
+  thought it hadn't gone and typed it again. The check now waits a second after a send, the result says the text was
+  sent, and the voice never resends unless a careful look shows the text still in the box.
+
+### Changed
+- "Reply to this guy" looks at the open chat instead of asking who; without words it says what they wrote and the reply
+  it would send, and sends it once you agree (or at once if you said to write whatever). After sending it always says the
+  words it sent.
+
 ## 1.4.4 — 2026-10-14
 
 ### Changed

@@ -340,7 +340,7 @@ def tool_ui_controls(app=""):
 
 def tool_act(steps, screenshot_after=True, fast=False):
     """Several screen actions from one plan, in order, then a fresh screenshot."""
-    done, captured = [], None
+    done, captured, sent = [], None, False
     for i, step in enumerate(steps):
         if step.get("type") in step and step["type"] != "type":  # {type: "keys", keys: "Return"}: a label, not text to type
             step = {k: v for k, v in step.items() if k != "type"}
@@ -374,12 +374,12 @@ def tool_act(steps, screenshot_after=True, fast=False):
             r = tool_click(*pos, step.get("button", "left"), step.get("double", False)) if pos else \
                 {"error": f"couldn't find {step['click_on']} on screen"}
         elif step.get("look"):
-            time.sleep(0.15)  # let the last input render
+            time.sleep(1.0 if sent else 0.15)  # let the last input render (a sent chat message takes a moment to appear)
             image = tool_screenshot()[1]
             captured = image
             r = {"result": f"looked: {tool_look(step['look'], image, fast=fast)['answer']}"}
         elif step.get("expect"):  # a check that stops the plan, e.g. before typing into what might be the wrong chat
-            time.sleep(0.15)  # let the last input render
+            time.sleep(1.0 if sent else 0.15)  # let the last input render
             answer = tool_look(f"Is this so: {step['expect']}? Start your answer with yes or no, then say in a few words what the "
                                "screen shows instead.", model=pointer[0])["answer"]
             r = {"result": f"checked: {step['expect']}"} if re.match(r"\W*yes\b", answer, re.I) else \
@@ -400,6 +400,7 @@ def tool_act(steps, screenshot_after=True, fast=False):
             r = tool_type_text(step["type"])
         elif "keys" in step:
             r = tool_press_keys(step["keys"])
+            sent = sent or bool(re.search(r"\b(?:Return|KP_Enter|Enter)\b", str(step["keys"]))) and any("type" in s for s in steps[:i])
             if "error" in r:
                 r["error"] += " (keys is only for key names like Return, Escape or ctrl+a: put text in a type step)"
         elif "scroll" in step:
@@ -414,12 +415,14 @@ def tool_act(steps, screenshot_after=True, fast=False):
             return (out, tool_screenshot()[1]) if screenshot_after else out
         done.append(r["result"])
         time.sleep(0.05)  # give the app a moment to react before the next input
+    sent_note = {"sent": "the typed text was sent with Return: never type or send it again unless a careful look shows it still "
+                         "sitting in the message box"} if sent else {}
     if captured:
-        return {"result": done, "note": "the screenshot from the screenshot step is attached"}, captured
+        return {"result": done, "note": "the screenshot from the screenshot step is attached", **sent_note}, captured
     if not screenshot_after:
-        return {"result": done}
+        return {"result": done, **sent_note}
     time.sleep(0.25)
-    return {"result": done, "note": "screenshot taken after the steps is attached"}, tool_screenshot()[1]
+    return {"result": done, "note": "screenshot taken after the steps is attached", **sent_note}, tool_screenshot()[1]
 
 
 # all from the AI Studio key; local_backends.py can put others in front

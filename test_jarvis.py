@@ -199,6 +199,14 @@ pressed, real_keys = [], brain.tool_press_keys
 brain.tool_press_keys = lambda keys: pressed.append(keys) or {"result": "pressed"}
 brain.tool_act([{"type": "keys", "keys": "Return"}, {"type": "wait", "wait": 0}], screenshot_after=False)
 assert pressed == ["Return"] and typed == ["hi"], (pressed, typed)
+# a sent chat message takes a moment to appear: the look after Return waits for it, and the result says it was sent
+slept, real_sleep, real_look = [], brain.time.sleep, brain.tool_look
+brain.time.sleep, brain.tool_look = slept.append, (lambda q, image=None, model=None, fast=False, careful=False: {"answer": "it's there"})
+out = brain.tool_act([{"type": "hi"}, {"keys": "Return"}, {"look": "is it in the chat?"}], screenshot_after=False)
+assert 1.0 in slept and "sent" in out[0], (slept, out)  # (a look step returns its screenshot too)
+slept.clear()
+assert "sent" not in brain.tool_act([{"keys": "Return"}, {"look": "what happened?"}], screenshot_after=False)[0] and 1.0 not in slept
+brain.time.sleep, brain.tool_look = real_sleep, real_look
 brain.tool_press_keys = real_keys
 brain.tool_screenshot, brain.tool_type_text = real
 brain.pointer[0] = None
