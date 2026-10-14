@@ -449,7 +449,7 @@ assert "{SYSTEM}" not in prompt and ("Windows" in prompt or "Linux" in prompt)
 assert "{SYSTEM}" not in jarvis.LIVE_PROMPT.replace("{SYSTEM}", system.describe())
 assert "kcalc" not in jarvis.VOICE_ACT or system.CALC == "kcalc"
 assert list(brain.BACKENDS)[0] == "aistudio"
-# the web guard: every fetch (Larry's own and the headless browser's) refuses this PC and the local network, redirects included
+# the web guard: every fetch (Jarvis's own and the headless browser's) refuses this PC and the local network, redirects included
 import http.server
 class Local(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -479,6 +479,13 @@ brain.requests.get = lambda url, **k: types.SimpleNamespace(ok=True, text="", js
     {"current": {"time": "2026-10-09T10:00", "weather_code": 3, "temperature_2m": 18.4, "apparent_temperature": 17, "relative_humidity_2m": 60,
                  "wind_speed_10m": 9}, "daily": {"weather_code": [61, 3, 0], "temperature_2m_max": [20, 21, 22], "temperature_2m_min": [12, 13, 14],
                  "precipitation_probability_max": [40, 10, None], "sunrise": ["2026-10-09T06:50"] * 3, "sunset": ["2026-10-09T18:10"] * 3}}))
+asked_places, real_here, real_get_weather = [], brain.here, brain.requests.get
+brain.here = lambda: ""  # the network can't tell: where the user said they live, from memory
+brain.requests.get = lambda url, params=None, **k: asked_places.append((params or {}).get("name")) or real_get_weather(url, params=params, **k)
+store.set_memory("- likes tea\n- The user lives in Rome now.")
+assert brain.memory_city() == "Rome" and "place" in brain.tool_weather() and asked_places[0] == "Rome", asked_places
+store.set_memory("")
+brain.here, brain.requests.get = real_here, real_get_weather
 w = brain.tool_weather("Rome")
 assert w["place"] == "Rome, Italy" and w["now"].startswith("overcast, 18") and w["forecast"][0].startswith("today: light rain") and "0% chance" in w["forecast"][2]
 brain.requests.get = lambda url, **k: types.SimpleNamespace(ok=True, text="", json=lambda: (
@@ -495,6 +502,22 @@ brain.painter[0] = lambda contents, entries: asked.append(entries[0][1]) or (
     [{"text": ""}] if entries[0][1] == "first" else [{"inlineData": {"data": base64.b64encode(b"\x89PNG..").decode()}}])
 assert "result" in brain.tool_make_image("a cat") and asked == ["first", "second"], asked
 brain.painter[0], brain.IMAGE_MODELS, brain.IMAGE_DIR = real_painter, real_models, real_dir
+
+# a Drive file by name: an exact name beats newer near-misses, Docs are exported as text and read like a local file
+db = brain.Brain.__new__(brain.Brain)
+db.connected, calls = {"googledrive"}, []
+db.app_data = lambda slug, args: calls.append((slug, args)) or (
+    {"files": [{"id": "a", "name": "Graph notes v2.pdf", "mimeType": "application/pdf"},
+               {"id": "b", "name": "Graph notes", "mimeType": "application/vnd.google-apps.document"}]}
+    if slug == "GOOGLEDRIVE_FIND_FILE" else {"downloaded_file_content": {"s3url": "https://files.example.com/x"}})
+real_fetch = brain.fetch
+brain.fetch = lambda url, **k: types.SimpleNamespace(ok=True, status_code=200, content=b"Graphs: a slope is rise over run.")
+got = db.drive_file("graph notes")
+assert got["file"] == "Graph notes" and "rise over run" in got["text"] and got["other_matches"] == ["Graph notes v2.pdf"], got
+assert calls[1] == ("GOOGLEDRIVE_DOWNLOAD_FILE", {"fileId": "b", "mime_type": "text/plain"}), calls
+brain.fetch = real_fetch
+db.connected = set()
+assert "isn't connected" in db.drive_file("x")["error"]
 
 # Settings lists the models each backend offers: from its own list, or (without one) the ones Jarvis already uses with it
 class Listed:

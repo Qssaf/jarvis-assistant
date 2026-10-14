@@ -210,7 +210,7 @@ def _wayland_tool():
     return "wdotool" if have("wdotool") else "ydotool" if have("ydotool") else None
 
 
-PERMISSION_PENDING = ("timed out: the desktop is still waiting for the user to allow Larry's input control in its permission "
+PERMISSION_PENDING = ("timed out: the desktop is still waiting for the user to allow Jarvis's input control in its permission "
                       "prompt (Remote Control)")
 _input_blocked_until = [0.0]  # after a timed-out permission prompt, fail fast for a minute instead of waiting again
 

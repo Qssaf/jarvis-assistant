@@ -41,7 +41,10 @@ app with a notch at the top of the screen and a native dashboard window.
 - **Memory and reminders**: *"Remember that I prefer short answers"*, *"Remind me in 20 minutes to stretch"*.
 - **Pictures and files**: *"Make a picture of a rainy city at night"*. You can also drop a PDF, picture or text file on
   the window and ask about it.
-- **Your day**: *"Good morning"* gives a briefing (weather, work due, calendar, unread email, reminders).
+- **Your day**: *"Good morning"* gives a briefing (weather, work due, calendar, unread email, reminders). Tell Jarvis
+  where you live once and the weather uses it.
+- **Your accounts**: *"Mark my unread emails as read"*, *"Any new announcements on Classroom?"*, *"Read my lab notes
+  from Drive"*: Docs, Slides, Sheets and PDFs in your Drive are read by name.
 - **Plugins**: add any [MCP](https://modelcontextprotocol.io) server, by URL or as a local command, and Jarvis gains
   its tools.
 

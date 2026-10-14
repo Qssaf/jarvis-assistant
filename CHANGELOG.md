@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.2 — 2026-10-14
+
+### Changed
+- **A new voice prompt**, chosen by testing: ten versions were scored on 27 requests taken from real conversations
+  (tool choice, asking before sending invented words, not hanging up on a stray word, careful looks for quiz questions,
+  no false "I'm watching your screen", remembering what to call you), on two models. The winner, organised by kind of
+  request with short worked examples, passed every check on both; the old prompt failed 3 to 6 of them.
+- New `drive_file` tool: reads a Google Drive file by name (Docs, Slides and Sheets as text, PDFs, pictures).
+- The weather finds where you live in what Jarvis remembers ("The user lives in ...") before guessing from the network.
+- Settings lists the full model catalogue of backends added in `local_backends.py` when they offer one.
+- Web and input-permission messages said "Larry"; they say Jarvis.
+
 ## 1.4.1 — 2026-10-14
 
 ### Changed
