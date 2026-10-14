@@ -566,6 +566,12 @@ try:
 except ValueError:
     pass
 
+# the voice list leaves out models whose tool calls never reach Jarvis
+studio = brain.AIStudio.__new__(brain.AIStudio)
+studio._listing = lambda: [("gemini-3.8-live", ["bidiGenerateContent"]), ("gemini-3.8-live-extended-thinking", ["bidiGenerateContent"]),
+                           ("gemini-3.8-flash", ["generateContent"])]
+assert studio.live_models() == ["gemini-3.8-live"], studio.live_models()
+
 # Settings lists the models each backend offers: from its own list, or (without one) the ones Jarvis already uses with it
 class Listed:
     def models(self):

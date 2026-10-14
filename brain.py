@@ -103,8 +103,10 @@ class AIStudio:
         return [n for n, ways in self._listing() if "generateContent" in ways and not re.search(r"embed|tts|aqa|imagen|veo|robotics", n)]
 
     def live_models(self):
-        """The real-time (voice) models this key can use."""
-        return [n for n, ways in self._listing() if "bidiGenerateContent" in ways and not re.search(r"transcribe|translate|robotics", n)]
+        """The real-time (voice) models this key can use. (Extended-thinking ones are left out: their tool calls never reach
+        the client, so the voice would say it did things it can't.)"""
+        return [n for n, ways in self._listing() if "bidiGenerateContent" in ways
+                and not re.search(r"transcribe|translate|robotics|extended-thinking", n)]
 
 
 # name -> class with generate(contents, model, thinking, tools=None, system=None, **options); local_backends.py may add more
