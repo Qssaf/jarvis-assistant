@@ -182,6 +182,8 @@ class Window:
         self.backend = Backend(get, post, tool_label, live, shown_state, version)
         self.events = self.backend  # (jarvis.clients takes anything with put())
         qmlRegisterSingletonInstance(Backend, "Jarvis", 1, 0, "Backend", self.backend)
+        from PySide6.QtQuickControls2 import QQuickStyle
+        QQuickStyle.setStyle("Basic")  # (Windows' native style ignores the custom look of fields, menus and sliders)
         self.engine = QQmlApplicationEngine()
         self.engine.addImageProvider("icon", IconProvider())
         self.engine.setInitialProperties({"startShown": show})

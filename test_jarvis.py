@@ -609,7 +609,8 @@ import window
 pix = window.icon_pixmap("home", QColor("#9c9ab0"), 48).toImage()
 assert any(pix.pixelColor(x, y).alpha() > 0 for x in range(48) for y in range(48)), "the line icons came out empty"
 warnings = []
-qInstallMessageHandler(lambda kind, ctx, msg: warnings.append(msg) if kind != QtMsgType.QtDebugMsg and "portal" not in msg else None)
+qInstallMessageHandler(lambda kind, ctx, msg: warnings.append(msg) if kind != QtMsgType.QtDebugMsg and "portal" not in msg
+                       and "Cannot find font directory" not in msg else None)  # (headless Windows: no font folder for the offscreen platform)
 stub = types.SimpleNamespace(plugin_status=lambda: [], workspaces=lambda: [], app_tools={}, model_jobs=brain.Brain.model_jobs, available_models=lambda: {
     "backends": [{"name": "aistudio", "models": ["gemini-3.8-flash", "gemini-3.7-flash"]},
                  {"name": "openai", "models": [], "error": "no API key"}], "live": ["gemini-3.8-live"]})
