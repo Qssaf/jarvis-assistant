@@ -1055,4 +1055,19 @@ assert "away from the PC" in brain.Brain.ask_user(ab, "Which Sam?")["error"]
 ab.remote = False
 store.set_secret("telegram", "")
 
+# a loop meant to run for good is started again when it stops, instead of Jarvis going quietly deaf
+runs, real_emit, real_sleep = [], jarvis.emit, jarvis.time.sleep
+jarvis.emit = lambda kind, **data: None
+def flaky():
+    runs.append(1)
+    if len(runs) < 3:
+        raise RuntimeError("mic unplugged")
+    threading.Event().wait()  # (third time lucky: it keeps running)
+jarvis.background(flaky, restart=True, wait=0.01)
+end = time.time() + 3
+while len(runs) < 3 and time.time() < end:
+    time.sleep(0.02)
+jarvis.emit = real_emit
+assert len(runs) == 3, runs
+
 print("ok")

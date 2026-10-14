@@ -13,7 +13,7 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.10.0"
+VERSION = "1.10.1"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
@@ -1736,12 +1736,25 @@ def run_tray(live, show=False):
     del notch, win
 
 
-def background(fn, *args):
+def background(fn, *args, restart=False, wait=5):
+    """Run fn on its own thread. restart: it's meant to run for good (listening, reminders), so if it ever stops, it's
+    started again (after wait seconds, longer each time it fails quickly) instead of Jarvis going quietly deaf."""
     def run():
-        try:
-            fn(*args)
-        except Exception as e:
-            emit("log", who="system", text=f"{fn.__name__} stopped: {e}")
+        delay = wait
+        while True:
+            started = time.time()
+            try:
+                fn(*args)
+                problem = "ended"
+            except Exception as e:
+                problem = f"stopped: {e}"
+            if not restart:
+                if problem != "ended":
+                    emit("log", who="system", text=f"{fn.__name__} {problem}")
+                return
+            delay = wait if time.time() - started > 300 else min(delay * 2, 300)
+            emit("log", who="system", text=f"{fn.__name__} {problem}; starting it again in {delay:.0f} s")
+            time.sleep(delay)
     threading.Thread(target=run, daemon=True).start()
 
 
@@ -1808,13 +1821,13 @@ def main():
     if not store.settings()["setup_done"] and os.path.exists(store.SETTINGS_FILE):
         store.update_settings({"setup_done": True})  # (set up before the setup screen existed: don't show it)
     background(serve_app, live, brain)
-    background(reminder_loop, live)
-    background(deadline_loop, brain)
+    background(reminder_loop, live, restart=True)
+    background(deadline_loop, brain, restart=True)
     import remote
     remote_ref[0] = remote.Telegram(brain, notify=lambda text: emit("log", who="system", text=text))
-    background(remote_ref[0].run)
+    background(remote_ref[0].run, restart=True)
     if not args.no_voice:
-        background(voice_loop, live, "jarvis-ec-source" if echo else None)
+        background(voice_loop, live, "jarvis-ec-source" if echo else None, restart=True)
         background(morning_briefing, live)
     try:
         run_tray(live, show=args.no_voice)
