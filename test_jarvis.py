@@ -215,9 +215,9 @@ live.question, live.mic = None, False
 got_answer = []
 waiter = threading.Thread(target=lambda: got_answer.append(live.ask_from_task("Sam Lee or Sam Leeds?", threading.Event())))
 waiter.start()
-while live.question is None:
+while not asked_voice:
     time.sleep(0.01)
-assert live.mic and asked_voice, "the question wasn't said with the mic left open"
+assert live.mic and live.question, "the question wasn't said with the mic left open"
 assert asyncio.run(live._tool(types.SimpleNamespace(name="answer_task", args={"answer": "Sam Lee"})))["result"]
 waiter.join(2)
 assert got_answer == ["Sam Lee"] and live.question is None, got_answer

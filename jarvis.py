@@ -813,15 +813,14 @@ class Live:
     def ask_from_task(self, question, cancel):
         """The agent's question (from its thread): said out loud with the mic left open, then wait for answer_task, for
         Stop, or for ASK_WAIT seconds. The answer, or None."""
+        self.quiet, self.primed, self.stopped = False, False, False
+        self.mic, self.last = True, time.time()  # they answer without saying "Hey Jarvis" first
         q = self.question = {"text": question, "answered": threading.Event(), "answer": None}
         emit("log", who="system", text=f"The task needs you: {question}")
         system.notify("Jarvis needs you", question)
-        self.quiet, self.primed, self.stopped = False, False, False
         quoted = question.replace('"', "'")
         self._go(self._send(f'(Your background task needs the user before it can go on. Ask them this, briefly and in your own words: '
                             f'"{quoted}". When they answer, call answer_task with their answer.)', track=False))
-        self.mic = True  # they answer without saying "Hey Jarvis" first
-        self.last = time.time()
         end = time.time() + ASK_WAIT
         try:
             while time.time() < end and not cancel.is_set() and not q["answered"].wait(0.5):
