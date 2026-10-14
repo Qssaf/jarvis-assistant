@@ -12,6 +12,10 @@ ScrollPage {
     property var voices: []
     property var languages: ({})
     property bool confirmDelete: false
+    property var remote: ({})
+    function setToken(token) {
+        Api.post("/api/remote/token", { token: token }, d => { remote = d; tgToken.text = "" }, e => Backend.toast(e.error, true))
+    }
     property var avail: ({ backends: [], live: [] })  // for the voice models (asked for separately: it's slower)
     property bool looking: false
     signal setupAgain()
@@ -25,6 +29,7 @@ ScrollPage {
 
     function load() {
         Api.get("/api/settings", d => { s = d.settings; voices = d.voices; languages = d.languages })
+        Api.get("/api/remote", d => remote = d)
         lookUp()
     }
     function lookUp() {
@@ -108,6 +113,30 @@ ScrollPage {
         Txt { kind: "small"; Layout.fillWidth: true; text: "Models for everything else, and your API keys, are on the Models page." }
         Txt { kind: "small"; Layout.fillWidth: true
               text: "Push to talk: bind the command  jarvis --listen  to a keyboard shortcut (KDE: System Settings → Keyboard → Shortcuts → Add New → Command)." }
+    }
+
+    Section {
+        title: "Jarvis on your phone"
+        Txt { kind: "small"; Layout.fillWidth: true; textFormat: Text.StyledText
+              text: "Send Jarvis tasks from anywhere through Telegram. 1. In Telegram, message <a href=\"https://t.me/BotFather\">@BotFather</a>, "
+                    + "send /newbot and copy the token it gives you. 2. Paste it here. 3. Send your new bot the code below. Only that chat is answered." }
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 10
+            Field { id: tgToken; Layout.fillWidth: true; echoMode: TextInput.Password
+                    placeholderText: page.remote.token ? "Bot token saved · paste a new one to replace it" : "Paste your bot's token"
+                    onAccepted: page.setToken(text) }
+            Pill { text: "Save"; enabled: tgToken.text.trim() !== ""; onClicked: page.setToken(tgToken.text) }
+        }
+        Txt { visible: !!page.remote.token; Layout.fillWidth: true
+              text: page.remote.paired ? `Paired with ${page.remote.paired}.` : `Send your bot this code: ${page.remote.code}` }
+        Txt { kind: "small"; visible: !!page.remote.error; text: page.remote.error || ""; color: Theme.warm; Layout.fillWidth: true }
+        RowLayout {
+            visible: !!page.remote.token
+            spacing: 10
+            Pill { visible: !!page.remote.paired; text: "Unpair"; onClicked: Api.post("/api/remote/unpair", {}, d => page.remote = d) }
+            Pill { text: "Remove the bot"; onClicked: page.setToken("") }
+        }
     }
 
     Section {

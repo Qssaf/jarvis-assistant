@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.0 — 2026-10-15
+
+### Added
+- **Jarvis on your phone** (Settings): send tasks from anywhere through your own Telegram bot. Only the chat that sent
+  the pairing code is answered (five wrong codes and a chat is ignored); `/stop` stops a task. The agent knows you're
+  away: it doesn't ask out loud, and ends with its question instead.
+
+### Changed
+- Voice and phone tasks take turns: the agent runs one task at a time.
+
 ## 1.8.0 — 2026-10-15
 
 ### Added

@@ -21,6 +21,7 @@ CI runs the same lint and tests on Linux and Windows for every push and pull req
 | `brain.py` | The agent (`Brain.ask`), every tool (`TOOLS`), model backends and fallbacks, accounts and plugins |
 | `system.py` | Everything that depends on the OS: audio, screenshots, input, windows, the shell |
 | `store.py` | Settings, memory, reminders, routines, sessions, keys |
+| `remote.py` | Jarvis on your phone: the Telegram bot link |
 | `window.py`, `qml/` | The window (Qt Quick); `Theme.qml` holds the colours |
 | `prompt.md` | The agent's instructions (the voice's are `LIVE_PROMPT` in `jarvis.py`) |
 | `test_jarvis.py` | Plain `assert`s, run top to bottom |

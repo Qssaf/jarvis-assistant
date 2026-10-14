@@ -84,6 +84,10 @@ screenshot. The voice model can't see images, so `act` from voice refuses coordi
 - Messaging on screen relies on `act`'s `expect` step (a vision yes/no that stops the plan) and on `locate` refusing
   near-miss names: together they keep a misheard name from sending a message to the wrong chat.
 
+**Phone.** `remote.py` long-polls the user's own Telegram bot (token in the keychain as `telegram`) and answers only the
+chat paired with the code shown in Settings (five wrong codes and a chat is ignored). Its tasks run `Brain.ask(...,
+remote=True)`: `ask_user` refuses (the user can't answer out loud). `Brain.ask_lock` makes voice and phone tasks take turns.
+
 **State.** `store.py` keeps settings (unknown keys dropped, types coerced, `agent_models` validated), plugins,
 `memory.md`, reminders and sessions under `system.CONFIG` / `system.DATA`. Files holding tokens are written with
 `private=True`.

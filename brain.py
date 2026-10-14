@@ -1568,6 +1568,8 @@ class Brain:
         self.down_until = {}  # (backend, model) -> time it may be tried again
         self.contents = []
         self.cancel = threading.Event()
+        self.ask_lock = threading.Lock()  # one task at a time (voice, phone): they share the history and the screen
+        self.remote = False  # the running task came from the phone: the user can't answer out loud
         self.plugins = {}  # name -> McpServer
         self.tool_owner = {}  # function name the model sees -> (McpServer, real tool name)
         self.app_tools = {}  # Composio slug -> {"description", "schema"}, for connected apps
@@ -1799,6 +1801,8 @@ class Brain:
 
     def ask_user(self, question):
         """The agent's question to the user, answered through the voice; the agent waits for it."""
+        if self.remote:
+            return {"error": "the user is away from the PC (this task came from their phone): end your reply with the question instead"}
         if not asker[0]:
             return {"error": "there's no way to ask the user right now: end your reply with the question instead"}
         answer = asker[0](question, self.cancel)
@@ -2037,7 +2041,15 @@ class Brain:
                     delay = min(delay * 2, 600)
         threading.Thread(target=probe, daemon=True).start()
 
-    def ask(self, text, on_tool=lambda name: None, on_thought=None):
+    def ask(self, text, on_tool=lambda name: None, on_thought=None, remote=False):
+        with self.ask_lock:
+            self.remote = remote
+            try:
+                return self._ask(text, on_tool, on_thought)
+            finally:
+                self.remote = False
+
+    def _ask(self, text, on_tool, on_thought):
         self.cancel.clear()
         reset_interrupt_act()
         msgs = self.contents  # reset() swaps in a new list; this turn keeps writing to its own

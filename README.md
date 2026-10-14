@@ -48,6 +48,10 @@ app with a notch at the top of the screen and a native dashboard window.
 - **Plugins**: add any [MCP](https://modelcontextprotocol.io) server, by URL or as a local command, and Jarvis gains
   its tools.
 
+### On your phone
+Settings → *Jarvis on your phone*: make a Telegram bot with @BotFather, paste its token, send it the pairing code, and
+message it tasks from anywhere (*"what's due this week?"*, *"turn the volume down"*). `/stop` stops a task.
+
 ### Routines and reminders
 Say *"when I say study mode, close Discord, open my notes and set a 50-minute timer"*, then just *"study mode"*.
 Reminders can repeat: *"remind me every weekday at 8 to check Classroom"*.

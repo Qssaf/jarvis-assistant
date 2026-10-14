@@ -114,7 +114,7 @@ brain.chain = lambda: [("x", "m", "low")]
 brain.TOOLS["close_window"] = (lambda name: {"result": f"closed {name}"},) + brain.TOOLS["close_window"][1:]
 a = brain.Brain.__new__(brain.Brain)
 a.backends, a.down_until, a.notify, a.plugins, a.app_tools = {"x": OneShot()}, {}, (lambda t: None), {}, {}
-a.contents, a.cancel = [], brain.threading.Event()
+a.contents, a.cancel, a.ask_lock, a.remote = [], brain.threading.Event(), brain.threading.Lock(), False
 a._system = lambda: ""
 assert a.ask("12 times 12 then close it") == "144, sir. Closed it." and OneShot.calls == 1
 # page text: attribute values may contain markup, scripts are dropped, entities decoded
@@ -235,9 +235,9 @@ stopped.set()
 assert live.ask_from_task("Delete 37 emails?", stopped) is None  # Stop pressed: no answer, the agent ends with its question
 brain_asker = brain.asker[0]
 brain.asker[0] = lambda q, cancel: "yes"
-assert brain.Brain.ask_user(types.SimpleNamespace(cancel=None), "ok?") == {"answer": "yes"}
+assert brain.Brain.ask_user(types.SimpleNamespace(cancel=None, remote=False), "ok?") == {"answer": "yes"}
 brain.asker[0] = lambda q, cancel: None
-assert "end your reply" in brain.Brain.ask_user(types.SimpleNamespace(cancel=None), "ok?")["error"]
+assert "end your reply" in brain.Brain.ask_user(types.SimpleNamespace(cancel=None, remote=False), "ok?")["error"]
 brain.asker[0], system.notify = brain_asker, real_notify
 # clicking where the mouse is (button without coordinates) works in-place
 clicked = []
@@ -460,6 +460,7 @@ threading.Thread(target=srv.serve_forever, daemon=True).start()
 store.save_custom_provider("local", f"http://127.0.0.1:{srv.server_port}/v1")
 b = brain.Brain.__new__(brain.Brain)
 b.backends, b.down_until, b.contents, b.cancel, b.plugins, b.app_tools, b.notify = {}, {}, [], threading.Event(), {}, {}, print
+b.ask_lock, b.remote = threading.Lock(), False
 brain.chain = lambda: [("local", "tiny-model", "low")]
 assert b.ask("any reminders?") == "You have no reminders."
 assert seen[0][0] is None and any(t["function"]["name"] == "list_reminders" for t in seen[0][1]["tools"])
@@ -1012,5 +1013,42 @@ store.delete_data()
 assert (store.memory(), store.reminders(), store.routines(), os.listdir(store.SESSIONS_DIR)) == ("", [], {}, []), (store.memory(), store.reminders(), store.routines(), os.listdir(store.SESSIONS_DIR))
 assert not os.path.exists(os.path.join(store.DATA, "wake")) and store.settings()["voice"] == "Puck"
 store.update_settings({"voice": "Charon"})
+
+# Telegram: only the chat that sends the pairing code is answered; it gets the agent's reply, and the agent can't ask out loud
+import remote
+class FakeTelegram:
+    def __init__(self):
+        self.updates, self.sent = [], []
+
+    def get(self, url, params=None, timeout=None):
+        if url.endswith("/getMe"):
+            return types.SimpleNamespace(json=lambda: {"ok": True, "result": {"username": "my_jarvis_bot"}})
+        out, self.updates = self.updates, []
+        return types.SimpleNamespace(json=lambda: {"ok": True, "result": out})
+
+    def post(self, url, json=None, timeout=None):
+        self.sent.append((json["chat_id"], json["text"]))
+fake_tg, asked_remote = FakeTelegram(), []
+tb = types.SimpleNamespace(ask_lock=threading.Lock(), interrupt=lambda: asked_remote.append("stop"),
+                           ask=lambda text, remote=False: asked_remote.append((text, remote)) or "It's 21°C and sunny.")
+tg = remote.Telegram(tb, notify=lambda text: None)
+tg.http = fake_tg
+tg.set_token("123:abc")
+assert store.secret("telegram") == "123:abc" and tg.status()["token"] and not tg.status()["paired"]
+msg = lambda uid, chat, text: {"update_id": uid, "message": {"chat": {"id": chat}, "from": {"first_name": "Sam"}, "text": text}}
+fake_tg.updates = [msg(1, 42, "what's the weather?"), msg(2, 42, f"/start {tg.code}"), msg(3, 42, "what's the weather?"), msg(4, 99, "hi")]
+tg.poll("123:abc")
+assert tg.status()["paired"] == "Sam" and tg.state["offset"] == 5
+assert asked_remote == [(remote.REMOTE_NOTE + "what's the weather?", True)]  # (before pairing: not run; the stranger: ignored)
+assert fake_tg.sent[-1] == (42, "It's 21°C and sunny.") and not any(chat == 99 for chat, _ in fake_tg.sent)
+tg.unpair()
+wrong = str((int(tg.code) + 1) % 10 ** 6).zfill(6)
+fake_tg.updates = [msg(5 + i, 7, wrong) for i in range(5)] + [msg(10, 7, tg.code)]  # five wrong codes: that chat can't pair any more
+tg.poll("123:abc")
+assert not tg.status()["paired"]
+ab.remote = True
+assert "away from the PC" in brain.Brain.ask_user(ab, "Which Sam?")["error"]
+ab.remote = False
+store.set_secret("telegram", "")
 
 print("ok")

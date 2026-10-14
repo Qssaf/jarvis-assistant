@@ -13,7 +13,7 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.8.0"
+VERSION = "1.9.0"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
@@ -1143,6 +1143,8 @@ def api_get(path, brain):
         return system.now_playing()
     if path == "/api/health":
         return health(live_ref[0], brain)
+    if path == "/api/remote":
+        return remote_ref[0].status() if remote_ref[0] else {"token": False, "paired": "", "code": "", "error": "not running"}
     if path == "/api/report":
         return {"text": diagnostics(brain)}
     if path == "/api/update":
@@ -1162,6 +1164,7 @@ def api_get(path, brain):
 
 
 live_ref = [None]  # the running Live, for the Health page
+remote_ref = [None]  # the Telegram link, for Settings
 
 
 def health(live, brain):
@@ -1435,6 +1438,12 @@ def api_post(path, data, live, brain):
         store.set_memory(str(data.get("memory", "")))
     elif m := re.fullmatch(r"/api/reminders/(\w+)/cancel", path):
         store.cancel_reminder(m[1])
+    elif path == "/api/remote/token":
+        remote_ref[0].set_token(str(data.get("token", "")))
+        return remote_ref[0].status()
+    elif path == "/api/remote/unpair":
+        remote_ref[0].unpair()
+        return remote_ref[0].status()
     elif path == "/api/data/delete":
         live.barge_in()
         live.close()
@@ -1793,6 +1802,9 @@ def main():
     background(serve_app, live, brain)
     background(reminder_loop, live)
     background(deadline_loop, brain)
+    import remote
+    remote_ref[0] = remote.Telegram(brain, notify=lambda text: emit("log", who="system", text=text))
+    background(remote_ref[0].run)
     if not args.no_voice:
         background(voice_loop, live, "jarvis-ec-source" if echo else None)
         background(morning_briefing, live)

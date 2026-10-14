@@ -24,6 +24,8 @@ everything Jarvis keeps about me* removes memory, conversations, reminders, rout
   your memory and recent conversation as context, screenshots when a task needs the screen, files you ask Jarvis to
   read, and web search questions. Audio before the wake word never leaves your computer.
 - **Composio** (only for accounts you connect): the account actions Jarvis runs for you, like reading or sending email.
+- **Telegram** (only if you set up *Jarvis on your phone*): the tasks you send your bot and Jarvis's replies. Only the
+  chat you paired is answered.
 - **Other model providers** you add on the Models page: the same as Gemini, for the jobs you give them.
 - **The web**: pages Jarvis reads for you, the weather (Open-Meteo, wttr.in), YouTube and DuckDuckGo searches, and an
   update check that reads Jarvis's version from GitHub.
