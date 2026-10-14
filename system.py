@@ -109,6 +109,25 @@ class AudioOut:
             self.stream = None
 
 
+def record_audio(path, source="pc"):
+    """Start recording to a 16 kHz mono WAV: what the PC is playing ("pc") or the microphone ("room"). The process; end it
+    with stop_recording, which finishes the file."""
+    if IS_WINDOWS or not have("pw-record"):
+        raise RuntimeError("recording needs PipeWire (Linux)")
+    what = ["-P", "{ stream.capture.sink=true }"] if source == "pc" else []
+    return subprocess.Popen(["pw-record", *what, "--rate", "16000", "--channels", "1", "--format", "s16", path],
+                            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def stop_recording(proc):
+    import signal
+    proc.send_signal(signal.SIGINT)  # (pw-record finishes the WAV header on SIGINT)
+    try:
+        proc.wait(5)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+
+
 def chime():
     """A short, soft two-note chime (generated, so there's no sound file to ship)."""
     def play():

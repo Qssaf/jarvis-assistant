@@ -1070,4 +1070,40 @@ while len(runs) < 3 and time.time() < end:
 jarvis.emit = real_emit
 assert len(runs) == 3, runs
 
+# notes: recorded in chunks, each transcribed as it goes, then a summary and the transcript saved to a file
+real_rec, real_dir = (system.record_audio, system.stop_recording), brain.NOTES_DIR
+recorded = []
+def fake_record(path, source):
+    recorded.append(source)
+    with open(path, "wb") as f:
+        f.write(b"RIFF" + b"\0" * 40000)
+    return None
+system.record_audio, system.stop_recording = fake_record, (lambda proc: None)
+brain.NOTES_DIR = os.path.join(store.DATA, "notes-test")
+done = []
+brain.notes_done[0] = lambda text, path: done.append((text, path))
+heard = iter(["Today: derivatives. The slope is rise over run.", "(silence)", "Homework: exercises 1 to 5, due Friday."])
+n = brain.Notes(transcribe=lambda audio: next(heard), summarise=lambda t: "Derivatives; homework 1-5 due Friday." if "Homework" in t else "?")
+n.CHUNK = 0.15
+assert "taking notes of the room" in n.start("Calculus 2", "room")["result"] and "error" in n.start("again")
+time.sleep(0.4)
+assert n.status()["taking_notes"] == "Calculus 2"
+assert "stopped after" in n.stop()["result"] and "error" in n.stop()
+end = time.time() + 3
+while not done and time.time() < end:
+    time.sleep(0.05)
+text, path = done[0]
+saved = open(path, encoding="utf-8").read()
+assert "homework 1-5 due Friday" in text and "# Calculus 2" in saved and "rise over run" in saved and "(silence)" not in saved
+assert set(recorded) == {"room"}
+system.record_audio, system.stop_recording = real_rec
+import wave
+def wav(samples):
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000); w.writeframes(samples.astype(np.int16).tobytes())
+    return buf.getvalue()
+assert not brain.audible(wav(np.zeros(16000))) and brain.audible(wav(np.sin(np.arange(16000) / 3) * 5000))  # (silence isn't sent)
+brain.NOTES_DIR = real_dir
+
 print("ok")

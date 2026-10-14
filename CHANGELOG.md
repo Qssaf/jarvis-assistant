@@ -3,6 +3,10 @@
 ## 1.11.0 — 2026-10-15
 
 ### Added
+- **Lecture and meeting notes**: "take notes of this lecture" records what the PC plays (or the room's microphone, for a
+  class in person), transcribes it every five minutes as it goes, and on "stop the notes" writes a summary, key points,
+  dates and homework plus the full transcript to Documents/Jarvis Notes, then says it's ready. Silent stretches aren't
+  sent (models invent words for silence). Linux (PipeWire).
 - **Text size** (Settings): the whole window's text, from 0.9 to 1.5 times the normal size.
 - **A Windows build** for new releases: `Jarvis.exe` in a zip, attached to each GitHub release (built and started
   headless in CI first).

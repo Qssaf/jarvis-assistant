@@ -48,6 +48,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - System info, files, volume, clipboard: run_command. {SYSTEM} Open apps with act launch, not run_command.
 - Pictures: make_image, show_image. Local files: read_file. Time: set_reminder (repeat for "every day/weekday/week"), list_reminders, cancel_reminder.
 - "This"/"what I selected"/"what I copied" with summarise, translate, explain or rewrite: selection. Music: media (play_pause, next, previous, now_playing).
+- "Take notes of this lecture/meeting/video": notes start (source pc for what's playing, room for a class in person); "stop the notes": notes stop.
 - Something from an earlier conversation ("what was that site you told me about?", "what did I ask you yesterday?"): recall.
 - Routines: when the user says one of their routines' names (listed under what you can do), routine run, then do its steps. "When I say X, do Y": routine save.
 - Something lasting about the user (what to call them, where they live, a preference): remember it right away; forget when they take it back.
@@ -129,7 +130,7 @@ VOICE_RESULT_LIMIT = 12000  # characters of one tool result the voice model gets
 LIVE_TOOLS = ["run_command", "web_search", "read_webpage", "youtube_search", "open_url", "remember", "forget", "set_reminder", "list_reminders",
               "cancel_reminder", "list_windows", "focus_window", "close_window", "act", "look", "ui_controls", "make_image",
               "show_image", "read_file", "briefing", "account_settings", "weather", "classroom_due", "drive_file", "routine",
-              "recall", "selection", "media"]
+              "recall", "selection", "media", "notes"]
 
 # what the user asked to be called, from what Jarvis remembers ("prefers to be called Q", "call me Sam, not sir")
 # ponytail: a pattern over remember()'s usual wording, not understanding; unmatched memory falls back to the prompt's rule
@@ -160,7 +161,7 @@ TOOL_LABELS = {"run_command": "Running a command", "web_search": "Searching the 
                "account_settings": "Changing account settings", "weather": "Checking the weather",
                "classroom_due": "Checking Classroom", "drive_file": "Reading from Drive", "ask_user": "Asking you",
                "routine": "Running a routine", "recall": "Searching past conversations", "selection": "Reading your selection",
-               "media": "Controlling the music"}
+               "media": "Controlling the music", "notes": "Taking notes"}
 
 
 def tool_label(name):
@@ -1811,6 +1812,12 @@ def main():
     import brain as brain_mod
     brain = brain_mod.Brain(notify=lambda text: emit("log", who="system", text=text))
     brain_mod.on_image[0] = lambda path, caption: emit("log", who="image", text=path, caption=caption)
+
+    def notes_ready(text, path):
+        emit("log", who="system", text=f"📝 {text}\n{path}")
+        system.notify("Notes ready", text[:200])
+        live.announce(text)
+    brain_mod.notes_done[0] = notes_ready
     speaker = Speaker()
     echo = store.settings()["echo_cancel"] and start_echo_cancel()
     if echo:

@@ -1,7 +1,7 @@
 """Jarvis's brain: a Gemini agent with PC tools, web search, Photopea and plugins (MCP servers, e.g. Composio).
 Models come from your Google AI Studio API key (GEMINI_API_KEY, in the environment or the env file in Jarvis's config
 folder). An optional local_backends.py can add more backends (see the README). The "agent_models" setting decides the order."""
-import asyncio, base64, ipaddress, json, os, re, select, socket, subprocess, tempfile, threading, time, uuid
+import asyncio, base64, ipaddress, json, os, re, select, shutil, socket, subprocess, tempfile, threading, time, uuid
 from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 from urllib.parse import parse_qs, quote, urlparse
 
@@ -966,6 +966,106 @@ def tool_media(action):
     return {"result": f"pressed {action.replace('_', '/')}"}
 
 
+# ---------------------------------------------------------------- notes of a lecture or meeting
+NOTES_DIR = os.path.join(os.path.expanduser("~"), "Documents", "Jarvis Notes")
+notes_done = [lambda text: print(text, flush=True)]  # set by the app: says the notes are ready
+
+
+class Notes:
+    """Records what the PC plays (a lecture, a call) or the room, transcribes it in chunks as it goes, and at the end
+    writes a summary and the transcript to a file. One recording at a time; three hours at most."""
+    CHUNK, LONGEST = 300, 3 * 3600
+
+    def __init__(self, transcribe, summarise):
+        self.transcribe, self.summarise = transcribe, summarise
+        self.on = None  # {"title", "source", "started", "stop" (Event), "parts" [text or None], "thread"}
+        self.pool = ThreadPoolExecutor(2)
+
+    def start(self, title="", source="pc"):
+        if self.on:
+            return {"error": f"already taking notes ('{self.on['title']}', {self._minutes()} min so far): stop those first"}
+        title = " ".join(str(title or "").split())[:80] or time.strftime("Notes %d %b %H:%M")
+        self.on = {"title": title, "source": source, "started": time.time(), "stop": threading.Event(), "parts": [], "folder": tempfile.mkdtemp(prefix="jarvis-notes-")}
+        self.on["thread"] = threading.Thread(target=self._record, args=(self.on,), daemon=True)
+        self.on["thread"].start()
+        return {"result": f"taking notes of {'what the PC is playing' if source == 'pc' else 'the room'}: '{title}'. Say stop the notes when it ends."}
+
+    def _minutes(self):
+        return round((time.time() - self.on["started"]) / 60) if self.on else 0
+
+    def _record(self, on):
+        n = 0
+        while not on["stop"].is_set() and time.time() - on["started"] < self.LONGEST:
+            path = os.path.join(on["folder"], f"{n:03d}.wav")
+            proc = system.record_audio(path, on["source"])
+            on["stop"].wait(self.CHUNK)
+            system.stop_recording(proc)
+            on["parts"].append(self.pool.submit(self._transcribe_file, path))
+            n += 1
+        if not on["stop"].is_set():  # (three hours: finish by itself)
+            threading.Thread(target=self.stop, daemon=True).start()
+
+    def _transcribe_file(self, path):
+        try:
+            with open(path, "rb") as f:
+                audio = f.read()
+            return self.transcribe(audio) if len(audio) > 16000 and audible(audio) else ""  # (models invent words for silence)
+        except Exception as e:
+            return f"(this part couldn't be transcribed: {str(e)[:100]})"
+        finally:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+
+    def stop(self):
+        on, self.on = self.on, None
+        if not on:
+            return {"error": "no notes are being taken"}
+        on["stop"].set()
+        on["thread"].join(15)
+        threading.Thread(target=self._finish, args=(on,), daemon=True).start()
+        return {"result": f"stopped after {round((time.time() - on['started']) / 60)} min; writing up the notes (they'll be "
+                          "announced when ready)"}
+
+    def _finish(self, on):
+        transcript = "\n".join(t for t in (f.result() for f in on["parts"]) if t and t.strip() != "(silence)").strip()
+        try:
+            summary = self.summarise(transcript) if transcript else "Nothing was heard."
+        except Exception as e:
+            summary = f"(the summary couldn't be written: {str(e)[:100]})"
+        os.makedirs(NOTES_DIR, exist_ok=True)
+        path = os.path.join(NOTES_DIR, time.strftime("%Y-%m-%d %H-%M ") + re.sub(r"[^\w .-]", "", on["title"])[:60].strip() + ".md")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(f"# {on['title']}\n\n{time.strftime('%A %d %B %Y, %H:%M', time.localtime(on['started']))}\n\n"
+                    f"## Summary\n\n{summary}\n\n## Transcript\n\n{transcript or '(nothing)'}\n")
+        shutil.rmtree(on["folder"], ignore_errors=True)
+        notes_done[0](f"Your notes on '{on['title']}' are ready: {summary[:300]}", path)
+
+    def status(self):
+        return {"taking_notes": self.on["title"], "minutes": self._minutes()} if self.on else {"taking_notes": None}
+
+
+def audible(wav):
+    """Whether a 16-bit WAV has more than near-silence in it (anything that isn't a WAV counts as audible)."""
+    import io, wave
+    import numpy as np
+    try:
+        with wave.open(io.BytesIO(wav)) as w:
+            samples = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float32)
+    except (wave.Error, EOFError):
+        return True
+    return samples.size > 0 and float(np.sqrt(np.mean(samples ** 2))) > 60
+
+
+notes = [None]  # set by Brain
+
+
+def tool_notes(action, title="", source="pc"):
+    n = notes[0]
+    return n.start(title, source) if action == "start" else n.stop() if action == "stop" else n.status()
+
+
 def tool_routine(action, name="", steps=""):
     """The user's routines: named sets of steps ("study mode": close Discord, open my notes, a 50-minute timer)."""
     if action == "save":
@@ -1008,6 +1108,10 @@ TOOLS.update({
                   "translate / explain / rewrite this\" about text they selected or copied.", obj()),
     "media": (tool_media, "Music and video: play_pause, next, previous, or now_playing (what's playing, by whom, in which app).",
               obj(action={"type": "string", "enum": ["play_pause", "next", "previous", "now_playing"]})),
+    "notes": (tool_notes, "Take notes of a lecture, meeting or video: start (source pc: what the PC is playing; room: the "
+              "microphone, for a class in person; a title), stop (the summary and transcript are saved to Documents/Jarvis "
+              "Notes and announced when ready), or status.", obj(action={"type": "string", "enum": ["start", "stop", "status"]},
+              title={"type": "string"}, source={"type": "string", "enum": ["pc", "room"]}, optional=("title", "source"))),
     "routine": (tool_routine, "The user's routines: named sets of steps they can start with a phrase (\"study mode\", \"I'm going "
                 "to bed\"). action: save (name + steps, in their words), run (name: get the steps, then do them), list, delete.",
                 obj(action={"type": "string", "enum": ["save", "run", "list", "delete"]}, name={"type": "string"},
@@ -1582,6 +1686,20 @@ class Brain:
         threading.Thread(target=self.loop.run_forever, daemon=True).start()
         self.load_plugins()
         vision[0] = lambda contents: self._generate(contents, entries=models_for("look"))
+
+        def transcribe(audio):
+            parts = self._generate([{"role": "user", "parts": [{"inlineData": {"mimeType": "audio/wav", "data": base64.b64encode(audio).decode()}},
+                                                               {"text": "Transcribe this recording word for word, in its own language, with a "
+                                                                        "new line when the speaker changes. If nobody speaks, reply only: (silence)"}]}],
+                                   entries=models_for("look"))
+            return "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
+
+        def summarise(transcript):
+            parts = self._generate([{"role": "user", "parts": [{"text": "Write study notes from this transcript of a lecture or meeting: "
+                                     "a two-sentence summary, then the key points as short bullets, then any dates, deadlines, homework or "
+                                     "action items. Markdown, in the transcript's language.\n\n" + transcript[:400000]}]}])
+            return "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
+        notes[0] = Notes(transcribe, summarise)
         painter[0] = lambda contents, entries=None: self._generate(contents, entries=entries or models_for("image"), images=True)
         pointer[0] = lambda contents: self._generate(contents, entries=models_for("point"))
         pointer[1] = lambda contents: self._generate(contents, entries=models_for("point_strong"))
