@@ -11,7 +11,12 @@ ComboBox {
     implicitHeight: 40
     font.family: Theme.font
     font.pixelSize: 14
-    currentIndex: Math.max(0, indexOfValue(value))
+    // (not a binding: it wouldn't re-run when the list arrives after the value, and picking an item would break it)
+    function sync() { currentIndex = Math.max(0, indexOfValue(value)) }
+    onValueChanged: sync()
+    onModelChanged: Qt.callLater(sync)  // (once the new list is in place)
+    onCountChanged: Qt.callLater(sync)
+    Component.onCompleted: sync()
     onActivated: i => { value = valueAt(i); picked(value) }
     background: Rectangle {
         radius: Theme.radiusSmall

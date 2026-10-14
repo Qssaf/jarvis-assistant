@@ -161,15 +161,25 @@ if not system.IS_WINDOWS:
     system.launch, system.window_ids, system.active_window = (lambda command, env=None: started.append((command, env))), set, str
     brain.tool_launch("chatapp https://example.com", wait=0, screenshot=False)
     brain.tool_launch("calc", wait=0, screenshot=False)
-    system.launch, system.window_ids, system.active_window = real
-    assert [c for c, _ in started] == ["chatapp --force-renderer-accessibility https://example.com", "calc"], started
-    assert started[0][1]["ACCESSIBILITY_ENABLED"] == "1"
     # only an app Jarvis has just started is worth waiting for: one that's open but not in the tree never shows up
     assert brain.a11y_wait("calc") == 3 and brain.a11y_wait("discord") == 0
+    # a name that's only in the app menu starts that entry, when exactly one fits
+    real_lookup = system.program_exists, system.similar_programs, system.have
+    system.program_exists, system.have = (lambda command: command.startswith("gtk-launch")), (lambda program: True)
+    system.similar_programs = lambda name: ["gtk-launch somegame-launcher"]
+    brain.tool_launch("somegame", wait=0, screenshot=False)
+    system.similar_programs = lambda name: ["somegame-cli", "gtk-launch somegame-launcher", "gtk-launch somegame-editor"]
+    assert "no program" in brain.tool_launch("somegame", wait=0, screenshot=False)["error"]
+    system.program_exists, system.similar_programs, system.have = real_lookup
+    system.launch, system.window_ids, system.active_window = real
+    assert [c for c, _ in started] == ["chatapp --force-renderer-accessibility https://example.com", "calc",
+                                       "gtk-launch somegame-launcher"], started
+    assert started[0][1]["ACCESSIBILITY_ENABLED"] == "1"
 
 # what the user asked to be called, read from memory; negations and "sir" don't count
 for note, name in [("- User prefers to be called Q.", "Q"), ("- likes tea\n- Call me Captain, not sir", "Captain"),
-                   ("- Don't call me sir", ""), ("- Never call him by his full name", ""), ("- likes tea", "")]:
+                   ("- Don't call me sir", ""), ("- Never call him by his full name", ""), ("- likes tea", ""),
+                   ("- The user's name is Sam.", "Sam"), ("- My name is Alex", "Alex")]:
     assert jarvis.preferred_name(note) == name, (note, jarvis.preferred_name(note))
 
 # a failed expect step stops the plan before anything is typed (the wrong chat is open); a passed one carries on
@@ -182,6 +192,12 @@ assert "Alex" in out["error"] and typed == [], out
 brain.pointer[0] = lambda contents: [{"text": "Yes, it is."}]
 assert brain.tool_act([{"expect": "the open chat is with Sam"}, {"type": "hi"}], screenshot_after=False)["result"] == \
     ["checked: the open chat is with Sam", "typed"] and typed == ["hi"]
+# models sometimes label a step with type ({type: "keys", keys: "Return"}): that's the step's kind, never text to type
+pressed, real_keys = [], brain.tool_press_keys
+brain.tool_press_keys = lambda keys: pressed.append(keys) or {"result": "pressed"}
+brain.tool_act([{"type": "keys", "keys": "Return"}, {"type": "wait", "wait": 0}], screenshot_after=False)
+assert pressed == ["Return"] and typed == ["hi"], (pressed, typed)
+brain.tool_press_keys = real_keys
 brain.tool_screenshot, brain.tool_type_text = real
 brain.pointer[0] = None
 
@@ -465,7 +481,45 @@ brain.requests.get = lambda url, **k: types.SimpleNamespace(ok=True, text="", js
                  "precipitation_probability_max": [40, 10, None], "sunrise": ["2026-10-09T06:50"] * 3, "sunset": ["2026-10-09T18:10"] * 3}}))
 w = brain.tool_weather("Rome")
 assert w["place"] == "Rome, Italy" and w["now"].startswith("overcast, 18") and w["forecast"][0].startswith("today: light rain") and "0% chance" in w["forecast"][2]
+brain.requests.get = lambda url, **k: types.SimpleNamespace(ok=True, text="", json=lambda: (
+    {"results": [{"name": "Rome", "country": "Italy", "latitude": 41.9, "longitude": 12.5}]} if "geocoding" in url else
+    {"error": True, "reason": "busy"}))
+assert "busy" in brain.tool_weather("Rome")["error"]  # a forecast-service error is said, not a crash
 brain.requests.get = real_get
+
+# an image model that answers without a picture (refused, no quota) hands over to the next one
+import base64
+asked, real_painter, real_models, real_dir = [], brain.painter[0], brain.IMAGE_MODELS, brain.IMAGE_DIR
+brain.IMAGE_MODELS, brain.IMAGE_DIR = [("a", "first", None), ("b", "second", None)], tempfile.mkdtemp()
+brain.painter[0] = lambda contents, entries: asked.append(entries[0][1]) or (
+    [{"text": ""}] if entries[0][1] == "first" else [{"inlineData": {"data": base64.b64encode(b"\x89PNG..").decode()}}])
+assert "result" in brain.tool_make_image("a cat") and asked == ["first", "second"], asked
+brain.painter[0], brain.IMAGE_MODELS, brain.IMAGE_DIR = real_painter, real_models, real_dir
+
+# Settings lists the models each backend offers: from its own list, or (without one) the ones Jarvis already uses with it
+class Listed:
+    def models(self):
+        return ["big-model", "small-model"]
+
+    def live_models(self):
+        return ["voice-model"]
+
+
+class Broken:
+    def models(self):
+        raise RuntimeError("401 bad key")
+
+
+lb = brain.Brain.__new__(brain.Brain)
+real_lists = brain.BACKENDS, brain.providers, brain.chain
+brain.BACKENDS, brain.providers = {"aistudio": Listed, "private": object}, (lambda: {"other": "https://x/v1"})
+brain.chain = lambda: [("private", "known-model", "high"), ("aistudio", "big-model", "low")]
+lb.backend = lambda name: ((Listed() if name == "aistudio" else Broken() if name == "other" else object()), "")
+got = {r["name"]: r for r in lb.available_models()["backends"]}
+assert got["aistudio"]["models"] == ["big-model", "small-model"] and "error" not in got["aistudio"], got
+assert got["private"]["models"] == ["known-model"] and "401" in got["other"]["error"], got
+assert lb.available_models()["live"] == ["voice-model"]
+brain.BACKENDS, brain.providers, brain.chain = real_lists
 
 # the window: line icons draw, and every page loads against the real API without a single QML warning
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
@@ -480,7 +534,9 @@ pix = window.icon_pixmap("home", QColor("#9c9ab0"), 48).toImage()
 assert any(pix.pixelColor(x, y).alpha() > 0 for x in range(48) for y in range(48)), "the line icons came out empty"
 warnings = []
 qInstallMessageHandler(lambda kind, ctx, msg: warnings.append(msg) if kind != QtMsgType.QtDebugMsg and "portal" not in msg else None)
-stub = types.SimpleNamespace(plugin_status=lambda: [], workspaces=lambda: [], app_tools={})
+stub = types.SimpleNamespace(plugin_status=lambda: [], workspaces=lambda: [], app_tools={}, available_models=lambda: {
+    "backends": [{"name": "aistudio", "models": ["gemini-3.8-flash", "gemini-3.7-flash"]},
+                 {"name": "openai", "models": [], "error": "no API key"}], "live": ["gemini-3.8-live"]})
 live.mic = False
 win = window.Window(get=lambda path: jarvis.api_get(path, stub), post=lambda path, data: {"ok": True}, tool_label=jarvis.tool_label,
                     live=live, shown_state=jarvis.shown_state, version="test", show=True)

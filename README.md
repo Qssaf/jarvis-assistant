@@ -122,19 +122,20 @@ the top of the screen.
 | Finding where to click | Gemini 3.5 Flash Lite (trained on Gemini's 0–1000 grid; fast and accurate) |
 | Web search | Gemini 3.5 Flash Lite with Google Search grounding |
 | Pictures | Gemini 3.1 Flash Image (paid key) |
-| Background agent | Gemini 3.8 Flash, then fallbacks: set the order in **Settings → Agent models** |
+| Background agent | Gemini 3.8 Flash, then fallbacks: pick them and their order in **Settings → Models and keys** |
 
 Busy or rate-limited models are skipped automatically.
 
 **Your own models**: in **Settings → Models and keys**, paste a key for OpenAI, Anthropic, OpenRouter, Groq, DeepSeek,
-Mistral or xAI, or add any other OpenAI-compatible service (LM Studio, vLLM, a proxy) by address. Then list the models
-in **Agent models**, e.g. `openai gpt-5 low` or `anthropic claude-sonnet-4-6 low`. Keys are kept in your system
+Mistral or xAI, or add any other OpenAI-compatible service (LM Studio, vLLM, a proxy) by address. Jarvis then asks each
+provider which models your key can use, so you pick the agent's models (and how hard each thinks) from drop-downs, and
+the voice model from Gemini's real-time ones. Keys are kept in your system
 keychain (Windows Credential Manager, GNOME Keyring / KWallet), or in a private file if there's none. They're never
 saved in settings, never shown again, and never sent over plain http to another machine. The voice itself always uses
 Gemini Live.
 
 **Local models with [Ollama](https://ollama.com)**: install it, `ollama pull qwen3:8b` (pick a model that supports
-tools), then add `ollama qwen3:8b low` to **Agent models**. No key is needed; set `OLLAMA_HOST` if it runs elsewhere.
+tools), then pick it under **ollama** in the agent models. No key is needed; set `OLLAMA_HOST` if it runs elsewhere.
 
 **Your own backends in code**: create `local_backends.py` next to `jarvis.py` (it's gitignored) to add another model provider.
 It's imported at startup and can register itself:

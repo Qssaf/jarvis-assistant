@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.4.1 — 2026-10-14
+
+### Changed
+- **Pick models instead of typing them**: Settings asks each provider which models your key can use. The agent's models
+  are rows of drop-downs (provider, model, thinking) you can reorder, and the voice model is chosen from Gemini's
+  real-time models.
+- Smarter with accounts: direct tools to mark Gmail read or archive it in bulk, and to read Classroom announcements. The
+  voice never says it can't do something an account can do: it hands it to the agent, which never clicks through a website
+  for account work.
+- Smarter on screen: `look` has a careful mode (the strong model) for solving a question, picking the right answer or
+  reading a graph. On quizzes and forms Jarvis only fills in answers, never submits; in chats it only presses Enter after
+  typing your words. It no longer claims to be watching the screen.
+- Fewer false goodbyes (stray words no longer end the conversation), and banter is answered as banter, not with a lecture.
+- `act` launches an app by its menu entry when that's the only match for the name.
+
+### Fixed
+- Jarvis called you "sir" when it remembered your name as "my name is ..." rather than "call me ...".
+- An `act` step labelled with `type` (`{type: "keys", keys: "Return"}`) typed the label instead of pressing the key.
+- Pressing Stop while Jarvis spoke could kill the thread that plays its voice.
+- The briefing failed when the weather service returned an error; an image model that answered without a picture ended
+  `make_image` instead of trying the next one; selected values in Settings' drop-downs could show the first entry.
+
 ## 1.4.0 — 2026-10-09
 
 ### Changed

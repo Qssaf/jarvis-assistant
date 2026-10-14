@@ -74,12 +74,13 @@ class AudioOut:
 
     def write(self, pcm):
         if self.pipewire:
-            if not self.proc or self.proc.poll() is not None:
-                self.proc = subprocess.Popen(["pw-play", *(["--target", self.target] if self.target else []), "--raw", "--rate",
-                                              "24000", "--channels", "1", "--format", "s16", "-"],
-                                             stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
-            self.proc.stdin.write(pcm)
-            self.proc.stdin.flush()
+            proc = self.proc  # (stop() may clear it from another thread meanwhile)
+            if not proc or proc.poll() is not None:
+                proc = self.proc = subprocess.Popen(["pw-play", *(["--target", self.target] if self.target else []), "--raw", "--rate",
+                                                     "24000", "--channels", "1", "--format", "s16", "-"],
+                                                    stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            proc.stdin.write(pcm)
+            proc.stdin.flush()
         else:
             import numpy as np
             import sounddevice as sd
@@ -89,13 +90,13 @@ class AudioOut:
             self.stream.write(np.frombuffer(pcm, np.int16).tobytes())
 
     def stop(self):
-        if self.proc:
-            self.proc.kill()
+        proc, self.proc = self.proc, None  # the speaker thread and the Stop button can both get here at once
+        if proc:
+            proc.kill()
             try:
-                self.proc.stdin.close()
+                proc.stdin.close()
             except OSError:
                 pass
-            self.proc = None
         if self.stream is not None:
             try:
                 self.stream.abort()

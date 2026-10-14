@@ -91,6 +91,21 @@ class AIStudio:
             raise http_error(r)
         return reply_parts(r.json())
 
+    def _listing(self):
+        r = self.http.get("https://generativelanguage.googleapis.com/v1beta/models", params={"pageSize": 1000},
+                          headers={"x-goog-api-key": self.key}, timeout=10)
+        if not r.ok:
+            raise http_error(r)
+        return [(m["name"].removeprefix("models/"), m.get("supportedGenerationMethods", [])) for m in r.json().get("models", [])]
+
+    def models(self):
+        """The chat models this key can use (not embeddings, speech or picture-only ones), for picking in Settings."""
+        return [n for n, ways in self._listing() if "generateContent" in ways and not re.search(r"embed|tts|aqa|imagen|veo|robotics", n)]
+
+    def live_models(self):
+        """The real-time (voice) models this key can use."""
+        return [n for n, ways in self._listing() if "bidiGenerateContent" in ways and not re.search(r"transcribe|translate|robotics", n)]
+
 
 # name -> class with generate(contents, model, thinking, tools=None, system=None, **options); local_backends.py may add more
 BACKENDS = {"aistudio": AIStudio}
@@ -195,6 +210,19 @@ class OpenAICompatible:
         if not r.ok:
             raise http_error(r)
         return from_openai(r.json())
+
+    def models(self):
+        """The models this provider offers (its /models list), for picking in Settings."""
+        headers = {"Authorization": f"Bearer {self.key}"} if self.key else {}
+        if self.key and urlparse(self.url).hostname == "api.anthropic.com":  # (its model list wants its own headers)
+            headers |= {"x-api-key": self.key, "anthropic-version": "2023-06-01"}
+        try:
+            r = self.http.get(f"{self.url}/models", headers=headers, timeout=8)
+        except requests.ConnectionError:
+            raise RuntimeError("isn't running" if self.name == "ollama" else f"can't reach {urlparse(self.url).hostname}")
+        if not r.ok:
+            raise http_error(r)
+        return sorted(m["id"] for m in r.json().get("data", []))
 
 
 # ---------------------------------------------------------------- PC tools (system.py does the OS-specific part)
@@ -314,6 +342,8 @@ def tool_act(steps, screenshot_after=True, fast=False):
     """Several screen actions from one plan, in order, then a fresh screenshot."""
     done, captured = [], None
     for i, step in enumerate(steps):
+        if step.get("type") in step and step["type"] != "type":  # {type: "keys", keys: "Return"}: a label, not text to type
+            step = {k: v for k, v in step.items() if k != "type"}
         if _interrupted.is_set():
             out = {"error": "interrupted", "done": done}
             return (out, tool_screenshot()[1]) if screenshot_after else out
@@ -370,6 +400,8 @@ def tool_act(steps, screenshot_after=True, fast=False):
             r = tool_type_text(step["type"])
         elif "keys" in step:
             r = tool_press_keys(step["keys"])
+            if "error" in r:
+                r["error"] += " (keys is only for key names like Return, Escape or ctrl+a: put text in a type step)"
         elif "scroll" in step:
             r = tool_scroll(step["scroll"])
         elif "wait" in step:
@@ -402,9 +434,11 @@ vision = [None]  # set by Brain: a function(contents) -> parts, for reading the 
 pointer = [None, None]  # the same, for finding where to click: fast, then strong (when the fast one finds nothing)
 
 
-def tool_look(question, image=None, model=None, fast=False):
+def tool_look(question, image=None, model=None, fast=False, careful=False):
     """Answer a question about the screen with a vision model: text back, no image for the caller to handle. fast: the
-    quickest model (the voice is waiting on it; on reading tests it was as accurate, in half the time)."""
+    quickest model (the voice is waiting on it; on reading tests it was as accurate, in half the time). careful: the
+    strong one even then, for questions that need reasoning (solving a problem, picking the right answer, reading a graph)."""
+    fast = fast and not careful
     image = image or tool_screenshot()[1]
     contents = [{"role": "user", "parts": [{"inlineData": {"mimeType": "image/jpeg", "data": base64.b64encode(image).decode()}},
                                            {"text": f"{question}\nAnswer precisely and briefly from this screenshot; quote visible text exactly. If what's "
@@ -429,7 +463,11 @@ def tool_launch(command, wait=8, screenshot=True):
     words = [w for w in command.split() if w not in ("setsid", "-f", "nohup", "env", "exec") and "=" not in w]
     if words and not system.program_exists(command):  # wrong name: say so now, not after waiting for a window
         similar = system.similar_programs(words[0])
-        return {"error": f"there's no program called {words[0]}" + (f"; similar: {', '.join(similar)}" if similar else "")}
+        entries = [s for s in similar if s.startswith("gtk-launch ")]
+        if len(entries) == 1 and system.have("gtk-launch"):  # one app-menu entry fits ("somegame" -> its launcher): start that
+            command, words = entries[0], entries[0].split()
+        else:
+            return {"error": f"there's no program called {words[0]}" + (f"; similar: {', '.join(similar)}" if similar else "")}
     before, focused = system.window_ids(), system.active_window()
     if words and system.chromium_based(words[0]):  # browsers and Electron apps (Discord, VS Code...) need a switch too
         command = re.sub(rf"(?:^|\s){re.escape(words[0])}(?=\s|$)", lambda m: m[0] + " --force-renderer-accessibility", command, count=1)
@@ -743,7 +781,7 @@ def here():
 def tool_weather(place=""):
     place = place.strip() or store.settings()["home_city"].strip() or here()
     if not place:
-        return {"error": "couldn't tell where the user is; ask which city"}
+        return {"error": "couldn't tell where the user is; ask which city, then remember where they live and pass it as place from then on"}
     found = requests.get("https://geocoding-api.open-meteo.com/v1/search", params={"name": place, "count": 1, "language": "en"},
                          timeout=6).json().get("results") or []
     if not found:
@@ -753,6 +791,8 @@ def tool_weather(place=""):
         "latitude": p["latitude"], "longitude": p["longitude"], "timezone": "auto", "forecast_days": 3,
         "current": "temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,precipitation",
         "daily": "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset"}).json()
+    if "current" not in w or "daily" not in w:  # the forecast service had a problem (it says why in "reason")
+        return {"error": f"the weather service didn't answer: {w.get('reason') or 'no forecast'}"}
     c, d = w["current"], w["daily"]
     days = [f"{day}: {WMO.get(d['weather_code'][i], 'mixed')}, {d['temperature_2m_min'][i]:.0f} to {d['temperature_2m_max'][i]:.0f}°C, "
             f"{d['precipitation_probability_max'][i] or 0}% chance of rain" for i, day in enumerate(("today", "tomorrow", "the day after"))]
@@ -796,7 +836,9 @@ TOOLS = {
                 "scroll": {"type": "integer", "description": "positive scrolls down (newer), negative scrolls up (older)"}, "wait": {"type": "number"}}}},
                 screenshot_after={"type": "boolean"}, optional=("screenshot_after",))),
     "look": (tool_look, "Look at the screen and answer a question about it (what's open, text, a result, where something is). "
-             "Fast, returns text.", obj(question={"type": "string"})),
+             "Fast, returns text. careful: true for anything that needs reasoning or fine detail (solve the question shown, "
+             "which answer is right, read a graph or chart, judge or compare): a stronger model, a second or two slower.",
+             obj(question={"type": "string"}, careful={"type": "boolean"}, optional=("careful",))),
     "ui_controls": (tool_ui_controls, "List an app's buttons, menus and fields by their accessible names (fast, no screenshot). "
                     "Works for apps opened with launch/act and most desktop apps.", obj(app={"type": "string"}, optional=("app",))),
     "type_text": (tool_type_text, "Type text into the focused window.", obj(text={"type": "string"})),
@@ -928,10 +970,19 @@ def tool_make_image(prompt, edit=""):
             data = f.read()
         parts.insert(0, {"inlineData": {"mimeType": "image/png" if data.startswith(b"\x89PNG") else "image/jpeg",
                                         "data": base64.b64encode(data).decode()}})
-    out = painter[0]([{"role": "user", "parts": parts}])
-    images = [p["inlineData"] for p in out if "inlineData" in p]
+    images, said = [], []
+    for i in range(len(IMAGE_MODELS)):  # a model can answer without a picture (refused, or no image quota): try the next
+        try:
+            out = painter[0]([{"role": "user", "parts": parts}], IMAGE_MODELS[i:i + 1])
+        except RuntimeError as e:  # this one isn't available
+            said.append(str(e)[:150])
+            continue
+        images = [p["inlineData"] for p in out if "inlineData" in p]
+        if images:
+            break
+        said.append("".join(p.get("text", "") for p in out).strip()[:150] or f"{IMAGE_MODELS[i][1]} returned no picture")
     if not images:
-        return {"error": "the image model didn't return a picture: " + "".join(p.get("text", "") for p in out)[:300]}
+        return {"error": "no image model returned a picture: " + "; ".join(said)[:400]}
     os.makedirs(IMAGE_DIR, exist_ok=True)
     data = base64.b64decode(images[0]["data"])
     path = os.path.join(IMAGE_DIR, time.strftime("%Y-%m-%d %H-%M-%S") + (".png" if data.startswith(b"\x89PNG") else ".jpg"))
@@ -1254,7 +1305,8 @@ def account_names(results):
 
 # Common actions offered as direct tools for connected apps: one step instead of search-then-execute
 APP_TOOLS = {
-    "gmail": ["GMAIL_GET_LABEL", "GMAIL_FETCH_EMAILS", "GMAIL_SEND_EMAIL", "GMAIL_CREATE_EMAIL_DRAFT", "GMAIL_REPLY_TO_THREAD"],
+    "gmail": ["GMAIL_GET_LABEL", "GMAIL_FETCH_EMAILS", "GMAIL_SEND_EMAIL", "GMAIL_CREATE_EMAIL_DRAFT", "GMAIL_REPLY_TO_THREAD",
+              "GMAIL_BATCH_MODIFY_MESSAGES"],  # (mark read, archive, star: up to 1000 messages per call)
     "googletasks": ["GOOGLETASKS_LIST_TASK_LISTS", "GOOGLETASKS_LIST_TASKS", "GOOGLETASKS_INSERT_TASK"],
     "googlecalendar": ["GOOGLECALENDAR_EVENTS_LIST", "GOOGLECALENDAR_FIND_EVENT", "GOOGLECALENDAR_CREATE_EVENT"],
     "googledrive": ["GOOGLEDRIVE_FIND_FILE"],
@@ -1262,7 +1314,7 @@ APP_TOOLS = {
     "slack": ["SLACK_SEND_MESSAGE", "SLACK_FETCH_CONVERSATION_HISTORY"],
     "notion": ["NOTION_SEARCH_NOTION_PAGE", "NOTION_CREATE_NOTION_PAGE"],
     "google_classroom": ["GOOGLE_CLASSROOM_COURSES_LIST", "GOOGLE_CLASSROOM_COURSE_WORK_LIST",
-                         "GOOGLE_CLASSROOM_COURSE_WORK_STUDENT_SUBMISSIONS_LIST"],
+                         "GOOGLE_CLASSROOM_COURSE_WORK_STUDENT_SUBMISSIONS_LIST", "GOOGLE_CLASSROOM_COURSES_ANNOUNCEMENTS_LIST"],
     "github": ["GITHUB_GET_THE_AUTHENTICATED_USER", "GITHUB_LIST_NOTIFICATIONS", "GITHUB_LIST_REPOSITORIES_FOR_THE_AUTHENTICATED_USER", "GITHUB_SEARCH_ISSUES_AND_PULL_REQUESTS"],
     "trello": ["TRELLO_GET_MEMBERS_BOARDS_BY_ID_MEMBER", "TRELLO_GET_BOARDS_CARDS_BY_ID_BOARD", "TRELLO_GET_SEARCH"],
 }
@@ -1358,7 +1410,7 @@ class Brain:
         threading.Thread(target=self.loop.run_forever, daemon=True).start()
         self.load_plugins()
         vision[0] = lambda contents: self._generate(contents, entries=LOOK_MODELS)
-        painter[0] = lambda contents: self._generate(contents, entries=IMAGE_MODELS, images=True)
+        painter[0] = lambda contents, entries=None: self._generate(contents, entries=entries or IMAGE_MODELS, images=True)
         pointer[0] = lambda contents: self._generate(contents, entries=POINT_MODELS)
         pointer[1] = lambda contents: self._generate(contents, entries=POINT_MODELS_STRONG)
         grounder[0] = lambda contents: self._generate(contents, entries=SEARCH_MODELS, tools=[{"googleSearch": {}}])
@@ -1643,6 +1695,32 @@ class Brain:
             if isinstance(out[0], dict):
                 out[0].setdefault("note", UNTRUSTED)
         return out
+
+    def available_models(self):
+        """What each backend offers, for picking models in Settings: {"backends": [{name, models, error?}], "live": [...]}.
+        Backends without a model list (some in local_backends.py) offer the models Jarvis already uses with them."""
+        names = list(dict.fromkeys(["aistudio", *BACKENDS, *providers()]))
+        known = {}
+        for b, m, _ in chain() + LOOK_MODELS + POINT_MODELS + POINT_MODELS_STRONG + SEARCH_MODELS:
+            known.setdefault(b, []).append(m)
+
+        def listing(name):
+            be, problem = self.backend(name)
+            if not be:
+                return {"name": name, "models": [], "error": problem}
+            if not hasattr(be, "models"):
+                return {"name": name, "models": list(dict.fromkeys(known.get(name, [])))}
+            try:
+                return {"name": name, "models": be.models()}
+            except Exception as e:
+                return {"name": name, "models": [], "error": describe(e)[:200]}
+
+        def live():
+            be, _ = self.backend("aistudio")
+            return be.live_models() if be else []
+        *rows, voices = in_parallel(*(lambda n=n: listing(n) for n in names), live, timeout=10)
+        return {"backends": [r or {"name": n, "models": [], "error": "didn't answer in time"} for n, r in zip(names, rows)],
+                "live": voices or []}
 
     def backend(self, name):
         """The backend called `name`, made on first use for providers from Settings; (None, why) if it can't be."""
