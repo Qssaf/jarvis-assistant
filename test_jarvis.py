@@ -464,7 +464,7 @@ brain.chain = lambda: [("local", "tiny-model", "low")]
 assert b.ask("any reminders?") == "You have no reminders."
 assert seen[0][0] is None and any(t["function"]["name"] == "list_reminders" for t in seen[0][1]["tools"])
 last = seen[1][1]["messages"][-1]
-assert last["role"] == "tool" and last["tool_call_id"] == "t1" and '"reminders"' in last["content"]
+assert last["role"] == "tool" and last["tool_call_id"] == "t1" and '"reminders"' in last["content"], seen[1][1]["messages"][-3:]
 srv.shutdown()
 
 # the voice session's whole config builds (tool schemas included), with the name the user asked for
