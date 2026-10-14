@@ -26,6 +26,8 @@ DEFAULT_SETTINGS = {
     "deadline_reminders": True,    # reminders a day and two hours before Google Classroom work is due
     "echo_cancel": False,          # PipeWire echo cancelling (Linux): talk over Jarvis on speakers (experimental)
     "learn_my_voice": True,        # learn from real wake-ups to ignore things that aren't you saying "Hey Jarvis"
+    "safety": "ask",               # ask: risky commands and account changes wait for your yes; full: Jarvis just does them
+    "setup_done": False,           # the first-run setup has been gone through (or skipped)
     # "backend model thinking-level", tried top to bottom; busy or rate-limited ones are skipped
     # the same for the other jobs (see brain.MODEL_JOBS); empty = Jarvis's built-in choice
     "look_models": [], "point_models": [], "point_strong_models": [], "search_models": [], "image_models": [],
@@ -98,6 +100,8 @@ def update_settings(changes):
             raise ValueError("follow-up must be 0-120 seconds")
         if key == "keep_session_seconds" and not 0 <= value <= 600:
             raise ValueError("keep the session 0-600 seconds")
+        if key == "safety" and value not in ("ask", "full"):
+            raise ValueError("safety is ask or full")
         if key == "end_of_speech_ms" and not 200 <= value <= 2000:
             raise ValueError("the pause must be 200-2000 ms")
         s[key] = value

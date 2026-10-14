@@ -614,10 +614,14 @@ stub = types.SimpleNamespace(plugin_status=lambda: [], workspaces=lambda: [], ap
     "backends": [{"name": "aistudio", "models": ["gemini-3.8-flash", "gemini-3.7-flash"]},
                  {"name": "openai", "models": [], "error": "no API key"}], "live": ["gemini-3.8-live"]})
 live.mic = False
-win = window.Window(get=lambda path: jarvis.api_get(path, stub), post=lambda path, data: {"ok": True}, tool_label=jarvis.tool_label,
+canned = {"/api/health": {"checks": [{"name": "Microphone", "ok": False, "detail": "no audio", "fix": "check it", "page": "settings"}],
+                          "usage": {"aistudio gemini-3.8-flash": 3}},
+          "/api/setup/key": {"ok": False, "detail": "no key yet"}}  # (the real ones take a screenshot and call Google)
+win = window.Window(get=lambda path: canned.get(path) or jarvis.api_get(path, stub), post=lambda path, data: {"ok": True}, tool_label=jarvis.tool_label,
                     live=live, shown_state=jarvis.shown_state, version="test", show=True)
 root = win.engine.rootObjects()[0]
-for page in ("chats", "activity", "accounts", "plugins", "models", "memory", "settings", "home"):
+assert root.property("needsSetup") is not None
+for page in ("chats", "activity", "accounts", "plugins", "models", "memory", "settings", "health", "home"):
     root.setProperty("page", page)
     qt.processEvents()
 end = time.time() + 1.5
@@ -625,6 +629,17 @@ while time.time() < end:
     qt.processEvents()
     time.sleep(0.02)
 assert not warnings, warnings
+
+# every function a page calls on itself exists (Settings lost its set() once, and every switch on it silently did nothing)
+import glob, re
+for qml in glob.glob(os.path.join(os.path.dirname(os.path.abspath(jarvis.__file__)), "qml", "*.qml")):
+    src = open(qml).read()
+    root_id = re.search(r"^\S.*\{\s*\n\s*id: (\w+)", src, re.M)
+    if root_id:
+        builtin = {"startSystemMove", "startSystemResize", "showMinimized", "showNormal", "showMaximized", "show", "hide", "raise",
+                   "requestActivate", "close", "forceActiveFocus"}  # (Qt's own, on Window and Item)
+        for name in set(re.findall(rf"\b{root_id[1]}\.(\w+)\(", src)) - builtin:
+            assert re.search(rf"(?:function|signal) {name}\b", src), f"{os.path.basename(qml)} calls {root_id[1]}.{name}() but has no {name}"
 
 # quick tools: silent responses to prevent duplicate replies, interruptions, and superseded turns
 sent_responses = []
@@ -820,5 +835,63 @@ live._go = lambda coro: asked_voice.append(coro) or coro.close()
 live.stopped, live.mic, cancelled = True, False, threading.Event()
 cancelled.set()
 assert live.ask_from_task("Which Sam?", cancelled) is None and asked_voice == [] and live.stopped and not live.mic
+
+# risky commands wait for a yes (unless the safety setting is off); ordinary ones just run
+assert brain.risky_command("rm -rf ~/old") and brain.risky_command("echo hi > notes.txt") and brain.risky_command("ls; sudo reboot")
+assert not brain.risky_command("ls ~/Downloads") and not brain.risky_command("wpctl set-volume @DEFAULT_AUDIO_SINK@ 50%") \
+    and not brain.risky_command("ls 2>&1") and not brain.risky_command("cat x > /dev/null")
+ran, real_shell = [], system.shell
+system.shell = lambda command, timeout: ran.append(command) or (0, "done")
+assert "not run" in brain.tool_run_command("rm ~/old.txt")["error"] and ran == []
+assert brain.tool_run_command("rm ~/old.txt", confirmed=True)["output"] == "done" and brain.tool_run_command("df -h")["exit_code"] == 0
+store.update_settings({"safety": "full"})
+assert brain.tool_run_command("rm ~/other.txt")["output"] == "done"
+store.update_settings({"safety": "ask"})
+system.shell = real_shell
+
+# account changes in "ask" mode wait for a yes; reads don't; the flag never reaches the account
+ab = brain.Brain.__new__(brain.Brain)
+executed = []
+ab.plugins = {"composio": types.SimpleNamespace(call=lambda tool, args: executed.append(args) or {"result": "ok"})}
+assert ab.run_app_tool("GMAIL_SEND_EMAIL", {"to": "a@b.c"})["error"] == brain.NEEDS_YES and executed == []
+assert ab.run_app_tool("GMAIL_SEND_EMAIL", {"to": "a@b.c", "confirmed": True}) == {"result": "ok"}
+assert executed[-1]["tools"][0]["arguments"] == {"to": "a@b.c"}
+assert ab.run_app_tool("GMAIL_FETCH_EMAILS", {"query": "is:unread"}) == {"result": "ok"}
+ab.app_tools = {"GMAIL_SEND_EMAIL": {"description": "", "schema": {"type": "object", "properties": {"to": {}}}},
+                "GMAIL_FETCH_EMAILS": {"description": "", "schema": {"type": "object", "properties": {}}}}
+offered = ab.active_app_tools()
+assert "confirmed" in offered["GMAIL_SEND_EMAIL"]["schema"]["properties"] and "confirmed" not in offered["GMAIL_FETCH_EMAILS"]["schema"]["properties"]
+store.set_connector_mode("gmail", "full")  # "full access": no yes needed
+assert ab.run_app_tool("GMAIL_SEND_EMAIL", {"to": "a@b.c"}) == {"result": "ok"}
+store.set_connector_mode("gmail", "ask")
+
+# Google's 429s: a used-up daily quota waits for the reset, a per-minute limit for the delay it gives
+daily = brain.http_error(types.SimpleNamespace(status_code=429, text='{"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier"}'))
+minute = brain.http_error(types.SimpleNamespace(status_code=429, text='{"retryDelay": "33s"}'))
+assert 60 <= daily.retry_after <= 86400 and minute.retry_after == 34
+assert 0 < brain.quota_reset_in() <= 86400
+
+# use per model per day, for the Health page
+brain.count_use("aistudio", "gemini-x")
+brain.count_use("aistudio", "gemini-x")
+assert brain.usage_today()["aistudio gemini-x"] == 2
+
+# the Health page: every check answers, with a fix for what's broken (no real screenshot or Google call here)
+class FakeStudio:
+    def models(self):
+        return ["gemini-3.8-flash"]
+
+    def live_models(self):
+        return ["gemini-3.8-live"]
+real_health = brain.AIStudio, system.screenshot
+brain.AIStudio, system.screenshot = FakeStudio, (lambda: b"jpeg")
+hb = types.SimpleNamespace(plugin_status=lambda: [{"name": "composio", "status": "error", "error": "signed out", "enabled": True, "tools": []}],
+                           connected=set(), backend=lambda name: (object(), ""), down_until={})
+report = jarvis.health(types.SimpleNamespace(mic_seen=time.time(), raw_level=0.1), hb)
+got = {c["name"]: c for c in report["checks"]}
+assert got["Google AI Studio key"]["ok"] and got["Microphone"]["ok"] and got["Seeing the screen"]["ok"]
+assert got["Accounts (Composio)"]["ok"] is False and got["Accounts (Composio)"]["page"] == "plugins" and got["Accounts (Composio)"]["fix"]
+assert "aistudio gemini-x" in report["usage"]
+brain.AIStudio, system.screenshot = real_health
 
 print("ok")

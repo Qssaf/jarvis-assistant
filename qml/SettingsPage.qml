@@ -12,6 +12,7 @@ ScrollPage {
     property var voices: []
     property var avail: ({ backends: [], live: [] })  // for the voice models (asked for separately: it's slower)
     property bool looking: false
+    signal setupAgain()
 
     function load() {
         Api.get("/api/settings", d => { s = d.settings; voices = d.voices })
@@ -24,6 +25,11 @@ ScrollPage {
     function options(list, current) {  // [{value, label}] for a Select, keeping the current choice even if it isn't listed
         const all = current && list.indexOf(current) < 0 ? [current].concat(list) : list
         return all.map(v => ({ value: v, label: v }))
+    }
+    function set(key, value) {
+        const change = {}
+        change[key] = value
+        Api.post("/api/settings", change, d => s = d.settings, e => { Backend.toast(e.error, true); load() })
     }
     Component.onCompleted: load()
 
@@ -80,6 +86,9 @@ ScrollPage {
                  onToggled: page.set("show_thinking", checked) }
         Toggle { Layout.fillWidth: true; text: "Start Jarvis when I log in"; checked: !!page.s.start_at_login
                  onToggled: page.set("start_at_login", checked) }
+        Toggle { Layout.fillWidth: true; text: "Ask before risky actions"
+                 hint: "Commands that delete, install or shut down, and account changes (sending email, new events), wait for your yes unless you asked for exactly that"
+                 checked: page.s.safety !== "full"; onToggled: page.set("safety", checked ? "ask" : "full") }
         Setting { label: "Your instructions for Jarvis (how to behave, things to know about you)"
             Area { text: page.s.extra_instructions || ""; onDone: v => page.set("extra_instructions", v) } }
         Txt { kind: "small"; Layout.fillWidth: true; text: "Models for everything else, and your API keys, are on the Models page." }
@@ -87,7 +96,11 @@ ScrollPage {
               text: "Push to talk: bind the command  jarvis --listen  to a keyboard shortcut (KDE: System Settings → Keyboard → Shortcuts → Add New → Command)." }
     }
 
-    Txt { kind: "small"; text: "Jarvis " + Backend.version; Layout.topMargin: 6 }
+    RowLayout {
+        Layout.topMargin: 6
+        Txt { kind: "small"; text: "Jarvis " + Backend.version; Layout.fillWidth: true }
+        Pill { text: "Run the setup again"; onClicked: page.setupAgain() }
+    }
     Item { Layout.preferredHeight: 24 }
 
     component Section: Card {

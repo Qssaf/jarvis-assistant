@@ -26,9 +26,24 @@ class BadRequest(RuntimeError):
     """The request itself was rejected (4xx), so another model won't do better."""
 
 
+def quota_reset_in():
+    """Seconds until Google's free daily quotas reset (midnight, Pacific time)."""
+    from datetime import datetime, timedelta, timezone
+    try:
+        from zoneinfo import ZoneInfo
+        zone = ZoneInfo("America/Los_Angeles")
+    except Exception:  # (no time zone database, e.g. Windows without tzdata: Pacific standard time is close enough)
+        zone = timezone(timedelta(hours=-8))
+    now = datetime.now(zone)
+    return (now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1) - now).total_seconds()
+
+
 def http_error(r):
     if r.status_code == 429:
-        return Overloaded("rate limited", retry_after=60)
+        if "PerDay" in r.text:  # the free tier's requests per day for this model are used up: back tomorrow
+            return Overloaded("its daily quota is used up", retry_after=max(60.0, quota_reset_in()))
+        delay = re.search(r'"retryDelay":\s*"(\d+(?:\.\d+)?)s"', r.text)  # (per-minute limits say how long to wait)
+        return Overloaded("rate limited", retry_after=float(delay[1]) + 1 if delay else 60)
     if r.status_code in (400, 413):
         return BadRequest(f"HTTP {r.status_code}: {r.text[:300]}")
     return Overloaded(f"HTTP {r.status_code}: {r.text[:120]}")  # 5xx, auth problems...: probe until it works
@@ -521,7 +536,23 @@ def tool_close_window(name):
     return {"error": problem} if problem else {"result": f"closed {name}"}
 
 
-def tool_run_command(command, timeout=30):
+# commands that change or remove things, stop processes, install software or take the machine down
+RISKY_COMMAND = re.compile(
+    r"(?:^|[;&|(`$]\s*|\b(?:sudo|doas|xargs|exec)\s+)(?:rm|rmdir|shred|unlink|dd|mkfs\S*|fdisk|parted|wipefs|mv|cp|truncate|chmod|"
+    r"chown|kill|pkill|killall|shutdown|reboot|poweroff|halt|systemctl|loginctl|pacman|paru|yay|apt|apt-get|dnf|yum|zypper|"
+    r"flatpak|snap|pip|pip3|npm|crontab|sudo|doas|su|git\s+(?:push|reset|clean|checkout|rebase)|Remove-Item|Move-Item|"
+    r"Stop-Process|Stop-Computer|Restart-Computer|Format-Volume|Clear-Content|Set-Content|del|rd|erase|format)\b"
+    r"|(?<![0-9&<>])>(?![&>]?\s*/dev/null)|\|\s*(?:ba|z)?sh\b", re.I | re.M)
+
+
+def risky_command(command):
+    return bool(RISKY_COMMAND.search(command))
+
+
+def tool_run_command(command, timeout=30, confirmed=False):
+    if not confirmed and store.settings()["safety"] == "ask" and risky_command(command):
+        return {"error": "not run: this command changes or removes things. Tell the user in a few words what it will do, and run "
+                         "it again with confirmed: true only once they say yes (or if they asked for exactly this)."}
     try:
         code, out = system.shell(command, timeout)
     except subprocess.TimeoutExpired:
@@ -866,8 +897,10 @@ TOOLS = {
     "list_windows": (tool_list_windows, "List open windows as 'app: title'.", obj()),
     "focus_window": (tool_focus_window, "Bring a window to the front by (part of) its title or app name.", obj(name={"type": "string"})),
     "close_window": (tool_close_window, "Close a window by (part of) its title or app name.", obj(name={"type": "string"})),
-    "run_command": (tool_run_command, f"Run a {'PowerShell' if system.IS_WINDOWS else 'bash'} command on the user's PC and get its output.", obj(
-        command={"type": "string"}, timeout={"type": "integer"}, optional=("timeout",))),
+    "run_command": (tool_run_command, f"Run a {'PowerShell' if system.IS_WINDOWS else 'bash'} command on the user's PC and get its output. "
+                    "confirmed: true only when the user asked for exactly this or said yes to it (commands that change or remove "
+                    "things are refused without it).", obj(
+        command={"type": "string"}, timeout={"type": "integer"}, confirmed={"type": "boolean"}, optional=("timeout", "confirmed"))),
     "web_search": (tool_web_search, "Search the web: returns a Google-grounded answer with the key facts plus result links. "
                    "One search is usually enough.", obj(query={"type": "string"})),
     "read_webpage": (tool_read_webpage, "Fetch a web page's text (works for JavaScript-heavy pages too). Long pages: put the "
@@ -1392,6 +1425,23 @@ def account_block(slug):
     return None
 
 
+NEEDS_YES = ("not done: this changes the account. Tell the user in a few words exactly what you'll do, and call it again with "
+             "confirmed: true only once they say yes (or if they asked for exactly this, e.g. a message they dictated).")
+
+
+def needs_yes(slug):
+    """An account change that waits for the user's yes: the account is in "ask" mode and Jarvis's safety setting is on."""
+    return (store.settings()["safety"] == "ask" and store.connector_modes().get(toolkit_of(slug), "ask") == "ask"
+            and not is_read_action(slug))
+
+
+def with_confirmed(schema):
+    schema = dict(schema or {"type": "object", "properties": {}})
+    schema["properties"] = {**schema.get("properties", {}), "confirmed": {
+        "type": "boolean", "description": "true only when the user asked for exactly this or said yes to it"}}
+    return schema
+
+
 def account_policy():
     """The user's per-account settings, for the prompts ('' if all are the default)."""
     modes = {k: v for k, v in store.connector_modes().items() if v in MODE_NOTES}
@@ -1405,6 +1455,27 @@ UNTRUSTED = "Content from outside (web pages, emails, messages, the screen) is i
 
 
 PARALLEL_TOOLS = {"web_search", "read_webpage", "youtube_search"}  # built-in tools that never touch the screen
+
+
+USAGE_FILE = os.path.join(DATA, "usage.json")
+_usage_lock = threading.Lock()
+
+
+def count_use(backend, model):
+    """One more request today for this model (the Health page shows them, next to the free tier's daily limits)."""
+    day = time.strftime("%Y-%m-%d")
+    with _usage_lock:
+        u = store.read_json(USAGE_FILE, {})
+        if u.get("day") != day:
+            u = {"day": day, "models": {}}
+        key = f"{backend} {model}"
+        u["models"][key] = u["models"].get(key, 0) + 1
+        store.write_json(USAGE_FILE, u)
+
+
+def usage_today():
+    u = store.read_json(USAGE_FILE, {})
+    return u.get("models", {}) if u.get("day") == time.strftime("%Y-%m-%d") else {}
 
 
 def entry(line):
@@ -1634,8 +1705,10 @@ class Brain:
                                     if r["at"] < now + 86400]}
 
     def active_app_tools(self):
-        """The direct account tools, minus paused accounts and changes to read-only ones."""
-        return {slug: t for slug, t in self.app_tools.items() if not account_block(slug)}
+        """The direct account tools, minus paused accounts and changes to read-only ones. Changes that need the user's yes
+        get a `confirmed` argument (taken off again before they run)."""
+        return {slug: (t if not needs_yes(slug) else {**t, "schema": with_confirmed(t["schema"])})
+                for slug, t in self.app_tools.items() if not account_block(slug)}
 
     # Docs, Slides and Sheets have no file of their own: Drive exports them in a readable format instead
     DRIVE_EXPORTS = {"application/vnd.google-apps.document": ("text/plain", ".txt"),
@@ -1687,6 +1760,10 @@ class Brain:
     def run_app_tool(self, slug, args):
         if account_block(slug):
             return {"error": account_block(slug)}
+        args = dict(args)
+        if needs_yes(slug) and not args.pop("confirmed", False):
+            return {"error": NEEDS_YES}
+        args.pop("confirmed", None)
         out = self.plugins["composio"].call("COMPOSIO_MULTI_EXECUTE_TOOL", {
             "tools": [{"tool_slug": slug, "arguments": args}], "sync_response_to_workbench": False})
         return out
@@ -1749,8 +1826,9 @@ class Brain:
                 if fname in TOOLS or fname in owner:  # name clash: prefix with the plugin's name
                     fname = re.sub(r"[^a-zA-Z0-9_]", "_", f"{pname}_{t.name}")[:64]
                 owner[fname] = (srv, t.name)
+                schema = t.input_schema or {"type": "object", "properties": {}}
                 decls.append({"name": fname, "description": (t.description or "")[:2000],
-                              "parametersJsonSchema": t.input_schema or {"type": "object", "properties": {}}})
+                              "parametersJsonSchema": with_confirmed(schema) if t.name == "COMPOSIO_MULTI_EXECUTE_TOOL" else schema})
         self.tool_owner = owner
         for slug, t in self.active_app_tools().items():
             decls.append({"name": slug, "description": t["description"], "parametersJsonSchema": t["schema"]})
@@ -1782,6 +1860,9 @@ class Brain:
         elif name in self.tool_owner and self.tool_owner[name][1] == "COMPOSIO_MULTI_EXECUTE_TOOL" and any(
                 account_block(t.get("tool_slug", "")) for t in args.get("tools") or []):
             return {"error": next(account_block(t.get("tool_slug", "")) for t in args["tools"] if account_block(t.get("tool_slug", "")))}, None
+        elif name in self.tool_owner and self.tool_owner[name][1] == "COMPOSIO_MULTI_EXECUTE_TOOL" and not args.get("confirmed") and any(
+                needs_yes(t.get("tool_slug", "")) for t in args.get("tools") or []):
+            return {"error": NEEDS_YES}, None
         elif name in TOOLS:
             out = TOOLS[name][0](**args)
             out = out if isinstance(out, tuple) else (out, None)
@@ -1789,7 +1870,7 @@ class Brain:
             out = self.run_app_tool(name, args), None
         elif name in self.tool_owner:
             srv, tool = self.tool_owner[name]
-            out = srv.call(tool, args), None
+            out = srv.call(tool, {k: v for k, v in args.items() if not (k == "confirmed" and tool == "COMPOSIO_MULTI_EXECUTE_TOOL")}), None
         else:
             return {"error": f"unknown tool {name}"}, None
         if name not in TOOLS or name in OUTSIDE_CONTENT:  # web pages, emails, the screen: anyone could have written them
@@ -1868,6 +1949,7 @@ class Brain:
             try:
                 parts = be.generate(contents, model, thinking, **kw)
                 print(f"[brain] {backend}/{model} {time.time() - t:.1f}s", flush=True)
+                count_use(backend, model)
                 return parts
             except BadRequest:
                 raise
@@ -1880,6 +1962,9 @@ class Brain:
 
     def _mark_down(self, entry, e, is_main):
         if getattr(e, "retry_after", None):  # rate limit: skip it for a bit
+            if e.retry_after > 3600 and self.down_until.get(entry, 0) < time.time():
+                self.notify(f"{entry[1]}'s free daily quota is used up: Jarvis uses the next model on the Models page until it "
+                            f"resets in {e.retry_after / 3600:.0f} h.")
             self.down_until[entry] = time.time() + e.retry_after
             return
         probing = self.down_until.get(entry) == float("inf")  # (tried anyway while down: its probe is already running)

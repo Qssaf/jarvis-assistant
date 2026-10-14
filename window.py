@@ -110,7 +110,8 @@ class Backend(QObject):
         self.event.emit(json.dumps(event, ensure_ascii=False, default=str))
 
     def poll(self):
-        values = {"state": self.shown[0], "level": round(getattr(self.live, "level", 0.0), 3), "listening": bool(self.live.mic)}
+        values = {"state": self.shown[0], "level": round(getattr(self.live, "level", 0.0), 3), "listening": bool(self.live.mic),
+                  "mic": round(getattr(self.live, "raw_level", 0.0), 3)}
         if values != self._values:
             self._values = values
             self.changed.emit()
@@ -118,6 +119,7 @@ class Backend(QObject):
     state = Property(str, lambda self: self._values.get("state", "idle"), notify=changed)
     level = Property(float, lambda self: self._values.get("level", 0.0), notify=changed)
     listening = Property(bool, lambda self: self._values.get("listening", False), notify=changed)
+    micLevel = Property(float, lambda self: self._values.get("mic", 0.0), notify=changed)  # the raw mic, even when not listening
 
     @Property(str, constant=True)
     def version(self):

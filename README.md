@@ -51,7 +51,8 @@ app with a notch at the top of the screen and a native dashboard window.
 ### The window
 Qt Quick, drawn on the GPU. **Home** is the conversation under the animated arc reactor, with a **Today** column: now playing,
 weather, what's next and system load. Other pages: **Chats** (saved and searchable), **Activity**, **Accounts**,
-**Plugins**, **Memory** and **Settings**. Press **Ctrl+K** to jump anywhere or ask anything.
+**Plugins**, **Models**, **Memory**, **Health** (is the key, mic, screen, input, accounts and each model working, and
+how many requests each model has used today) and **Settings**. Press **Ctrl+K** to jump anywhere or ask anything.
 
 ---
 
@@ -99,6 +100,8 @@ On X11, input, windows and screenshots work with nothing extra. On Wayland, the 
 the top of the screen.
 
 ### First run
+A short setup opens the first time: what leaves your PC, your Gemini key (with a link to get a free one), a microphone
+check, Jarvis's voice, and how careful it should be. Run it again from Settings.
 - **Mouse and keyboard on Wayland**: the first time Jarvis clicks or types, your desktop may ask whether it may control
   input. Allow it (tick *Always allow* if offered).
 - **Accounts**: open **Accounts** and press Connect, or just say *"Connect my Google Calendar"*.
@@ -165,6 +168,11 @@ Then write `mine some-model low` in **Settings → Agent models**.
   starts with a blank profile.
 - Text from web pages, emails and the screen is treated as information, not instructions. Jarvis confirms out loud
   before sending, posting, deleting or buying anything.
+- **Ask before risky actions** (on by default): shell commands that delete, install, kill or shut down, and changes to
+  accounts in *ask* mode (sending email, creating events), are refused until the model passes `confirmed: true`, which
+  it may only do when you asked for exactly that or said yes. Turn it off in Settings if you'd rather it just acts.
+- **Free-tier quotas**: when a model's daily quota runs out, Jarvis says so and uses the next model in that job's list
+  until it resets (midnight Pacific); the Health page shows each model's requests today.
 
 ## Files
 

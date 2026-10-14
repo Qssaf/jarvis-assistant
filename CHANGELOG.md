@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.6.0 — 2026-10-14
+
+### Added
+- **First-run setup**: what leaves your PC, the Gemini key (a link to get a free one, checked as you paste it), a live
+  microphone meter and wake word sensitivity, the voice, and how careful Jarvis should be. Skippable, and it can be run
+  again from Settings. Installs that were already set up don't see it.
+- **Health page**: checks the key, the voice model, the microphone, the speaker, screenshots, mouse and keyboard,
+  window control, app controls by name, accounts, plugins and each job's models, with what to do about anything red and
+  a button to the page that fixes it. Below: each model's requests today.
+- **Ask before risky actions** (Settings, on by default): risky shell commands and account changes in *ask* mode wait
+  for the user's yes (`confirmed: true`), enforced in code, not only in the prompt.
+- **Daily quotas**: a free tier's used-up daily quota now pauses that model until the reset at midnight Pacific (it was
+  retried every minute), with a notice; per-minute limits wait as long as Google says.
+
+### Fixed
+- Every switch and slider on the Settings page did nothing since 1.5.0 (its save function went with the model lists).
+  A test now checks that each page's functions exist.
+
 ## 1.5.1 — 2026-10-14
 
 ### Fixed

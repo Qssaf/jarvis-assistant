@@ -9,6 +9,7 @@ Window {
     id: win
     property bool startShown: true
     property string page: "home"
+    property bool needsSetup: false  // the first run: the setup screen covers the window until it's done or skipped
     readonly property bool maximized: visibility === Window.Maximized
     width: 1220
     height: 800
@@ -21,6 +22,7 @@ Window {
 
     function present() { show(); raise(); requestActivate() }
     function go(key) { page = key }
+    Component.onCompleted: Api.get("/api/settings", d => win.needsSetup = !d.settings.setup_done)
 
     Connections {
         target: Backend
@@ -94,7 +96,7 @@ Window {
                     Repeater {
                         model: [["home", "Home", "home"], ["chats", "Chats", "chats"], ["activity", "Activity", "activity"],
                                 ["accounts", "Accounts", "accounts"], ["plugins", "Plugins", "plugins"], ["models", "Models", "cpu"],
-                                ["memory", "Memory", "memory"]]
+                                ["memory", "Memory", "memory"], ["health", "Health", "wrench"]]
                         RailButton { required property var modelData; key: modelData[0]; label: modelData[1]; symbol: modelData[2] }
                     }
                     Item { Layout.fillHeight: true }
@@ -127,7 +129,7 @@ Window {
 
                 StackLayout {
                     anchors.fill: parent
-                    currentIndex: ["home", "chats", "activity", "accounts", "plugins", "models", "memory", "settings"].indexOf(win.page)
+                    currentIndex: ["home", "chats", "activity", "accounts", "plugins", "models", "memory", "settings", "health"].indexOf(win.page)
                     HomePage { id: home }
                     Loader { active: win.page === "chats" || item; sourceComponent: ChatsPage { onOpened: { home.reload(); win.go("home") } } }
                     Loader { active: win.page === "activity" || item; sourceComponent: ActivityPage {} }
@@ -135,7 +137,8 @@ Window {
                     Loader { active: win.page === "plugins" || item; sourceComponent: PluginsPage {} }
                     Loader { active: win.page === "models" || item; sourceComponent: ModelsPage {} }
                     Loader { active: win.page === "memory" || item; sourceComponent: MemoryPage {} }
-                    Loader { active: win.page === "settings" || item; sourceComponent: SettingsPage {} }
+                    Loader { active: win.page === "settings" || item; sourceComponent: SettingsPage { onSetupAgain: win.needsSetup = true } }
+                    Loader { active: win.page === "health" || item; sourceComponent: HealthPage { onGoTo: key => win.go(key) } }
                 }
             }
         }
@@ -157,6 +160,13 @@ Window {
                            : (modelData[3] === modelData[4]) ? Qt.SizeFDiagCursor : Qt.SizeBDiagCursor
                 onPressed: win.startSystemResize(modelData[0])
             }
+        }
+
+        Loader {
+            anchors.fill: parent
+            active: win.needsSetup
+            z: 5
+            sourceComponent: SetupWizard { onFinished: goTo => { win.needsSetup = false; if (goTo) win.go(goTo) } }
         }
 
         Toast { id: toast; anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 26 }
