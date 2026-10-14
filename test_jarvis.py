@@ -671,6 +671,10 @@ live.quick_gen = 1
 sent_responses.clear()
 asyncio.run(live._quick(fake_session, [types.SimpleNamespace(name="stop_listening", id="5", args={})], gen=1, spoke_before=False))
 assert sent_responses[0][0].scheduling == "SILENT"
+# ...and it ends the request, so the watchdog doesn't reconnect 12 s later and say the goodbye late
+live.inflight = {"text": None, "heard": "that's all", "since": time.time(), "tool": True, "answered": False, "recovered": False}
+asyncio.run(type(live)._tool(live, types.SimpleNamespace(name="stop_listening", id="5", args={})))
+assert live.inflight is None and not live.mic
 
 # 6. act immediately aborts when interrupted
 brain.interrupt_act()

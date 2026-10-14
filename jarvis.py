@@ -695,6 +695,7 @@ class Live:
         if fc.name == "stop_listening":
             print("[voice] stop listening (asked to)", flush=True)
             self.mic = False  # back to waiting for "Hey Jarvis"; the session stays connected, so next time is instant
+            self.inflight = None  # the request is done: its reply is SILENT, so the watchdog mustn't wait 12 s and re-ask for one
             return {"result": "not listening any more"}
         if fc.name == "answer_task":
             q = self.question
