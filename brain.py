@@ -521,6 +521,7 @@ def tool_run_command(command, timeout=30):
 
 
 grounder = [None]  # set by Brain: answers with Google Search grounding
+asker = [None]  # set by the app: function(question, cancel event) -> the user's answer, or None if none came
 BROWSER_UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36"
 
 
@@ -1076,6 +1077,9 @@ TOOLS["classroom_due"] = (None, "Google Classroom work due in the next `days` da
 TOOLS["drive_file"] = (None, "Read a Google Drive file by its name (or part of it) or id: Docs, Slides and Sheets come back as text, "
                        "PDFs and text files are read, pictures described (answering `question`). The newest match is read; "
                        "other_matches lists the rest.", obj(name={"type": "string"}, question={"type": "string"}, optional=("question",)))
+TOOLS["ask_user"] = (None, "Ask the user something only they can tell you, out loud, and wait for the answer (up to two "
+                     "minutes), then carry on: which of two close matches they meant, the words to send, a yes before "
+                     "something irreversible. Never for what you can find out yourself.", obj(question={"type": "string"}))
 TOOLS["briefing"] = (None, "Today's briefing in one call: weather, upcoming Classroom work, today's calendar, unread email "
                      "count and reminders. Use it for \"good morning\" or \"what's my day like\".", obj())
 
@@ -1639,6 +1643,15 @@ class Brain:
             read = tool_read_file(path, question)
         return {"file": f["name"], **read, **({"other_matches": [x["name"] for x in files[1:6]]} if len(files) > 1 else {})}
 
+    def ask_user(self, question):
+        """The agent's question to the user, answered through the voice; the agent waits for it."""
+        if not asker[0]:
+            return {"error": "there's no way to ask the user right now: end your reply with the question instead"}
+        answer = asker[0](question, self.cancel)
+        if answer is None:
+            return {"error": "the user didn't answer (or stopped the task): end your reply with the question instead"}
+        return {"answer": answer}
+
     def run_app_tool(self, slug, args):
         if account_block(slug):
             return {"error": account_block(slug)}
@@ -1730,6 +1743,8 @@ class Brain:
             out = self.classroom_due(**args), None
         elif name == "drive_file":
             out = self.drive_file(**args), None
+        elif name == "ask_user":
+            out = self.ask_user(**args), None
         elif name == "account_settings":
             out = self.account_settings(**args), None
         elif name in self.tool_owner and self.tool_owner[name][1] == "COMPOSIO_MULTI_EXECUTE_TOOL" and any(

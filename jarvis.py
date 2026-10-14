@@ -13,7 +13,7 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.4.3"
+VERSION = "1.4.4"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
@@ -44,7 +44,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - Something lasting about the user (what to call them, where they live, a preference): remember it right away; forget when they take it back.
 - When the user corrects how you did something (the wrong button, the wrong chat, a habit they dislike), remember the lesson in one line starting "Lesson:", so it never happens again.
 - You can't see the screen, so screen jobs you can't plan from one look (filling in a form, working through several pages, a quiz with several questions, an app you don't know) go to do_task: the agent sees screenshots. One or two quick steps (click play, open a chat, type what they said) you do yourself.
-- Long jobs (many pages, logins, forms) or after two acts failed: do_task with a complete instruction (goal, every detail, what you tried). Say its outcome briefly when it arrives.
+- Long jobs (many pages, logins, forms) or after two acts failed: do_task with a complete instruction (goal, every detail, what you tried). Say its outcome briefly when it arrives. While it runs it may need the user: ask them its question plainly, then pass their reply with answer_task.
 - Call independent tools together in one turn.
 
 # Getting it right
@@ -84,6 +84,13 @@ DO_TASK = {
     "description": "Have Jarvis's agent carry out a task that needs the screen, an app's interface, a website, or many steps. Returns what was done or found.",
     "parameters": {"type": "object", "properties": {"task": {"type": "string", "description": "Complete instruction with every detail the user gave."}}, "required": ["task"]},
 }
+ANSWER_TASK = {
+    "name": "answer_task",
+    "description": ("Give the background task the user's answer to the question it asked (only while it's waiting for one): their "
+                    "words, plus which option they meant if that's clear from the conversation."),
+    "parameters": {"type": "object", "properties": {"answer": {"type": "string"}}, "required": ["answer"]},
+}
+ASK_WAIT = 120  # seconds the agent waits for an answer to its question
 STOP_LISTENING = {
     "name": "stop_listening",
     "description": ('Turn your microphone off until the user says "Hey Jarvis" again. You keep hearing everything until you call '
@@ -135,7 +142,7 @@ TOOL_LABELS = {"run_command": "Running a command", "web_search": "Searching the 
                "cancel_reminder": "Cancelling a reminder", "make_image": "Making a picture", "show_image": "Showing a picture",
                "read_file": "Reading a file", "briefing": "Preparing your briefing",
                "account_settings": "Changing account settings", "weather": "Checking the weather",
-               "classroom_due": "Checking Classroom", "drive_file": "Reading from Drive"}
+               "classroom_due": "Checking Classroom", "drive_file": "Reading from Drive", "ask_user": "Asking you"}
 
 
 def tool_label(name):
@@ -235,6 +242,9 @@ class Live:
         self.turn_spoke = False
         self.interrupted_at = 0.0
         self.current_task = ""  # what the running do_task is doing
+        self.question = None   # the running task's question to the user: {"text", "answered" (Event), "answer"}
+        import brain as brain_mod
+        brain_mod.asker[0] = self.ask_from_task
         self.closing = False   # the current session is being shut down
         self.backlog = collections.deque(maxlen=125)  # up to 10 s of mic audio heard while the session connects
         self.utterance = collections.deque(maxlen=250)  # the last 20 s sent to Gemini and not yet answered
@@ -409,7 +419,7 @@ class Live:
     def _tools(self):
         import brain
         t = self.t
-        decls = [t.FunctionDeclaration(**DO_TASK), t.FunctionDeclaration(**STOP_LISTENING)]
+        decls = [t.FunctionDeclaration(**DO_TASK), t.FunctionDeclaration(**STOP_LISTENING), t.FunctionDeclaration(**ANSWER_TASK)]
         for name in LIVE_TOOLS:
             _, desc, schema = brain.TOOLS[name]
             if name == "act":
@@ -569,7 +579,7 @@ class Live:
             busy = self.working or self.running or (self.waiting and time.time() - self.last < 20)
             state("thinking" if busy else "speaking" if self.speaker.busy() else "listening" if self.mic else "idle")
             quiet = time.time() - max(self.last, self.voice_at, self.speaker.until)  # never stop listening mid-sentence
-            talking = self.running or (self.waiting and time.time() - self.last < 20)  # (a background task doesn't count)
+            talking = self.running or self.question or (self.waiting and time.time() - self.last < 20)  # (a background task doesn't count, unless it asked something)
             if not talking and quiet > follow_up and self.mic:
                 self.mic = False  # stop listening: back to waiting for "Hey Jarvis"...
                 self._flush()
@@ -681,6 +691,13 @@ class Live:
             print("[voice] stop listening (asked to)", flush=True)
             self.mic = False  # back to waiting for "Hey Jarvis"; the session stays connected, so next time is instant
             return {"result": "not listening any more"}
+        if fc.name == "answer_task":
+            q = self.question
+            if not q:
+                return {"error": "no task is waiting for an answer: treat it as a new request"}
+            q["answer"] = str(args.get("answer", "")).strip()
+            q["answered"].set()
+            return {"result": "passed on: the task carries on and reports when it's done"}
         if fc.name == "act":
             if any(isinstance(step.get("click"), (list, tuple)) for step in args.get("steps") or []):
                 return {"error": "nothing was done: you can't see the screen, so coordinate positions are guesses. Use click_on with a description, or {button: 'left'} to click where the mouse is."}
@@ -785,13 +802,33 @@ class Live:
     async def _progress(self):
         """A long background task: after 40 s say once that it's still going (if nobody's talking), then keep the notch fresh."""
         await asyncio.sleep(40)
-        if self.working and not self.stopped and not self.mic and not self.speaker.busy() and self.session:
+        if self.working and not self.stopped and not self.mic and not self.question and not self.speaker.busy() and self.session:
             last = next((m["text"] for m in reversed(sessions.messages) if m["who"] == "tool"), "")
             await self._send("(The background task is still running. Tell the user in a few words that you're still on it"
                              + (f"; the latest step: {tool_label(last)}" if last else "") + ".)", track=False)
         while self.working:
             notch_line[:] = ["Still working on it…", time.time()]
             await asyncio.sleep(60)
+
+    def ask_from_task(self, question, cancel):
+        """The agent's question (from its thread): said out loud with the mic left open, then wait for answer_task, for
+        Stop, or for ASK_WAIT seconds. The answer, or None."""
+        q = self.question = {"text": question, "answered": threading.Event(), "answer": None}
+        emit("log", who="system", text=f"The task needs you: {question}")
+        system.notify("Jarvis needs you", question)
+        self.quiet, self.primed, self.stopped = False, False, False
+        quoted = question.replace('"', "'")
+        self._go(self._send(f'(Your background task needs the user before it can go on. Ask them this, briefly and in your own words: '
+                            f'"{quoted}". When they answer, call answer_task with their answer.)', track=False))
+        self.mic = True  # they answer without saying "Hey Jarvis" first
+        self.last = time.time()
+        end = time.time() + ASK_WAIT
+        try:
+            while time.time() < end and not cancel.is_set() and not q["answered"].wait(0.5):
+                pass
+            return q["answer"] if q["answered"].is_set() and q["answer"] else None
+        finally:
+            self.question = None
 
     def _flush(self):
         if self.heard.strip():

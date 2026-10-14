@@ -207,6 +207,30 @@ brain.pointer[0] = None
 import asyncio
 refused = asyncio.run(live._tool(types.SimpleNamespace(name="act", args={"steps": [{"type": "hi"}, {"click": [500, 500]}]})))
 assert "click_on" in refused["error"]
+import threading
+# the agent asks the user mid-task: the voice says the question, its answer_task hands the answer back, and Stop ends the wait
+asked_voice, real_notify = [], system.notify
+live._go, system.notify = (lambda coro: asked_voice.append(coro) or coro.close()), (lambda *a: None)
+live.question, live.mic = None, False
+got_answer = []
+waiter = threading.Thread(target=lambda: got_answer.append(live.ask_from_task("Sam Lee or Sam Leeds?", threading.Event())))
+waiter.start()
+while live.question is None:
+    time.sleep(0.01)
+assert live.mic and asked_voice, "the question wasn't said with the mic left open"
+assert asyncio.run(live._tool(types.SimpleNamespace(name="answer_task", args={"answer": "Sam Lee"})))["result"]
+waiter.join(2)
+assert got_answer == ["Sam Lee"] and live.question is None, got_answer
+assert "error" in asyncio.run(live._tool(types.SimpleNamespace(name="answer_task", args={"answer": "late"})))  # nothing waiting
+stopped = threading.Event()
+stopped.set()
+assert live.ask_from_task("Delete 37 emails?", stopped) is None  # Stop pressed: no answer, the agent ends with its question
+brain_asker = brain.asker[0]
+brain.asker[0] = lambda q, cancel: "yes"
+assert brain.Brain.ask_user(types.SimpleNamespace(cancel=None), "ok?") == {"answer": "yes"}
+brain.asker[0] = lambda q, cancel: None
+assert "end your reply" in brain.Brain.ask_user(types.SimpleNamespace(cancel=None), "ok?")["error"]
+brain.asker[0], system.notify = brain_asker, real_notify
 # clicking where the mouse is (button without coordinates) works in-place
 clicked = []
 real_click = system.click

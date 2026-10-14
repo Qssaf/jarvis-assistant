@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.4 — 2026-10-14
+
+### Changed
+- **The agent can ask you mid-task.** When it needs something only you can tell it (which of two chats, the words for a
+  reply, a yes before deleting), it calls `ask_user`: Jarvis says the question out loud (and in a notification), leaves the
+  mic open, and passes your answer back with `answer_task`; the task carries on from where it was. No answer within two
+  minutes, or Stop, and it ends with the question instead. In tests it asked in exactly the three tasks that needed it
+  and in none of the thirteen that didn't.
+
 ## 1.4.3 — 2026-10-14
 
 ### Changed
