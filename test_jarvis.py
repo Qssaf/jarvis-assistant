@@ -628,7 +628,7 @@ end = time.time() + 1.5
 while time.time() < end:
     qt.processEvents()
     time.sleep(0.02)
-assert not warnings, warnings
+assert not warnings, ascii(warnings)[:4000]
 
 # every function a page calls on itself exists (Settings lost its set() once, and every switch on it silently did nothing)
 import glob, re
