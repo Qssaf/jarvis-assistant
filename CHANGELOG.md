@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.13.3 — 2026-10-15
+
+### Fixed
+- **A message is never sent twice.** The voice model sometimes called the same send again right after it worked (one
+  Discord message went out three times), or a second "yes" cut the first send off halfway and typed it all again.
+  Text that was already sent isn't sent again until you ask again, and text a cancelled send left in the message box
+  isn't typed over it.
+- Typing several lines (five jokes) puts them in one message: line breaks go in as Shift+Enter, where a typed newline
+  sent each line as its own message.
+- **Faster with a Google account signed in:** background tasks and careful looks used Gemini Flash on "high"
+  thinking, 10-35 s per agent step and over a minute for a hard screen (a careful look ran past the voice's 60 s
+  limit). They now use "medium", and the second try at finding a click target "low". A Models page list you set
+  yourself keeps its settings.
+- Learning your voice stops at 120 clips of each kind: every few wake-ups it retrained on all of them, minutes of
+  full CPU in the middle of a conversation or a game.
+- "Type five jokes" makes them up and types them, without reading them out or asking first; "why is my internet
+  slow?" checks with a command instead of giving general advice.
+- The agent no longer reads other apps' private files (a browser's saved site data) to work out what's on screen.
+
 ## 1.13.2 — 2026-10-15
 
 ### Fixed

@@ -545,8 +545,14 @@ def focus_launched():
 
 
 def tool_type_text(text):
+    """Line breaks go in as shift+Return: a typed newline is a Return, and chat apps send each line as its own message."""
     focus_launched()
-    return input_result(f"typed {len(text)} characters", system.type_text(text))
+    problem = ""
+    for i, line in enumerate(text.replace("\r", "").split("\n")):
+        problem = (system.press_keys("shift+Return") if i else "") or (system.type_text(line) if line else "")
+        if problem:
+            break
+    return input_result(f"typed {len(text)} characters", problem)
 
 
 def tool_press_keys(keys):
@@ -680,12 +686,12 @@ def tool_act(steps, screenshot_after=True, fast=False, halt=None):
 
 
 # the signed-in Google accounts first (skipped when there are none), then the AI Studio key; local_backends.py can put
-# others in front. Through Google accounts: Flash on high for careful looks and second tries, Flash Lite for quick looks,
-# clicks and search (as accurate on test screens, 2-3x faster)
+# others in front. Through Google accounts: Flash for careful looks and second tries (medium: on high a hard screen took
+# over the voice's 60 s), Flash Lite for quick looks, clicks and search (as accurate on test screens, 2-3x faster)
 SEARCH_MODELS = [("antigravity", "gemini-3.1-flash-lite", "minimal"), ("aistudio", "gemini-3.5-flash-lite", "minimal"), ("aistudio", "gemini-3.8-flash", "low")]
-LOOK_MODELS = [("antigravity", "gemini-3.8-flash", "high"), ("aistudio", "gemini-3.8-flash", "low"), ("aistudio", "gemini-3.7-flash", "low"),
+LOOK_MODELS = [("antigravity", "gemini-3.8-flash", "medium"), ("aistudio", "gemini-3.8-flash", "low"), ("aistudio", "gemini-3.7-flash", "low"),
                ("aistudio", "gemini-3.5-flash-lite", "minimal")]
-POINT_MODELS_STRONG = [("antigravity", "gemini-3.8-flash", "high"), ("aistudio", "gemini-3.8-flash", "low"), ("aistudio", "gemini-3.7-flash", "low")]
+POINT_MODELS_STRONG = [("antigravity", "gemini-3.8-flash", "low"), ("aistudio", "gemini-3.8-flash", "low"), ("aistudio", "gemini-3.7-flash", "low")]
 # where to click: Gemini is trained on the 0-1000 grid; the small models aim about as well, much faster
 POINT_MODELS = [("antigravity", "gemini-3.1-flash-lite", "minimal"), ("aistudio", "gemini-3.5-flash-lite", "minimal"), ("aistudio", "gemini-3.1-flash-lite", "minimal"),
                 ("aistudio", "gemini-3.8-flash", "low")]

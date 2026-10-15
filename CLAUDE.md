@@ -72,7 +72,8 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   call's late cancel never stops the new one. Never cancel asyncio tasks from another thread: use `call_soon_threadsafe`.
   A query tool asked again with the same arguments while the first is still running (noise "interrupting" makes the
   model re-ask) shares that run's answer (`asked`); a finished one is shared for 3 s at most, never longer (a screen or
-  a list may have changed).
+  a list may have changed). A voice act that types goes through `_type_once` (shielded, one at a time): the same text
+  isn't sent again until the user speaks, and text a cancelled act left in the box isn't typed over it.
 - `Brain.ask` holds `ask_lock`: voice and phone tasks take turns over the shared history and screen.
 
 **Tools.** `brain.TOOLS` maps a name to `(function, description, JSON schema)`. A function returns a dict, or

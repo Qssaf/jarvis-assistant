@@ -1339,4 +1339,36 @@ asyncio.run(ask_later())
 assert runs == ["look", "look"]
 live.brain = real_brain
 
+# typed line breaks are shift+Return: a plain Return sent each joke as its own Discord message
+inputs = []
+real_type, real_keys = system.type_text, system.press_keys
+system.type_text, system.press_keys = (lambda t: inputs.append(("type", t)) or ""), (lambda k: inputs.append(("keys", k)) or "")
+assert brain.tool_type_text("1. a joke\n2. another\r\n") == {"result": "typed 22 characters"}
+assert inputs == [("type", "1. a joke"), ("keys", "shift+Return"), ("type", "2. another"), ("keys", "shift+Return")], inputs
+system.type_text, system.press_keys = real_type, real_keys
+assert jarvis.typed_text([{"click_on": "the box"}, {"type": "hi\n there"}, {"type": "keys", "keys": "Return"}]) == "hi there"
+
+# the voice calling the same send again (it sent one message three times): refused until the user speaks again; and
+# text a cancelled act already typed isn't typed over it when it's asked again
+sent_steps = []
+
+
+def fake_act(name, args):
+    sent_steps.append(args["steps"])
+    return {"result": [s.get("type") and "typed 2 characters" or f"pressed {s['keys']}" for s in args["steps"]]}, None
+
+
+live.brain = types.SimpleNamespace(_run_tool=fake_act, app_tools={})
+live.typed, live.act_lock, live.user_spoke_at = {}, asyncio.Lock(), time.time()
+send = types.SimpleNamespace(name="act", args={"steps": [{"type": "hi"}, {"keys": "Return"}]})
+halt = threading.Event()
+assert asyncio.run(live._tool(send, halt)) == {"result": ["typed 2 characters", "pressed Return"]}
+assert "NOT DONE" in asyncio.run(live._tool(send, halt))["error"] and len(sent_steps) == 1
+live.user_spoke_at = time.time() + 1  # "send it again"
+assert "error" not in asyncio.run(live._tool(send, halt)) and len(sent_steps) == 2
+live.typed = {"hi": {"at": time.time(), "sent": False}}  # a cancelled act typed it, then stopped before Return
+asyncio.run(live._tool(send, halt))
+assert sent_steps[-1] == [{"keys": "Return"}], sent_steps[-1]
+live.brain = real_brain
+
 print("ok")

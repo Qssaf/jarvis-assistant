@@ -13,7 +13,7 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.13.2"
+VERSION = "1.13.3"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
@@ -50,7 +50,8 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - Pictures: make_image, show_image. Local files: read_file. Time: set_reminder (repeat for "every day/weekday/week"), list_reminders, cancel_reminder.
 - "This"/"what I selected"/"what I copied" with summarise, translate, explain or rewrite: selection. Music: media (play_pause, next, previous, now_playing).
 - "Take notes of this lecture/meeting/video": notes start at once, without asking anything first (the start would be lost): source pc for what the PC plays, room only if they say it's in person; the title is optional. "Stop the notes": notes stop.
-- "Type X" or "write X here": act [{type: "X"}] into the focused window. Never just say it back.
+- "Type X" or "write X here": act [{type: "X"}] into the focused window. Never just say it back. When they leave the words to you ("type five jokes", "write something funny"), make them up and type them at once: never read them out or ask "shall I?" first.
+- Questions about this PC itself (why is it slow, is the internet slow, what's using the CPU, is the disk full): check with run_command first and answer from what it shows, never with general advice.
 - "Mute/unmute my mic": the PC's microphone, with run_command (not stop_listening); say you won't hear them either until it's unmuted.
 - Quick things the user asked for on their own PC (volume, mute, locking the screen, opening, closing or switching apps, music): do them straight away, never "shall I?".
 - "Download X": do_task (find the official download and save it to Downloads). Opening the download page isn't downloading it.
@@ -179,6 +180,13 @@ def tool_label(name):
     return f"Using {app}" if app and app != "Composio" else "Working"
 
 
+def typed_text(steps):
+    """The text an act's type steps put in, whitespace evened out ('' when it types nothing). {type: "keys", keys: ...}
+    is a label (tool_act skips it), not text."""
+    texts = [s["type"] for s in steps or [] if isinstance(s, dict) and isinstance(s.get("type"), str) and s["type"] not in s]
+    return " ".join(" ".join(texts).split())
+
+
 def emit(kind, **data):
     if kind == "tool":  # tool use is part of the conversation record too
         kind, data = "log", {"who": "tool", "text": data["name"]}
@@ -264,6 +272,8 @@ class Live:
         self.running = 0       # quick tool calls in progress
         self.quick_tasks = {}  # quick tool calls running -> their halt event (set: their acts stop at the next step)
         self.asked = {}  # (query tool, its arguments) -> [the task answering it, when it finished]: see _tool
+        self.typed = {}  # text a voice act typed -> {"at": when that act ended, "sent": it pressed Return}: see _type_once
+        self.act_lock = asyncio.Lock()  # one voice act that types at a time
         self.quick_gen = 0
         self.user_spoke_at = 0.0
         self.gemini_spoke_at = 0.0
@@ -744,6 +754,8 @@ class Live:
             if any(isinstance(step.get("click"), (list, tuple)) for step in args.get("steps") or []):
                 return {"error": "nothing was done: you can't see the screen, so coordinate positions are guesses. Use click_on with a description, or {button: 'left'} to click where the mouse is."}
             args = {**args, "screenshot_after": False, "fast": True, "halt": halt}  # (it couldn't see that screenshot either: saves a second per act)
+            if typed_text(args.get("steps")):
+                return await asyncio.shield(asyncio.ensure_future(self._type_once(fc, args)))  # (cancelled, it still finishes and records)
         if fc.name == "look":
             args = {**args, "fast": True}  # (the quickest vision model: the voice is waiting on it)
         if fc.name in QUERY_TOOLS:  # the same question again while it's being answered (a noisy room re-asks after each
@@ -757,6 +769,28 @@ class Live:
                 task.add_done_callback(lambda t, k=key: self.asked.get(k, [None])[0] is t and self.asked[k].__setitem__(1, time.time()))
             return await asyncio.shield(self.asked[key][0])
         return await self._answer(fc, args)
+
+    async def _type_once(self, fc, args):
+        """An act that types: the same text never goes in twice. The voice model sometimes calls the same act again right
+        after it worked, or a noise "interrupts" one mid-way and it's asked again: sent text isn't sent again unless the
+        user spoke since, and text a cancelled act left in the message box isn't typed over it."""
+        async with self.act_lock:  # a re-asked act waits for the one still typing, then sees what it did
+            text, now = typed_text(args["steps"]), time.time()
+            self.typed = {k: v for k, v in self.typed.items() if now - v["at"] < 600}
+            before = self.typed.get(text)
+            if before and before["sent"] and self.user_spoke_at < before["at"]:
+                return {"error": "NOT DONE, and not needed: this exact text was already typed and sent a moment ago, so it's in "
+                                 "the chat. Never send it again unless the user asks for it again."}
+            if before and not before["sent"] and now - before["at"] < 30:  # still in the message box
+                args = {**args, "steps": [s for s in args["steps"] if not typed_text([s])]}
+            result = await self._answer(fc, args)
+            done = (result.get("result") or result.get("done") or []) if isinstance(result, dict) else []
+            done = done if isinstance(done, list) else []
+            if any(re.fullmatch(r"pressed (?:Return|Enter|KP_Enter)", str(d), re.I) for d in done):
+                self.typed[text] = {"at": time.time(), "sent": True}
+            elif any(str(d).startswith("typed ") for d in done):
+                self.typed[text] = {"at": time.time(), "sent": False}
+            return result
 
     async def _answer(self, fc, args):
         if fc.name in LIVE_TOOLS or fc.name in self.brain.app_tools:  # quick tools (paused accounts are refused inside): run them right here
@@ -1072,10 +1106,11 @@ class VoiceLearner:
         self.pending = None
 
     def other_speech(self, audio):
-        if len(os.listdir(self.dirs["no"])) < 120:
-            self._save("no", audio)
+        self._save("no", audio)
 
     def _save(self, kind, audio):
+        if len(os.listdir(self.dirs[kind])) >= 120:  # enough: each retrain reads every clip, minutes of CPU mid-conversation
+            return
         import wave
         with wave.open(os.path.join(self.dirs[kind], f"{time.time():.3f}.wav"), "wb") as w:
             w.setnchannels(1)
