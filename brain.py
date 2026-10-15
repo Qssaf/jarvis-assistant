@@ -1339,6 +1339,48 @@ def tool_notes(action, title="", source="pc"):
     return n.start(title, source) if action == "start" else n.stop() if action == "stop" else n.status()
 
 
+WATCH_EVERY = 4  # seconds between looks while watching the screen
+watch_alert = [lambda text: print(text, flush=True)]  # set by the app: says out loud what the watch saw
+watching = {}  # the watch going on now, if any: {"what", "stop"}
+
+
+def tool_watch(action, what="", minutes=10):
+    """Keep looking at the screen until something shows up, then say so (one watch at a time)."""
+    old = watching.pop("now", None)
+    if old:
+        old["stop"].set()
+    if action == "stop":
+        return {"result": f"stopped watching for {old['what']}" if old else "wasn't watching anything"}
+    if not str(what).strip():
+        return {"error": "say what to watch for"}
+    minutes = max(1.0, min(float(minutes or 10), 60.0))
+    w = watching["now"] = {"what": what, "stop": threading.Event()}
+
+    def run():
+        until = time.time() + minutes * 60
+        while not w["stop"].is_set() and time.time() < until:
+            try:
+                image = tool_screenshot()[1]
+                parts = pointer[0]([{"role": "user", "parts": [
+                    {"inlineData": {"mimeType": "image/jpeg", "data": base64.b64encode(image).decode()}},
+                    {"text": f"Is this on the screen right now: {what}? Answer only YES or NO."}]}])
+                seen = "".join(p.get("text", "") for p in parts if not p.get("thought")).strip().upper().startswith("YES")
+            except Exception as e:  # (a busy model or a failed screenshot: try again next time)
+                print(f"[watch] {e}", flush=True)
+                seen = False
+            if seen:
+                watch_alert[0](f"It's on the screen now: {what}.")
+                break
+            w["stop"].wait(WATCH_EVERY)
+        else:
+            if not w["stop"].is_set():
+                watch_alert[0](f"I watched the screen for {minutes:g} minutes and didn't see {what}.")
+        if watching.get("now") is w:
+            watching.pop("now")
+    threading.Thread(target=run, daemon=True).start()
+    return {"result": f"watching the screen for {what}, up to {minutes:g} minutes: it's said out loud when it shows up"}
+
+
 def tool_routine(action, name="", steps=""):
     """The user's routines: named sets of steps ("study mode": close Discord, open my notes, a 50-minute timer)."""
     if action == "save":
@@ -1381,6 +1423,11 @@ TOOLS.update({
                   "translate / explain / rewrite this\" about text they selected or copied.", obj()),
     "media": (tool_media, "Music and video: play_pause, next, previous, or now_playing (what's playing, by whom, in which app).",
               obj(action={"type": "string", "enum": ["play_pause", "next", "previous", "now_playing"]})),
+    "watch": (tool_watch, "Keep watching the screen until something shows up ('tell me when the download finishes', 'watch "
+              "for an enemy plane'), then it's said out loud. Looks every few seconds, up to `minutes` (default 10, at most "
+              "60); one watch at a time. stop: stop watching.", obj(action={"type": "string", "enum": ["start", "stop"]},
+              what={"type": "string", "description": "what to watch for, described plainly"}, minutes={"type": "number"},
+              optional=("what", "minutes"))),
     "notes": (tool_notes, "Take notes of a lecture, meeting or video: start (source pc: what the PC is playing; room: the "
               "microphone, for a class in person; a title), stop (the summary and transcript are saved to Documents/Jarvis "
               "Notes and announced when ready), or status.", obj(action={"type": "string", "enum": ["start", "stop", "status"]},
@@ -1939,6 +1986,16 @@ def models_for(job):
         {"look": LOOK_MODELS, "point": POINT_MODELS, "point_strong": POINT_MODELS_STRONG, "search": SEARCH_MODELS, "image": IMAGE_MODELS}[job]
 
 
+def turned_in_at(submission):
+    """When a Classroom submission was last turned in (epoch), from its history; None if it doesn't say."""
+    import calendar
+    stamps = [h["stateHistory"].get("stateTimestamp", "") for h in submission.get("submissionHistory") or []
+              if (h.get("stateHistory") or {}).get("state") == "TURNED_IN"]
+    if not stamps or not stamps[-1]:
+        return None
+    return calendar.timegm(time.strptime(max(stamps)[:19], "%Y-%m-%dT%H:%M:%S"))
+
+
 class Brain:
     def __init__(self, notify=print):
         self.backends = {}
@@ -2086,7 +2143,7 @@ class Brain:
             subs = [pool.submit(self.app_data, "GOOGLE_CLASSROOM_COURSE_WORK_STUDENT_SUBMISSIONS_LIST",
                                 {"courseId": c["id"], "courseWorkId": "-", "userId": "me", "pageSize": 100}) for c in courses]
             works = [(c, w.result() or {}) for c, w in zip(courses, works)]
-            done = {x.get("courseWorkId") for f in subs for x in (f.result() or {}).get("studentSubmissions") or []
+            done = {x.get("courseWorkId"): turned_in_at(x) for f in subs for x in (f.result() or {}).get("studentSubmissions") or []
                     if x.get("state") in ("TURNED_IN", "RETURNED")}
         import calendar
         out, now = [], time.time()
@@ -2099,7 +2156,7 @@ class Brain:
                 due = calendar.timegm((d["year"], d["month"], d["day"], t.get("hours", 23 if not t else 0), t.get("minutes", 59 if not t else 0), 0))
                 if now < due < now + days * 86400:
                     out.append({"id": w.get("id"), "course": course.get("name", ""), "title": w.get("title", ""), "due": due,
-                                "link": w.get("alternateLink", ""), "done": w.get("id") in done})
+                                "link": w.get("alternateLink", ""), "done": w.get("id") in done, "turned_in_at": done.get(w.get("id"))})
         return sorted(out, key=lambda x: x["due"])
 
     def classroom_due(self, days=7):
@@ -2107,8 +2164,11 @@ class Brain:
         if "google_classroom" not in self.connected:
             return {"error": "Google Classroom isn't connected (the user can connect it on the Accounts page)"}
         work = self.classroom_work(max(1, min(int(days), 60)))
-        return {"due": [{"title": w["title"], "course": w["course"], "due": time.strftime("%a %d %b, %H:%M", time.localtime(w["due"])),
-                         "turned_in": w["done"]} for w in work] or "nothing due in that time"}
+        def when(t):
+            return time.strftime("%a %d %b, %H:%M", time.localtime(t))
+        return {"due": [{"title": w["title"], "course": w["course"], "due": when(w["due"]),
+                         "turned_in": (f"yes, {when(w['turned_in_at'])}" if w.get("turned_in_at") else "yes") if w["done"] else "no"}
+                        for w in work] or "nothing due in that time"}
 
     def sign_in_note(self):
         """Which plugins wait for the user to sign in again in the browser ('' if none): why their tools hang."""

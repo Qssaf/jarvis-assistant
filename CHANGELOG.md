@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.13.1 — 2026-10-15
+
+### Added
+- **Watch the screen**: "tell me when the download finishes", "watch for an enemy plane": Jarvis looks every few
+  seconds (up to an hour) and says it out loud when it shows up. "Stop watching" ends it.
+
+### Fixed
+- Game or video sound picked up as speech no longer restarts a screen check over and over: the same question asked
+  again while it's being answered waits for that answer, so it's spoken once instead of being cut off each time.
+- "Did I turn it in?" says when it was turned in (from Classroom's history) instead of guessing "earlier today".
+- No more "anything else I can help with?" after a stray word; words from a game or call aren't taken as the user's.
+- The agent no longer tries to take and analyse screenshots with shell commands when a click or paste seems not to
+  work: it looks and tries another way.
+
 ## 1.13.0 — 2026-10-15
 
 ### Added

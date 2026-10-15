@@ -366,11 +366,19 @@ CLASS = {"GOOGLE_CLASSROOM_COURSES_LIST": {"courses": [{"id": "c1", "name": "Mat
          "GOOGLE_CLASSROOM_COURSE_WORK_LIST": {"courseWork": [{"id": "w1", "title": "Quiz", **due_in(5 * 3600)},
                                                               {"id": "w2", "title": "Lab", **due_in(2 * 86400)}]},
          "GOOGLE_CLASSROOM_COURSE_WORK_STUDENT_SUBMISSIONS_LIST": {"studentSubmissions": [
-             {"courseWorkId": "w1", "state": "TURNED_IN"}, {"courseWorkId": "w2", "state": "CREATED"}]}}
+             {"courseWorkId": "w1", "state": "TURNED_IN", "submissionHistory": [
+                 {"stateHistory": {"state": "CREATED", "stateTimestamp": "2026-10-01T08:00:00.1Z"}},
+                 {"stateHistory": {"state": "TURNED_IN", "stateTimestamp": "2026-10-03T09:30:00.123Z"}}]},
+             {"courseWorkId": "w2", "state": "CREATED"}]}}
 b = brain.Brain.__new__(brain.Brain)
 b.connected, b.plugins = {"google_classroom"}, {}
 b.app_data = lambda slug, args: CLASS.get(slug)  # (stands in for Composio: nothing may reach a real account)
 assert [(w["id"], w["done"]) for w in b.classroom_work(3)] == [("w1", True), ("w2", False)]
+# and when it was turned in, so "did I submit it?" never gets an invented "earlier today"
+import calendar as _cal
+assert b.classroom_work(3)[0]["turned_in_at"] == _cal.timegm((2026, 10, 3, 9, 30, 0))
+assert b.classroom_due(3)["due"][0]["turned_in"] == "yes, " + time.strftime("%a %d %b, %H:%M", time.localtime(_cal.timegm((2026, 10, 3, 9, 30, 0))))
+assert b.classroom_due(3)["due"][1]["turned_in"] == "no"
 real_get = brain.requests.get
 brain.requests.get = lambda *a, **k: (_ for _ in ()).throw(brain.requests.ConnectionError("offline"))  # (no weather)
 day = b.briefing()
@@ -1209,5 +1217,52 @@ except RuntimeError as e:
 system.open_target = real_open
 assert not brain.google_signing.is_set() and "didn't get" in pokes[0]
 assert brain.google_accounts() == []
+
+# watching the screen: looks until it sees the thing, says so once, and stops; "stop" ends a watch early
+real_pointer, real_shot, real_every = brain.pointer[0], brain.tool_screenshot, brain.WATCH_EVERY
+seen_after = [3]
+brain.pointer[0] = lambda contents: [{"text": "YES" if seen_after.__setitem__(0, seen_after[0] - 1) or seen_after[0] <= 0 else "NO"}]
+brain.tool_screenshot = lambda: ({"result": "screenshot"}, b"\xff\xd8")
+brain.WATCH_EVERY = 0.01
+alerts = []
+brain.watch_alert[0] = alerts.append
+assert "watching" in brain.tool_watch("start", "an enemy plane", 1)["result"]
+for _ in range(200):
+    if alerts:
+        break
+    time.sleep(0.01)
+assert alerts == ["It's on the screen now: an enemy plane."] and seen_after[0] == 0
+time.sleep(0.05)
+assert alerts == ["It's on the screen now: an enemy plane."] and "now" not in brain.watching  # (once, then done)
+seen_after[0] = 10 ** 6
+brain.tool_watch("start", "the download finishing", 1)
+assert brain.tool_watch("stop")["result"] == "stopped watching for the download finishing"
+assert brain.tool_watch("stop")["result"] == "wasn't watching anything"
+assert "error" in brain.tool_watch("start", " ")
+brain.pointer[0], brain.tool_screenshot, brain.WATCH_EVERY = real_pointer, real_shot, real_every
+
+# the voice asking the same question again while it's still being answered (noise "interrupting") shares that answer:
+# one look, not three, and a cancelled caller doesn't stop it
+runs = []
+real_brain = live.brain
+
+
+def slow_look(name, args):
+    runs.append(name)
+    time.sleep(0.2)
+    return ({"answer": "a plane, top left"}, None)
+live.brain = types.SimpleNamespace(_run_tool=slow_look, app_tools={})
+live.asked = {}
+look_call = types.SimpleNamespace(name="look", args={"question": "any enemy planes?", "careful": True})
+again = types.SimpleNamespace(name="look", args={"careful": True, "question": "any enemy planes?"})
+
+
+async def ask_twice():
+    first = asyncio.ensure_future(live._tool(look_call))
+    await asyncio.sleep(0.05)
+    first.cancel()  # (what an interruption does to the quick call)
+    return await live._tool(again)
+assert asyncio.run(ask_twice()) == {"answer": "a plane, top left"} and runs == ["look"]
+live.brain = real_brain
 
 print("ok")

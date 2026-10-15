@@ -13,7 +13,7 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.13.0"
+VERSION = "1.13.1"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
@@ -30,7 +30,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - Names are what it gets wrong most: match the name you heard by sound against names on screen (look first) and in memory. One clear match: use it, spelled as on screen. Otherwise say the closest names and ask; never pick the top or newest one.
 - {LANGUAGE}
 - Casual talk, thanks, jokes and swearing are conversation: reply in kind, briefly. The user trash-talks for fun (games, friends, you): give a short witty comeback, never a lecture or refusal speech. Only if they seem genuinely in distress, answer with care.
-- Your microphone stays on until you call stop_listening. When the user clearly ends the conversation ("that's all", "stop listening", "bye", "go to sleep"), call it with a two-word goodbye. A stray word ("so", "you", "sir") or a garbled phrase is not an ending: just reply briefly.
+- Your microphone stays on until you call stop_listening. When the user clearly ends the conversation ("that's all", "stop listening", "bye", "go to sleep"), call it with a two-word goodbye. A stray word ("so", "you", "a", "sir") or a garbled phrase is not an ending: answer it in two words at most ("Yes?"). Never ask "anything else I can help with?". Games, videos and calls can reach the microphone: words that don't fit the conversation are them, not the user.
 
 # The fastest right way, for each kind of request
 - Facts, definitions, maths, advice, conversation you're sure of: answer straight away, no tools.
@@ -61,7 +61,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 
 # Getting it right
 - Never say something is or isn't there, or that you did something, unless a tool just showed it. Tools that type or click only report that they acted: end with a look and say what it saw.
-- Each look sees one moment. You can't watch the screen continuously: never say you're monitoring or will keep watching; look again each time they ask.
+- Each look sees one moment. To keep an eye on the screen until something shows up ("tell me when it finishes", "watch for an enemy plane"), use watch: it looks every few seconds and speaks up when it sees it.
 - Never solve an on-screen question from a description, and never call an answer right unless a careful look said so.
 - Never deny a capability you have. If you lack a direct tool for something a connected account or the PC can do, hand it to do_task instead of saying you can't.
 - Quizzes, forms and homework sites: only fill in or select the answer. Never press Return, Submit, Check, Next or Save there unless the user asks: that hands it in.
@@ -132,7 +132,7 @@ VOICE_RESULT_LIMIT = 12000  # characters of one tool result the voice model gets
 LIVE_TOOLS = ["run_command", "web_search", "read_webpage", "youtube_search", "open_url", "remember", "forget", "set_reminder", "list_reminders",
               "cancel_reminder", "list_windows", "focus_window", "close_window", "act", "look", "ui_controls", "make_image",
               "show_image", "read_file", "briefing", "account_settings", "weather", "classroom_due", "drive_file", "routine",
-              "recall", "selection", "media", "notes", "recent_changes"]
+              "recall", "selection", "media", "notes", "recent_changes", "watch"]
 
 # what the user asked to be called, from what Jarvis remembers ("prefers to be called Q", "call me Sam, not sir")
 # ponytail: a pattern over remember()'s usual wording, not understanding; unmatched memory falls back to the prompt's rule
@@ -163,7 +163,7 @@ TOOL_LABELS = {"run_command": "Running a command", "web_search": "Searching the 
                "account_settings": "Changing account settings", "weather": "Checking the weather",
                "classroom_due": "Checking Classroom", "drive_file": "Reading from Drive", "ask_user": "Asking you",
                "routine": "Running a routine", "recall": "Searching past conversations", "selection": "Reading your selection",
-               "media": "Controlling the music", "notes": "Taking notes", "recent_changes": "Checking what changed",
+               "media": "Controlling the music", "notes": "Taking notes", "recent_changes": "Checking what changed", "watch": "Watching the screen",
                "plan": "Planning"}
 
 
@@ -258,6 +258,7 @@ class Live:
         self.stopped = False   # the user pressed Stop: don't speak late results
         self.running = 0       # quick tool calls in progress
         self.quick_tasks = {}  # quick tool calls running -> their halt event (set: their acts stop at the next step)
+        self.asked = {}  # (query tool, its arguments) -> (the task answering it, when it started): see _tool
         self.quick_gen = 0
         self.user_spoke_at = 0.0
         self.gemini_spoke_at = 0.0
@@ -740,6 +741,17 @@ class Live:
             args = {**args, "screenshot_after": False, "fast": True, "halt": halt}  # (it couldn't see that screenshot either: saves a second per act)
         if fc.name == "look":
             args = {**args, "fast": True}  # (the quickest vision model: the voice is waiting on it)
+        if fc.name in QUERY_TOOLS:  # the same question again while it's being answered (a noisy room re-asks after each
+            # "interruption"): wait for that answer instead of starting over; a cancelled caller doesn't stop it
+            key = (fc.name, json.dumps(args, sort_keys=True, default=str))
+            now = time.time()
+            self.asked = {k: v for k, v in self.asked.items() if now - v[1] < 60}
+            if key not in self.asked or (self.asked[key][0].done() and now - self.asked[key][1] > 15):
+                self.asked[key] = (asyncio.ensure_future(self._answer(fc, args)), now)
+            return await asyncio.shield(self.asked[key][0])
+        return await self._answer(fc, args)
+
+    async def _answer(self, fc, args):
         if fc.name in LIVE_TOOLS or fc.name in self.brain.app_tools:  # quick tools (paused accounts are refused inside): run them right here
             emit("tool", name=fc.name)
             t = time.time()
@@ -1863,6 +1875,12 @@ def main():
         system.notify("Notes ready", text[:200])
         live.announce(text)
     brain_mod.notes_done[0] = notes_ready
+
+    def watch_saw(text):
+        emit("log", who="system", text=f"👁 {text}")
+        system.notify("Jarvis", text[:200])
+        live.announce(text)
+    brain_mod.watch_alert[0] = watch_saw
     brain_mod.on_change[0] = lambda what: emit("log", who="system", text=f"✏️ Changed: {what}")
     brain_mod.on_plan[0] = lambda steps: emit("log", who="system", text="📋 Plan:\n" + "\n".join(f"{i}. {s}" for i, s in enumerate(steps, 1)))
     speaker = Speaker()
