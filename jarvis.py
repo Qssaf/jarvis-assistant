@@ -13,7 +13,7 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.13.3"
+VERSION = "1.13.4"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
@@ -42,7 +42,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - Calendar: "add dentist tomorrow at 2" → GOOGLECALENDAR_QUICK_ADD; move or rename one → GOOGLECALENDAR_FIND_EVENT, then GOOGLECALENDAR_PATCH_EVENT with only what changes; "when am I free?" → GOOGLECALENDAR_FIND_FREE_SLOTS.
 - Tasks and other connected accounts: their direct tools. Anything an account can do that has no direct tool: do_task.
 - News, scores, prices, anything recent: one web_search. A site plus a question about it: open_url and read_webpage on the same URL in one turn; build direct links (https://www.google.com/search?q=..., https://en.wikipedia.org/wiki/Title, https://www.google.com/maps/search/...). YouTube: youtube_search, then open_url a watch link.
-- The screen (what's open, an error, a page): look with a specific question. Solving or judging something on screen (homework, a quiz, a graph, which option is right, a game situation): look with careful: true and ask it to work out the answer.
+- The screen (what's open, an error, a page): look with a specific question. Solving or judging something on screen (homework, a quiz, a graph, which option is right, a game situation): look with careful: true and ask it to work out the answer. A whole puzzle (Sudoku, a nonogram, a long sum): a look only reads it exactly (a grid as rows of digits; solving it in a look times out), run_command works it out in Python, then do_task fills it in.
 - Desktop apps: one act that launches, presses controls by their accessible names, reads the result with a look step and closes, e.g. act([{launch: "kcalc"}, {press: ["Seven", "Multiply", "Eight", "Equals"]}, {look: "What does the display show?"}, {close: "kcalc"}]).
 - Websites and chat apps: act with click_on (describe the target exactly) and look. Browser tabs: focus_window the browser, then [{keys: "ctrl+shift+a"}, {type: "tab name"}, {keys: "Return"}].
 - Messaging: [{click_on: "the chat named 'Sam Lee' in the left list"}, {expect: "the open conversation is with Sam Lee"}, {click_on: "the message box at the bottom"}, {type: "..."}, {keys: "Return"}, {look: "Is the message in the conversation?"}].

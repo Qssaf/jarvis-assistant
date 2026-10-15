@@ -686,10 +686,11 @@ def tool_act(steps, screenshot_after=True, fast=False, halt=None):
 
 
 # the signed-in Google accounts first (skipped when there are none), then the AI Studio key; local_backends.py can put
-# others in front. Through Google accounts: Flash for careful looks and second tries (medium: on high a hard screen took
-# over the voice's 60 s), Flash Lite for quick looks, clicks and search (as accurate on test screens, 2-3x faster)
+# others in front. Through Google accounts: Flash on low for careful looks and second tries (reading a Sudoku grid took
+# 5 s on low, 27 s on medium, and solving one in a look timed out on every level), Flash Lite for quick looks, clicks and
+# search (as accurate on test screens, 2-3x faster)
 SEARCH_MODELS = [("antigravity", "gemini-3.1-flash-lite", "minimal"), ("aistudio", "gemini-3.5-flash-lite", "minimal"), ("aistudio", "gemini-3.8-flash", "low")]
-LOOK_MODELS = [("antigravity", "gemini-3.8-flash", "medium"), ("aistudio", "gemini-3.8-flash", "low"), ("aistudio", "gemini-3.7-flash", "low"),
+LOOK_MODELS = [("antigravity", "gemini-3.8-flash", "low"), ("aistudio", "gemini-3.8-flash", "low"), ("aistudio", "gemini-3.7-flash", "low"),
                ("aistudio", "gemini-3.5-flash-lite", "minimal")]
 POINT_MODELS_STRONG = [("antigravity", "gemini-3.8-flash", "low"), ("aistudio", "gemini-3.8-flash", "low"), ("aistudio", "gemini-3.7-flash", "low")]
 # where to click: Gemini is trained on the 0-1000 grid; the small models aim about as well, much faster
@@ -2508,21 +2509,28 @@ class Brain:
         if probing:
             return
         backend, model, thinking = entry
-        if is_main:
+        # a timeout is often one request too heavy for the model (solving a puzzle in a look), not the model being gone:
+        # check again in a few seconds, and only say it's down if that fails too
+        timed_out = "timed out" in str(e)
+        told = is_main and not timed_out
+        if told:
             self.notify(f"{model} via {backend} isn't answering; using backup models until it's back.")
 
-        def probe(delay=60):
+        def probe(delay, told):
             while True:
                 time.sleep(delay)
                 try:
                     self.backend(backend)[0].generate([{"role": "user", "parts": [{"text": "hi"}]}], model, thinking)
                     self.down_until[entry] = 0
-                    if is_main:
+                    if told:
                         self.notify(f"{model} is back.")
                     return
                 except Exception:
-                    delay = min(delay * 2, 600)
-        threading.Thread(target=probe, daemon=True).start()
+                    if is_main and not told:
+                        self.notify(f"{model} via {backend} isn't answering; using backup models until it's back.")
+                        told = True
+                    delay = min(max(delay, 30) * 2, 600)
+        threading.Thread(target=probe, args=(5 if timed_out else 60, told), daemon=True).start()
 
     def ask(self, text, on_tool=lambda name: None, on_thought=None, remote=False):
         with self.ask_lock:

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.13.4 — 2026-10-15
+
+### Fixed
+- **Careful looks are fast again** (5 s instead of 25-60 s): with a Google account signed in they used Gemini Flash on
+  "medium" thinking, which took 27 s just to read a Sudoku grid. They're back on "low", like before 1.13.
+- Puzzles are read, then solved with code: asking a look to solve a whole Sudoku timed out on every model and thinking
+  level. A look now only reads the grid, a short Python script solves it, and a background task fills it in.
+- One request that times out no longer benches its model for a minute or more with "isn't answering": Jarvis checks it
+  again after 5 s and only says it's down if that fails too.
+
 ## 1.13.3 — 2026-10-15
 
 ### Fixed

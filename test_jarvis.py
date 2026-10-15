@@ -53,7 +53,8 @@ class Fake:
 brain.chain = lambda: [("a", "m1", "low"), ("b", "m2", "low"), ("c", "m3", "low")]
 b = brain.Brain.__new__(brain.Brain)
 b.backends, b.down_until, b.notify = {"a": Fake("limited"), "b": Fake("broken"), "c": Fake("ok")}, {}, lambda t: None
-real_thread, brain.threading.Thread = brain.threading.Thread, lambda target, daemon: type("T", (), {"start": lambda self: None})()  # no real probes
+probes = []
+real_thread, brain.threading.Thread = brain.threading.Thread, lambda target, daemon, args=(): probes.append(args) or type("T", (), {"start": lambda self: None})()  # no real probes
 assert b._generate([])[0]["text"] == "from m3"
 assert b._generate([])[0]["text"] == "from m3"
 assert Fake.calls == ["m1", "m2", "m3", "m3"]  # m1 cooling down, m2 waiting for its probe
@@ -63,6 +64,14 @@ try:
     raise AssertionError("BadRequest should stop the chain")
 except brain.BadRequest:
     pass
+# a timeout (one request too heavy, e.g. solving a puzzle in a look) is checked again in seconds, and nobody is told the
+# model is down unless that check fails too
+told = []
+b.notify, probes[:] = told.append, []
+b._mark_down(("x", "m9", "low"), brain.Overloaded("timed out"), True)
+assert probes == [(5, False)] and not told and b.down_until[("x", "m9", "low")] == float("inf"), (probes, told)
+b._mark_down(("y", "m8", "low"), brain.Overloaded("busy"), True)
+assert probes[-1] == (60, True) and told == ["m8 via y isn't answering; using backup models until it's back."], told
 brain.threading.Thread = real_thread
 # settings validation rejects nonsense instead of saving it
 import store
