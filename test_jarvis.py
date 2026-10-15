@@ -8,6 +8,9 @@ os.environ.update(XDG_CONFIG_HOME=os.path.join(_home, "config"), XDG_DATA_HOME=o
 import brain
 import system
 
+brain.OPENCODE_ACCOUNTS = os.path.join(_home, "opencode-accounts.json")  # (not the user's real Google sign-ins,
+brain.PLUGIN_CONSTANTS = [os.path.join(_home, "constants.js")]               # nor an installed plugin's client)
+
 # click grid: Gemini's 0-1000 coordinates map onto the screen, clamped to its edges
 brain.screen_size[:] = (1600, 900)
 assert brain.to_pixels(0, 0) == (0, 0)
@@ -1148,5 +1151,63 @@ said.clear()
 jarvis.ask_about_region(fake_live)
 assert said == []
 system.capture_region, brain.tool_look, jarvis.emit = real_region, real_look_fn, real_emit
+
+# Google sign-in: Jarvis's accounts and the opencode plugin's merge (Jarvis's first, no duplicates, disabled ones skipped);
+# with none, the backend is skipped quietly and its models simply aren't used
+assert brain.google_accounts() == []
+try:
+    brain.Antigravity()
+    assert False, "no accounts: the backend can't be made"
+except LookupError:
+    pass
+said = []
+brain.Brain(notify=said.append)
+assert not any("antigravity" in s for s in said), said
+store.write_json(brain.OPENCODE_ACCOUNTS, {"accounts": [
+    {"email": "a@x", "refreshToken": "r1|p|m", "managedProjectId": "m1", "fingerprint": {"userAgent": "ua"}},
+    {"email": "b@x", "refreshToken": "r2", "managedProjectId": "m2", "enabled": False},
+    {"email": "c@x", "refreshToken": "r3", "managedProjectId": "m3"}]})
+store.write_json(brain.GOOGLE_FILE, {"accounts": [{"email": "c@x", "refresh_token": "r3", "project": "m3"}]}, private=True)
+assert [(a["email"], a["refresh_token"], a["project"], a["source"]) for a in brain.google_accounts()] == \
+    [("c@x", "r3", "m3", "jarvis"), ("a@x", "r1", "m1", "opencode")]
+brain.google_sign_out("c@x")
+assert [(a["email"], a["source"]) for a in brain.google_accounts()] == [("a@x", "opencode"), ("c@x", "opencode")]  # (opencode's own stay)
+os.remove(brain.OPENCODE_ACCOUNTS)
+assert brain.antigravity_model("gemini-3.8-flash", "minimal") == ("gemini-3.8-flash-tiered", "low")
+assert brain.antigravity_model("gemini-3.1-flash-image", None) == ("gemini-3.1-flash-image", None)
+
+# Antigravity's client comes from an installed plugin (or the env file), never from Jarvis's source
+assert brain.google_client() is None
+try:
+    brain.google_sign_in(timeout=1)
+    assert False, "no client: no sign-in"
+except RuntimeError as e:
+    assert "opencode-antigravity-auth" in str(e)
+with open(brain.PLUGIN_CONSTANTS[0], "w") as f:
+    f.write('export const ANTIGRAVITY_CLIENT_ID = "id-1.apps";\nexport const ANTIGRAVITY_CLIENT_SECRET = "sec-1";\n')
+assert brain.google_client() == ("id-1.apps", "sec-1")
+
+# the sign-in page: only Google's answer to this sign-in (its state) counts; a refusal ends it with Google's reason
+import requests as _requests
+real_open = system.open_target
+pokes = []
+
+
+def fake_google(url):
+    state = brain.parse_qs(brain.urlparse(url).query)["state"][0]
+    def answer():
+        base = f"http://127.0.0.1:{brain.GOOGLE_PORT}/oauth-callback"
+        pokes.append(_requests.get(f"{base}?code=stolen&state=wrong", timeout=5).text)
+        pokes.append(_requests.get(f"{base}?error=access_denied&state={state}", timeout=5).text)
+    threading.Thread(target=answer, daemon=True).start()
+system.open_target = fake_google
+try:
+    brain.google_sign_in(timeout=20)
+    assert False, "a refused sign-in can't succeed"
+except RuntimeError as e:
+    assert "access_denied" in str(e), e
+system.open_target = real_open
+assert not brain.google_signing.is_set() and "didn't get" in pokes[0]
+assert brain.google_accounts() == []
 
 print("ok")

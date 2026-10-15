@@ -158,6 +158,14 @@ fallback with `PYTHON_KEYRING_BACKEND`. The voice always uses Gemini Live.
 `is_read_action` is a verb heuristic on the slug, and unknown verbs count as changes. `account_policy()` feeds both
 prompts.
 
+**Google sign-in.** The `antigravity` backend (brain.py) uses Google accounts signed in from the Models page
+(`google_sign_in`: Antigravity's OAuth client, read by `google_client()` from an installed opencode-antigravity-auth
+plugin or the env file and never committed (GitHub's push protection blocks it), PKCE, a callback on `localhost:51121`, then `loadCodeAssist` /
+`onboardUser` for the account's project) plus any from the opencode plugin's `antigravity-accounts.json`, rotating on 429.
+Opt-in and warned about (Google may suspend accounts used this way). With no account its constructor raises
+`LookupError`, so its entries (first in every built-in list) are skipped and Brain says nothing. Tests point
+`OPENCODE_ACCOUNTS` and `PLUGIN_CONSTANTS` at temp files.
+
 **Backends in code.** A gitignored `local_backends.py`, imported at the end of
 brain.py, may register more classes in `brain.BACKENDS` and prepend entries to the model lists (`LOOK_MODELS`,
 `POINT_MODELS`, `SEARCH_MODELS`, `IMAGE_MODELS`).

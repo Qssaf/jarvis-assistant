@@ -42,6 +42,7 @@ DEFAULT_SETTINGS = {
     # the same for the other jobs (see brain.MODEL_JOBS); empty = Jarvis's built-in choice
     "look_models": [], "point_models": [], "point_strong_models": [], "search_models": [], "image_models": [],
     "agent_models": [
+        "antigravity gemini-3.8-flash high",  # (only when signed in with Google, on the Models page)
         "aistudio gemini-3.8-flash medium",
         "aistudio gemini-3.7-flash low",
         "aistudio gemini-3.5-flash-lite minimal",

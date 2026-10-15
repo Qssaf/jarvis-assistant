@@ -13,7 +13,7 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.12.0"
+VERSION = "1.13.0"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
@@ -1379,7 +1379,9 @@ def models_info():
     rows = [{"name": "aistudio", "url": "Google AI Studio (Gemini; also the voice)", "key": gemini, "custom": False, "local": False}]
     rows += [{"name": n, "url": u, "key": bool(store.secret(n)), "custom": n in custom, "local": brain_mod.is_local(u)}
              for n, u in brain_mod.providers().items()]
-    return {"providers": rows, "storage": store.key_storage(), "ollama": brain_mod.ollama_models()}
+    google = [{"email": a["email"], "source": a["source"]} for a in brain_mod.google_accounts()]
+    return {"providers": rows, "storage": store.key_storage(), "ollama": brain_mod.ollama_models(),
+            "google": google, "google_signing": brain_mod.google_signing.is_set(), "google_client": bool(brain_mod.google_client())}
 
 
 def add_plugin(data):
@@ -1458,6 +1460,25 @@ def api_post(path, data, live, brain):
             raise ValueError("the address should look like https://host/v1")
         store.save_custom_provider(name, url)
         brain.forget_backend(name)
+        return models_info()
+    elif path == "/api/google/signin":
+        import brain as brain_mod
+        if brain_mod.google_signing.is_set():
+            raise ValueError("a Google sign-in is already waiting in your browser")
+
+        def sign_in():
+            try:
+                email = brain_mod.google_sign_in()
+                brain.forget_backend("antigravity")
+                emit("log", who="system", text=f"Signed in to Google as {email}: its models come first now (Models page).")
+            except Exception as e:
+                emit("log", who="system", text=f"Google sign-in didn't work: {e}")
+        threading.Thread(target=sign_in, daemon=True).start()
+        return models_info()
+    elif path == "/api/google/signout":
+        import brain as brain_mod
+        brain_mod.google_sign_out(str(data.get("email", "")))
+        brain.forget_backend("antigravity")
         return models_info()
     elif m := re.fullmatch(r"/api/providers/(\w+)/delete", path):
         store.save_custom_provider(m[1], "")

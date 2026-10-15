@@ -1,9 +1,9 @@
 """Jarvis's brain: a Gemini agent with PC tools, web search, Photopea and plugins (MCP servers, e.g. Composio).
 Models come from your Google AI Studio API key (GEMINI_API_KEY, in the environment or the env file in Jarvis's config
 folder). An optional local_backends.py can add more backends (see the README). The "agent_models" setting decides the order."""
-import asyncio, base64, ipaddress, json, os, re, select, shutil, socket, subprocess, tempfile, threading, time, uuid
+import asyncio, base64, hashlib, ipaddress, json, os, re, select, shutil, socket, subprocess, tempfile, threading, time, uuid
 from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
-from urllib.parse import parse_qs, quote, urlparse
+from urllib.parse import parse_qs, quote, urlencode, urlparse
 
 import requests
 from concurrent.futures import ThreadPoolExecutor
@@ -57,11 +57,18 @@ class Overloaded(RuntimeError):
         self.retry_after = retry_after
 
 
-def api_key():
-    key = os.environ.get("GEMINI_API_KEY") or store.secret("aistudio")
-    if not key and os.path.exists(ENV_FILE):
+def env_value(name):
+    """A setting from the environment, else from the env file in Jarvis's config folder ("" if neither has it)."""
+    if os.environ.get(name):
+        return os.environ[name]
+    if os.path.exists(ENV_FILE):
         with open(ENV_FILE) as f:
-            key = dict(l.strip().split("=", 1) for l in f if "=" in l).get("GEMINI_API_KEY", "").strip().strip("'\"")
+            return dict(l.strip().split("=", 1) for l in f if "=" in l).get(name, "").strip().strip("'\"")
+    return ""
+
+
+def api_key():
+    key = os.environ.get("GEMINI_API_KEY") or store.secret("aistudio") or env_value("GEMINI_API_KEY")
     if not key:
         raise RuntimeError(f"add your Google AI Studio key in the Models page (or GEMINI_API_KEY=... in {ENV_FILE})")
     return key
@@ -124,8 +131,236 @@ class AIStudio:
                 and not re.search(r"transcribe|translate|robotics|extended-thinking", n)]
 
 
+# ---------------------------------------------------------------- Gemini and Claude through your Google account
+# Signs in the way Google's Antigravity IDE does, for the larger quotas of a Google account. It isn't an API Google offers
+# other apps and Google may limit or suspend accounts used this way, so it's opt-in (Models page) and the page says so.
+# Antigravity's OAuth client isn't in Jarvis's source: it comes from an installed opencode-antigravity-auth plugin, or
+# ANTIGRAVITY_CLIENT_ID / ANTIGRAVITY_CLIENT_SECRET in the environment or the env file.
+PLUGIN_CONSTANTS = [os.path.join(base, "opencode-antigravity-auth", "dist", "src", "constants.js") for base in (
+    os.path.expanduser("~/.cache/opencode/node_modules"), os.path.expanduser("~/.config/opencode/node_modules"),
+    "/usr/lib/node_modules", "/usr/local/lib/node_modules", os.path.expanduser("~/.npm-global/lib/node_modules"),
+    os.path.join(os.environ.get("APPDATA", ""), "npm", "node_modules"))] + \
+    [os.path.expanduser("~/.config/opencode/opencode-antigravity-auth/src/constants.ts")]  # (a source checkout)
+GOOGLE_SCOPES = " ".join("https://www.googleapis.com/auth/" + s for s in
+                         ("cloud-platform", "userinfo.email", "userinfo.profile", "cclog", "experimentsandconfigs"))
+GOOGLE_PORT = 51121
+GOOGLE_REDIRECT = f"http://localhost:{GOOGLE_PORT}/oauth-callback"  # (the only address this client accepts)
+GOOGLE_FILE = os.path.join(DATA, "google.json")  # the accounts signed in from Jarvis
+OPENCODE_ACCOUNTS = os.path.expanduser("~/.config/opencode/antigravity-accounts.json")  # the plugin's, used as well
+CLOUDCODE = ("https://cloudcode-pa.googleapis.com", "https://daily-cloudcode-pa.googleapis.com")
+CLI_AGENT = "antigravity/cli/1.1.13 (aidev_client; os_type=linux; arch=amd64; cl=964361259; auth_method=consumer)"
+google_signing = threading.Event()  # a sign-in page is waiting in the browser
+
+
+def google_client():
+    """Antigravity's OAuth client (id, secret), or None when neither the env file nor an installed plugin has it."""
+    found = env_value("ANTIGRAVITY_CLIENT_ID"), env_value("ANTIGRAVITY_CLIENT_SECRET")
+    for path in PLUGIN_CONSTANTS:
+        if all(found):
+            break
+        if os.path.exists(path):
+            src = open(path, encoding="utf-8", errors="replace").read()
+            found = tuple(m[1] if (m := re.search(rf'ANTIGRAVITY_CLIENT_{k}\s*=\s*["\']([^"\']+)', src)) else ""
+                          for k in ("ID", "SECRET"))
+    return found if all(found) else None
+
+
+NO_CLIENT = ("install the opencode-antigravity-auth plugin (npm i -g opencode-antigravity-auth), or put ANTIGRAVITY_CLIENT_ID "
+             "and ANTIGRAVITY_CLIENT_SECRET in Jarvis's env file")
+
+
+def google_accounts():
+    """Signed-in Google accounts, Jarvis's own first: [{email, refresh_token, project, source, fingerprint?}]."""
+    own = [{**a, "source": "jarvis"} for a in store.read_json(GOOGLE_FILE, {}).get("accounts", [])]
+    seen = {a["refresh_token"] for a in own}
+    for a in store.read_json(OPENCODE_ACCOUNTS, {}).get("accounts", []):
+        token = str(a.get("refreshToken", "")).split("|")[0]
+        if a.get("enabled", True) and token and a.get("managedProjectId") and token not in seen:
+            own.append({"email": a.get("email", ""), "refresh_token": token, "project": a["managedProjectId"],
+                        "source": "opencode", "fingerprint": a.get("fingerprint") or {}})
+    return own
+
+
+def google_project(access_token):
+    """The account's Cloud Code project, set up on Google's free tier the first time."""
+    headers = {"Authorization": f"Bearer {access_token}", "User-Agent": CLI_AGENT}
+    meta = {"metadata": {"ideType": "ANTIGRAVITY"}}
+    for base in CLOUDCODE:
+        r = requests.post(f"{base}/v1internal:loadCodeAssist", json=meta, headers=headers, timeout=15)
+        if r.ok:
+            break
+    else:
+        raise http_error(r)
+    d = r.json()
+    project = d.get("cloudaicompanionProject")
+    project = project.get("id") if isinstance(project, dict) else project
+    if project:
+        return project
+    tiers = d.get("allowedTiers") or []
+    tier = next((t["id"] for t in tiers if t.get("isDefault")), tiers[0]["id"] if tiers else "FREE")
+    for _ in range(10):  # (setting one up takes a few seconds)
+        r = requests.post(f"{CLOUDCODE[0]}/v1internal:onboardUser", json={"tierId": tier, **meta}, headers=headers, timeout=15)
+        if not r.ok:
+            raise http_error(r)
+        d = r.json()
+        project = (d.get("response", {}).get("cloudaicompanionProject") or {}).get("id")
+        if d.get("done") and project:
+            return project
+        time.sleep(5)
+    raise RuntimeError("Google didn't finish setting up the account; try again")
+
+
+def google_sign_in(timeout=300):
+    """Sign in with Google in the browser and keep the account; returns its email. Blocks until done."""
+    client = google_client()
+    if not client:
+        raise RuntimeError(f"Jarvis needs Antigravity's sign-in details first: {NO_CLIENT}")
+    verifier = base64.urlsafe_b64encode(os.urandom(32)).rstrip(b"=").decode()
+    challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=").decode()
+    state, got = uuid.uuid4().hex, {}
+
+    class H(BaseHTTPRequestHandler):
+        def do_GET(self):
+            url = urlparse(self.path)
+            query = {k: v[0] for k, v in parse_qs(url.query).items()}
+            if url.path == "/oauth-callback" and query.get("state") == state:
+                got.update(query)
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain")
+            self.end_headers()
+            self.wfile.write(b"Jarvis is signed in to your Google account. You can close this tab." if "code" in got
+                             else b"Jarvis didn't get the sign-in. Try again from the Models page.")
+
+        def log_message(self, *a):
+            pass
+
+    srv = HTTPServer(("127.0.0.1", GOOGLE_PORT), H)  # (busy if another app is signing in to Google the same way)
+    srv.timeout = 2
+    google_signing.set()
+    try:
+        system.open_target("https://accounts.google.com/o/oauth2/v2/auth?" + urlencode({
+            "client_id": client[0], "response_type": "code", "redirect_uri": GOOGLE_REDIRECT, "scope": GOOGLE_SCOPES,
+            "code_challenge": challenge, "code_challenge_method": "S256", "state": state, "access_type": "offline",
+            "prompt": "select_account consent"}))  # (consent: always a lasting refresh token; select_account: any account)
+        deadline = time.time() + timeout
+        while not got and time.time() < deadline:
+            srv.handle_request()
+    finally:
+        srv.server_close()
+        google_signing.clear()
+    if "code" not in got:
+        raise RuntimeError(f"Google said {got['error']}" if got.get("error") else "the sign-in timed out")
+    r = requests.post("https://oauth2.googleapis.com/token", timeout=20, data={
+        "client_id": client[0], "client_secret": client[1], "code": got["code"], "grant_type": "authorization_code",
+        "redirect_uri": GOOGLE_REDIRECT, "code_verifier": verifier})
+    if not r.ok:
+        raise http_error(r)
+    tokens = r.json()
+    if not tokens.get("refresh_token"):
+        raise RuntimeError("Google didn't give a lasting sign-in; try again")
+    me = requests.get("https://www.googleapis.com/oauth2/v1/userinfo?alt=json", timeout=10,
+                      headers={"Authorization": f"Bearer {tokens['access_token']}"})
+    email = me.json().get("email", "") if me.ok else ""
+    project = google_project(tokens["access_token"])
+    kept = [a for a in store.read_json(GOOGLE_FILE, {}).get("accounts", []) if a.get("email") != email]
+    store.write_json(GOOGLE_FILE, {"accounts": kept + [{"email": email, "refresh_token": tokens["refresh_token"], "project": project}]},
+                     private=True)
+    return email
+
+
+def google_sign_out(email):
+    """Forget an account signed in from Jarvis (ones from opencode stay: they're the plugin's)."""
+    accounts = store.read_json(GOOGLE_FILE, {}).get("accounts", [])
+    store.write_json(GOOGLE_FILE, {"accounts": [a for a in accounts if a.get("email") != email]}, private=True)
+
+
+def antigravity_model(model, thinking):
+    """Antigravity's names for models people write plainly: gemini-3.8-flash is gemini-3.8-flash-tiered (thinking is sent
+    separately), Gemini 3.1 Pro is gemini-3.1-pro-low or gemini-pro-agent. Those reject thinking "minimal": sent as low."""
+    if thinking is None:  # image models: no thinking settings at all
+        return model, thinking
+    if re.match(r"gemini-3\.[678]-flash", model) and thinking == "minimal":
+        thinking = "low"
+    if re.fullmatch(r"gemini-3\.[678]-flash", model):
+        return f"{model}-tiered", thinking
+    if model == "gemini-3.1-pro":
+        return ("gemini-3.1-pro-low", "low") if thinking in ("low", "minimal") else ("gemini-pro-agent", thinking)
+    return model, thinking
+
+
+class Antigravity:
+    """Models through the signed-in Google accounts, taking turns when one is rate-limited."""
+    URL = "https://daily-cloudcode-pa.googleapis.com/v1internal:{}"
+
+    def __init__(self):
+        if not google_accounts():
+            raise LookupError("not signed in (Models page: Sign in with Google)")
+        self.client = google_client()
+        if not self.client:
+            raise LookupError(f"not signed in: {NO_CLIENT}")
+        self.http = requests.Session()
+        self.idx = 0
+        self.tokens = {}  # refresh token -> (access token, expiry)
+
+    def _token(self, acct):
+        tok, exp = self.tokens.get(acct["refresh_token"], (None, 0))
+        if time.time() > exp - 60:
+            r = self.http.post("https://oauth2.googleapis.com/token", timeout=20, data={
+                "client_id": self.client[0], "client_secret": self.client[1], "grant_type": "refresh_token",
+                "refresh_token": acct["refresh_token"]})
+            if not r.ok:
+                raise http_error(r)
+            tok, exp = r.json()["access_token"], time.time() + r.json().get("expires_in", 3600)
+            self.tokens[acct["refresh_token"]] = (tok, exp)
+        return tok
+
+    def _post(self, acct, method, body, read_timeout=30):
+        fp = acct.get("fingerprint") or {}
+        return self.http.post(self.URL.format(method), timeout=(10, read_timeout), json={"project": acct["project"], **body}, headers={
+            "Authorization": f"Bearer {self._token(acct)}",
+            "User-Agent": fp.get("userAgent", "antigravity/2.0.6 windows/amd64"),
+            "X-Goog-Api-Client": fp.get("apiClient", "google-cloud-sdk vscode_cloudshelleditor/0.1"),
+            "Client-Metadata": json.dumps(fp.get("clientMetadata", {"ideType": "ANTIGRAVITY", "platform": "WINDOWS", "pluginType": "GEMINI"})),
+        })
+
+    def generate(self, contents, model, thinking, tools=None, system=None, **options):
+        """One model turn; returns the reply's parts (text, functionCall, thoughtSignature...)."""
+        accounts = google_accounts()
+        if not accounts:
+            raise RuntimeError("signed out of Google")
+        model, thinking = antigravity_model(model, thinking)
+        for _ in range(len(accounts) * 2):
+            acct = accounts[self.idx % len(accounts)]
+            try:
+                r = self._post(acct, "generateContent", {
+                    "model": model, "request": build_request(contents, tools, system, thinking, **options),
+                    "requestType": "agent", "userAgent": "antigravity", "requestId": f"agent-{uuid.uuid4()}"},
+                    READ_TIMEOUT.get(thinking, 60))
+            except requests.Timeout:
+                raise Overloaded("timed out")
+            if r.status_code == 401:
+                self.tokens.pop(acct["refresh_token"], None)
+                continue
+            if r.status_code == 429:  # this account is rate-limited: the next one
+                self.idx += 1
+                continue
+            if not r.ok:
+                raise http_error(r)
+            return reply_parts(r.json().get("response", {}))
+        raise Overloaded("every Google account is rate-limited", retry_after=60)
+
+    def models(self):
+        """The chat models these accounts can use, for picking on the Models page ("-tiered" ones by their plain names,
+        which antigravity_model adds it back to)."""
+        r = self._post(google_accounts()[0], "fetchAvailableModels", {}, 15)
+        if not r.ok:
+            raise http_error(r)
+        found = r.json().get("models", {})
+        return sorted({re.sub(r"-tiered$", "", k) for k, v in found.items() if isinstance(v, dict) and v.get("supportsThinking")})
+
+
 # name -> class with generate(contents, model, thinking, tools=None, system=None, **options); local_backends.py may add more
-BACKENDS = {"aistudio": AIStudio}
+BACKENDS = {"aistudio": AIStudio, "antigravity": Antigravity}
 
 
 # ---------------------------------------------------------------- any OpenAI-compatible API, with your own key
@@ -444,13 +679,15 @@ def tool_act(steps, screenshot_after=True, fast=False, halt=None):
     return {"result": done, "note": "screenshot taken after the steps is attached", **sent_note}, tool_screenshot()[1]
 
 
-# all from the AI Studio key; local_backends.py can put others in front
-SEARCH_MODELS = [("aistudio", "gemini-3.5-flash-lite", "minimal"), ("aistudio", "gemini-3.8-flash", "low")]
-LOOK_MODELS = [("aistudio", "gemini-3.8-flash", "low"), ("aistudio", "gemini-3.7-flash", "low"),
+# the signed-in Google accounts first (skipped when there are none), then the AI Studio key; local_backends.py can put
+# others in front. Through Google accounts: Flash on high for careful looks and second tries, Flash Lite for quick looks,
+# clicks and search (as accurate on test screens, 2-3x faster)
+SEARCH_MODELS = [("antigravity", "gemini-3.1-flash-lite", "minimal"), ("aistudio", "gemini-3.5-flash-lite", "minimal"), ("aistudio", "gemini-3.8-flash", "low")]
+LOOK_MODELS = [("antigravity", "gemini-3.8-flash", "high"), ("aistudio", "gemini-3.8-flash", "low"), ("aistudio", "gemini-3.7-flash", "low"),
                ("aistudio", "gemini-3.5-flash-lite", "minimal")]
-POINT_MODELS_STRONG = [("aistudio", "gemini-3.8-flash", "low"), ("aistudio", "gemini-3.7-flash", "low")]
+POINT_MODELS_STRONG = [("antigravity", "gemini-3.8-flash", "high"), ("aistudio", "gemini-3.8-flash", "low"), ("aistudio", "gemini-3.7-flash", "low")]
 # where to click: Gemini is trained on the 0-1000 grid; the small models aim about as well, much faster
-POINT_MODELS = [("aistudio", "gemini-3.5-flash-lite", "minimal"), ("aistudio", "gemini-3.1-flash-lite", "minimal"),
+POINT_MODELS = [("antigravity", "gemini-3.1-flash-lite", "minimal"), ("aistudio", "gemini-3.5-flash-lite", "minimal"), ("aistudio", "gemini-3.1-flash-lite", "minimal"),
                 ("aistudio", "gemini-3.8-flash", "low")]
 vision = [None]  # set by Brain: a function(contents) -> parts, for reading the screen
 pointer = [None, None]  # the same, for finding where to click: fast, then strong (when the fast one finds nothing)
@@ -1201,7 +1438,8 @@ TOOLS["photopea"] = (tool_photopea, "Open images (local paths or URLs) in Photop
 
 # ---------------------------------------------------------------- images and files
 IMAGE_DIR = system.PICTURES
-IMAGE_MODELS = [("aistudio", "gemini-3.1-flash-image", None), ("aistudio", "gemini-3-pro-image", None)]  # (not on the free tier)
+IMAGE_MODELS = [("antigravity", "gemini-3.1-flash-image", None), ("aistudio", "gemini-3.1-flash-image", None),
+                ("aistudio", "gemini-3-pro-image", None)]  # (AI Studio's: not on the free tier)
 on_image = [lambda path, caption: None]  # set by the app: shows an image in the chat
 painter = [None]  # set by Brain: a function(contents) -> parts, for image generation
 
@@ -1707,6 +1945,8 @@ class Brain:
         for name, cls in BACKENDS.items():
             try:
                 self.backends[name] = cls()
+            except LookupError:  # not signed in: nothing to say until the user chooses to
+                pass
             except Exception as e:  # e.g. no API key: just skip that backend
                 notify(f"{name} backend unavailable: {e}")
         self.notify = notify

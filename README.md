@@ -160,6 +160,14 @@ keychain (Windows Credential Manager, GNOME Keyring / KWallet), or in a private 
 saved in settings, never shown again, and never sent over plain http to another machine. The voice itself always uses
 Gemini Live.
 
+**Sign in with Google** (Models page, optional): Gemini and Claude through your Google account's Antigravity quota,
+which is much larger than a free AI Studio key's. Add several accounts and they take turns when one hits its limit.
+**Use it at your own risk**: Jarvis signs in the way Google's Antigravity app does, which Google doesn't offer to other
+apps, and Google may limit or suspend accounts used this way. The voice still needs an AI Studio key. Jarvis doesn't ship
+Antigravity's sign-in details: install the [opencode-antigravity-auth](https://www.npmjs.com/package/opencode-antigravity-auth)
+plugin (`npm i -g opencode-antigravity-auth`) and Jarvis reads them from it, or put `ANTIGRAVITY_CLIENT_ID` and
+`ANTIGRAVITY_CLIENT_SECRET` in the env file.
+
 **Local models with [Ollama](https://ollama.com)**: install it, `ollama pull qwen3:8b` (pick a model that supports
 tools), then pick it under **ollama** in the agent models. No key is needed; set `OLLAMA_HOST` if it runs elsewhere.
 

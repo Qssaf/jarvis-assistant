@@ -34,9 +34,41 @@ ScrollPage {
     function modelsOf(name) { const b = page.avail.backends.find(b => b.name === name); return b ? b.models : [] }
     function usableBackends() { return page.avail.backends.filter(b => !b.error || b.models.length).map(b => b.name) }
     readonly property string status: looking ? "Looking up the models you can use…" : avail.backends
-        .filter(b => b.models.length || (b.error && !/no API key|unknown backend/.test(b.error)))
+        .filter(b => b.models.length || (b.error && !/no API key|unknown backend|not signed in/.test(b.error)))
         .map(b => b.models.length ? `${b.name}: ${b.models.length} models` : `${b.name}: ${b.error}`).join(" · ")
     Component.onCompleted: load()
+    Timer {  // while a Google sign-in waits in the browser: notice when it's done
+        interval: 2000; repeat: true; running: !!page.info.google_signing
+        onTriggered: Api.get("/api/models", d => { const was = page.info.google_signing; page.info = d; if (was && !d.google_signing) page.lookUp() })
+    }
+
+    Section {
+        title: "Your Google account"
+        Txt { kind: "small"; Layout.fillWidth: true
+              text: "Sign in with Google for Gemini (and Claude) through your account's Antigravity quota, much more than a free "
+                    + "AI Studio key. It signs in the way Google's Antigravity app does, which Google doesn't offer to other apps: "
+                    + "Google may limit or suspend accounts used like this. Use an account you can afford to lose." }
+        Repeater {
+            model: page.info.google || []
+            RowLayout {
+                required property var modelData
+                Layout.fillWidth: true
+                spacing: 12
+                Rectangle { Layout.preferredWidth: 8; Layout.preferredHeight: 8; radius: 4; color: Theme.green }
+                Txt { text: modelData.email || "Google account"; font.weight: Font.DemiBold; Layout.fillWidth: true }
+                Txt { kind: "small"; visible: modelData.source === "opencode"; text: "from opencode" }
+                IconButton { visible: modelData.source === "jarvis"; symbol: "trash"; tip: "Sign out"
+                             onClicked: Api.post("/api/google/signout", { email: modelData.email }, d => { page.info = d; page.lookUp() }) }
+            }
+        }
+        Txt { kind: "small"; Layout.fillWidth: true; visible: page.info.google_client === false; color: Theme.warm
+              text: "First install the opencode-antigravity-auth plugin (npm i -g opencode-antigravity-auth): Jarvis signs in "
+                    + "with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis's env file." }
+        Pill { visible: page.info.google_client !== false
+               text: page.info.google_signing ? "Waiting for the browser…" : (page.info.google || []).length ? "Add another account" : "Sign in with Google"
+               kind: (page.info.google || []).length ? "" : "primary"; enabled: !page.info.google_signing
+               onClicked: Api.post("/api/google/signin", {}, d => page.info = d, e => Backend.toast(e.error, true)) }
+    }
 
     Section {
         title: "What each job uses"

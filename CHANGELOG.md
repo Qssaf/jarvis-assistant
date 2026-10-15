@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.13.0 — 2026-10-15
+
+### Added
+- **Sign in with Google** (Models page, opt-in): Gemini and Claude models through a Google account's Antigravity quota,
+  far more than a free AI Studio key. Several accounts take turns when one is rate-limited, and accounts signed in with
+  the opencode Antigravity plugin are used too. When signed in, these models come first for every job; without a
+  sign-in they're skipped. It signs in the way Google's Antigravity app does, which Google doesn't offer other apps:
+  Google may limit or suspend accounts used like this, and the page says so. The voice still uses an AI Studio key.
+  Antigravity's sign-in details aren't in Jarvis: they're read from an installed opencode-antigravity-auth plugin, or
+  `ANTIGRAVITY_CLIENT_ID` / `ANTIGRAVITY_CLIENT_SECRET` in the env file.
+
 ## 1.12.0 — 2026-10-15
 
 ### Added
