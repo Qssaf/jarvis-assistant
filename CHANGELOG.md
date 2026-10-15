@@ -11,13 +11,17 @@
   sent each line as its own message.
 - **Faster with a Google account signed in:** background tasks and careful looks used Gemini Flash on "high"
   thinking, 10-35 s per agent step and over a minute for a hard screen (a careful look ran past the voice's 60 s
-  limit). They now use "medium", and the second try at finding a click target "low". A Models page list you set
-  yourself keeps its settings.
+  limit). Background tasks now use "low" (same answers in our tests, 2-3x faster: 3-4 s a step), careful looks
+  "medium" and the second try at finding a click target "low". A Models page list you set yourself keeps its
+  settings.
 - Learning your voice stops at 120 clips of each kind: every few wake-ups it retrained on all of them, minutes of
   full CPU in the middle of a conversation or a game.
 - "Type five jokes" makes them up and types them, without reading them out or asking first; "why is my internet
   slow?" checks with a command instead of giving general advice.
 - The agent no longer reads other apps' private files (a browser's saved site data) to work out what's on screen.
+
+### Changed
+- GitHub releases carry their version's changelog as release notes.
 
 ## 1.13.2 — 2026-10-15
 
