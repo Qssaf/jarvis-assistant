@@ -86,7 +86,7 @@ ScrollPage {
         }
         Toggle { Layout.fillWidth: true; text: "Learn my voice"; hint: "Wake-ups you dismiss teach Jarvis what isn't you"
                  checked: !!page.s.learn_my_voice; onToggled: page.set("learn_my_voice", checked) }
-        Toggle { Layout.fillWidth: true; text: "Echo cancelling"; hint: "Talk over Jarvis on speakers (PipeWire; restart Jarvis to apply)"
+        Toggle { Layout.fillWidth: true; text: "Echo cancelling"; hint: "Keeps the PC's own sound (Jarvis, games, videos, calls) out of the mic, so it isn't heard as you, and you can talk over Jarvis (PipeWire; restart Jarvis to apply)"
                  checked: !!page.s.echo_cancel; onToggled: page.set("echo_cancel", checked) }
     }
 

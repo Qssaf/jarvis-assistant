@@ -133,7 +133,8 @@ check, Jarvis's voice, and how careful it should be. Run it again from Settings.
 - If it cuts you off mid-sentence, raise **Settings → Pause before Jarvis answers**. If it wakes up by itself, raise
   **Wake word sensitivity** a little.
 - On speakers, Jarvis doesn't hear itself while it talks, so start talking a moment after it finishes, or use
-  headphones. Linux with PipeWire can also turn on **Echo cancelling** (Settings, experimental).
+  headphones. Linux with PipeWire can also turn on **Echo cancelling** (Settings, experimental): it takes everything the PC
+  plays (Jarvis, games, videos, calls) out of the mic, so game sound isn't taken for you talking.
 - On Linux, browsers and Electron apps (Discord, VS Code, Spotify...) only show their buttons to Jarvis when Jarvis
   starts them. Ones you opened yourself still work, through the screen, which is a little slower. To always get the
   fast way, start them with `--force-renderer-accessibility` and `ACCESSIBILITY_ENABLED=1`.

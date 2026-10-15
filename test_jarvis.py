@@ -87,6 +87,11 @@ now = time.mktime((2026, 10, 7, 14, 0, 0, 0, 0, -1))
 assert brain.parse_when(in_minutes=20, now=now) == now + 1200
 assert time.localtime(brain.parse_when(at="09:00", now=now)).tm_mday == 8
 assert time.localtime(brain.parse_when(at="2026-12-25 08:00", now=now)).tm_mon == 12
+try:  # a date and time already gone is a mistake to report, not a reminder that goes off at once
+    brain.parse_when(at="2026-10-06 08:00", now=now)
+    raise AssertionError("a past date was accepted")
+except ValueError as e:
+    assert "already passed" in str(e)
 
 # memory and reminder storage (in a temp folder)
 import tempfile
@@ -333,9 +338,9 @@ assert sorted(brain.tool_read_file(t)["folder"]) == ["blob.bin", "notes.txt"] an
 assert brain.toolkit_of("GOOGLE_CLASSROOM_COURSES_LIST") == "google_classroom" and brain.toolkit_of("GMAIL_SEND_EMAIL") == "gmail"
 assert [brain.workspace_slug(a) for a in ("Google Tasks", "google_drive", "google classroom", "GitHub", "fax")] == \
     ["googletasks", "googledrive", "google_classroom", "github", None]  # however the voice model spells the app
-assert all(map(brain.is_read_action, ["GMAIL_FETCH_EMAILS", "GOOGLECALENDAR_EVENTS_LIST", "GITHUB_GET_THE_AUTHENTICATED_USER",
+assert all(map(brain.is_read_action, ["GMAIL_FETCH_EMAILS", "GOOGLECALENDAR_EVENTS_LIST", "GITHUB_GET_THE_AUTHENTICATED_USER", "GMAIL_GET_LABEL",
                                       "GOOGLE_CLASSROOM_COURSE_WORK_LIST", "TRELLO_GET_SEARCH"]))
-assert not any(map(brain.is_read_action, ["GMAIL_SEND_EMAIL", "SLACK_ADD_TO_LIST", "GOOGLETASKS_INSERT_TASK", "GMAIL_REPLY_TO_THREAD",
+assert not any(map(brain.is_read_action, ["GMAIL_SEND_EMAIL", "SLACK_ADD_TO_LIST", "GMAIL_ADD_LABEL_TO_EMAIL", "GOOGLETASKS_INSERT_TASK", "GMAIL_REPLY_TO_THREAD",
                                           "NOTION_SOMETHING_UNKNOWN"]))
 store.set_connector_mode("gmail", "read_only"); store.set_connector_mode("github", "paused"); store.set_connector_mode("trello", "full")
 assert brain.account_block("GMAIL_FETCH_EMAILS") is None and "read-only" in brain.account_block("GMAIL_SEND_EMAIL")
@@ -965,7 +970,12 @@ store.write_json(os.path.join(store.SESSIONS_DIR, "20261001-100000-aaaaaa.json")
                                    {"who": "you", "text": "thanks"}], "agent": []})
 got = brain.tool_recall("photopea")["conversations"]
 assert got[0]["title"] == "Photo editors" and any("photoshop" in l for l in got[0]["lines"]) and any("Photopea" in l for l in got[0]["lines"])
-assert "nothing about" in brain.tool_recall("quantum flux")["result"]
+assert "no past conversation about 'quantum flux'" == brain.tool_recall("quantum flux")["result"]
+# ...or by day ("what did we talk about yesterday?"): that day's conversations and how they started
+that_day = time.strftime("%Y-%m-%d", time.localtime(1.0e9))
+by_day = brain.tool_recall(day=that_day)["conversations"]
+assert by_day[0]["title"] == "Photo editors" and by_day[0]["lines"][0].startswith("you: what's a free photoshop")
+assert brain.tool_recall(day="2026-01-01")["result"] == "no past conversation on 2026-01-01" and "error" in brain.tool_recall()
 
 # selection: what's selected, else what's copied; neither is an error the model can explain
 real_sel = system.selected_text
@@ -999,6 +1009,9 @@ assert len(rs) == 1 and abs(rs[0]["at"] - (now + 6600)) < 1, rs
 events["items"] = []  # cancelled
 jarvis.calendar_pass(cal, now)
 assert store.reminders() == []
+events["items"] = [{"id": "e3", "summary": "Call", "start": {"dateTime": iso(now + 300)}}]  # too soon for a heads-up
+jarvis.calendar_pass(cal, now)
+assert store.reminders() == [] and store.read_json(os.path.join(store.DATA, "calendar.json"), {})["e3"]["reminder"] == ""
 
 # the language: Jarvis speaks the one picked, and still expects English names mixed in
 live.brain = types.SimpleNamespace(accounts={}, app_tools_for=set(), connected=set(), plugin_status=lambda: [], active_app_tools=lambda: {})
@@ -1053,6 +1066,10 @@ assert store.secret("telegram") == "123:abc" and tg.status()["token"] and not tg
 msg = lambda uid, chat, text: {"update_id": uid, "message": {"chat": {"id": chat}, "from": {"first_name": "Sam"}, "text": text}}
 fake_tg.updates = [msg(1, 42, "what's the weather?"), msg(2, 42, f"/start {tg.code}"), msg(3, 42, "what's the weather?"), msg(4, 99, "hi")]
 tg.poll("123:abc")
+for _ in range(200):  # (the task runs on its own thread)
+    if fake_tg.sent and fake_tg.sent[-1][1] == "It's 21°C and sunny.":
+        break
+    time.sleep(0.01)
 assert tg.status()["paired"] == "Sam" and tg.state["offset"] == 5
 assert asked_remote == [(remote.REMOTE_NOTE + "what's the weather?", True)]  # (before pairing: not run; the stranger: ignored)
 assert fake_tg.sent[-1] == (42, "It's 21°C and sunny.") and not any(chat == 99 for chat, _ in fake_tg.sent)
@@ -1061,6 +1078,20 @@ wrong = str((int(tg.code) + 1) % 10 ** 6).zfill(6)
 fake_tg.updates = [msg(5 + i, 7, wrong) for i in range(5)] + [msg(10, 7, tg.code)]  # five wrong codes: that chat can't pair any more
 tg.poll("123:abc")
 assert not tg.status()["paired"]
+# a task from the phone runs on its own: /stop sent while it works gets through and stops it
+release, events_tg = threading.Event(), []
+tb.ask = lambda text, remote=False: events_tg.append("asked") or release.wait(5) and "done"
+tb.interrupt = lambda: events_tg.append("stop") or release.set()
+tg.state.update(chat=42, name="Sam")
+fake_tg.updates = [msg(20, 42, "clean my downloads folder"), msg(21, 42, "/stop")]
+tg.poll("123:abc")  # (returns at once: the task is still waiting)
+assert "stop" in events_tg and (42, "Stopped.") in fake_tg.sent
+for _ in range(200):
+    if fake_tg.sent[-1] == (42, "done"):
+        break
+    time.sleep(0.01)
+assert fake_tg.sent[-1] == (42, "done")
+tg.unpair()
 ab.remote = True
 assert "away from the PC" in brain.Brain.ask_user(ab, "Which Sam?")["error"]
 ab.remote = False
@@ -1124,6 +1155,7 @@ system.shell = lambda command, timeout: (0, "")
 brain.tool_run_command("gio trash ~/Downloads/a.tmp", confirmed=True)
 brain.tool_run_command("ls ~/Downloads")
 assert not brain.risky_command("gio trash --list")
+assert brain.risky_command("find ~/Downloads -name '*.tmp' -delete") and not brain.risky_command("find ~ -name deleted.txt")
 executed.clear()
 ab.run_app_tool("GMAIL_CREATE_EMAIL_DRAFT", {"to": "a@b.c", "confirmed": True})
 ab.run_app_tool("GMAIL_FETCH_EMAILS", {"query": "x"})
@@ -1263,6 +1295,48 @@ async def ask_twice():
     first.cancel()  # (what an interruption does to the quick call)
     return await live._tool(again)
 assert asyncio.run(ask_twice()) == {"answer": "a plane, top left"} and runs == ["look"]
+live.brain = real_brain
+
+# a watch whose looks keep failing (quota gone, no screenshots) stops and says why, instead of trying for an hour
+brain.tool_screenshot = lambda: ({"result": "screenshot"}, b"\xff\xd8")
+brain.pointer[0] = lambda contents: (_ for _ in ()).throw(RuntimeError("no model could answer"))
+brain.WATCH_EVERY, alerts = 0.001, []
+brain.watch_alert[0] = alerts.append
+brain.tool_watch("start", "the build finishing", 1)
+for _ in range(300):
+    if alerts:
+        break
+    time.sleep(0.01)
+assert alerts and alerts[0].startswith("I had to stop watching for the build finishing: no model could answer"), alerts
+brain.pointer[0], brain.tool_screenshot, brain.WATCH_EVERY = real_pointer, real_shot, real_every
+
+# account changes made through Composio's generic tool are logged for "undo that", like direct ones; reads aren't
+logged = []
+real_changed = brain.changed
+brain.changed = logged.append
+srv = types.SimpleNamespace(call=lambda tool, args: {"result": "ok"})
+ob = brain.Brain.__new__(brain.Brain)
+ob.tool_owner, ob.app_tools = {"COMPOSIO_MULTI_EXECUTE_TOOL": (srv, "COMPOSIO_MULTI_EXECUTE_TOOL")}, {}
+store.update_settings({"safety": "full"})
+ob._run_tool("COMPOSIO_MULTI_EXECUTE_TOOL", {"tools": [{"tool_slug": "DISCORD_SEND_MESSAGE", "arguments": {"text": "hi"}},
+                                                       {"tool_slug": "DISCORD_LIST_CHANNELS", "arguments": {}}]})
+assert logged == ['DISCORD_SEND_MESSAGE: {"text": "hi"}'], logged
+store.update_settings({"safety": "ask"})
+brain.changed = real_changed
+
+# a finished answer isn't shared with a later question: the screen or a list may have changed since
+live.brain = types.SimpleNamespace(_run_tool=slow_look, app_tools={})
+runs.clear()
+live.asked = {}
+
+
+async def ask_later():
+    await live._tool(look_call)
+    for v in live.asked.values():
+        v[1] -= 5  # (finished five seconds ago)
+    return await live._tool(again)
+asyncio.run(ask_later())
+assert runs == ["look", "look"]
 live.brain = real_brain
 
 print("ok")

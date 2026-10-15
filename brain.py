@@ -779,7 +779,7 @@ RISKY_COMMAND = re.compile(
     r"chown|kill|pkill|killall|shutdown|reboot|poweroff|halt|systemctl|loginctl|pacman|paru|yay|apt|apt-get|dnf|yum|zypper|"
     r"flatpak|snap|pip|pip3|npm|crontab|sudo|doas|su|trash-put|gio\s+trash(?!\s+--list)|git\s+(?:push|reset|clean|checkout|rebase)|Remove-Item|Move-Item|"
     r"Stop-Process|Stop-Computer|Restart-Computer|Format-Volume|Clear-Content|Set-Content|del|rd|erase|format)\b"
-    r"|(?<![0-9&<>])>(?![&>]?\s*/dev/null)|\|\s*(?:ba|z)?sh\b", re.I | re.M)
+    r"|(?<![0-9&<>])>(?![&>]?\s*/dev/null)|\|\s*(?:ba|z)?sh\b|\s-delete\b", re.I | re.M)
 
 
 def risky_command(command):
@@ -1195,9 +1195,12 @@ def parse_when(in_minutes=None, at=None, now=None):
     at = str(at or "").strip().replace("T", " ")
     for fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S"):
         try:
-            return time.mktime(time.strptime(at, fmt))
+            when = time.mktime(time.strptime(at, fmt))
         except ValueError:
-            pass
+            continue
+        if when < now - 60:
+            raise ValueError(f"{at} has already passed (it's {time.strftime('%Y-%m-%d %H:%M', time.localtime(now))} now)")
+        return when
     try:
         hm = time.strptime(at, "%H:%M")
     except ValueError:
@@ -1218,9 +1221,12 @@ def tool_list_reminders():
                            **({"repeat": r["repeat"]} if r.get("repeat") else {})} for r in store.reminders()]}
 
 
-def tool_recall(query):
-    found = store.recall(query)
-    return {"conversations": found} if found else {"result": f"nothing about '{query}' in past conversations"}
+def tool_recall(query="", day=""):
+    if not query.strip() and not day:
+        return {"error": "give words to look for, a day (YYYY-MM-DD), or both"}
+    found = store.recall(query, day=day)
+    return {"conversations": found} if found else {"result": "no past conversation " + " and ".join(
+        ([f"about '{query}'"] if query.strip() else []) + ([f"on {day}"] if day else []))}
 
 
 def tool_selection():
@@ -1357,17 +1363,20 @@ def tool_watch(action, what="", minutes=10):
     w = watching["now"] = {"what": what, "stop": threading.Event()}
 
     def run():
-        until = time.time() + minutes * 60
+        until, failures = time.time() + minutes * 60, 0
         while not w["stop"].is_set() and time.time() < until:
             try:
                 image = tool_screenshot()[1]
                 parts = pointer[0]([{"role": "user", "parts": [
                     {"inlineData": {"mimeType": "image/jpeg", "data": base64.b64encode(image).decode()}},
                     {"text": f"Is this on the screen right now: {what}? Answer only YES or NO."}]}])
-                seen = "".join(p.get("text", "") for p in parts if not p.get("thought")).strip().upper().startswith("YES")
-            except Exception as e:  # (a busy model or a failed screenshot: try again next time)
+                seen, failures = "".join(p.get("text", "") for p in parts if not p.get("thought")).strip().upper().startswith("YES"), 0
+            except Exception as e:  # (a busy model or a failed screenshot: try again next time, but not forever)
                 print(f"[watch] {e}", flush=True)
-                seen = False
+                seen, failures = False, failures + 1
+                if failures >= 5:
+                    watch_alert[0](f"I had to stop watching for {what}: {str(e)[:150]}")
+                    break
             if seen:
                 watch_alert[0](f"It's on the screen now: {what}.")
                 break
@@ -1417,8 +1426,9 @@ TOOLS.update({
                      "'YYYY-MM-DD HH:MM' or 'HH:MM'; repeat it daily, on weekdays or weekly if they ask (\"every morning at 8\").",
                      obj(text={"type": "string"}, in_minutes={"type": "number"}, at={"type": "string"},
                          repeat={"type": "string", "enum": ["daily", "weekdays", "weekly"]}, optional=("in_minutes", "at", "repeat"))),
-    "recall": (tool_recall, "Search past conversations with the user (\"what did I ask you about last week?\", \"what was "
-               "that site you told me about?\"): when, and the lines that mention it.", obj(query={"type": "string"})),
+    "recall": (tool_recall, "Search past conversations with the user (\"what was that site you told me about?\"): when, and "
+               "the lines that mention it. day (YYYY-MM-DD) for one day's conversations (\"what did we talk about yesterday?\"), "
+               "with or without words to look for.", obj(query={"type": "string"}, day={"type": "string"}, optional=("query", "day"))),
     "selection": (tool_selection, "The text the user has selected (highlighted) right now, and the clipboard: for \"summarise / "
                   "translate / explain / rewrite this\" about text they selected or copied.", obj()),
     "media": (tool_media, "Music and video: play_pause, next, previous, or now_playing (what's playing, by whom, in which app).",
@@ -1888,8 +1898,10 @@ def toolkit_of(slug):
 
 def is_read_action(slug):
     # ponytail: verb heuristic on the action's name; anything not clearly a read counts as a change (the safe side)
-    words = set(slug.upper()[len(toolkit_of(slug)) + 1:].split("_"))
-    return bool(words & READ_VERBS) and not words & WRITE_VERBS
+    words = slug.upper()[len(toolkit_of(slug)) + 1:].split("_")
+    if words[0] in READ_VERBS or words[0] in WRITE_VERBS:  # verb first (GET_LABEL: a read; ADD_LABEL_TO_EMAIL: a change)
+        return words[0] in READ_VERBS
+    return bool(set(words) & READ_VERBS) and not set(words) & WRITE_VERBS  # verb last (EVENTS_LIST)
 
 
 def account_block(slug):
@@ -1903,8 +1915,9 @@ def account_block(slug):
     return None
 
 
-NEEDS_YES = ("not done: this changes the account. Tell the user in a few words exactly what you'll do, and call it again with "
-             "confirmed: true only once they say yes (or if they asked for exactly this, e.g. a message they dictated).")
+NEEDS_YES = ("NOT DONE: nothing was sent or changed yet, because this changes the account. Tell the user in a few words exactly "
+             "what you'll do and ask; call it again with confirmed: true once they say yes (or now, if they asked for exactly this, "
+             "e.g. a message they dictated). Never say it's done before a call succeeds.")
 
 
 def needs_yes(slug):
@@ -2190,10 +2203,9 @@ class Brain:
         def calendar_today():
             if "googlecalendar" not in self.connected:
                 return "not connected"
-            day = time.strftime("%Y-%m-%dT00:00:00%z")
-            day = day[:-2] + ":" + day[-2:]
-            end = time.strftime("%Y-%m-%dT23:59:59%z")
-            end = end[:-2] + ":" + end[-2:]
+            from datetime import datetime
+            midnight = datetime.now().astimezone().replace(hour=0, minute=0, second=0, microsecond=0)
+            day, end = midnight.isoformat(), midnight.replace(hour=23, minute=59, second=59).isoformat()
             data = self.app_data("GOOGLECALENDAR_EVENTS_LIST", {"calendarId": "primary", "timeMin": day, "timeMax": end, "singleEvents": True})
             if data is None:
                 return None
@@ -2385,6 +2397,10 @@ class Brain:
         elif name in self.tool_owner:
             srv, tool = self.tool_owner[name]
             out = srv.call(tool, {k: v for k, v in args.items() if not (k == "confirmed" and tool == "COMPOSIO_MULTI_EXECUTE_TOOL")}), None
+            if tool == "COMPOSIO_MULTI_EXECUTE_TOOL" and "error" not in out[0]:  # (for "undo that", like the direct tools)
+                for t in args.get("tools") or []:
+                    if not is_read_action(t.get("tool_slug", "")):
+                        changed(f"{t.get('tool_slug')}: {json.dumps(t.get('arguments', {}), ensure_ascii=False)[:300]}")
         else:
             return {"error": f"unknown tool {name}"}, None
         if name not in TOOLS or name in OUTSIDE_CONTENT:  # web pages, emails, the screen: anyone could have written them

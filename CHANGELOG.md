@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.13.2 — 2026-10-15
+
+### Fixed
+- **Echo cancelling covers everything the PC plays** (games, videos, calls), not only Jarvis's voice: PipeWire's echo
+  canceller now uses the speakers' output as its reference, so game sound isn't taken for the user talking.
+- "How many unread emails?" was refused in read-only mode and logged as a change: an action's own verb now decides
+  (GMAIL_GET_LABEL reads a label).
+- The voice no longer says an email was sent when the safety check held it back: the refusal reads "NOT DONE", and a
+  tool that returned an error never counts as done.
+- "Type hello world" types it instead of saying it; "mute my mic" mutes the PC's microphone instead of ending the
+  conversation; locking the screen and other quick PC actions run without "shall I?"; "take notes" starts at once
+  (asking first lost the lecture's start); "download X" downloads it instead of opening the page.
+- "What did we talk about yesterday?" looks up that day's conversations (`recall` takes a day).
+- Jarvis on your phone: `/stop` works while a task runs (tasks no longer block reading new messages).
+- Account changes made through Composio's general tool are in the change log for "undo that".
+- A screen watch whose looks keep failing (a used-up quota) stops and says why instead of trying for an hour.
+- Shared voice answers are reused only while the first is still running, never a finished one (a stale screen).
+- `find ... -delete` asks first like `rm`; a reminder for a date that's already passed is refused, not fired at once.
+- A self-update restart cleans up like a normal exit (the echo canceller was left loaded twice).
+- Today's calendar range uses a real UTC offset on Windows too.
+
+### Added
+- `evals/voice_eval.py`: ~110 real-life requests typed to the real voice model, with real reads from connected accounts
+  and simulated changes behind the real safety gates.
+
 ## 1.13.1 — 2026-10-15
 
 ### Added

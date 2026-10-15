@@ -387,17 +387,21 @@ def save_plugins(p):
 SESSIONS_DIR = os.path.join(DATA, "sessions")
 
 
-def recall(query, limit=5):
+def recall(query="", limit=5, day=""):
     """Past conversations about something, newest first: when, the title, and the lines that mention it (with what was
-    said just before and after, so a reply makes sense)."""
-    words = [w for w in query.lower().split() if len(w) > 2] or [query.lower().strip()]
+    said just before and after, so a reply makes sense). day ("YYYY-MM-DD"): only that day's, and without a query, how
+    each of them started."""
+    words = [w for w in query.lower().split() if len(w) > 2] or ([query.lower().strip()] if query.strip() else [])
     found = []
     for name in os.listdir(SESSIONS_DIR) if os.path.isdir(SESSIONS_DIR) else []:
         s = read_json(os.path.join(SESSIONS_DIR, name), None) if name.endswith(".json") else None
         if not s:
             continue
+        if day and day not in {time.strftime("%Y-%m-%d", time.localtime(s.get(k) or 0)) for k in ("created", "updated")}:
+            continue
         talk = [m for m in s.get("messages", []) if m.get("who") in ("you", "jarvis")]
-        hits = [i for i, m in enumerate(talk) if all(w in str(m.get("text", "")).lower() for w in words)]
+        hits = [i for i, m in enumerate(talk) if all(w in str(m.get("text", "")).lower() for w in words)] if words else \
+            list(range(min(len(talk), 2)))
         if hits:
             near = sorted({j for i in hits[:3] for j in (i - 1, i, i + 1) if 0 <= j < len(talk)})
             found.append({"when": time.strftime("%a %d %b %Y, %H:%M", time.localtime(s.get("updated", 0))), "updated": s.get("updated", 0),

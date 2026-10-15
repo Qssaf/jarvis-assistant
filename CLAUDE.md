@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 .venv/bin/python jarvis.py --no-voice # run without the microphone; the window opens
 jarvis --listen                       # tell a running instance to start listening (--region: ask about a dragged area)
 EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py [case ...]  # agent eval (spends model requests)
+.venv/bin/python evals/voice_eval.py [case-prefix ...]   # ~110 real-life requests to the voice model (one Live session each)
 ```
 
 - CI (`.github/workflows/tests.yml`) runs lint and tests on Linux and Windows. `release.yml` builds `Jarvis.exe` with
@@ -19,6 +20,10 @@ EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py
 - `evals/agent_eval.py` runs the real `Brain.ask` on real models against simulated tools (nothing on the PC or in
   accounts is touched) and checks the moves the agent made. Run it before and after prompt or tool changes. Keep eval
   harnesses in the repo, not a temp dir.
+- `evals/voice_eval.py` types real-life requests to the real voice model with the real prompt, memory and accounts:
+  reads run for real, changes and screen/PC actions are simulated behind the real safety gates, and every `store`
+  write and `system` action function is patched to raise first. Its transcripts hold personal data: `EVAL_OUT` goes
+  outside the repo. Run it after `LIVE_PROMPT` or voice tool changes.
 
 - There's no test framework: `test_jarvis.py` is one script of plain `assert`s run top to bottom, so "one test" means
   running the relevant snippet in `python -c`. It points `XDG_CONFIG_HOME`/`XDG_DATA_HOME`/`APPDATA` at a temp dir
@@ -65,6 +70,9 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   `_cancel_quick` sets it and cancels the task. Voice acts check only their halt, agent acts only the global
   `interrupt_act` flag (Stop / New conversation), so cutting the voice off never stops the agent and a superseded
   call's late cancel never stops the new one. Never cancel asyncio tasks from another thread: use `call_soon_threadsafe`.
+  A query tool asked again with the same arguments while the first is still running (noise "interrupting" makes the
+  model re-ask) shares that run's answer (`asked`); a finished one is shared for 3 s at most, never longer (a screen or
+  a list may have changed).
 - `Brain.ask` holds `ask_lock`: voice and phone tasks take turns over the shared history and screen.
 
 **Tools.** `brain.TOOLS` maps a name to `(function, description, JSON schema)`. A function returns a dict, or
@@ -123,9 +131,15 @@ screenshot. The voice model can't see images, so `act` from voice refuses coordi
 - Messaging on screen relies on `act`'s `expect` step (a vision yes/no that stops the plan) and on `locate` refusing
   near-miss names: together they keep a misheard name from sending a message to the wrong chat.
 
+**Echo cancelling** (`echo_cancel`, Linux/PipeWire): `start_echo_cancel` loads `module-echo-cancel` in `monitor.mode`, so
+the reference is everything the default output plays (games, calls, Jarvis), not only Jarvis's voice; the mic reads
+`jarvis-ec-source` and `Speaker.echo_cancelled` turns off the half-duplex mic gate. The module lives as long as its
+`pw-cli` process: `atexit` stops it, so a restart must run the exit handlers (`restart_soon` does before `execv`).
+
 **Phone.** `remote.py` long-polls the user's own Telegram bot (token in the keychain as `telegram`) and answers only the
 chat paired with the code shown in Settings (five wrong codes and a chat is ignored). Its tasks run `Brain.ask(...,
-remote=True)`: `ask_user` refuses (the user can't answer out loud). `Brain.ask_lock` makes voice and phone tasks take turns.
+remote=True)` on their own thread, so `/stop` is still read while one works; `ask_user` refuses (the user can't answer
+out loud). `Brain.ask_lock` makes voice and phone tasks take turns.
 
 **State.** `store.py` keeps settings (unknown keys dropped, types coerced, `*_models`, `language`, `safety`... validated),
 plugins, `memory.md`, reminders (optionally repeating: `next_time`), routines, the change log and sessions under

@@ -100,11 +100,18 @@ class Telegram:
         self.notify(f"📱 From your phone: {text}")
         if self.brain.ask_lock.locked():
             self.send(token, chat, "Jarvis is busy with another task; yours starts when it's done.")
+        # (off the polling thread: while it runs, /stop and new messages still get read)
+        threading.Thread(target=self._task, args=(token, chat, text), daemon=True).start()
+
+    def _task(self, token, chat, text):
         try:
             reply = self.brain.ask(REMOTE_NOTE + text, remote=True)
         except Exception as e:
             reply = f"The task failed: {e}"
-        self.send(token, chat, reply)
+        try:
+            self.send(token, chat, reply)
+        except requests.RequestException as e:
+            print(f"[telegram] couldn't send the reply: {e}", flush=True)
 
     def send(self, token, chat, text):
         for i in range(0, max(len(text), 1), LIMIT):
