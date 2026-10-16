@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.13.5 — 2026-10-16
+
+### Fixed
+- **Jarvis no longer hears and answers itself** with echo cancelling on. The canceller leaves a faint copy of Jarvis's
+  voice in the mic (about 1/200 as loud as you); Gemini heard it as you talking, cut itself off and replied to its own
+  words, over and over. While Jarvis talks, the mic now sends silence unless you're clearly talking, so you can still
+  interrupt it.
+
 ## 1.13.4 — 2026-10-15
 
 ### Fixed

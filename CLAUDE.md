@@ -134,7 +134,8 @@ screenshot. The voice model can't see images, so `act` from voice refuses coordi
 
 **Echo cancelling** (`echo_cancel`, Linux/PipeWire): `start_echo_cancel` loads `module-echo-cancel` in `monitor.mode`, so
 the reference is everything the default output plays (games, calls, Jarvis), not only Jarvis's voice; the mic reads
-`jarvis-ec-source` and `Speaker.echo_cancelled` turns off the half-duplex mic gate. The module lives as long as its
+`jarvis-ec-source` and `Speaker.echo_cancelled` swaps the half-duplex mic gate for a level gate: while Jarvis talks,
+`feed` sends silence unless the user is clearly talking (the canceller leaves a faint echo Gemini hears as the user). The module lives as long as its
 `pw-cli` process: `atexit` stops it, so a restart must run the exit handlers (`restart_soon` does before `execv`).
 
 **Phone.** `remote.py` long-polls the user's own Telegram bot (token in the keychain as `telegram`) and answers only the

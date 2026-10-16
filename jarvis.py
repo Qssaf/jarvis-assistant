@@ -13,7 +13,7 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.13.4"
+VERSION = "1.13.5"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
@@ -340,6 +340,10 @@ class Live:
         self.level = min(1.0, max(0.0, (level - self.floor) / 2500))
         if level > max(250.0, 4 * self.floor):  # the user is talking (Gemini only transcribes at the end of a long request)
             self.voice_at = time.time()
+        elif time.time() <= self.speaker.until + 0.5 and time.time() - self.voice_at > 1.0:
+            # Jarvis is talking: echo cancelling leaves a faint copy of its voice (peaks ~50 against ~10000 for the user),
+            # which Gemini heard as the user and answered, over and over. Only clear speech (and the second after it) gets through
+            frame = np.zeros_like(frame)
         s, data = self.session, frame.tobytes()
         if s is None:  # still connecting: keep the audio, or the start of the request ("open You-") is lost
             self.backlog.append(data)

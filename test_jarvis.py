@@ -157,6 +157,16 @@ live.voice_at = 0.0
 live.feed(frame(400))
 assert live.voice_at == 0.0
 
+# while Jarvis talks with echo cancelling on, the faint echo left over goes to Gemini as silence (it heard itself and
+# kept answering itself); the user talking over it still gets through, and so does the second after
+live.speaker.echo_cancelled, live.speaker.until, live.floor, live.voice_at = True, time.time() + 5, 3.0, 0.0
+live.backlog.clear()
+live.feed(frame(50))
+live.feed(frame(3000))
+live.feed(frame(50))
+assert [any(np.frombuffer(b, np.int16)) for b in live.backlog] == [False, True, True], "echo gate"
+live.speaker.echo_cancelled, live.speaker.until = False, 0.0
+
 # keys: common names become xkb's, several chains run in order; only portal errors are blamed on the permission prompt
 assert system.key_chains("Enter control+a esc") == [["Return"], ["ctrl", "a"], ["Escape"]]
 brain.focus_launched = lambda: None
