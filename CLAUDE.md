@@ -35,7 +35,9 @@ EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py
 - In a fresh config dir, write `{}` to `<config>/jarvis/plugins.json` first. Otherwise the default Composio plugin
   starts an OAuth sign-in and opens the user's browser. Set `PYTHON_KEYRING_BACKEND=keyring.backends.fail.Keyring` to
   keep test keys out of the real keychain.
-- The log uses `\r` progress bars on first start (wake-word model downloads), so read it with `tr '\r' '\n'`.
+- `jarvis.py` sets `TQDM_DISABLE=1`: tqdm's `\r` bars (model downloads, learning the wake word) used to land mid-line
+  and hide `[you]`/`[jarvis]` lines. Older logs still have them: read those with `tr '\r' '\n'` and never drop lines
+  containing `%|` (the text after the bar is a real log line).
 - Tests should use the real objects (e.g. `jarvis.Speaker()`) rather than hand-made fakes: a fake with an old
   attribute once hid a crash that killed voice after the first wake word. Tests that build `Brain.__new__` or
   `Live.__new__` set the attributes they need by hand (`ask_lock`, `remote`, `quick_tasks` as a dict...): a new
@@ -77,7 +79,7 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
 - `Brain.ask` holds `ask_lock`: voice and phone tasks take turns over the shared history and screen.
 
 **Tools.** `brain.TOOLS` maps a name to `(function, description, JSON schema)`. A function returns a dict, or
-`(dict, jpeg_bytes)` to attach a screenshot. `briefing`, `classroom_due`, `drive_file`, `ask_user` and
+`(dict, jpeg_bytes)` to attach a screenshot. `briefing`, `classroom_due`, `classroom_announcements`, `drive_file`, `ask_user` and
 `account_settings` (entries with `None`) are Brain methods dispatched in `Brain._run_tool`. Results from outside
 sources (`OUTSIDE_CONTENT`, accounts, plugins) get the `UNTRUSTED` note. To add a tool: put it in `TOOLS`, in
 `LIVE_TOOLS` if the voice model should run it directly (`QUERY_TOOLS` if its result must be spoken), and in

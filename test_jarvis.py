@@ -410,6 +410,16 @@ assert day["weather"].startswith("couldn't check") and day["unread_emails"] == "
 assert [x.split(" (")[0] for x in day["classroom_due_this_week_not_turned_in"]] == ["Lab"]
 b.app_data = lambda slug, args: None
 assert b.briefing()["classroom_due_this_week_not_turned_in"].startswith("couldn't check")
+# announcements: every course in one call, newest first, by the course's full name; a course that failed is named
+POSTS = {"c1": {"announcements": [{"text": "Quiz moved", "updateTime": "2026-10-10T08:00:00Z"}]},
+         "c2": {"announcements": [{"text": "Lab tonight", "updateTime": "2026-10-12T08:00:00.5Z"}]}}
+COURSES = {"courses": [{"id": "c1", "name": "MAT1", "section": "Calculus 3"}, {"id": "c2", "name": "CS1"}, {"id": "c3", "name": "EN1"}]}
+b.app_data = lambda slug, args: COURSES if slug == "GOOGLE_CLASSROOM_COURSES_LIST" else POSTS.get(args["courseId"])
+news = b.classroom_announcements()
+assert [(a["course"], a["text"]) for a in news["announcements"]] == [("CS1", "Lab tonight"), ("MAT1 - Calculus 3", "Quiz moved")]
+assert news["couldnt_check"] == ["EN1"] and b.classroom_announcements(1)["announcements"][0]["text"] == "Lab tonight"
+b.app_data = lambda slug, args: None
+assert b.classroom_announcements() == {"error": "couldn't reach Google Classroom"}
 brain.requests.get = real_get
 # deadline reminders: set for work not turned in, cancelled once it is
 b.app_data = lambda slug, args: CLASS.get(slug)
@@ -512,6 +522,18 @@ config = live._config()
 assert 'Call the user "Q"' in config.system_instruction and "{ADDRESS}" not in config.system_instruction
 assert any(d.name == "act" and "expect" in str(d.parameters_json_schema) for d in config.tools[0].function_declarations)
 store.set_memory("")
+# what Jarvis sent in earlier conversations reaches a new voice session, so a joke isn't sent again after a restart
+real_sessions, jarvis.sessions = jarvis.sessions, store.Sessions()
+jarvis.sessions.dir = tempfile.mkdtemp()
+jarvis.sessions.add({"who": "you", "text": "type a dark joke"})
+jarvis.sessions.add({"who": "jarvis", "text": "Sent: 'the one about the garden'"})
+jarvis.sessions.add({"who": "jarvis", "text": "Here you are."})
+jarvis.sessions.new()
+assert jarvis.sessions.sent() == ["'the one about the garden'"]
+assert "never send one of these again" in live._config().system_instruction and "- 'the one about the garden'" in live._config().system_instruction
+jarvis.sessions = real_sessions
+
+assert os.environ["TQDM_DISABLE"] == "1"  # (tqdm's \r bars hid whole conversations in the log)
 
 # the prompts describe this computer, and nothing personal or private ships
 prompt = brain.Brain._system(None)
@@ -773,6 +795,11 @@ assert brain.tool_focus_window("Discord") == {"error": "no window matching Disco
 assert brain.tool_close_window("kcalc") == {"error": "no window matching kcalc"}
 system._kdo = lambda *args: "org.kde.kcalc"
 assert brain.tool_focus_window("kcalc") == {"result": "focused kcalc"}
+# a quote in a window title broke kdotool's KWin script (5 s, then "Error: Timed out"), which counted as focused
+searched = []
+system._kdo = lambda *args: searched.append(args[1]) or "Error: Timed out waiting for KWin script completion"
+assert brain.tool_focus_window('vesktop: Discord | "Forum" | `x`') == {"error": 'no window matching vesktop: Discord | "Forum" | `x`'}
+assert '"' not in searched[0] and "`" not in searched[0] and re.search(searched[0], 'Discord | "Forum" | `x`', re.I)
 assert brain.tool_close_window(" ") == {"error": "no window name given"}  # (an empty name would match every window)
 assert system._find_windows("") == []  # (X11 and Windows: close_window("") closed every window)
 system.KDE, system.WAYLAND, system.have, system._kdo = real_window
@@ -859,13 +886,29 @@ async def watch_after_stop():
     live.primed, live.stopped, live.working, live.running, live.question, live.waiting, live.mic = False, True, False, 0, None, False, False
     live.last = live.last_msg = live.voice_at = now - 20
     live.speaker = types.SimpleNamespace(until=0.0, busy=lambda: False, stop=lambda: None)
-    live.inflight = {"text": None, "heard": "hello", "since": now - 20, "tool": False, "answered": False, "recovered": False}
+    live.inflight = {"text": None, "heard": "what's the weather like today", "since": now - 20, "tool": False, "answered": False, "recovered": False}
     watcher = asyncio.create_task(live._watch())
     await asyncio.sleep(0.6)
     alive = not watcher.done()
     watcher.cancel()
     return alive
 assert asyncio.run(watch_after_stop()) and live.inflight is None
+
+# a stray word Gemini rightly ignored ("real", a game's noise) isn't a dropped session: no reconnect, no re-ask
+recovering, real_recover = [], live._recover
+live._recover = lambda why: recovering.append(why) or asyncio.sleep(0)
+live.stopped = False
+async def watch_stray():
+    now = time.time()
+    live.last = live.last_msg = live.voice_at = now - 20
+    live.inflight = {"text": None, "heard": " real", "since": now - 20, "tool": False, "answered": False, "recovered": False}
+    watcher = asyncio.create_task(live._watch())
+    await asyncio.sleep(0.6)
+    alive = not watcher.done()
+    watcher.cancel()
+    return alive
+assert asyncio.run(watch_stray()) and live.inflight is None and recovering == []
+live._recover = real_recover
 
 # Stop pressed just as the task asks its question: it isn't asked, and the mic stays off
 asked_voice.clear()

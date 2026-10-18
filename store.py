@@ -471,6 +471,14 @@ class Sessions:
                 out.append({**summary, "match": (hits[0] if hits else s["title"])[:160]})
         return sorted(out, key=lambda s: -s["updated"])
 
+    def sent(self, limit=15):
+        """What Jarvis said it typed and sent lately (its "Sent: ..." lines) in the newest conversations, oldest first: a
+        new voice session sees them, so it doesn't send the same joke again."""
+        names = sorted(n for n in os.listdir(self.dir) if n.endswith(".json"))[-10:]  # (ids start with the date)
+        out = [m["text"][5:].strip() for n in names for m in (read_json(os.path.join(self.dir, n), None) or {}).get("messages", [])
+               if m.get("who") == "jarvis" and str(m.get("text", "")).startswith("Sent:")]
+        return out[-limit:]
+
     def get(self, sid):
         s = read_json(self._path(sid), None)
         if not s:

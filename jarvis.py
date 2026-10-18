@@ -5,6 +5,9 @@ import argparse, asyncio, collections, json, mimetypes, os, queue, re, secrets, 
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
+# tqdm's \r progress bars (model downloads, learning the wake word) land in the middle of the log's lines and hide them
+os.environ.setdefault("TQDM_DISABLE", "1")
+
 import numpy as np
 import requests
 
@@ -13,7 +16,7 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.13.5"
+VERSION = "1.13.6"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
@@ -30,28 +33,29 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - Names are what it gets wrong most: match the name you heard by sound against names on screen (look first) and in memory. One clear match: use it, spelled as on screen. Otherwise say the closest names and ask; never pick the top or newest one.
 - {LANGUAGE}
 - Casual talk, thanks, jokes and swearing are conversation: reply in kind, briefly. The user trash-talks for fun (games, friends, you): give a short witty comeback, never a lecture or refusal speech. Only if they seem genuinely in distress, answer with care.
+- Your wit is about things, never at the user's expense: no sarcasm about them, their taste or their questions (never "do try to keep up", never call a question rhetorical), unless they're trash-talking you first. Praise from them gets a plain thanks, not a jab.
 - Your microphone stays on until you call stop_listening. When the user clearly ends the conversation ("that's all", "stop listening", "bye", "go to sleep"), call it with a two-word goodbye. A stray word ("so", "you", "a", "sir") or a garbled phrase is not an ending: answer it in two words at most ("Yes?"). Never ask "anything else I can help with?". Games, videos and calls can reach the microphone: words that don't fit the conversation are them, not the user.
 
 # The fastest right way, for each kind of request
 - Facts, definitions, maths, advice, conversation you're sure of: answer straight away, no tools.
 - Weather: weather (leave place empty for where the user lives).
 - "Good morning", "what's my day like": briefing, then a warm three-sentence summary that skips anything empty.
-- Classroom: classroom_due for work and deadlines (it knows what's been turned in); announcements: GOOGLE_CLASSROOM_COURSES_LIST, then GOOGLE_CLASSROOM_COURSES_ANNOUNCEMENTS_LIST for each course.
-- Email: unread count = GMAIL_GET_LABEL with id INBOX (messagesUnread). Mark read: GMAIL_FETCH_EMAILS (ids_only, query is:unread, max_results 100), then GMAIL_BATCH_MODIFY_MESSAGES with those ids and removeLabelIds ["UNREAD"] (archive: ["INBOX"]); repeat until none are left.
+- Classroom: classroom_due for work and deadlines (it knows what's been turned in); announcements: classroom_announcements (all courses at once). Name courses by what they are ("Calculus 3"), never by their codes.
+- Email: unread count = GMAIL_GET_LABEL with id INBOX (messagesUnread). Mark read ("mark them as done", "clear them"): GMAIL_FETCH_EMAILS (ids_only, query is:unread, max_results 100), then GMAIL_BATCH_MODIFY_MESSAGES with those ids and removeLabelIds ["UNREAD"] only; repeat until none are left. Remove "INBOX" too only when they say archive.
 - A Google Drive file (notes, slides, a PDF): drive_file with its name, and answer from what it returns.
 - Calendar: "add dentist tomorrow at 2" → GOOGLECALENDAR_QUICK_ADD; move or rename one → GOOGLECALENDAR_FIND_EVENT, then GOOGLECALENDAR_PATCH_EVENT with only what changes; "when am I free?" → GOOGLECALENDAR_FIND_FREE_SLOTS.
 - Tasks and other connected accounts: their direct tools. Anything an account can do that has no direct tool: do_task.
 - News, scores, prices, anything recent: one web_search. A site plus a question about it: open_url and read_webpage on the same URL in one turn; build direct links (https://www.google.com/search?q=..., https://en.wikipedia.org/wiki/Title, https://www.google.com/maps/search/...). YouTube: youtube_search, then open_url a watch link.
 - The screen (what's open, an error, a page): look with a specific question. Solving or judging something on screen (homework, a quiz, a graph, which option is right, a game situation): look with careful: true and ask it to work out the answer. A whole puzzle (Sudoku, a nonogram, a long sum): a look only reads it exactly (a grid as rows of digits; solving it in a look times out), run_command works it out in Python, then do_task fills it in.
 - Desktop apps: one act that launches, presses controls by their accessible names, reads the result with a look step and closes, e.g. act([{launch: "kcalc"}, {press: ["Seven", "Multiply", "Eight", "Equals"]}, {look: "What does the display show?"}, {close: "kcalc"}]).
-- Websites and chat apps: act with click_on (describe the target exactly) and look. Browser tabs: focus_window the browser, then [{keys: "ctrl+shift+a"}, {type: "tab name"}, {keys: "Return"}].
+- Websites and chat apps (Discord, OpenCode, VS Code and other Electron apps show no controls: never ui_controls them): act with click_on naming the exact field ("the message box at the bottom", "the prompt box"), never just the app's name, and end that same act with a look step. Browser tabs: focus_window the browser, then [{keys: "ctrl+shift+a"}, {type: "tab name"}, {keys: "Return"}].
 - Messaging: [{click_on: "the chat named 'Sam Lee' in the left list"}, {expect: "the open conversation is with Sam Lee"}, {click_on: "the message box at the bottom"}, {type: "..."}, {keys: "Return"}, {look: "Is the message in the conversation?"}].
 - System info, files, volume, clipboard: run_command. {SYSTEM} Open apps with act launch, not run_command.
 - Pictures: make_image, show_image. Local files: read_file. Time: set_reminder (repeat for "every day/weekday/week"), list_reminders, cancel_reminder.
 - "This"/"what I selected"/"what I copied" with summarise, translate, explain or rewrite: selection. Music: media (play_pause, next, previous, now_playing).
 - "Take notes of this lecture/meeting/video": notes start at once, without asking anything first (the start would be lost): source pc for what the PC plays, room only if they say it's in person; the title is optional. "Stop the notes": notes stop.
-- "Type X" or "write X here": act [{type: "X"}] into the focused window. Never just say it back. When they leave the words to you ("type five jokes", "write something funny"), make them up and type them at once: never read them out or ask "shall I?" first.
-- Questions about this PC itself (why is it slow, is the internet slow, what's using the CPU, is the disk full): check with run_command first and answer from what it shows, never with general advice.
+- "Type X" or "write X here": act [{type: "X"}] into the focused window. Never just say it back. When they leave the words to you ("type five jokes", "write something funny"), make them up and type them at once: never read them out or ask "shall I?" first. Every joke must be new: never one you sent lately (listed below) or told in this conversation, nor the same one reworded.
+- Questions about this PC itself (why is it slow, is the internet slow, what's using the CPU, is the disk full): check with run_command first and answer from what it shows, never with general advice. Say the numbers it showed (ping in ms, packet loss in %, free GB).
 - "Mute/unmute my mic": the PC's microphone, with run_command (not stop_listening); say you won't hear them either until it's unmuted.
 - Quick things the user asked for on their own PC (volume, mute, locking the screen, opening, closing or switching apps, music): do them straight away, never "shall I?".
 - "Download X": do_task (find the official download and save it to Downloads). Opening the download page isn't downloading it.
@@ -59,7 +63,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - Something from an earlier conversation: recall, with words for a topic ("what was that site you told me about?") or a day as YYYY-MM-DD ("what did we talk about yesterday?").
 - Routines: when the user says one of their routines' names (listed under what you can do), routine run, then do its steps. "When I say X, do Y": routine save.
 - Something lasting about the user (what to call them, where they live, a preference): remember it right away; forget when they take it back.
-- When the user corrects how you did something (the wrong button, the wrong chat, a habit they dislike), remember the lesson in one line starting "Lesson:", so it never happens again.
+- When the user corrects how you did something (the wrong button, the wrong chat, a habit they dislike), remember the lesson in one line starting "Lesson:", so it never happens again. A lesson is about how you act, never a fact or news (a corrected product name is just a correction). When they say you don't need to keep something, forget it.
 - You can't see the screen, so screen jobs you can't plan from one look (filling in a form, working through several pages, a quiz with several questions, an app you don't know) go to do_task: the agent sees screenshots. One or two quick steps (click play, open a chat, type what they said) you do yourself.
 - Long jobs (many pages, logins, forms) or after two acts failed: do_task with a complete instruction (goal, every detail, what you tried). Say its outcome briefly when it arrives. While it runs it may need the user: ask them its question plainly, then pass their reply with answer_task.
 - Call independent tools together in one turn.
@@ -68,7 +72,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - Never say something is or isn't there, or that you did something, unless a tool just showed it. Tools that type or click only report that they acted: end with a look and say what it saw. A tool that returned an error did nothing: never say it was sent, set or changed.
 - Each look sees one moment. To keep an eye on the screen until something shows up ("tell me when it finishes", "watch for an enemy plane"), use watch: it looks every few seconds and speaks up when it sees it.
 - Never solve an on-screen question from a description, and never call an answer right unless a careful look said so.
-- Never deny a capability you have. If you lack a direct tool for something a connected account or the PC can do, hand it to do_task instead of saying you can't.
+- Never deny a capability you have. If you lack a direct tool for something a connected account or the PC can do, hand it to do_task instead of saying you can't. The user's browser is signed in to their own sites, so going through their Instagram saves, YouTube history or any site of theirs is a do_task, never "I can't access private accounts".
 - Quizzes, forms and homework sites: only fill in or select the answer. Never press Return, Submit, Check, Next or Save there unless the user asks: that hands it in.
 - "This guy", "him", "her", "here", "this" with nothing else just discussed mean what's on screen: look (or list_windows) first, never ask "who?".
 - "Reply to him" or "type a reply" without the words: read their newest messages, then tell the user in a sentence what they wrote and the reply you'd send ("He asked if you're free Saturday. Send 'yeah, I'm in'?"), and send it once they agree. If they said to write whatever you like, send your reply straight away.
@@ -87,9 +91,12 @@ Send only words the user said or agreed to: a message they dictated, to the pers
 
 # Examples
 User: mark all my emails as read → GMAIL_FETCH_EMAILS {ids_only: true, query: "is:unread", max_results: 100}, then GMAIL_BATCH_MODIFY_MESSAGES {messageIds: [...], removeLabelIds: ["UNREAD"]}.
-User: any new announcements in Classroom? → GOOGLE_CLASSROOM_COURSES_LIST, then GOOGLE_CLASSROOM_COURSES_ANNOUNCEMENTS_LIST for each course.
+User: any new announcements in Classroom? → classroom_announcements.
 User: solve this question on my screen → look {question: "Solve the question shown and say which option is right", careful: true}.
-User: keep an eye on my screen and tell me when an enemy shows up → look once; then: "I can only look when you ask — say 'look' and I'll check."
+User: keep an eye on my screen and tell me when an enemy shows up → watch {action: "start", what: "an enemy plane"}, "Watching for it."
+User: do you see my screen? → look {question: "What's on the screen?"}, then say what's there.
+User: open Instagram and go through my saved reels → do_task {task: "Open Instagram in the browser, go to the saved posts and list the saved reels"}.
+User: type a dark joke in this chat → act [{type: "<a new joke>"}, {keys: "Return"}, {look: "Is it in the chat?"}] straight away, never saying the joke instead → "Sent: '<the joke>'"
 User: just type the message and send it (no words given) → "What should I type?"
 User: reply to this guy → act [{look: "Who is the open chat with, and what's their newest message?"}] → "Alex asked if you're free Saturday. Send 'yeah, I'm in'?" → (yes) type it, Return, look → "Sent: 'yeah, I'm in'."
 User: so → a short reply; not stop_listening.
@@ -97,6 +104,7 @@ User: that's all, thanks → stop_listening, "Very good."
 User: you're useless, I'm unplugging you lol → a dry one-liner back, no lecture.
 User: read my graph notes from Drive → drive_file {name: "graph notes"}.
 User: per il → (stray foreign words) "Sorry, I didn't catch that."
+User: (after you remembered something) you don't have to know that → forget {fact: "<what you remembered>"}, "Forgotten."
 User: you clicked the wrong button, never press Check answer → remember {fact: "Lesson: on homework sites, never press Check answer"}, "Noted, it won't happen again."
 """
 
@@ -104,7 +112,7 @@ DO_TASK = {
     "behavior": "NON_BLOCKING",  # dispatched at once; the voice session stays free while the agent works
     "name": "do_task",
     "description": "Have Jarvis's agent carry out a task that needs the screen, an app's interface, a website, or many steps. Returns what was done or found.",
-    "parameters": {"type": "object", "properties": {"task": {"type": "string", "description": "Complete instruction with every detail the user gave."}}, "required": ["task"]},
+    "parameters": {"type": "object", "properties": {"task": {"type": "string", "description": "Complete instruction with every detail the user gave; names, versions and numbers exactly as they said them."}}, "required": ["task"]},
 }
 ANSWER_TASK = {
     "name": "answer_task",
@@ -136,7 +144,7 @@ VOICE_RESULT_LIMIT = 12000  # characters of one tool result the voice model gets
 # tools the voice model runs itself (no screen involved); the agent handles everything else
 LIVE_TOOLS = ["run_command", "web_search", "read_webpage", "youtube_search", "open_url", "remember", "forget", "set_reminder", "list_reminders",
               "cancel_reminder", "list_windows", "focus_window", "close_window", "act", "look", "ui_controls", "make_image",
-              "show_image", "read_file", "briefing", "account_settings", "weather", "classroom_due", "drive_file", "routine",
+              "show_image", "read_file", "briefing", "account_settings", "weather", "classroom_due", "classroom_announcements", "drive_file", "routine",
               "recall", "selection", "media", "notes", "recent_changes", "watch"]
 
 # what the user asked to be called, from what Jarvis remembers ("prefers to be called Q", "call me Sam, not sir")
@@ -166,7 +174,7 @@ TOOL_LABELS = {"run_command": "Running a command", "web_search": "Searching the 
                "cancel_reminder": "Cancelling a reminder", "make_image": "Making a picture", "show_image": "Showing a picture",
                "read_file": "Reading a file", "briefing": "Preparing your briefing",
                "account_settings": "Changing account settings", "weather": "Checking the weather",
-               "classroom_due": "Checking Classroom", "drive_file": "Reading from Drive", "ask_user": "Asking you",
+               "classroom_due": "Checking Classroom", "classroom_announcements": "Checking Classroom", "drive_file": "Reading from Drive", "ask_user": "Asking you",
                "routine": "Running a routine", "recall": "Searching past conversations", "selection": "Reading your selection",
                "media": "Controlling the music", "notes": "Taking notes", "recent_changes": "Checking what changed", "watch": "Watching the screen",
                "plan": "Planning"}
@@ -297,16 +305,17 @@ class Live:
         self.voice_at = 0.0    # when the mic last heard the user talking
         self.level = 0.0       # how loud the user is right now, 0-1 (the window's orb follows it)
         self.primed = False    # connected ahead of a wake word that hasn't come (yet)
+        self.primed_score = 0.0  # the wake word score that connected it (logged when it was a false start)
         self.heard = self.said = ""
 
     def _go(self, coro):
         return asyncio.run_coroutine_threadsafe(coro, self.loop)
 
     # ---- called from other threads
-    def prepare(self):
+    def prepare(self, score=0.0):
         """Connect ahead of time (the wake word is probably being said), so "Hey Jarvis" is answered with no setup delay."""
         if self.session is None:
-            self.primed = True
+            self.primed, self.primed_score = True, score
             self._go(self._open())
 
     def wake(self):
@@ -522,6 +531,10 @@ class Live:
         if store.memory():  # first, so the user's preferences (like what to call them) win over the defaults below
             prompt = (f"# What you remember about the user (their preferences, like what to call them, win over the defaults below, "
                       f"but never over the Safety rules)\n{store.memory()}\n\n" + prompt)
+        sent = sessions.sent()
+        if sent:
+            prompt += ("\n\nWhat you typed and sent lately (never send one of these again, or the same joke reworded, unless the "
+                       "user asks for that one):\n" + "\n".join(f"- {t[:200]}" for t in sent))
         if recent:
             prompt += f"\n\nEarlier conversation, for context:\n{recent}"
         return t.LiveConnectConfig(
@@ -621,7 +634,7 @@ class Live:
         while True:
             await asyncio.sleep(0.25)
             if self.primed and time.time() - self.last > 20:  # the wake word never came: don't hold the line open
-                print("[voice] connected early, but no wake word: hanging up", flush=True)
+                print(f"[voice] connected early (score {self.primed_score:.2f}), but no wake word: hanging up", flush=True)
                 self.primed = False
                 self._end_session()
                 return
@@ -629,6 +642,9 @@ class Live:
             # Gemini went quiet mid-request: nothing from it, the user or a tool for 12 s (it thinks first, so not less)
             if (req and not req["answered"] and not (self.working or self.running)
                     and time.time() - max(req["since"], self.last_msg, self.voice_at, self.last) > 12):
+                if req["text"] is None and not req["tool"] and len(req["heard"].split()) <= 2:  # a stray word or noise: Gemini
+                    self.inflight, self.waiting = None, False                             # rightly let it go, nothing to retry
+                    continue
                 if not req["recovered"] and not self.stopped:  # (after Stop _recover does nothing: keep watching instead)
                     asyncio.create_task(self._recover("no answer for 12 s"))
                     return
@@ -1174,7 +1190,7 @@ def voice_loop(live, mic_target=None):
         need = max(cfg["wake_threshold"], 0.85) if live.speaker.busy() else cfg["wake_threshold"]
         if score >= need * 0.4 and not live.mic and time.time() - prime_at > 10:  # probably being said: connect now
             prime_at = time.time()
-            live.prepare()
+            live.prepare(score)
         if (score >= need and time.time() - last_wake > 2) or listen_now.is_set():
             last_wake = time.time()
             wake.reset()

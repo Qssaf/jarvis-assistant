@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.13.6 — 2026-10-18
+
+### Fixed
+- **"Keep watching my screen" works:** an old example in the voice prompt made Jarvis answer "I can only look when you
+  ask" instead of watching. "Do you see my screen?" now looks.
+- **No more repeated jokes:** a new voice session sees what Jarvis sent lately, so it doesn't send the same joke
+  again after a restart. Asked to type a joke, it types it instead of saying it.
+- **No sarcasm at your expense:** the wit is about things, never a jab at you or your questions.
+- Jarvis no longer says it "can't access" your own sites: going through your saved posts on a site you're signed in
+  to goes to a background task.
+- Switching to a window whose title has a quote in it (some Discord servers) took 5 s and then claimed it worked; it's
+  instant now.
+- A stray word Jarvis rightly ignored no longer makes it reconnect 12 s later.
+- In Electron apps (Discord, OpenCode, VS Code) Jarvis clicks the exact field, checks with a look in the same step, and
+  skips the accessibility lookup that always failed there.
+- "Mark my emails as done" marks them read; they're archived only when you say archive.
+- Network checks say the numbers (ping in ms, packet loss in %).
+- "Lesson:" notes are only about how Jarvis acts, not facts; "you don't need to know that" forgets it.
+
+### Added
+- **Classroom announcements in one step**, from every course at once, named by course instead of code.
+
+### Changed
+- The log no longer has progress bars mixed into its lines (they hid whole conversations).
+- A connection opened early for a wake word that didn't come logs its score, to tune that later.
+
 ## 1.13.5 — 2026-10-16
 
 ### Fixed

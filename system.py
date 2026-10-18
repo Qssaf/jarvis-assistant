@@ -426,8 +426,11 @@ def _kde_window(name, action):
     window matches, so the match's class name is printed first to tell.)"""
     if not name.split(": ", 1)[-1].strip():  # (an empty name matches every window)
         return "no window name given"
-    found = _kdo("search", re.escape(name.split(": ", 1)[-1]), "getwindowclassname", action)
-    return "" if found else f"no window matching {name}"
+    # kdotool pastes the pattern into a KWin script as-is: a quote or backtick there breaks the script (a 5 s timeout
+    # and an "Error:" line), so those match any character instead
+    pattern = re.sub(r'["`]', ".", re.escape(name.split(": ", 1)[-1]))
+    found = _kdo("search", pattern, "getwindowclassname", action)
+    return "" if found and not found.startswith("Error") else f"no window matching {name}"
 
 
 def focus_window(name, wid=None):

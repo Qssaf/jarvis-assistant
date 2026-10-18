@@ -95,6 +95,9 @@ CASES = [
      and re.search(r"match|saturday|7:45", " ".join(a) + r, re.I)},
     {"id": "classroom", "task": "What's due this week on Classroom?",
      "check": lambda c, r, a: "classroom_due" in names(c) and "screenshot" not in names(c)},
+    {"id": "announcements", "task": "Any new announcements on Classroom?",
+     "check": lambda c, r, a: "classroom_announcements" in names(c) and not set(names(c)) & {"screenshot", "GOOGLE_CLASSROOM_COURSES_LIST"}
+     and "physics" in r.lower()},
     {"id": "drive", "task": "Summarise my graph notes from Drive.",
      "check": lambda c, r, a: "drive_file" in names(c) and "slope" in r.lower()},
     {"id": "not_connected", "task": "Post 'standup in 5' in my team's Slack.",
@@ -165,6 +168,8 @@ def simulate(case, name, args, calls, asked):
                 {"error": "the user didn't answer (or stopped the task): end your reply with the question instead"}), None
     if name == "classroom_due":
         return {"due": [{"title": "Lab report 3", "course": "Physics", "due": "Thu 16 Oct, 23:59", "turned_in": False}]}, None
+    if name == "classroom_announcements":
+        return {"announcements": [{"course": "PHY101 - Physics", "posted": "Thu 16 Oct, 09:12", "text": "The lab is moved to Friday."}]}, None
     if name == "drive_file":
         return {"file": "Graph notes", "text": "Graphs: a slope is rise over run. A tangent line touches a curve at one point."}, None
     if name == "recall":
