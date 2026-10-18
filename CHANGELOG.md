@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.13.7 — 2026-10-18
+
+### Fixed
+- **No more runaway tool loops:** looking for an app that wasn't open, the voice once checked the windows and the
+  screen over 100 times in a minute without a word. After 12 tools for one request it now stops and tells you what's in
+  the way.
+
 ## 1.13.6 — 2026-10-18
 
 ### Fixed

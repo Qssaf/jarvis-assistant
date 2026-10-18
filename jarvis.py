@@ -16,7 +16,7 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.13.6"
+VERSION = "1.13.7"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
@@ -141,6 +141,9 @@ SCREEN_TOOLS = {"act", "look", "show_image", "ui_controls", "list_windows", "foc
 QUERY_TOOLS = {"look", "web_search", "read_webpage", "youtube_search", "read_file", "briefing", "ui_controls", "list_windows", "list_reminders",
                "recall", "selection"}
 VOICE_RESULT_LIMIT = 12000  # characters of one tool result the voice model gets
+# tools the voice may call for one thing the user said: looking for an app that isn't open, it once called list_windows
+# and look over 100 times in a minute without a word to the user
+VOICE_TOOL_LIMIT = 12
 # tools the voice model runs itself (no screen involved); the agent handles everything else
 LIVE_TOOLS = ["run_command", "web_search", "read_webpage", "youtube_search", "open_url", "remember", "forget", "set_reminder", "list_reminders",
               "cancel_reminder", "list_windows", "focus_window", "close_window", "act", "look", "ui_controls", "make_image",
@@ -280,6 +283,7 @@ class Live:
         self.running = 0       # quick tool calls in progress
         self.quick_tasks = {}  # quick tool calls running -> their halt event (set: their acts stop at the next step)
         self.asked = {}  # (query tool, its arguments) -> [the task answering it, when it finished]: see _tool
+        self.turn_calls = [0.0, 0]  # [when the user spoke, how many tools the voice called since]: see VOICE_TOOL_LIMIT
         self.typed = {}  # text a voice act typed -> {"at": when that act ended, "sent": it pressed Return}: see _type_once
         self.act_lock = asyncio.Lock()  # one voice act that types at a time
         self.quick_gen = 0
@@ -770,6 +774,13 @@ class Live:
             q["answer"] = str(args.get("answer", "")).strip()
             q["answered"].set()
             return {"result": "passed on: the task carries on and reports when it's done"}
+        if self.turn_calls[0] != self.user_spoke_at:
+            self.turn_calls = [self.user_spoke_at, 0]
+        self.turn_calls[1] += 1
+        if self.turn_calls[1] > VOICE_TOOL_LIMIT:
+            return {"error": f"NOT DONE: that's {VOICE_TOOL_LIMIT} tools since the user last spoke. Stop calling tools: tell the "
+                             "user in a sentence what you found and what's in the way (for example, the app isn't open), and ask "
+                             "how to go on."}
         if fc.name == "act":
             if any(isinstance(step.get("click"), (list, tuple)) for step in args.get("steps") or []):
                 return {"error": "nothing was done: you can't see the screen, so coordinate positions are guesses. Use click_on with a description, or {button: 'left'} to click where the mouse is."}

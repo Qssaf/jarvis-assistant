@@ -240,6 +240,7 @@ brain.pointer[0] = None
 
 # the voice model can't see, so a coordinate click is refused before anything runs
 import asyncio
+live.turn_calls, live.user_spoke_at = [0.0, 0], 0.0
 refused = asyncio.run(live._tool(types.SimpleNamespace(name="act", args={"steps": [{"type": "hi"}, {"click": [500, 500]}]})))
 assert "click_on" in refused["error"]
 import threading
@@ -1357,6 +1358,19 @@ async def ask_twice():
     first.cancel()  # (what an interruption does to the quick call)
     return await live._tool(again)
 assert asyncio.run(ask_twice()) == {"answer": "a plane, top left"} and runs == ["look"]
+live.brain = real_brain
+# a voice that can't find what it's after (an app that isn't open) stops after VOICE_TOOL_LIMIT tools and tells the user,
+# instead of calling list_windows and look over and over; the next thing the user says starts a new count
+live.brain = types.SimpleNamespace(_run_tool=lambda name, args: ({"windows": ["brave: New Tab"]}, None), app_tools={})
+listing = types.SimpleNamespace(name="list_windows", args={})
+live.user_spoke_at, live.asked = time.time(), {}
+for _ in range(jarvis.VOICE_TOOL_LIMIT):
+    live.asked = {}
+    assert "windows" in asyncio.run(live._tool(listing))
+assert "Stop calling tools" in asyncio.run(live._tool(listing))["error"]
+assert "Stop calling tools" in asyncio.run(live._tool(types.SimpleNamespace(name="look", args={"question": "x"})))["error"]
+live.user_spoke_at, live.asked = time.time() + 1, {}
+assert "windows" in asyncio.run(live._tool(listing))
 live.brain = real_brain
 
 # a watch whose looks keep failing (quota gone, no screenshots) stops and says why, instead of trying for an hour
