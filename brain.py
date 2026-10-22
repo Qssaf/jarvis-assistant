@@ -547,6 +547,10 @@ def focus_launched():
 def tool_type_text(text):
     """Line breaks go in as shift+Return: a typed newline is a Return, and chat apps send each line as its own message."""
     focus_launched()
+    if len(text) > 200:  # pasted: key by key, a page of code took a minute and the virtual keyboard dropped mid-way
+        problem = system.paste_text(text.replace("\r", ""))
+        if problem is not None:
+            return input_result(f"typed {len(text)} characters", problem)
     problem = ""
     for i, line in enumerate(text.replace("\r", "").split("\n")):
         problem = (system.press_keys("shift+Return") if i else "") or (system.type_text(line) if line else "")
@@ -601,12 +605,21 @@ def tool_act(steps, screenshot_after=True, fast=False, halt=None):
     plan; the agent's plans stop on interrupt_act instead, so cutting the voice off never stops the agent's work."""
     done, captured, sent = [], None, False
     stopped = (halt or _interrupted).is_set
-    for i, step in enumerate(steps):
-        if step.get("type") in step and step["type"] != "type":  # {type: "keys", keys: "Return"}: a label, not text to type
+    split = []
+    for step in [s for s in steps or [] if isinstance(s, dict)]:
+        # {type: "keys", keys: "Return"} or {type: "text", click_on: ...}: a label, not text to type
+        if step.get("type") != "type" and (step.get("type") in step or step.get("type") == "text" and len(step) > 1):
             step = {k: v for k, v in step.items() if k != "type"}
+        # {click_on: "the message box", type: "hi"}: click, then type (only the click used to run, and the text was lost)
+        rest = [{k: step[k]} for k in ("type", "keys") if step.get("click_on") and isinstance(step.get(k), str)]
+        split += [{k: v for k, v in step.items() if k not in ("type", "keys")}, *rest] if rest else [step]
+    steps = split
+    for i, step in enumerate(steps):
         if stopped():
             out = {"error": "interrupted", "done": done}
             return (out, tool_screenshot()[1]) if screenshot_after else out
+        if step.get("app") and not any(k in step for k in ("launch", "press", "set_text")):  # (those use app themselves)
+            system.focus_window(step["app"])
         if "launch" in step:
             r = tool_launch(step["launch"], step.get("wait", 8), screenshot=False)
             seen = {} if "error" in r else a11y.ask({"cmd": "controls", "app": last_app[0], "wait": 1}, timeout=5)  # for the next step
@@ -1217,15 +1230,16 @@ def parse_when(in_minutes=None, at=None, now=None):
     return when if when > now else when + 86400
 
 
-def tool_set_reminder(text, in_minutes=None, at=None, repeat=""):
+def tool_set_reminder(text, in_minutes=None, at=None, repeat="", task=False):
     when = parse_when(in_minutes, at)
-    r = store.add_reminder(when, text, repeat)
-    return {"result": f"Reminder set for {time.strftime('%A %H:%M', time.localtime(when))}" + (f", then {repeat}" if repeat else ""), "id": r["id"]}
+    r = store.add_reminder(when, text, repeat, task)
+    return {"result": f"{'Task' if task else 'Reminder'} set for {time.strftime('%A %H:%M', time.localtime(when))}" + (f", then {repeat}" if repeat else ""), "id": r["id"]}
 
 
 def tool_list_reminders():
     return {"reminders": [{"id": r["id"], "when": time.strftime("%a %d %b %H:%M", time.localtime(r["at"])), "text": r["text"],
-                           **({"repeat": r["repeat"]} if r.get("repeat") else {})} for r in store.reminders()]}
+                           **({"repeat": r["repeat"]} if r.get("repeat") else {}), **({"task": True} if r.get("task") else {})}
+                          for r in store.reminders()]}
 
 
 def tool_recall(query="", day=""):
@@ -1412,6 +1426,23 @@ def tool_routine(action, name="", steps=""):
     return {"routines": found}
 
 
+CHECK_ADDED = "added: tell the user, and don't look into it now (the first check runs within the hour)"
+
+
+def tool_checks(action, text=""):
+    """Things Jarvis keeps an eye on in the background ("tell me if a payment fails"), checked every checks_every minutes."""
+    found = store.settings()["checks"]
+    if action == "add":
+        if not text.strip():
+            return {"error": "say what to keep an eye on"}
+        return {"result": CHECK_ADDED, "checks": store.update_settings({"checks": found + [text]})["checks"]}
+    elif action == "remove":
+        if not text.strip():  # ("" is part of every check: it would remove them all)
+            return {"error": "say which check to remove (part of its text)", "checks": found}
+        found = store.update_settings({"checks": [c for c in found if text.lower() not in c.lower()]})["checks"]
+    return {"checks": found, "every_minutes": store.settings()["checks_every"]}
+
+
 def tool_cancel_reminder(id):
     return {"result": "cancelled" if store.cancel_reminder(id) else "no such reminder"}
 
@@ -1427,12 +1458,22 @@ def tool_forget(text):
 TOOLS.update({
     "remember": (tool_remember, "Save a lasting fact about the user or their preferences (when they say 'remember...'), or a "
                  "name you misheard and were corrected on (a friend, a chat, an app), spelled as on screen, or a lesson when the user corrects "
-                 "how you did something (\"Lesson: on homework sites, never press Check answer\").", obj(fact={"type": "string"})),
+                 "how you did something (\"Lesson: on homework sites, never press Check answer\"), or the way a hard task finally "
+                 "worked (\"How to: ...\").", obj(fact={"type": "string"})),
     "forget": (tool_forget, "Delete remembered notes that contain this text.", obj(text={"type": "string"})),
     "set_reminder": (tool_set_reminder, "Remind the user later (desktop notification + spoken). Give in_minutes, or at as local "
-                     "'YYYY-MM-DD HH:MM' or 'HH:MM'; repeat it daily, on weekdays or weekly if they ask (\"every morning at 8\").",
+                     "'YYYY-MM-DD HH:MM' or 'HH:MM'; repeat it daily, on weekdays or weekly if they ask (\"every morning at 8\"). "
+                     "task: true when Jarvis should do something then (\"every weekday at 8, check my inbox and tell me what matters\"): "
+                     "text is the instruction, the agent runs it on its own and the outcome is said and sent to the phone.",
                      obj(text={"type": "string"}, in_minutes={"type": "number"}, at={"type": "string"},
-                         repeat={"type": "string", "enum": ["daily", "weekdays", "weekly"]}, optional=("in_minutes", "at", "repeat"))),
+                         repeat={"type": "string", "enum": ["daily", "weekdays", "weekly"]}, task={"type": "boolean"},
+                         optional=("in_minutes", "at", "repeat", "task"))),
+    "checks": (tool_checks, "What Jarvis keeps an eye on in the background, over hours or days (\"tell me if my professor emails\", "
+               "\"keep an eye on failed payments\"): checked every so often with the accounts and the web, and the user hears "
+               "only when something needs them. add one (text: what to look for), remove (text: part of it), or list. "
+               "Adding one is the whole job: don't search the accounts for it now, alongside or after (the checks do that). "
+               "Not for the screen right now: that's watch.",
+               obj(action={"type": "string", "enum": ["add", "remove", "list"]}, text={"type": "string"}, optional=("text",))),
     "recall": (tool_recall, "Search past conversations with the user (\"what was that site you told me about?\"): when, and "
                "the lines that mention it. day (YYYY-MM-DD) for one day's conversations (\"what did we talk about yesterday?\"), "
                "with or without words to look for.", obj(query={"type": "string"}, day={"type": "string"}, optional=("query", "day"))),
@@ -2020,6 +2061,8 @@ def turned_in_at(submission):
 
 
 class Brain:
+    unattended = False  # a scheduled task or background check is running: nobody is there to say yes
+
     def __init__(self, notify=print):
         self.backends = {}
         for name, cls in BACKENDS.items():
@@ -2563,13 +2606,20 @@ class Brain:
                     delay = min(max(delay, 30) * 2, 600)
         threading.Thread(target=probe, args=(5 if timed_out else 60, told), daemon=True).start()
 
-    def ask(self, text, on_tool=lambda name: None, on_thought=None, remote=False):
+    def ask(self, text, on_tool=lambda name: None, on_thought=None, remote=False, unattended=False):
+        """unattended: a scheduled task or a background check, on its own history (the conversation isn't touched), where
+        changes that wait for the user's yes are refused even if the model says it has one."""
         with self.ask_lock:
-            self.remote = remote
+            self.remote, self.unattended = remote or unattended, unattended
+            saved = self.contents
+            if unattended:
+                own = self.contents = []
             try:
                 return self._ask(text, on_tool, on_thought)
             finally:
-                self.remote = False
+                self.remote = self.unattended = False
+                if unattended and self.contents is own:  # (unless New conversation reset it meanwhile)
+                    self.contents = saved
 
     def _ask(self, text, on_tool, on_thought):
         self.cancel.clear()
@@ -2601,11 +2651,16 @@ class Brain:
                         return {"error": "cancelled by the user"}, None
                     on_tool(call["name"])
                     t = time.time()
+                    args = call.get("args") or {}
+                    if self.unattended:  # (here, not in _run_tool: the voice runs its tools there meanwhile, with real yeses)
+                        args = {k: v for k, v in args.items() if k != "confirmed"}
                     try:
-                        out = self._run_tool(call["name"], call.get("args") or {})
+                        out = self._run_tool(call["name"], args)
                     except Exception as e:
                         out = {"error": str(e)[:1000]}, None
-                    print(f"[tool] {call['name']} {time.time() - t:.1f}s", flush=True)
+                    res = out[0] if isinstance(out, tuple) else out
+                    err = isinstance(res, dict) and (res.get("error") or res.get("successful") is False and (res.get("data") or "failed"))
+                    print(f"[tool] {call['name']} {time.time() - t:.1f}s" + (f" error: {str(err)[:300]}" if err else ""), flush=True)
                     return out
                 # account, plugin and web calls run at once (8 Classroom courses: 3 s, not 22); screen work keeps its order
                 at_once = [c for c in calls if c["name"] not in TOOLS or c["name"] in PARALLEL_TOOLS]
@@ -2633,6 +2688,13 @@ class Brain:
             trim(msgs)
         reply = "".join(p.get("text", "") for p in parts if not p.get("thought"))
         return re.sub(r"@\d+@", "", reply).strip() or "Done."
+
+    def add_turn(self, text, reply):
+        """A finished unattended run that the user was told about, put in the conversation: "yes, do it" from the phone or
+        by voice then has its context."""
+        with self.ask_lock:
+            self.contents += [{"role": "user", "parts": [{"text": text}]}, {"role": "model", "parts": [{"text": reply}]}]
+            trim(self.contents)
 
     def interrupt(self):
         self.cancel.set()

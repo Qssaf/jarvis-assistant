@@ -1,19 +1,21 @@
 import QtQuick
 
 // A short message at the bottom of the window.
-Rectangle {
+Glass {
     id: t
     property bool bad: false
     function show(text, isBad) { label.text = text; bad = isBad; opacity = 1; hide.restart() }
-    width: label.implicitWidth + 36
-    height: 40
-    radius: 20
-    color: Theme.raised
-    border.width: 1
-    border.color: bad ? Theme.alpha(Theme.red, 0.5) : Theme.lineStrong
+    floating: true
+    color: Theme.popover
+    border.color: bad ? Theme.alpha(Theme.red, 0.4) : Theme.strokeStrong
+    width: label.implicitWidth + 50
+    height: 44
+    radius: 22
     opacity: 0
     visible: opacity > 0
-    Behavior on opacity { NumberAnimation { duration: 180 } }
+    transform: Translate { y: (1 - t.opacity) * 8 }
+    Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
     Timer { id: hide; interval: 3200; onTriggered: t.opacity = 0 }
-    Txt { id: label; anchors.centerIn: parent; color: t.bad ? Theme.red : Theme.text; wrapMode: Text.NoWrap }
+    StatusDot { id: dot; x: 18; anchors.verticalCenter: parent.verticalCenter; status: t.bad ? "error" : "ok" }
+    Txt { id: label; anchors.left: dot.right; anchors.leftMargin: 10; anchors.verticalCenter: parent.verticalCenter; wrapMode: Text.NoWrap }
 }

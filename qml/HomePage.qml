@@ -1,20 +1,23 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
 import QtQuick.Dialogs
 import Jarvis
 
-// The conversation (or, before it starts, Jarvis's orb and some ideas), the message box, and today at a glance.
+// The conversation (or, before it starts, Jarvis's reactor and some ideas), the message box, and today at a glance.
 Item {
     id: home
     property var attachments: []
     property string wake: "Hey Jarvis"
     property real latency: -1
+    readonly property bool wide: width > 1000  // (narrower, today folds into a strip above the conversation)
+    readonly property real column: Math.min(760, talk.width - 2 * Theme.margin)
 
     function reload() {
         Api.get("/api/conversation", c => {
+            list.model = null  // (refilled detached, so a reload doesn't animate every message in)
             messages.clear()
             for (const m of c.messages) add(m)
+            list.model = messages
             list.positionViewAtEnd()
         })
     }
@@ -45,6 +48,7 @@ Item {
     }
 
     DropArea {
+        id: drop
         anchors.fill: parent
         onDropped: drop => { home.attachments = home.attachments.concat(drop.urls.map(u => decodeURIComponent(String(u).replace("file://", "")))) }
     }
@@ -55,119 +59,169 @@ Item {
         onAccepted: home.attachments = home.attachments.concat(selectedFiles.map(u => decodeURIComponent(String(u).replace("file://", ""))))
     }
 
-    RowLayout {
-        anchors.fill: parent
-        anchors.topMargin: 46
-        spacing: 0
+    // ---- the conversation
+    Item {
+        id: talk
+        anchors { left: parent.left; top: parent.top; bottom: parent.bottom; right: home.wide ? today.left : parent.right
+                  rightMargin: home.wide ? 8 : 0 }
 
-        // ---- the conversation
-        Item {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+        Item {  // before anything is said: the reactor, a greeting and some ideas
+            id: hero
+            anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: home.wide ? 46 : 116; bottom: composer.top; bottomMargin: 12 }
+            visible: messages.count === 0
+            opacity: visible ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 250 } }
 
-            Item {  // before anything is said: the orb, a greeting and some ideas
-                id: hero
-                anchors { left: parent.left; right: parent.right; top: parent.top; bottom: composer.top }
-                visible: messages.count === 0
-                opacity: visible ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 250 } }
-
-                Column {
-                    anchors.centerIn: parent
-                    width: Math.min(parent.width - 64, 720)
-                    spacing: 6
-                    Orb {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: 210; height: 210
-                        mode: Backend.state
-                        level: Backend.level
-                        TapHandler { onTapped: Backend.talk() }
-                        HoverHandler { cursorShape: Qt.PointingHandCursor }
+            Column {
+                anchors.centerIn: parent
+                width: home.column
+                Orb {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    // (the outer ring is 84% of the item: 262 gives a ~220 px reactor, smaller only when the height is short)
+                    width: Math.max(130, Math.min(262, hero.height - ideas.height - 150)); height: width
+                    mode: Backend.state
+                    level: Backend.level
+                    TapHandler { onTapped: Backend.talk() }
+                    HoverHandler { cursorShape: Qt.PointingHandCursor }
+                }
+                Item { width: 1; height: 20 }
+                Txt {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    kind: "display"
+                    text: Backend.state === "idle" ? greeting() : Theme.stateName(Backend.state) + "…"
+                    function greeting() {
+                        const h = new Date().getHours()
+                        return h < 5 ? "Up late?" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"
                     }
-                    Item { width: 1; height: 14 }
-                    Txt {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        kind: "title"
-                        font.pixelSize: Theme.px(30)
-                        text: Backend.state === "idle" ? greeting() : Theme.stateName(Backend.state) + "…"
-                        function greeting() {
-                            const h = new Date().getHours()
-                            return h < 5 ? "Up late?" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"
-                        }
-                    }
-                    Txt {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        kind: "small"
-                        font.pixelSize: Theme.px(14)
-                        text: Backend.state === "idle" ? `Say “${home.wake}”, tap the orb, or type below`
-                            : Backend.state === "listening" ? (Backend.listening ? "Go ahead, I'm listening" : "Paused")
-                            : Backend.state === "speaking" ? `Say “${home.wake}” to cut in` : "On it"
-                    }
-                    Item { width: 1; height: 26 }
-                    GridLayout {
-                        width: parent.width
-                        columns: width > 620 ? 3 : 2
-                        rowSpacing: 10
-                        columnSpacing: 10
-                        Repeater {
-                            model: [["sun", "Good morning", "Your day at a glance"], ["calendar", "What's due this week?", "From Google Classroom"],
-                                    ["mail", "Any new emails?", "Your Gmail inbox"], ["screen", "What's on my screen?", "Jarvis takes a look"],
-                                    ["timer", "Set a 10 minute timer", "With a notification"], ["image", "Paint a rainy city", "Make a picture"]]
-                            Suggestion { required property var modelData; Layout.fillWidth: true; symbol: modelData[0]; title: modelData[1]; hint: modelData[2] }
-                        }
+                }
+                Item { width: 1; height: 8 }
+                Txt {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    color: Theme.text2
+                    font.pixelSize: Theme.px(15)
+                    text: Backend.state === "idle" ? `Say “${home.wake}”, tap the reactor, or type below`
+                        : Backend.state === "listening" ? (Backend.listening ? "Go ahead, I'm listening" : "Paused")
+                        : Backend.state === "speaking" ? `Say “${home.wake}” to cut in` : "On it"
+                }
+                Item { width: 1; height: 32 }
+                Grid {
+                    id: ideas
+                    width: parent.width
+                    columns: width > 640 ? 3 : 2
+                    spacing: 12
+                    Repeater {
+                        model: [["sun", "Brief me", "Weather and your schedule"], ["calendar", "What's due this week?", "From Google Classroom"],
+                                ["mail", "Any new emails?", "Your Gmail inbox"], ["screen", "What's on my screen?", "Jarvis takes a look"],
+                                ["timer", "Set a 10 minute timer", "With a notification"], ["image", "Paint a rainy city", "Make a picture"]]
+                        Suggestion { required property var modelData; width: (ideas.width - (ideas.columns - 1) * ideas.spacing) / ideas.columns
+                                     symbol: modelData[0]; title: modelData[1]; hint: modelData[2] }
                     }
                 }
             }
+        }
 
-            ListView {
-                id: list
-                anchors { left: parent.left; right: parent.right; top: parent.top; bottom: composer.top; bottomMargin: 8 }
-                visible: messages.count > 0
-                clip: true
-                model: messages
-                spacing: 6
-                topMargin: 48
-                bottomMargin: 12
-                boundsBehavior: Flickable.StopAtBounds
-                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
-                delegate: Message { width: ListView.view.width }
+        Pill {
+            id: fresh
+            anchors { top: parent.top; topMargin: home.wide ? 52 : 62; right: parent.right; rightMargin: (parent.width - home.column) / 2 }
+            visible: messages.count > 0
+            implicitHeight: 36
+            text: "New chat"
+            symbol: "plus"
+            onClicked: Api.post("/api/new", {}, () => home.reload())
+        }
+
+        ListView {
+            id: list
+            anchors { left: parent.left; right: parent.right; top: fresh.bottom; topMargin: home.wide ? 4 : 14; bottom: composer.top; bottomMargin: 4 }
+            visible: messages.count > 0
+            clip: true
+            model: messages
+            topMargin: 8
+            bottomMargin: 16
+            boundsBehavior: Flickable.StopAtBounds
+            ScrollBar.vertical: Scroller {}
+            delegate: Message { width: ListView.view.width; column: home.column }
+            add: Transition {
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 220; easing.type: Easing.OutCubic }
+                NumberAnimation { property: "rise"; from: 8; to: 0; duration: 220; easing.type: Easing.OutCubic }
             }
-
-            Row {
-                anchors { top: parent.top; right: parent.right; topMargin: 6; rightMargin: 22 }
-                visible: messages.count > 0
-                z: 10
-                spacing: 8
-
-                Pill {
-                    text: "New chat"
-                    symbol: "plus"
-                    onClicked: Api.post("/api/new", {}, () => home.reload())
+            footer: Item {  // while Jarvis works: a warm reactor, a pulsing "Working on it…" chip and Stop
+                id: busy
+                readonly property bool on: Backend.state === "thinking"
+                width: ListView.view.width
+                height: on ? 48 : 0
+                visible: on
+                onOnChanged: if (on) Qt.callLater(list.positionViewAtEnd)
+                Item {
+                    x: (parent.width - home.column) / 2
+                    width: home.column; height: 32
+                    anchors.verticalCenter: parent.verticalCenter
+                    Orb { width: 24; height: 24; anchors.verticalCenter: parent.verticalCenter; rings: false; mode: "thinking" }
+                    Rectangle {
+                        x: 36  // (the text column, like the tool chips)
+                        width: working.implicitWidth + 26; height: 32; radius: 16
+                        color: Theme.glass
+                        border.width: 1
+                        border.color: Theme.stroke
+                        Row {
+                            id: working
+                            anchors.centerIn: parent
+                            spacing: 9
+                            StatusDot {
+                                anchors.verticalCenter: parent.verticalCenter
+                                status: "working"
+                                SequentialAnimation on opacity {
+                                    running: busy.on; loops: Animation.Infinite
+                                    NumberAnimation { to: 0.35; duration: 700; easing.type: Easing.InOutSine }
+                                    NumberAnimation { to: 1; duration: 700; easing.type: Easing.InOutSine }
+                                }
+                            }
+                            Txt { anchors.verticalCenter: parent.verticalCenter; text: "Working on it…"; color: Theme.text2
+                                  font.pixelSize: Theme.px(13); wrapMode: Text.NoWrap }
+                        }
+                    }
+                    Chip { anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                           symbol: "stop"; text: "Stop"; ink: Theme.warm; onClicked: Backend.stop() }
                 }
             }
+        }
 
-            Composer {
-                id: composer
-                anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: 22; topMargin: 0 }
-                attachments: home.attachments
-                onSubmitted: text => home.send(text)
-                onAttach: picker.open()
-                onRemoved: path => home.attachments = home.attachments.filter(p => p !== path)
+        Composer {
+            id: composer
+            anchors { bottom: parent.bottom; bottomMargin: 24; horizontalCenter: parent.horizontalCenter }
+            width: home.column
+            stopShown: list.visible && Backend.state === "thinking"  // (the Stop chip under the conversation)
+            attachments: home.attachments
+            onSubmitted: text => home.send(text)
+            onAttach: picker.open()
+            onRemoved: path => home.attachments = home.attachments.filter(p => p !== path)
+        }
+
+        Rectangle {  // dragging files over Jarvis
+            anchors { fill: parent; topMargin: 46; margins: 16 }
+            visible: drop.containsDrag
+            radius: Theme.radius
+            color: Theme.alpha(Theme.accentSoft, 0.6)
+            border.width: 1
+            border.color: Theme.alpha(Theme.accent, 0.5)
+            Column {
+                anchors.centerIn: parent
+                spacing: 10
+                Icon { anchors.horizontalCenter: parent.horizontalCenter; name: "attach"; size: 28; color: Theme.accent }
+                Txt { kind: "heading"; text: "Drop to attach" }
             }
         }
+    }
 
-        Rectangle { Layout.fillHeight: true; Layout.preferredWidth: 1; color: Theme.line; visible: today.visible }
-
-        Today {
-            id: today
-            Layout.preferredWidth: 300
-            Layout.minimumWidth: 300
-            Layout.maximumWidth: 300
-            Layout.fillHeight: true
-            visible: home.width > 1000
-            latency: home.latency
-            onWake: phrase => home.wake = phrase
-        }
+    Today {
+        id: today
+        x: home.wide ? home.width - width - 12 : (home.width - home.column) / 2
+        y: 52
+        width: home.wide ? 300 : home.column - (fresh.visible ? fresh.width + 12 : 0)
+        height: home.wide ? home.height - y - 24 : 56
+        compact: !home.wide
+        latency: home.latency
+        onWake: phrase => home.wake = phrase
     }
 
     component Suggestion: AbstractButton {
@@ -177,32 +231,30 @@ Item {
         property string hint
         hoverEnabled: true
         focusPolicy: Qt.NoFocus
-        implicitHeight: 84
+        implicitHeight: 76
         onClicked: Backend.send(title)
-        background: Rectangle {
-            radius: Theme.radius
-            color: s.hovered ? Theme.cardHover : Theme.card
-            border.width: 1
-            border.color: s.hovered ? Theme.alpha(Theme.accent, 0.45) : Theme.line
-            Behavior on color { ColorAnimation { duration: 140 } }
-            Behavior on border.color { ColorAnimation { duration: 140 } }
+        background: Glass {
+            color: s.hovered ? Theme.glassHover : Theme.glass
+            border.color: s.hovered ? Theme.alpha(Theme.accent, 0.3) : Theme.stroke
+            Behavior on color { ColorAnimation { duration: Theme.fast } }
+            Behavior on border.color { ColorAnimation { duration: Theme.fast } }
         }
         contentItem: Item {
             Rectangle {
-                id: badge
-                x: 14; anchors.verticalCenter: parent.verticalCenter
-                width: 36; height: 36; radius: 11
-                color: Theme.alpha(Theme.accent, s.hovered ? 0.22 : 0.13)
+                id: well
+                x: 16; anchors.verticalCenter: parent.verticalCenter
+                width: 36; height: 36; radius: 18
+                color: s.hovered ? Theme.alpha(Theme.accent, 0.22) : Theme.accentSoft
                 Icon { anchors.centerIn: parent; name: s.symbol; size: 18; color: Theme.accent }
             }
             Column {
-                anchors { left: badge.right; leftMargin: 12; right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
+                anchors { left: well.right; leftMargin: 12; right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
                 spacing: 3
-                Txt { text: s.title; width: parent.width; font.weight: Font.DemiBold; font.pixelSize: Theme.px(14); elide: Text.ElideRight; wrapMode: Text.NoWrap }
-                Txt { text: s.hint; kind: "small"; width: parent.width; elide: Text.ElideRight; wrapMode: Text.NoWrap }
+                Txt { text: s.title; width: parent.width; weight: 600; elide: Text.ElideRight; wrapMode: Text.NoWrap }
+                Txt { text: s.hint; kind: "small"; font.pixelSize: Theme.px(12); width: parent.width; elide: Text.ElideRight; wrapMode: Text.NoWrap }
             }
         }
-        scale: down ? 0.98 : 1
-        Behavior on scale { NumberAnimation { duration: 90 } }
+        scale: down ? 0.97 : 1
+        Behavior on scale { NumberAnimation { duration: Theme.fast; easing.type: Easing.OutCubic } }
     }
 }

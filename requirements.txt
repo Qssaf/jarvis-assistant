@@ -8,6 +8,9 @@ scikit-learn
 tqdm
 google-genai
 mcp
+websockets
+cryptography
+segno
 ddgs
 PySide6-Essentials
 psutil

@@ -113,6 +113,12 @@ class Telegram:
         except requests.RequestException as e:
             print(f"[telegram] couldn't send the reply: {e}", flush=True)
 
+    def push(self, text):
+        """Something Jarvis did or found on its own (a scheduled task, a check), sent to the paired chat."""
+        token = store.secret("telegram")
+        if token and self.state.get("chat"):
+            self.send(token, self.state["chat"], text)
+
     def send(self, token, chat, text):
         for i in range(0, max(len(text), 1), LIMIT):
             self.http.post(API.format(token, "sendMessage"), json={"chat_id": chat, "text": text[i:i + LIMIT] or "Done."}, timeout=20)

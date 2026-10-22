@@ -34,6 +34,8 @@ DEFAULT_SETTINGS = {
     "morning_briefing": True,      # the first time Jarvis starts in a morning, it gives the day's briefing out loud
     "deadline_reminders": True,    # reminders a day and two hours before Google Classroom work is due
     "calendar_reminders": True,    # a reminder ten minutes before each Google Calendar event
+    "checks": [],                  # things Jarvis keeps an eye on in the background ("tell me if a payment fails"), one per line
+    "checks_every": 60,            # minutes between those checks (each one is a few agent requests)
     "echo_cancel": False,          # PipeWire echo cancelling (Linux): talk over Jarvis on speakers (experimental)
     "learn_my_voice": True,        # learn from real wake-ups to ignore things that aren't you saying "Hey Jarvis"
     "safety": "ask",               # ask: risky commands and account changes wait for your yes; full: Jarvis just does them
@@ -121,6 +123,8 @@ def update_settings(changes):
             raise ValueError("safety is ask or full")
         if key == "end_of_speech_ms" and not 200 <= value <= 2000:
             raise ValueError("the pause must be 200-2000 ms")
+        if key == "checks_every" and not 15 <= value <= 1440:
+            raise ValueError("check every 15-1440 minutes")
         s[key] = value
     with _lock:
         write_json(SETTINGS_FILE, {k: v for k, v in s.items() if v != DEFAULT_SETTINGS[k]})
@@ -187,10 +191,12 @@ def next_time(at, repeat, now=None):
             return when
 
 
-def add_reminder(at, text, repeat=""):
+def add_reminder(at, text, repeat="", task=False):
+    """task: at that time the agent does what text says (instead of Jarvis just saying it)."""
     if repeat and repeat not in REPEATS:
         raise ValueError(f"repeat is one of {', '.join(REPEATS)}")
-    r = {"id": uuid.uuid4().hex[:8], "at": float(at), "text": " ".join(str(text).split()), **({"repeat": repeat} if repeat else {})}
+    r = {"id": uuid.uuid4().hex[:8], "at": float(at), "text": " ".join(str(text).split()), **({"repeat": repeat} if repeat else {}),
+         **({"task": True} if task else {})}
     with _lock:
         write_json(REMINDERS_FILE, read_json(REMINDERS_FILE, []) + [r], private=True)
     return r

@@ -10,6 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 .venv/bin/python -m pyflakes *.py     # lint (CI runs it and the tests on Linux and Windows)
 .venv/bin/python jarvis.py --no-voice # run without the microphone; the window opens
 jarvis --listen                       # tell a running instance to start listening (--region: ask about a dragged area)
+jarvis --task "..." / --say "..."     # have it do a task (prints the reply) or say something; jarvis --mcp: the same as an MCP server
 EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py [case ...]  # agent eval (spends model requests)
 .venv/bin/python evals/voice_eval.py [case-prefix ...]   # ~110 real-life requests to the voice model (one Live session each)
 ```
@@ -46,9 +47,10 @@ EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py
   and timestamps must stay before the year 3000 (Windows can't format later ones).
 - The test window load fails on any QML warning, and it also checks that every `<rootId>.fn()` a page calls is defined
   in that page (Settings once lost its `set()` and every switch silently did nothing).
-- GUI checks without touching the user's screen: render the window with `QT_QPA_PLATFORM=offscreen` and
-  `widget.grab()`, or run apps inside a hidden compositor (`kwin_wayland --virtual --socket NAME`, then start them with
-  `WAYLAND_DISPLAY=NAME`). Apps there still register on the session's AT-SPI bus, so accessibility can be tested too.
+- GUI checks without touching the user's screen: `docs/screens.py OUT [page...]` renders pages with made-up data (it
+  also makes the README's pictures). Off screen it draws in software, without blur or shadows (MultiEffect); to see
+  those, start a hidden compositor (`kwin_wayland --virtual --socket NAME`) and run it with `WAYLAND_DISPLAY=NAME
+  QT_QPA_PLATFORM=wayland`. Apps there still register on the session's AT-SPI bus, so accessibility can be tested too.
 
 ## Architecture
 
@@ -66,7 +68,8 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
 - `Live` has resilience logic that's easy to break: request tracking (`inflight`), session resumption, `_recover`
   and `_relisten` after drops, the `_watch` silence watchdog, and half-duplex mic gating while the speaker plays.
   A tool reply sent with `scheduling="SILENT"` (always for `stop_listening`) gets no spoken answer, so the request
-  must be cleared (`inflight = None`) or the watchdog reconnects 12 s later and re-asks. Code in `_run`'s `except`
+  must be cleared (`inflight = None`) or the watchdog reconnects 12 s later and re-asks. Something Jarvis says on its
+  own (`announce`: reminders, scheduled tasks, `--say`) waits 25 s instead, and never asks the user to repeat it. Code in `_run`'s `except`
   that schedules a reconnect must read `self.mic` first: the `finally` turns it off before the callback runs.
 - Each batch of quick tool calls has its own `halt` event (`quick_tasks`: task -> halt), passed to `tool_act`;
   `_cancel_quick` sets it and cancels the task. Voice acts check only their halt, agent acts only the global
@@ -77,6 +80,11 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   a list may have changed). A voice act that types goes through `_type_once` (shielded, one at a time): the same text
   isn't sent again until the user speaks, and text a cancelled act left in the box isn't typed over it.
 - `Brain.ask` holds `ask_lock`: voice and phone tasks take turns over the shared history and screen.
+- Task reminders (`task: true`) and the `checks` loop run `Brain.ask(..., unattended=True)` (`run_unattended`): its own
+  history, swapped back after, and `confirmed` is dropped from every agent call (in `_ask`, not `_run_tool`: the voice
+  runs its tools there meanwhile), so nothing that waits for a yes runs. A
+  check that answers NOTHING stays quiet; anything else is added to the conversation (`add_turn`, so "yes, do it" from the
+  phone has its context) and goes through `tell` (chat, notification, voice, `push` to phones).
 
 **Tools.** `brain.TOOLS` maps a name to `(function, description, JSON schema)`. A function returns a dict, or
 `(dict, jpeg_bytes)` to attach a screenshot. `briefing`, `classroom_due`, `classroom_announcements`, `drive_file`, `ask_user` and
@@ -144,6 +152,15 @@ the reference is everything the default output plays (games, calls, Jarvis), not
 chat paired with the code shown in Settings (five wrong codes and a chat is ignored). Its tasks run `Brain.ask(...,
 remote=True)` on their own thread, so `/stop` is still read while one works; `ask_user` refuses (the user can't answer
 out loud). `Brain.ask_lock` makes voice and phone tasks take turns.
+`phone.py` is the Android app's link (`android/`, Kotlin): the PC and the app both dial out to the user's own relay
+(`relay/worker.js`, a Cloudflare Worker with one Durable Object per PC that only forwards frames), so nothing on the PC
+listens. The PC signs its relay login with its key (the id is that key's hash); the app trusts the PC's other key from
+the pairing QR and runs the handshake in `phone.py`'s docstring (P-256 ECDH, HKDF, AES-GCM with counter nonces). The app's UI is
+Jetpack Compose (`Screens.kt` takes plain state, so `ScreensTest`'s Paparazzi renders it with made-up data:
+`./gradlew recordPaparazziDebug`). The Python and Kotlin sides must stay byte-compatible: `android/app/src/test/resources/handshake.json` is checked by both
+`test_jarvis.py` and the app's `HandshakeTest` (`./gradlew testDebugUnitTest`). Build the APK with the SDK in
+`~/.bubblewrap` (`ANDROID_HOME=~/.bubblewrap/android_sdk JAVA_HOME=~/.bubblewrap/jdk ./gradlew assembleDebug`); test
+the relay locally with `npx wrangler dev` in `relay/`.
 
 **State.** `store.py` keeps settings (unknown keys dropped, types coerced, `*_models`, `language`, `safety`... validated),
 plugins, `memory.md`, reminders (optionally repeating: `next_time`), routines, the change log and sessions under
@@ -151,18 +168,21 @@ plugins, `memory.md`, reminders (optionally repeating: `next_time`), routines, t
 personal by its module constants (tests point some of them elsewhere).
 
 **Background loops.** `background(fn, restart=True)` restarts a loop that dies (voice, reminders, calendar/Classroom
-reminders, the phone link), with backoff; `system.mic_frames` restarts `pw-record` itself when PipeWire restarts.
+reminders, the user's `checks`, the phone links), with backoff; `system.mic_frames` restarts `pw-record` itself when PipeWire restarts.
 
 **Window and API.** The window is Qt Quick: `window.py` registers a `Backend` QObject as the QML singleton `Jarvis.Backend`
 (`qml/*.qml`, theme tokens in `qml/Theme.qml`). QML calls `Api.get/post` → `Backend.request` (thread pool) → `get(path)`/`post(path,
 data)`, which map to `api_get`/`api_post` in jarvis.py, and events from `emit()` reach it because `Backend` sits in `clients` (it has
-`put()`). Polled values (state, mic level) refresh at 30 fps. QML gotchas: `AbstractButton` has a FINAL `icon` (ours is `symbol`); local
+`put()`). Polled values (state, mic level) refresh at 30 fps. The look ("glass": tokens in `Theme.qml`, shared pieces
+like `Glass`, `Section`, `Chip`, `StatusDot`, the arc reactor in `Orb.qml`) is shared with the phone app's `Theme.kt`.
+QML gotchas: `AbstractButton` has a FINAL `icon` (ours is `symbol`); local
 `Label.qml`/`Page.qml` get shadowed by QtQuick.Controls (ours are `Txt`, `ScrollPage`); `#AARRGGBB` colours; font sizes go
 through `Theme.px(n)` (the text-size setting, rounded to whole pixels); QtSvg only reads `#rrggbb`; `window.py` forces the
 Basic style (Windows' native one ignores custom backgrounds). The first-run `SetupWizard` covers the window until
 `setup_done`. Never start apps on a private `dbus-run-session` here: its AT-SPI launcher takes over the
 session's accessibility socket. Web fetches (`fetch`, the headless browser, `show_image`) go through the `Guard` proxy in brain.py. Over real HTTP,
-`serve_app` only accepts `/api/listen`, `/api/show` and `/api/region`, and only with the per-run token and a matching Host header.
+`serve_app` only accepts `/api/listen`, `/api/show`, `/api/region`, `/api/task` and `/api/say`, and only with the per-run token and a
+matching Host header. `/api/task` (`jarvis --task`, `jarvis --mcp`) runs unattended, like a scheduled task.
 
 **Backends.** `AIStudio` (Gemini's native API) plus `OpenAICompatible` for every provider in `brain.providers()`
 (built-ins, the user's `providers.json`, Ollama). `Brain.backend(name)` builds them lazily, and `forget_backend` runs

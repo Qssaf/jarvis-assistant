@@ -1,5 +1,5 @@
 import QtQuick
-import QtQuick.Layouts
+import QtQuick.Effects
 import Jarvis
 
 // One line of the conversation: your words on the right, Jarvis's on the left, tools and notices quietly in between.
@@ -10,100 +10,113 @@ Item {
     required property string caption
     required property real time
     readonly property bool mine: who === "you"
-    readonly property real column: Math.min(width - 56, 760)
-    implicitHeight: body.implicitHeight + (who === "tool" || who === "thinking" ? 0 : 6)
+    property real column: Math.min(width - 80, 760)
+    property real rise: 0  // (the list animates new messages in with it)
+    readonly property int gap: who === "you" ? 20 : who === "jarvis" ? 10 : who === "system" ? 14 : who === "thinking" ? 4 : 8
+    implicitHeight: body.implicitHeight + gap
+    transform: Translate { y: m.rise }
 
     function linkify(t) {  // plain text with links made clickable, for Markdown
         return t.replace(/(^|\s)(https?:\/\/[^\s<>()]+)/g, "$1<$2>")
     }
 
+    HoverHandler { id: hover }
     Loader {
         id: body
-        anchors.horizontalCenter: parent.horizontalCenter
+        x: (m.width - m.column) / 2
+        y: m.gap
         width: m.column
-        sourceComponent: m.who === "you" ? you : m.who === "jarvis" ? jarvis : m.who === "image" ? picture : m.who === "tool" ? tool : notice
+        sourceComponent: m.who === "you" ? you : m.who === "jarvis" ? jarvis : m.who === "image" ? picture : m.who === "tool" ? tool
+                       : m.who === "system" ? note : thinking
     }
 
     Component {
         id: you
         Item {
-            implicitHeight: bubble.height + 8
+            implicitHeight: bubble.height
             Rectangle {
                 id: bubble
                 anchors.right: parent.right
-                y: 8
-                width: Math.min(words.implicitWidth + 32, parent.width * 0.78)
-                height: words.implicitHeight + 20
-                radius: 18
+                width: Math.min(words.implicitWidth, parent.width * 0.7 - 32) + 32
+                height: words.implicitHeight + 22
+                radius: Theme.radius
                 bottomRightRadius: 6
-                color: Theme.alpha(Theme.accent, 0.2)
+                color: Theme.accentSoft
                 border.width: 1
-                border.color: Theme.alpha(Theme.accent, 0.28)
-                Txt { id: words; anchors.centerIn: parent; width: parent.width - 32; text: m.text; textFormat: Text.PlainText }
+                border.color: Theme.alpha(Theme.accent, 0.25)
+                Txt { id: words; x: 16; anchors.verticalCenter: parent.verticalCenter; width: parent.width - 32
+                      text: m.text; textFormat: Text.PlainText; font.pixelSize: Theme.px(15); lineHeight: 1.1 }
             }
         }
     }
     Component {
         id: jarvis
-        RowLayout {
-            spacing: 12
-            Orb { Layout.alignment: Qt.AlignTop; Layout.topMargin: 10; Layout.preferredWidth: 26; Layout.preferredHeight: 26; rings: false; mode: "idle" }
+        Item {
+            implicitHeight: Math.max(24, said.implicitHeight)
+            Orb { width: 24; height: 24; y: 1; rings: false; mode: "idle" }
             Txt {
                 id: said
-                Layout.fillWidth: true
-                Layout.topMargin: 12
+                x: 36
+                width: parent.width - 36
                 text: m.linkify(m.text)
                 textFormat: Text.MarkdownText
                 font.pixelSize: Theme.px(15)
-                lineHeight: 1.18
-                HoverHandler { id: hover }
-                IconButton {
-                    anchors { right: parent.right; top: parent.top; topMargin: -6 }
-                    visible: hover.hovered
-                    size: 26; glyph: 13; symbol: "copy"; tip: "Copy"
-                    onClicked: Backend.copy(m.text)
-                }
+                lineHeight: 1.3
+            }
+            IconButton {
+                x: parent.width + 8
+                opacity: hover.hovered ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: Theme.fast } }
+                size: 28; glyph: 14; symbol: "copy"; tip: "Copy"
+                onClicked: Backend.copy(m.text)
             }
         }
     }
     Component {
         id: tool
-        Row {
-            leftPadding: 38
-            spacing: 7
-            Rectangle { width: 6; height: 6; radius: 3; color: Theme.warm; anchors.verticalCenter: parent.verticalCenter; opacity: 0.8 }
-            Txt { kind: "small"; text: Backend.toolLabel(m.text); color: Theme.faint; wrapMode: Text.NoWrap }
+        Item {
+            implicitHeight: 28
+            Chip { x: 36; implicitHeight: 28; enabled: false; dot: "working"; text: Backend.toolLabel(m.text) }
         }
     }
     Component {
-        id: notice
-        Rectangle {
-            implicitHeight: words.implicitHeight + 18
-            radius: 12
-            color: m.who === "thinking" ? "transparent" : Theme.alpha(Theme.card, 0.8)
-            border.width: m.who === "thinking" ? 0 : 1
-            border.color: Theme.line
-            Txt {
-                id: words
-                anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; leftMargin: m.who === "thinking" ? 38 : 14; rightMargin: 14 }
-                kind: "small"
-                font.italic: m.who === "thinking"
-                text: m.linkify(m.text)
-                textFormat: Text.MarkdownText
+        id: note
+        Item {
+            implicitHeight: words.implicitHeight + 12
+            Rectangle {
+                anchors.centerIn: parent
+                width: Math.min(words.implicitWidth, parent.width - 28) + 28
+                height: parent.height
+                radius: height / 2
+                color: Theme.alpha(Theme.glass, 0.7)
+                border.width: 1
+                border.color: Theme.alpha(Theme.stroke, 0.7)
+                Txt {
+                    id: words
+                    anchors.centerIn: parent
+                    width: Math.min(implicitWidth, parent.parent.width - 28)
+                    kind: "small"
+                    color: Theme.text2
+                    horizontalAlignment: Text.AlignHCenter
+                    // (without the emoji background notices start with: they clash with the line icons)
+                    text: m.linkify(m.text.replace(/^(?:[\u2300-\u27bf\u2b00-\u2bff]|[\ud83c-\ud83e][\udc00-\udfff])\ufe0f?\s*/, ""))
+                    textFormat: Text.MarkdownText
+                }
             }
         }
     }
     Component {
+        id: thinking
+        Txt { leftPadding: 36; kind: "small"; color: Theme.text3; font.italic: true; text: m.linkify(m.text); textFormat: Text.MarkdownText }
+    }
+    Component {
         id: picture
         Column {
-            leftPadding: 38
-            topPadding: 8
-            spacing: 6
-            Rectangle {
+            leftPadding: 36
+            topPadding: 4
+            spacing: 8
+            Item {
                 width: Math.min(img.implicitWidth, 420); height: width * (img.implicitHeight / Math.max(1, img.implicitWidth))
-                radius: 14
-                clip: true
-                color: Theme.card
                 Image {
                     id: img
                     anchors.fill: parent
@@ -111,7 +124,11 @@ Item {
                     fillMode: Image.PreserveAspectFit
                     asynchronous: true
                     sourceSize.width: 840
+                    layer.enabled: true
+                    layer.effect: MultiEffect { maskEnabled: true; maskSource: mask; maskThresholdMin: 0.5; maskSpreadAtMin: 1 }
                 }
+                Rectangle { id: mask; anchors.fill: parent; radius: 16; visible: false; layer.enabled: true }
+                Rectangle { anchors.fill: parent; radius: 16; color: "transparent"; border.width: 1; border.color: Theme.stroke }
                 TapHandler { onTapped: Backend.open(m.text) }
                 HoverHandler { cursorShape: Qt.PointingHandCursor }
             }

@@ -10,6 +10,7 @@ import system
 
 brain.OPENCODE_ACCOUNTS = os.path.join(_home, "opencode-accounts.json")  # (not the user's real Google sign-ins,
 brain.PLUGIN_CONSTANTS = [os.path.join(_home, "constants.js")]               # nor an installed plugin's client)
+brain.store.save_plugins({})  # (no Composio: a real Brain would connect to it, and could start a browser sign-in)
 
 # click grid: Gemini's 0-1000 coordinates map onto the screen, clamped to its edges
 brain.screen_size[:] = (1600, 900)
@@ -134,6 +135,25 @@ a.backends, a.down_until, a.notify, a.plugins, a.app_tools = {"x": OneShot()}, {
 a.contents, a.cancel, a.ask_lock, a.remote = [], brain.threading.Event(), brain.threading.Lock(), False
 a._system = lambda: ""
 assert a.ask("12 times 12 then close it") == "144, sir. Closed it." and OneShot.calls == 1
+# a scheduled task or background check runs on its own history, and can't confirm a change itself: nobody said yes
+class SelfConfirms:
+    seen = []
+
+    def generate(self, contents, model, thinking, **kw):
+        if "functionResponse" in contents[-1]["parts"][0]:
+            SelfConfirms.seen.append(contents[-1]["parts"][0]["functionResponse"]["response"])
+            return [{"text": "It needs your yes first."}]
+        return [{"functionCall": {"name": "run_command", "args": {"command": "sudo reboot", "confirmed": True}}}]
+a.backends, kept, ran, real_shell = {"x": SelfConfirms()}, list(a.contents), [], brain.system.shell
+brain.system.shell = lambda command, timeout: ran.append(command) or (0, "")
+assert a.ask("reboot at 3", unattended=True) == "It needs your yes first."
+assert ran == [] and "not run" in SelfConfirms.seen[0]["error"] and a.contents == kept and not (a.unattended or a.remote)
+a.unattended = True  # ...while the voice's own tools, run meanwhile, keep the user's real yes
+assert "error" not in a._run_tool("run_command", {"command": "sudo reboot", "confirmed": True})[0] and ran == ["sudo reboot"]
+a.unattended = False
+brain.system.shell = real_shell
+a.add_turn("[check] failed payments", "Two failed: offer a free month?")
+assert a.contents[-1] == {"role": "model", "parts": [{"text": "Two failed: offer a free month?"}]} and a.contents[-2]["role"] == "user"
 # page text: attribute values may contain markup, scripts are dropped, entities decoded
 assert brain.page_text('<div data-x="a<b>c</ref>">Hello&nbsp;<b>world</b></div><script>var x="<p>no</p>"</script> ok') == "Hello world ok"
 
@@ -234,7 +254,19 @@ assert 1.0 in slept and "sent" in out[0], (slept, out)  # (a look step returns i
 slept.clear()
 assert "sent" not in brain.tool_act([{"keys": "Return"}, {"look": "what happened?"}], screenshot_after=False)[0] and 1.0 not in slept
 brain.time.sleep, brain.tool_look = real_sleep, real_look
-brain.tool_press_keys = real_keys
+# a combined click and type step executes both (clicks then types) instead of dropping the type
+typed.clear()
+real_click, clicked = brain.tool_click, []
+brain.tool_click = lambda *a, **kw: clicked.append(a) or {"result": "clicked"}
+real_locate = brain.locate
+brain.locate = lambda *a, **kw: (100, 200)
+res = brain.tool_act([{"click_on": "message box", "type": "code"}], screenshot_after=False)
+assert res["result"] == ["clicked", "typed"] and clicked and typed == ["code"]
+# a type: "text" label on a click step is stripped, never typed
+typed.clear()
+res = brain.tool_act([{"type": "text", "click_on": "message box"}], screenshot_after=False)
+assert res["result"] == ["clicked"] and typed == []
+brain.tool_click, brain.locate, brain.tool_press_keys = real_click, real_locate, real_keys
 brain.tool_screenshot, brain.tool_type_text = real
 brain.pointer[0] = None
 
@@ -909,6 +941,25 @@ async def watch_stray():
     watcher.cancel()
     return alive
 assert asyncio.run(watch_stray()) and live.inflight is None and recovering == []
+# an announcement (a reminder, a scheduled task's outcome) waits 25 s before reconnecting, not 12, and if even the retry
+# gets no answer it isn't "please say it again": the user said nothing
+async def watch_announce(quiet, recovered):
+    now = time.time()
+    live.last = live.last_msg = live.voice_at = now - quiet
+    live.inflight = {"text": "(Tell the user...)", "heard": "", "since": now - quiet, "tool": False, "answered": False,
+                     "recovered": recovered, "announce": True}
+    watcher = asyncio.create_task(live._watch())
+    await asyncio.sleep(0.6)
+    watcher.cancel()
+logged = []
+jarvis.emit, real_emit = (lambda kind, **kw: logged.append(kw.get("text"))), jarvis.emit
+asyncio.run(watch_announce(15, False))
+assert recovering == [] and live.inflight is not None
+asyncio.run(watch_announce(26, False))
+assert recovering == ["no answer for 25 s"]
+asyncio.run(watch_announce(26, True))
+assert live.inflight is None and not any("say it again" in str(t) for t in logged)
+jarvis.emit = real_emit
 live._recover = real_recover
 
 # Stop pressed just as the task asks its question: it isn't asked, and the mic stays off
@@ -996,6 +1047,47 @@ try:
     raise AssertionError("a bad repeat was accepted")
 except ValueError:
     pass
+
+# scheduled tasks: a task reminder runs the agent instead of being said; a background check that finds nothing stays quiet
+store.add_reminder(friday8, "check my inbox", "weekdays", task=True)
+assert brain.tool_list_reminders()["reminders"][0]["task"] and store.pop_due(friday8 + 60)[0]["task"]
+for r in store.reminders():
+    store.cancel_reminder(r["id"])
+assert brain.tool_checks("add", "tell me if a payment fails") == {"result": brain.CHECK_ADDED, "checks": ["tell me if a payment fails"]}
+assert "error" in brain.tool_checks("remove", " ") and brain.tool_checks("list")["checks"]  # ("" would match them all)
+assert brain.tool_checks("remove", "PAYMENT")["checks"] == [] and brain.tool_checks("list")["every_minutes"] == 60
+told, check_asks, real_notify = [], [], jarvis.system.notify
+jarvis.system.notify = lambda *a: None
+turns = []
+check_live = types.SimpleNamespace(announce=told.append, brain=types.SimpleNamespace(
+    ask=lambda text, on_tool, unattended: check_asks.append((text, unattended)) or reply[0], add_turn=lambda *t: turns.append(t)))
+reply = ["Nothing."]
+jarvis.run_unattended(check_live, "check", check=True)
+reply = ["Stopped."]  # (Stop pressed meanwhile: nothing to tell)
+jarvis.run_unattended(check_live, "check", check=True)
+reply = ["Your card payment failed."]
+jarvis.run_unattended(check_live, "check", check=True)
+jarvis.system.notify = real_notify
+assert told == ["Your card payment failed."] and all(u for _, u in check_asks)
+assert turns == [("check", "Your card payment failed.")]  # (so "yes, do it" from the phone has the context; NOTHING isn't kept)
+
+# other programs on this PC: `jarvis --task` runs unattended and gets the reply, `--say` speaks; the MCP server wraps both
+api_live = types.SimpleNamespace(announce=told.append)
+api_brain = types.SimpleNamespace(ask=lambda text, on_tool, unattended: check_asks.append((text, unattended)) or "3 events today.")
+assert jarvis.api_post("/api/task", {"text": "what's on my calendar?"}, api_live, api_brain) == {"reply": "3 events today."}
+assert check_asks[-1] == (jarvis.EXTERNAL_NOTE + "what's on my calendar?", True)
+jarvis.api_post("/api/say", {"text": "The build finished."}, api_live, api_brain)
+assert told[-1] == "The build finished."
+import mcp.server.mcpserver as mcp_server
+servers, real_run, real_call = [], mcp_server.MCPServer.run, jarvis.call_running
+mcp_server.MCPServer.run = lambda self, transport: servers.append(self)
+jarvis.call_running = lambda what, text: {"reply": f"{what}: {text}"} if what == "task" else {"ok": True}
+jarvis.serve_mcp()
+mcp_tools = asyncio.run(servers[0].list_tools())
+assert {t.name for t in mcp_tools} == {"jarvis_task", "jarvis_say"}
+assert "task: open Spotify" in str(asyncio.run(servers[0].call_tool("jarvis_task", {"task": "open Spotify"})))
+mcp_server.MCPServer.run, jarvis.call_running = real_run, real_call
+
 
 # routines: saved under a plain name, run by name, listed to the voice, deleted
 assert brain.tool_routine("save", "Study  Mode", "close Discord, open my notes, set a 50-minute timer")["result"] == "saved the routine 'study mode'"
@@ -1136,6 +1228,8 @@ for _ in range(200):  # (the task runs on its own thread)
 assert tg.status()["paired"] == "Sam" and tg.state["offset"] == 5
 assert asked_remote == [(remote.REMOTE_NOTE + "what's the weather?", True)]  # (before pairing: not run; the stranger: ignored)
 assert fake_tg.sent[-1] == (42, "It's 21°C and sunny.") and not any(chat == 99 for chat, _ in fake_tg.sent)
+tg.push("A payment failed overnight.")  # (what a scheduled task or a check found goes to the paired chat)
+assert fake_tg.sent[-1] == (42, "A payment failed overnight.")
 tg.unpair()
 wrong = str((int(tg.code) + 1) % 10 ** 6).zfill(6)
 fake_tg.updates = [msg(5 + i, 7, wrong) for i in range(5)] + [msg(10, 7, tg.code)]  # five wrong codes: that chat can't pair any more
@@ -1421,7 +1515,14 @@ real_type, real_keys = system.type_text, system.press_keys
 system.type_text, system.press_keys = (lambda t: inputs.append(("type", t)) or ""), (lambda k: inputs.append(("keys", k)) or "")
 assert brain.tool_type_text("1. a joke\n2. another\r\n") == {"result": "typed 22 characters"}
 assert inputs == [("type", "1. a joke"), ("keys", "shift+Return"), ("type", "2. another"), ("keys", "shift+Return")], inputs
-system.type_text, system.press_keys = real_type, real_keys
+pasted, real_paste = [], system.paste_text
+system.paste_text = lambda t: pasted.append(t) or ""
+code = "int main() {\n    return 0;\n}\n" * 10
+assert brain.tool_type_text(code) == {"result": f"typed {len(code)} characters"} and pasted == [code] and len(inputs) == 4
+system.paste_text = lambda t: None  # no clipboard tool here: typed key by key
+brain.tool_type_text(code)
+assert len(inputs) > 4
+system.type_text, system.press_keys, system.paste_text = real_type, real_keys, real_paste
 assert jarvis.typed_text([{"click_on": "the box"}, {"type": "hi\n there"}, {"type": "keys", "keys": "Return"}]) == "hi there"
 
 # the voice calling the same send again (it sent one message three times): refused until the user speaks again; and
@@ -1431,20 +1532,106 @@ sent_steps = []
 
 def fake_act(name, args):
     sent_steps.append(args["steps"])
-    return {"result": [s.get("type") and "typed 2 characters" or f"pressed {s['keys']}" for s in args["steps"]]}, None
+    return {"result": [s.get("type") and "typed 2 characters" or f"pressed {s['keys']}" if "type" in s or "keys" in s else "done"
+                       for s in args["steps"]]}, None
 
 
 live.brain = types.SimpleNamespace(_run_tool=fake_act, app_tools={})
-live.typed, live.act_lock, live.user_spoke_at = {}, asyncio.Lock(), time.time()
+live.typed, live.act_lock, live.user_spoke_at, live.sent_for = {}, asyncio.Lock(), time.time(), 0.0
 send = types.SimpleNamespace(name="act", args={"steps": [{"type": "hi"}, {"keys": "Return"}]})
 halt = threading.Event()
 assert asyncio.run(live._tool(send, halt)) == {"result": ["typed 2 characters", "pressed Return"]}
 assert "NOT DONE" in asyncio.run(live._tool(send, halt))["error"] and len(sent_steps) == 1
 live.user_spoke_at = time.time() + 1  # "send it again"
 assert "error" not in asyncio.run(live._tool(send, halt)) and len(sent_steps) == 2
+# one request sends one message: a new joke right after the first went is refused (it sent four for "another one")
+another = types.SimpleNamespace(name="act", args={"steps": [{"type": "a better joke"}, {"keys": "Return"}]})
+assert "already sent" in asyncio.run(live._tool(another, halt))["error"] and len(sent_steps) == 2
+# ...but a second chat, checked with an expect step ("hi to Sam and bye to Alex"), is a message of its own
+to_alex = types.SimpleNamespace(name="act", args={"steps": [{"click_on": "Alex in the list"}, {"expect": "the chat is with Alex"},
+                                                            {"type": "bye"}, {"keys": "Return"}]})
+assert "error" not in asyncio.run(live._tool(to_alex, halt)) and len(sent_steps) == 3
+live.user_spoke_at = time.time() + 2
 live.typed = {"hi": {"at": time.time(), "sent": False}}  # a cancelled act typed it, then stopped before Return
 asyncio.run(live._tool(send, halt))
 assert sent_steps[-1] == [{"keys": "Return"}], sent_steps[-1]
 live.brain = real_brain
+
+# the phone app's link: the handshake proves the PC, frames are sealed and counted, pairing trades the one-time secret
+# for a token, and a phone that isn't paired gets nothing done
+import phone
+phone.STATE_FILE = os.path.join(store.DATA, "phone-test.json")
+asked_phone, answer_now = [], threading.Event()  # (the reply waits for the test: it can't overtake "working")
+answer_now.set()
+link = phone.PhoneLink(types.SimpleNamespace(ask=lambda text, remote=False: answer_now.wait(5) and (asked_phone.append(text) or "done"),
+                                             ask_lock=threading.Lock(), interrupt=lambda: None), notify=lambda t: None)
+assert phone.PhoneLink(link.brain).id == link.id  # (the identity is kept)
+link.set_relay("https://relay.example.workers.dev/")
+assert link.state["relay"] == "wss://relay.example.workers.dev" and "ws:" in link.host_url("ws://x") and "&sig=" in link.host_url("ws://x")
+frames = []
+
+
+async def relay_send(frame):
+    frames.append(frame)
+link.ws = types.SimpleNamespace(send=relay_send)
+c = "c" * 36
+
+
+def phone_says(message=None, raw=None):
+    frames.clear()
+    asyncio.run(link._frame(c.encode() + (raw if raw is not None else chan.seal(message))))
+    return [f if isinstance(f, str) else chan.open(f[36:]) for f in frames]
+
+
+hello, finish = phone.connect(phone.raw(link.enc_key.public_key()))
+asyncio.run(link._frame(c.encode() + hello))
+chan = finish(frames[0][36:])
+try:  # a phone that trusts another PC's key can't finish the handshake
+    phone.connect(phone.raw(phone.ec.generate_private_key(phone.ec.SECP256R1()).public_key()))[1](frames[0][36:])
+    assert False
+except Exception as e:
+    assert not isinstance(e, AssertionError)
+assert phone_says({"op": "ask", "text": "hi"})[0]["unpaired"] and not asked_phone  # not paired: refused
+assert "expired" in phone_says({"op": "pair", "secret": "guess"})[0]["error"]
+link.start_pairing()
+assert link.status()["pairing"]["qr"].startswith("data:image/png;base64,")
+payload = json.loads(phone.base64.urlsafe_b64decode(link.pair_link().split("#")[1] + "=="))
+assert payload["s"] == link.id and payload["r"] == "wss://relay.example.workers.dev"
+reply = phone_says({"op": "pair", "secret": payload["p"], "name": "Test phone"})[0]
+assert reply["op"] == "paired" and link.pairing is None and link.status()["devices"][0]["name"] == "Test phone"
+assert "expired" in phone_says({"op": "pair", "secret": payload["p"]})[0]["error"]  # (once only)
+link.loop = asyncio.new_event_loop()  # (where replies from finished tasks are sent from)
+threading.Thread(target=link.loop.run_forever, daemon=True).start()
+answer_now.clear()
+assert phone_says({"op": "ask", "id": 1, "text": "what time is it?"})[0] == {"op": "working", "id": 1, "queued": False}
+answer_now.set()
+for _ in range(200):
+    if len(frames) > 1:
+        break
+    time.sleep(0.01)
+assert chan.open(frames[1][36:]) == {"op": "reply", "id": 1, "text": "done"} and asked_phone[0].endswith("what time is it?")
+link.phones.clear()  # the app was closed when the next reply came: it waits for the phone
+link._task(link.phones.get(c, {}).get("device") or next(iter(link.state["devices"])), 2, "later")
+time.sleep(0.1)
+assert link.pending
+hello, finish = phone.connect(phone.raw(link.enc_key.public_key()))  # the app comes back: a new handshake, then its token
+asyncio.run(link._frame(c.encode() + hello))
+chan = finish(frames[-1][36:])
+said = phone_says({"op": "hello", "token": reply["token"]})
+assert said[0]["op"] == "ready" and said[1] == {"op": "reply", "id": 2, "text": "done"} and not link.pending
+assert phone_says(raw=b"\x03forged")[0] == json.dumps({"t": "close", "c": c})  # tampered: the connection is cut
+link.unpair(link.status()["devices"][0]["id"])
+assert link.status()["devices"] == []
+link.loop.call_soon_threadsafe(link.loop.stop)
+os.remove(phone.STATE_FILE)
+# the app's test vector (android/.../handshake.json, checked by the app's HandshakeTest) still matches phone.py
+vector = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "android/app/src/test/resources/handshake.json")))
+vb = lambda name: phone.base64.b64decode(vector[name])
+pc_key, phone_key = (phone.serialization.load_der_private_key(vb(n), None) for n in ("pc_private", "phone_private"))
+welcome = vb("welcome")
+to_pc, to_phone = phone.derive(pc_key.exchange(phone.ec.ECDH(), phone.point(vb("phone_public"))),
+                               phone_key.exchange(phone.ec.ECDH(), phone.point(welcome[1:66])), vb("phone_public"), welcome[1:66])
+pc_side = phone.Channel(to_phone, to_pc, sent=1)
+assert pc_side.open(vb("phone_frame")) == {"op": "hello"} and phone.Channel(to_pc, to_phone, got=1).open(vb("frame"))["name"] == "test-pc"
 
 print("ok")

@@ -1,8 +1,9 @@
 import QtQuick
 import QtQuick.Shapes
 
-// Jarvis's face: a glowing orb that breathes when idle, follows your voice when listening, pulses when speaking and
-// spins its rings while working.
+// Jarvis's face, an arc reactor: a glowing core in a solid ring, a segmented ring that turns (slowly when idle, faster
+// while listening or speaking, fast and orange while working) and a thin outer ring in a soft halo.
+// rings: false is the small version (core, inner ring and a faint halo), for the rail and chat avatars.
 Item {
     id: orb
     property string mode: "idle"
@@ -11,92 +12,114 @@ Item {
     property color tint: Theme.stateColor(mode)
     Behavior on tint { ColorAnimation { duration: 450; easing.type: Easing.OutCubic } }
     readonly property real r: Math.min(width, height) / 2
-    implicitWidth: 200
-    implicitHeight: 200
+    implicitWidth: 220
+    implicitHeight: 220
 
-    // animate only while someone can see it (an item stays "visible" in a hidden window)
+    // animate only while someone can see it (an item stays "visible" in a hidden window), and leave a small idle one still
     readonly property bool shown: visible && Window.window !== null && Window.window.visible
-    property real t: 0  // seconds, for the breathing and pulsing
-    NumberAnimation on t { from: 0; to: 1000; duration: 1000000; loops: Animation.Infinite; running: orb.shown }
+    property real t: 0      // seconds
+    property real spin: 0   // the segmented ring's angle
+    FrameAnimation {
+        running: orb.shown && (orb.rings || orb.mode !== "idle")
+        onTriggered: {
+            orb.t += frameTime
+            orb.spin = (orb.spin + frameTime * 360 / (orb.mode === "thinking" ? 3 : orb.mode === "idle" ? 14 : 5)) % 360
+        }
+    }
     property real smoothLevel: 0
     Behavior on smoothLevel { NumberAnimation { duration: 90 } }
     onLevelChanged: smoothLevel = level
-    readonly property real pulse: mode === "listening" ? 0.04 + smoothLevel * 0.22
-                                : mode === "speaking" ? 0.05 + 0.05 * Math.sin(t * 9) * Math.sin(t * 2.3)
-                                : mode === "thinking" ? 0.03 * Math.sin(t * 4)
-                                : 0.025 * Math.sin(t * 1.6)
+    readonly property real pulse: mode === "listening" ? 0.02 + smoothLevel * 0.12
+                                : mode === "speaking" ? 0.03 + 0.05 * Math.abs(Math.sin(t * 9) * Math.sin(t * 2.3))
+                                : mode === "thinking" ? 0.015 + 0.015 * Math.sin(t * 4)
+                                : 0.015 * (1 - Math.cos(t * 2 * Math.PI / 3))  // breathing: 1.0-1.03 over 3 s
 
-    // the halo
-    Shape {
+    // circle outlines as SVG paths: `n` arcs of `fill` (0-1) of their share of the circle
+    function arcs(cx, rad, n, fill) {
+        let d = ""
+        for (let i = 0; i < n; i++) {
+            const a0 = i * 2 * Math.PI / n - Math.PI / 2, a1 = a0 + fill * 2 * Math.PI / n
+            d += `M ${cx + rad * Math.cos(a0)} ${cx + rad * Math.sin(a0)} A ${rad} ${rad} 0 0 1 ${cx + rad * Math.cos(a1)} ${cx + rad * Math.sin(a1)} `
+        }
+        return d
+    }
+
+    component Disc: Shape {
+        property real radius
+        property alias gradient: path.fillGradient
+        anchors.centerIn: parent
+        width: radius * 2; height: width
+        preferredRendererType: Shape.CurveRenderer
+        ShapePath {
+            id: path
+            strokeWidth: -1
+            PathAngleArc { centerX: radius; centerY: radius; radiusX: radius; radiusY: radius; sweepAngle: 360 }
+        }
+    }
+    component Ring: Shape {
+        property real radius
+        property real line: 1
+        property color stroke
+        property string svg: ""   // instead of a whole circle
         anchors.centerIn: parent
         width: orb.r * 2; height: width
-        scale: 1 + orb.pulse * 1.6
         preferredRendererType: Shape.CurveRenderer
         ShapePath {
-            strokeWidth: 0
-            fillGradient: RadialGradient {
-                centerX: orb.r; centerY: orb.r; focalX: orb.r; focalY: orb.r; centerRadius: orb.r; focalRadius: 0
-                GradientStop { position: 0.30; color: Theme.alpha(orb.tint, 0.38) }
-                GradientStop { position: 0.62; color: Theme.alpha(orb.tint, 0.10) }
-                GradientStop { position: 1.0; color: Theme.alpha(orb.tint, 0.0) }
-            }
-            PathAngleArc { centerX: orb.r; centerY: orb.r; radiusX: orb.r; radiusY: orb.r; startAngle: 0; sweepAngle: 360 }
+            fillColor: "transparent"
+            strokeColor: stroke
+            strokeWidth: line
+            capStyle: ShapePath.FlatCap
+            PathSvg { path: svg !== "" ? svg : orb.arcs(orb.r, radius, 2, 1) }
         }
     }
 
-    // two thin rings: slow when idle, fast while working
-    Repeater {
-        model: orb.rings ? 2 : 0
-        Shape {
-            required property int index
-            anchors.centerIn: parent
-            width: orb.r * (index === 0 ? 1.18 : 1.02); height: width
-            preferredRendererType: Shape.CurveRenderer
-            opacity: orb.mode === "thinking" ? 0.95 : 0.45
-            Behavior on opacity { NumberAnimation { duration: 300 } }
-            RotationAnimation on rotation {
-                from: index === 0 ? 0 : 360; to: index === 0 ? 360 : 0; loops: Animation.Infinite; running: orb.shown
-                duration: orb.mode === "thinking" ? (index === 0 ? 1400 : 2100) : (index === 0 ? 14000 : 21000)
-            }
-            ShapePath {
-                fillColor: "transparent"
-                strokeColor: Theme.alpha(orb.tint, 0.9)
-                strokeWidth: Math.max(1.5, orb.r * 0.022)
-                capStyle: ShapePath.RoundCap
-                PathAngleArc {
-                    centerX: width / 2; centerY: height / 2; radiusX: width / 2 - 2; radiusY: height / 2 - 2
-                    startAngle: index * 140; sweepAngle: index === 0 ? 92 : 58
-                }
-            }
-            ShapePath {
-                fillColor: "transparent"
-                strokeColor: Theme.alpha(orb.tint, 0.35)
-                strokeWidth: Math.max(1, orb.r * 0.012)
-                capStyle: ShapePath.RoundCap
-                PathAngleArc {
-                    centerX: width / 2; centerY: height / 2; radiusX: width / 2 - 2; radiusY: height / 2 - 2
-                    startAngle: index * 140 + 180; sweepAngle: 40
-                }
-            }
+    // the halo: the big one reaches past the item, to about 1.6x the outer ring; a small one stays inside it
+    Disc {
+        id: halo
+        radius: orb.r * (orb.rings ? 1.35 : 1)
+        scale: 1 + orb.pulse * 2.2
+        gradient: RadialGradient {
+            centerX: halo.radius; centerY: halo.radius; focalX: halo.radius; focalY: halo.radius; centerRadius: halo.radius
+            GradientStop { position: 0.2; color: Theme.alpha(orb.tint, orb.rings ? 0.25 : 0.22) }
+            GradientStop { position: orb.rings ? 0.62 : 0.5; color: Theme.alpha(orb.tint, orb.rings ? 0.12 : 0.06) }
+            GradientStop { position: orb.rings ? 0.82 : 0.75; color: Theme.alpha(orb.tint, orb.rings ? 0.045 : 0.02) }
+            GradientStop { position: 1.0; color: Theme.alpha(orb.tint, 0) }
         }
     }
 
-    // the core
-    Shape {
-        anchors.centerIn: parent
-        width: orb.r * 0.86; height: width
+    // the outer rings
+    Ring { visible: orb.rings; radius: orb.r * 0.84; stroke: Theme.alpha(orb.tint, 0.3) }
+    Ring { visible: orb.rings; radius: orb.r * 0.65; line: Math.max(2, orb.r * 0.05); stroke: Theme.alpha(orb.tint, 0.1) }
+    Ring {
+        visible: orb.rings
+        rotation: orb.spin
+        line: Math.max(2, orb.r * 0.05)
+        stroke: Theme.alpha(orb.tint, 0.7)
+        svg: orb.rings ? orb.arcs(orb.r, orb.r * 0.65, 12, 0.7) : ""
+    }
+
+    // the inner ring, a lit gap, and the core with its bloom
+    Disc {
+        radius: orb.r * (orb.rings ? 0.5 : 0.66)
+        scale: 1 + orb.pulse * 0.5
+        gradient: RadialGradient {
+            centerX: orb.r * (orb.rings ? 0.5 : 0.66); centerY: centerX; focalX: centerX; focalY: centerX; centerRadius: centerX
+            GradientStop { position: 0.6; color: Theme.alpha(orb.tint, 0.45) }
+            GradientStop { position: 1.0; color: Theme.alpha(orb.tint, 0.08) }
+        }
+    }
+    Ring { radius: orb.r * (orb.rings ? 0.5 : 0.66); line: orb.rings ? 2 : 1.5; stroke: Theme.alpha(orb.tint, 0.95); scale: 1 + orb.pulse * 0.5 }
+    Disc {
+        id: core
+        radius: orb.r * (orb.rings ? 0.33 : 0.44)
         scale: 1 + orb.pulse
-        preferredRendererType: Shape.CurveRenderer
-        ShapePath {
-            strokeWidth: 0
-            fillGradient: RadialGradient {
-                readonly property real c: orb.r * 0.43
-                centerX: c; centerY: c; centerRadius: c; focalX: c * 0.72; focalY: c * 0.62; focalRadius: 0
-                GradientStop { position: 0.0; color: Qt.lighter(orb.tint, 1.65) }
-                GradientStop { position: 0.45; color: orb.tint }
-                GradientStop { position: 1.0; color: Qt.darker(orb.tint, orb.mode === "idle" ? 2.4 : 1.9) }
-            }
-            PathAngleArc { centerX: orb.r * 0.43; centerY: orb.r * 0.43; radiusX: orb.r * 0.43; radiusY: orb.r * 0.43; startAngle: 0; sweepAngle: 360 }
+        gradient: RadialGradient {
+            centerX: core.radius; centerY: core.radius; focalX: core.radius; focalY: core.radius; centerRadius: core.radius
+            GradientStop { position: 0.0; color: "white" }
+            GradientStop { position: 0.22; color: "white" }
+            GradientStop { position: 0.5; color: Qt.lighter(orb.tint, 1.3) }
+            GradientStop { position: 0.85; color: orb.tint }
+            GradientStop { position: 1.0; color: Theme.alpha(orb.tint, 0.85) }
         }
     }
 }

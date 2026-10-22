@@ -36,97 +36,103 @@ Window {
     Shortcut { sequence: "Ctrl+,"; onActivated: win.go("settings") }
     Shortcut { sequence: "Escape"; enabled: Backend.state !== "idle"; onActivated: Backend.stop() }
 
-    Rectangle {
+    onPageChanged: pageIn.restart()
+
+    Item {
         id: frame
         anchors.fill: parent
-        radius: win.maximized ? 0 : 18
-        color: Theme.bg
-        border.width: win.maximized ? 0 : 1
-        border.color: Theme.lineStrong
-        clip: true
+        readonly property real radius: win.maximized ? 0 : Theme.radiusWindow
+        property color glow: Theme.stateColor(Backend.state)
+        Behavior on glow { ColorAnimation { duration: 600; easing.type: Easing.OutCubic } }
 
-        // a soft glow in the corner, in Jarvis's colour of the moment
+        // the canvas: a deep navy gradient, light in Jarvis's colour of the moment from the top right, a warm hint below
         Shape {
-            width: 900; height: 900
-            x: parent.width - 560; y: -560
+            id: canvas
+            anchors.fill: parent
             preferredRendererType: Shape.CurveRenderer
+            readonly property real big: Math.max(width, height)
             ShapePath {
-                strokeWidth: 0
-                fillGradient: RadialGradient {
-                    centerX: 450; centerY: 450; centerRadius: 450; focalX: 450; focalY: 450
-                    GradientStop { position: 0; color: Theme.alpha(Theme.stateColor(Backend.state), 0.16) }
-                    GradientStop { position: 1; color: Theme.alpha(Theme.stateColor(Backend.state), 0) }
+                strokeWidth: -1
+                fillGradient: LinearGradient {
+                    x1: 0; y1: 0; x2: 0; y2: frame.height
+                    GradientStop { position: 0; color: Theme.bgTop }
+                    GradientStop { position: 1; color: Theme.bgBottom }
                 }
-                PathAngleArc { centerX: 450; centerY: 450; radiusX: 450; radiusY: 450; sweepAngle: 360 }
+                PathRectangle { width: frame.width; height: frame.height; radius: frame.radius }
+            }
+            ShapePath {
+                strokeWidth: -1
+                fillGradient: RadialGradient {
+                    centerX: frame.width * 0.9; centerY: -frame.height * 0.08; focalX: centerX; focalY: centerY
+                    centerRadius: canvas.big * 0.8
+                    GradientStop { position: 0; color: Theme.alpha(frame.glow, 0.13) }
+                    GradientStop { position: 0.45; color: Theme.alpha(frame.glow, 0.045) }
+                    GradientStop { position: 1; color: Theme.alpha(frame.glow, 0) }
+                }
+                PathRectangle { width: frame.width; height: frame.height; radius: frame.radius }
+            }
+            ShapePath {
+                strokeWidth: -1
+                fillGradient: RadialGradient {
+                    centerX: frame.width * 0.08; centerY: frame.height * 1.05; focalX: centerX; focalY: centerY
+                    centerRadius: canvas.big * 0.75
+                    GradientStop { position: 0; color: Theme.alpha(Theme.warm, 0.04) }
+                    GradientStop { position: 1; color: Theme.alpha(Theme.warm, 0) }
+                }
+                PathRectangle { width: frame.width; height: frame.height; radius: frame.radius }
             }
         }
 
-        RowLayout {
-            anchors.fill: parent
-            anchors.margins: 1
-            spacing: 0
+        // ---- the rail, floating over the canvas
+        Glass {
+            id: rail
+            floating: true
+            x: 12; y: 12
+            width: 76; height: parent.height - 24
+            radius: 26
 
-            // ---- the rail
-            Rectangle {
-                Layout.fillHeight: true
-                Layout.preferredWidth: 84
-                color: Theme.alpha(Theme.panel, 0.85)
-                topLeftRadius: frame.radius
-                bottomLeftRadius: frame.radius
+            DragHandler { target: null; onActiveChanged: if (active) win.startSystemMove() }
 
-                DragHandler { target: null; onActiveChanged: if (active) win.startSystemMove() }
+            ColumnLayout {
+                anchors { fill: parent; topMargin: 14; bottomMargin: 6 }
+                spacing: 2
 
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.topMargin: 18
-                    anchors.bottomMargin: 16
-                    spacing: 4
-
-                    Orb {
-                        Layout.alignment: Qt.AlignHCenter
-                        Layout.preferredWidth: 46; Layout.preferredHeight: 46
-                        mode: Backend.state
-                        level: Backend.level
-                        rings: false
-                        TapHandler { onTapped: Backend.talk() }
-                        HoverHandler { cursorShape: Qt.PointingHandCursor }
-                    }
-                    Item { Layout.preferredHeight: 14 }
-
-                    Repeater {
-                        model: [["home", "Home", "home"], ["chats", "Chats", "chats"], ["activity", "Activity", "activity"],
-                                ["accounts", "Accounts", "accounts"], ["plugins", "Plugins", "plugins"], ["models", "Models", "cpu"],
-                                ["memory", "Memory", "memory"], ["health", "Health", "wrench"]]
-                        RailButton { required property var modelData; key: modelData[0]; label: modelData[1]; symbol: modelData[2] }
-                    }
-                    Item { Layout.fillHeight: true }
-                    RailButton { key: "settings"; label: "Settings"; symbol: "settings" }
+                Orb {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredWidth: 48; Layout.preferredHeight: 48
+                    mode: Backend.state
+                    level: Backend.level
+                    rings: false
+                    TapHandler { onTapped: Backend.talk() }
+                    HoverHandler { cursorShape: Qt.PointingHandCursor }
                 }
+                Rectangle { Layout.alignment: Qt.AlignHCenter; Layout.preferredWidth: 28; Layout.preferredHeight: 1
+                            Layout.topMargin: 10; Layout.bottomMargin: 10; color: Theme.stroke }
+
+                Repeater {
+                    model: [["home", "Home", "home"], ["chats", "Chats", "chats"], ["activity", "Activity", "activity"],
+                            ["accounts", "Accounts", "accounts"], ["plugins", "Plugins", "plugins"], ["models", "Models", "cpu"],
+                            ["memory", "Memory", "memory"], ["health", "Health", "pulse"]]
+                    RailButton { required property var modelData; key: modelData[0]; label: modelData[1]; symbol: modelData[2] }
+                }
+                Item { Layout.fillHeight: true }
+                RailButton { key: "settings"; label: "Settings"; symbol: "settings" }
             }
-            Rectangle { Layout.fillHeight: true; Layout.preferredWidth: 1; color: Theme.line }
+        }
 
-            // ---- the page
+        // ---- the page
+        Item {
+            anchors { left: rail.right; right: parent.right; top: parent.top; bottom: parent.bottom }
+
             Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-
-                Item {  // the top strip: drag to move, window buttons on the right
-                    id: top
-                    anchors { left: parent.left; right: parent.right; top: parent.top }
-                    height: 46
-                    z: 2
-                    DragHandler { target: null; onActiveChanged: if (active) win.startSystemMove() }
-                    TapHandler { onDoubleTapped: win.maximized ? win.showNormal() : win.showMaximized() }
-                    Row {
-                        anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
-                        spacing: 2
-                        IconButton { symbol: "min"; size: 32; glyph: 16; tip: "Minimise"; onClicked: win.showMinimized() }
-                        IconButton { symbol: "max"; size: 32; glyph: 15; tip: win.maximized ? "Restore" : "Maximise"
-                                     onClicked: win.maximized ? win.showNormal() : win.showMaximized() }
-                        IconButton { symbol: "close"; size: 32; glyph: 16; tip: "Close (Jarvis keeps running in the tray)"; onClicked: win.hide() }
-                    }
+                id: pages
+                anchors.fill: parent
+                transform: Translate { id: rise }
+                ParallelAnimation {
+                    id: pageIn
+                    NumberAnimation { target: pages; property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: rise; property: "y"; from: 8; to: 0; duration: 200; easing.type: Easing.OutCubic }
                 }
-
                 StackLayout {
                     anchors.fill: parent
                     currentIndex: ["home", "chats", "activity", "accounts", "plugins", "models", "memory", "settings", "health"].indexOf(win.page)
@@ -162,6 +168,24 @@ Window {
             }
         }
 
+        Item {  // the top strip: drag to move, window buttons on the right (over the setup screen too)
+            id: top
+            anchors { left: rail.right; right: parent.right; top: parent.top }
+            height: 46
+            z: 5.5
+            DragHandler { target: null; onActiveChanged: if (active) win.startSystemMove() }
+            TapHandler { onDoubleTapped: win.maximized ? win.showNormal() : win.showMaximized() }
+            Row {
+                anchors { right: parent.right; rightMargin: 12; top: parent.top; topMargin: 12 }
+                spacing: 4
+                WinButton { symbol: "min"; tip: "Minimise"; onClicked: win.showMinimized() }
+                WinButton { symbol: win.maximized ? "restore" : "max"; tip: win.maximized ? "Restore" : "Maximise"
+                            onClicked: win.maximized ? win.showNormal() : win.showMaximized() }
+                WinButton { symbol: "close"; danger: true; tip: "Close (Jarvis keeps running in the tray)"; onClicked: win.hide() }
+            }
+        }
+
+
         Loader {
             anchors.fill: parent
             active: win.needsSetup
@@ -169,7 +193,17 @@ Window {
             sourceComponent: SetupWizard { onFinished: goTo => { win.needsSetup = false; if (goTo) win.go(goTo) } }
         }
 
-        Toast { id: toast; anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 26 }
+        Toast { id: toast; z: 6; anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 28 }
+
+        Rectangle {  // the window's edge, over everything
+            anchors.fill: parent
+            z: 7
+            visible: !win.maximized
+            radius: frame.radius
+            color: "transparent"
+            border.width: 1
+            border.color: Theme.strokeStrong
+        }
     }
 
     component RailButton: AbstractButton {
@@ -179,30 +213,49 @@ Window {
         property string symbol
         readonly property bool current: win.page === key
         Layout.alignment: Qt.AlignHCenter
-        Layout.preferredWidth: 68
-        Layout.preferredHeight: 58
+        Layout.preferredWidth: 64
+        Layout.preferredHeight: 56
+        Layout.maximumHeight: 56
+        Layout.minimumHeight: 44
+        Layout.fillHeight: true  // (so it can shrink in a short window)
         hoverEnabled: true
         focusPolicy: Qt.NoFocus
         onClicked: win.go(key)
         background: Rectangle {
-            radius: 14
-            color: rb.current ? Theme.alpha(Theme.accent, 0.16) : rb.hovered ? Theme.card : "transparent"
-            Behavior on color { ColorAnimation { duration: 140 } }
-            Rectangle {
-                visible: rb.current
-                width: 3; height: 22; radius: 2
-                anchors.verticalCenter: parent.verticalCenter
-                x: -8
-                color: Theme.accent
+            radius: 16
+            color: rb.current ? Theme.accentSoft : rb.hovered ? Theme.glassHover : "transparent"
+            Behavior on color { ColorAnimation { duration: Theme.fast } }
+        }
+        contentItem: Item {
+            Column {
+                anchors.centerIn: parent
+                spacing: 4
+                Icon { anchors.horizontalCenter: parent.horizontalCenter; name: rb.symbol; size: 20
+                       color: rb.current ? Theme.accent : rb.hovered ? Theme.text : Theme.text2 }
+                Text { anchors.horizontalCenter: parent.horizontalCenter; text: rb.label; font.family: Theme.font; font.pixelSize: Theme.px(11)
+                       font.variableAxes: { "wght": rb.current ? 600 : 500 }; color: rb.current ? Theme.text : rb.hovered ? Theme.text : Theme.text2 }
             }
         }
-        contentItem: Column {
-            spacing: 4
-            topPadding: 8
-            Icon { anchors.horizontalCenter: parent.horizontalCenter; name: rb.symbol; size: 21
-                   color: rb.current ? Theme.accent : rb.hovered ? Theme.text : Theme.dim }
-            Text { anchors.horizontalCenter: parent.horizontalCenter; text: rb.label; font.family: Theme.font; font.pixelSize: Theme.px(11)
-                   font.weight: rb.current ? Font.DemiBold : Font.Medium; color: rb.current ? Theme.text : Theme.dim }
+        scale: down ? 0.97 : 1
+        Behavior on scale { NumberAnimation { duration: Theme.fast; easing.type: Easing.OutCubic } }
+    }
+
+    component WinButton: AbstractButton {
+        id: wb
+        property string symbol
+        property string tip
+        property bool danger: false
+        implicitWidth: 30; implicitHeight: 30
+        hoverEnabled: true
+        focusPolicy: Qt.NoFocus
+        Tip { text: wb.tip; visible: wb.hovered }
+        background: Rectangle {
+            radius: 15
+            color: !wb.hovered ? "transparent" : wb.danger ? Theme.alpha(Theme.red, 0.8) : Theme.glassHover
+            Behavior on color { ColorAnimation { duration: Theme.fast } }
+        }
+        contentItem: Item {
+            Icon { anchors.centerIn: parent; name: wb.symbol; size: 16; color: wb.hovered ? (wb.danger ? "white" : Theme.text) : Theme.text3 }
         }
     }
 }

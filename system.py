@@ -255,6 +255,8 @@ def _wdo(*args, timeout=15):
     with _input_lock:
         try:
             r = subprocess.run(["wdotool", *map(str, args)], capture_output=True, text=True, timeout=timeout, env=WDOTOOL_ENV)
+            if r.returncode != 0 and "no keyboard device from EIS" in (r.stderr or ""):
+                r = subprocess.run(["wdotool", "--backend", "uinput", *map(str, args)], capture_output=True, text=True, timeout=timeout, env=WDOTOOL_ENV)
         except subprocess.TimeoutExpired:
             _input_blocked_until[0] = time.time() + 60
             return PERMISSION_PENDING
@@ -317,7 +319,7 @@ def click(button="left", double=False):
 def type_text(text):
     if WAYLAND:
         tool = _wayland_tool()
-        return _wdo("type", text, timeout=60) if tool == "wdotool" else run(["ydotool", "type", text], 60) and "" if tool else \
+        return _wdo("type", "--", text, timeout=60) if tool == "wdotool" else run(["ydotool", "type", "--", text], 60) and "" if tool else \
             "typing on Wayland needs wdotool or ydotool"
     from pynput.keyboard import Controller
     Controller().type(text)
@@ -351,7 +353,7 @@ def press_keys(keys):
 
 def scroll(amount):
     if WAYLAND:
-        return _wdo("scroll", 0, int(amount), timeout=40) if _wayland_tool() == "wdotool" else "scrolling on Wayland needs wdotool"
+        return _wdo("scroll", "--", 0, int(amount), timeout=40) if _wayland_tool() == "wdotool" else "scrolling on Wayland needs wdotool"
     from pynput.mouse import Controller
     Controller().scroll(0, -int(amount))
     return ""
@@ -576,6 +578,24 @@ def selected_text():
         get = lambda which: run(["xclip", "-o", "-selection", which], 3)
         return get("primary"), get("clipboard")
     return "", ""
+
+
+def paste_text(text):
+    """Puts text in the clipboard, presses ctrl+v, then puts back what the clipboard held: '' when done, else the
+    problem; None where there's no clipboard tool (Windows, or Linux without wl-copy/xclip), so it's typed instead."""
+    if WAYLAND and have("wl-copy"):
+        copy, paste = ["wl-copy"], ["wl-paste", "--no-newline"]
+    elif not IS_WINDOWS and have("xclip"):
+        copy, paste = ["xclip", "-selection", "clipboard"], ["xclip", "-o", "-selection", "clipboard"]
+    else:
+        return None
+    before = subprocess.run(paste, capture_output=True, timeout=3)  # (stdout only: an empty clipboard's error isn't text to keep)
+    subprocess.run(copy, input=text.encode(), timeout=5)
+    problem = press_keys("ctrl+v")
+    time.sleep(0.5)  # (the app reads the clipboard after the key press)
+    if before.returncode == 0 and before.stdout:
+        subprocess.run(copy, input=before.stdout, timeout=5)
+    return problem
 
 
 def now_playing():

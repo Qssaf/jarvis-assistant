@@ -117,6 +117,8 @@ def simulated(case, name, args):
                           + (f", then {args['repeat']}" if args.get("repeat") else ""), "id": "r1"}
     if name == "cancel_reminder":
         return {"result": "cancelled"}
+    if name == "checks":
+        return {"checks": [args.get("text")] if args.get("action") == "add" else [], "every_minutes": 60}
     if name == "routine":
         if args.get("action") == "save":
             return {"result": f"saved the routine '{args.get('name')}'"}
@@ -308,6 +310,13 @@ CASES = [
     ("remind_weekdays", ["Remind me every weekday at 7:30 to take my vitamins."], lambda c, s: (arg(c, "set_reminder", "repeat") == "weekdays" and "07:30" in str(arg(c, "set_reminder", "at", ""))) or "weekdays at 07:30"),
     ("remind_list", ["What reminders do I have?"], lambda c, s: called(c, "list_reminders") or "list_reminders"),
     ("remind_cancel", ["Remind me in 20 minutes to stretch.", "Actually, cancel that reminder."], lambda c, s: called(c, "cancel_reminder") or "cancel_reminder"),
+    ("remind_task", ["Every weekday at 8, check my inbox and tell me what's important."],
+     lambda c, s: (arg(c, "set_reminder", "task") is True and arg(c, "set_reminder", "repeat") == "weekdays") or "a weekday task reminder"),
+    ("remind_task_once", ["At 6 pm, check the weather and tell me if I need an umbrella."],
+     lambda c, s: (arg(c, "set_reminder", "task") is True and not called(c, "weather")) or "a task reminder, not the weather now"),
+    ("remind_not_task", ["Remind me in 15 minutes to call my mum."], lambda c, s: (called(c, "set_reminder") and not arg(c, "set_reminder", "task")) or "a plain reminder"),
+    ("checks_add", ["Keep an eye on my email and tell me if my professor writes to me."],
+     lambda c, s: arg(c, "checks", "action") == "add" or "checks add"),
     ("remind_alarm", ["Wake me up at 6 tomorrow."], lambda c, s: str(arg(c, "set_reminder", "at", "")).endswith("06:00") or "a 06:00 reminder"),
 
     # ---- memory and past conversations

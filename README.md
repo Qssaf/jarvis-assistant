@@ -9,7 +9,7 @@ app with a notch at the top of the screen and a native dashboard window.
 
 ![Home: the arc reactor, a greeting and things to try](docs/home.png)
 
-![A conversation: tool use, a generated picture and Jarvis's thinking](docs/window.png)
+![A conversation: tool steps, a reminder and replies](docs/window.png)
 
 ![The notch: listening, working, speaking](docs/notch.png)
 
@@ -51,6 +51,14 @@ app with a notch at the top of the screen and a native dashboard window.
 - **Your selection and music**: *"Summarise what I selected"*, *"translate this"*, *"next song"*, *"what's playing?"*.
 - **Undo**: everything Jarvis changes is logged; *"undo that"* reverses it. Deleted files go to the trash.
 - **Heads-ups**: a reminder ten minutes before calendar events, and a day and two hours before Classroom work is due.
+- **Scheduled tasks and checks**: *"Every weekday at 8, check my inbox and tell me what matters"* runs the task at that
+  time. *"Keep an eye on failed payments"* (or the list in Settings) is checked every hour or so with your accounts and
+  the web, and you only hear about it when something needs you. Results are said, shown, and sent to your phone, so
+  you can answer *"yes, do it"* from there.
+- **For scripts and other AI agents**: `jarvis --task "what's on my calendar?"` prints Jarvis's reply, `jarvis --say
+  "the build finished"` says it out loud, and `jarvis --mcp` is an MCP server, so Claude Code or Codex can hand Jarvis
+  tasks (`claude mcp add jarvis -- jarvis --mcp`). Like scheduled tasks, nothing that needs your yes is done. (On
+  Windows these need the source install: `Jarvis.exe` has no console.)
 - **Pictures and files**: *"Make a picture of a rainy city at night"*. You can also drop a PDF, picture or text file on
   the window and ask about it.
 - **Your day**: *"Good morning"* gives a briefing (weather, work due, calendar, unread email, reminders). Tell Jarvis
@@ -61,8 +69,14 @@ app with a notch at the top of the screen and a native dashboard window.
   its tools.
 
 ### On your phone
-Settings → *Jarvis on your phone*: make a Telegram bot with @BotFather, paste its token, send it the pairing code, and
-message it tasks from anywhere (*"what's due this week?"*, *"turn the volume down"*). `/stop` stops a task.
+- **The Jarvis app** (Android, in `android/`): reaches your PC from anywhere through your own private relay, a tiny
+  Cloudflare Worker in `relay/` on your free Cloudflare account (`npx wrangler login`, then `npx wrangler deploy` in that
+  folder). The PC and the phone both dial out to it, so nothing on the PC is open to the internet, and everything
+  between them is end-to-end encrypted: the relay only passes on ciphertext. Paste the relay's address in Settings →
+  *The Jarvis app*, tap *Pair a phone* and scan the code with the app. Type or speak tasks; replies that finish while
+  the app is closed arrive when you open it. With your own Gemini key in the app, it still answers when the PC is off.
+- **Telegram**: Settings → *Jarvis on Telegram*: make a bot with @BotFather, paste its token, send it the pairing code,
+  and message it tasks (*"what's due this week?"*, *"turn the volume down"*). `/stop` stops a task.
 
 ### Routines and reminders
 Say *"when I say study mode, close Discord, open my notes and set a 50-minute timer"*, then just *"study mode"*.

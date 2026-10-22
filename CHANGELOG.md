@@ -1,5 +1,50 @@
 # Changelog
 
+## 1.14.0 — 2026-10-22
+
+### Changed
+- **A new look, everywhere:** the window is redesigned from the ground up in a "glass" style: a deep navy canvas lit
+  by Jarvis's colour, frosted cards, a floating sidebar, larger type, and an arc reactor at the heart of Home that
+  turns faster while Jarvis listens and glows orange while it works. Every page, the chat and the first-run setup
+  were redone to match, and the setup screen can now be moved and closed like the rest of the window.
+
+### Added
+- **Scheduled tasks:** *"every weekday at 8, check my inbox and tell me what matters"* now does it at 8, instead of
+  just saying the words. The outcome is said, shown, and sent to your phone (Telegram or the app).
+- **Keep an eye on things:** a list in Settings (or *"keep an eye on failed payments"*) that Jarvis checks every hour
+  or so, through your accounts and the web, telling you only when something needs you. These run on their own: changes
+  that need your yes are never made, Jarvis says what it would do instead. Each check is a few model requests.
+  What it found joins the conversation, so you can answer *"yes, do it"* from your phone or out loud.
+- **Jarvis for scripts and AI agents:** `jarvis --task "..."` prints Jarvis's reply, `jarvis --say "..."` says it out
+  loud, and `jarvis --mcp` is an MCP server, so Claude Code, Codex and other agents can hand Jarvis tasks on the PC.
+- **Jarvis learns the way:** when a task only worked after several tries, it remembers how ("How to: ...") and goes
+  straight there next time.
+- **The Jarvis app for Android:** type or speak tasks to Jarvis from anywhere. It connects through your own private
+  relay (a small Cloudflare Worker you deploy for free from the `relay` folder), the way OpenChamber's phone link does:
+  the PC and the phone both dial out, so nothing on the PC is open to the internet, and everything is end-to-end
+  encrypted, so the relay only ever sees ciphertext. It shares the window's new design. Pair by scanning the code in
+  Settings. Replies that finish while
+  the app is closed arrive when you open it, and with your own Gemini key it still answers when the PC is off.
+
+### Fixed
+- **Reminders said out loud:** when Gemini was slow to say one, Jarvis reconnected after 12 s and then showed "please
+  say it again" (you hadn't said anything). Announcements now get 25 s, and never ask you to repeat yourself.
+- **One message per request:** asked for "another joke", Jarvis sent four in a row, and a C++ game went out eight
+  times. Once a message is sent, another one for the same request is refused (several go in one go when you ask).
+- **"Can you see my screen?":** Jarvis said it couldn't, three times, before looking. It looks now.
+- **Clicking and typing in one step:** when a step both clicked the message box and held the text, the text was
+  dropped and an empty Return was "sent". It now clicks, then types.
+- **Long text is pasted:** a page of code typed key by key took up to a minute and the virtual keyboard dropped
+  mid-way. Text over 200 characters goes in through the clipboard (and the clipboard is put back after).
+- **Text starting with a dash** (like "-1, 0, 1" in homework) failed to type; scrolling up failed the same way.
+- **The virtual keyboard dropping** on Wayland: typing tries the uinput backend before giving up.
+- **Long sends aren't read out:** a sent message is said back word for word only when it's short; code, digits and
+  long jokes are named, not recited. No placeholder text ("...") is ever typed.
+- **"My days"** no longer starts the morning briefing.
+- **Crisis lines:** asked about suicide, Jarvis gave a US number to someone outside the US. It now gives the line for
+  the country you live in.
+- **Agent tool errors are logged** with what went wrong, not only the tool's name.
+
 ## 1.13.7 — 2026-10-18
 
 ### Fixed
