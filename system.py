@@ -52,7 +52,9 @@ def mic_frames(target=None):
     import numpy as np
     if not IS_WINDOWS and have("pw-record"):
         while True:  # pw-record quits when PipeWire restarts (an update, a new device): start it again, or Jarvis goes deaf
-            p = subprocess.Popen(["pw-record", *(["--target", target] if target else []), "--rate", "16000", "--channels", "1",
+            # --raw: to a pipe pw-record otherwise writes an .au stream, big-endian since PipeWire 1.6.10. Read as ours,
+            # quiet sound came through and anything loud enough for a call was noise: Jarvis went deaf as the mic went up
+            p = subprocess.Popen(["pw-record", *(["--target", target] if target else []), "--raw", "--rate", "16000", "--channels", "1",
                                   "--format", "s16", "-"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             started = time.time()
             while chunk := p.stdout.read(2560):

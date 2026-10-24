@@ -863,6 +863,11 @@ system.time = types.SimpleNamespace(time=time.time, sleep=lambda seconds: None)
 system.have = lambda program: program == "pw-record"
 mic = system.mic_frames()
 assert next(mic)[0] == 1 and next(mic)[0] == 2
+# raw samples in our byte order: to a pipe pw-record 1.6.10 writes big-endian .au, and loud speech came in as noise
+started = []
+system.subprocess.Popen = lambda args, **k: started.append(args) or Recorder(b"\1\0" * 1280)
+next(system.mic_frames())
+assert "--raw" in started[0], started
 system.subprocess, system.time, system.have, system.IS_WINDOWS = real_mic
 
 # a long name with underscores is looked up by name; only when no file has it is it taken for an id

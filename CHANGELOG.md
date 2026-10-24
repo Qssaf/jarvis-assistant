@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- **Jarvis hears you again with the mic turned up:** since PipeWire 1.6.10 the microphone arrived with its bytes
+  swapped, so only very quiet speech got through, and at a volume loud enough for calls Jarvis heard nothing. It now
+  asks PipeWire for plain samples.
+
 ## 1.14.0 — 2026-10-22
 
 ### Changed
