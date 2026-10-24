@@ -14,6 +14,7 @@ ScrollPage {
     property bool confirmDelete: false
     property var remote: ({})
     property var phone: ({})
+    property var wa: ({})
     property bool changingRelay: false
     function setRelay(url) {
         Api.post("/api/phone/relay", { relay: url }, d => { phone = d; relayUrl.text = ""; changingRelay = false }, e => Backend.toast(e.error, true))
@@ -36,6 +37,7 @@ ScrollPage {
         Api.get("/api/settings", d => { s = d.settings; voices = d.voices; languages = d.languages })
         Api.get("/api/remote", d => remote = d)
         Api.get("/api/phone", d => phone = d)
+        Api.get("/api/whatsapp", d => wa = d)
         lookUp()
     }
     function lookUp() {
@@ -309,6 +311,59 @@ ScrollPage {
         Timer {  // while a code is up: notice when the phone has paired, and keep the relay's status fresh
             interval: 2000; repeat: true; running: !!page.phone.pairing || (!!page.phone.relay && !page.phone.connected)
             onTriggered: Api.get("/api/phone", d => page.phone = d)
+        }
+    }
+
+    Section {
+        title: "WhatsApp"
+        description: "Jarvis links to your own WhatsApp like WhatsApp Web. It answers your contacts' messages that don't need you, "
+                     + "saying it's your assistant, and picks up calls you miss to take a message. It's not an official "
+                     + "WhatsApp feature: WhatsApp may block numbers that act like bots, so Jarvis answers only saved contacts, never groups."
+        Pill { visible: !page.wa.linked && page.wa.state === "off"; kind: "primary"; symbol: "chats"; text: "Link WhatsApp"
+               onClicked: Api.post("/api/whatsapp/link", {}, d => page.wa = d, e => Backend.toast(e.error, true)) }
+        Status { visible: page.wa.state === "starting" || page.wa.state === "connecting"; status: "working"
+                 text: page.wa.linked ? "Connecting to WhatsApp…" : "Getting a code from WhatsApp…" }
+        RowLayout {
+            visible: page.wa.state === "qr" && !!page.wa.qr
+            Layout.fillWidth: true
+            spacing: 24
+            Rectangle {  // (a QR code needs its light background to scan)
+                Layout.preferredWidth: 224; Layout.preferredHeight: 224
+                radius: 16
+                color: "white"
+                Image { anchors.centerIn: parent; width: 204; height: 204; smooth: false; source: page.wa.qr || "" }
+            }
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 6
+                Txt { kind: "heading"; text: "Scan with WhatsApp"; Layout.fillWidth: true }
+                Txt { kind: "small"; Layout.fillWidth: true
+                      text: "On your phone: WhatsApp → Settings → Linked devices → Link a device, then scan this code. It renews itself." }
+            }
+        }
+        RowLayout {
+            visible: page.wa.state === "connected"
+            spacing: 14
+            Status { status: page.wa.on_call ? "working" : "ok"
+                     text: page.wa.on_call ? `On a call with ${page.wa.on_call}` : `Linked${page.wa.name ? " as " + page.wa.name : ""}` }
+            Pill { kind: "ghost"; text: "Unlink"; onClicked: Api.post("/api/whatsapp/unlink", {}, d => page.wa = d) }
+        }
+        Txt { kind: "small"; visible: !!page.wa.error; text: page.wa.error || ""; color: Theme.red; Layout.fillWidth: true }
+        Row2 {
+            Setting { label: "Messages"
+                Select { Layout.fillWidth: true; value: page.s.whatsapp_replies || "contacts"; onPicked: v => page.set("whatsapp_replies", v)
+                         model: [{ value: "contacts", label: "Answer my contacts" }, { value: "off", label: "Just show them to me" }] } }
+            Setting { label: "Calls"
+                Select { Layout.fillWidth: true; value: page.s.whatsapp_calls || "answer"; onPicked: v => page.set("whatsapp_calls", v)
+                         model: [{ value: "answer", label: "Pick up if I don't (20 s)" }, { value: "decline", label: "Decline them" },
+                                 { value: "off", label: "Let them ring" }] } }
+        }
+        Setting { label: "What Jarvis tells people"
+            Area { text: page.s.whatsapp_note || ""; placeholder: "e.g. I'm in class until 5, I'll answer after"
+                   onDone: v => page.set("whatsapp_note", v) } }
+        Timer {  // while it's starting or showing a code: notice when the phone has linked
+            interval: 2000; repeat: true; running: page.wa.state === "qr" || page.wa.state === "starting" || page.wa.state === "connecting" || !!page.wa.on_call
+            onTriggered: Api.get("/api/whatsapp", d => page.wa = d)
         }
     }
 

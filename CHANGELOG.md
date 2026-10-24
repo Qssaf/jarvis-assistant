@@ -1,11 +1,29 @@
 # Changelog
 
-## Unreleased
+## 2.0.0 — 2026-10-24
+
+The first published release since 1.13.3, so it also brings everything from 1.13.4 to 1.14.0 below: the glass
+redesign, the Jarvis app for Android, scheduled tasks, keeping an eye on things, Jarvis for scripts and AI agents, and
+Jarvis learning the way. New in 2.0:
+
+### Added
+- **Jarvis looks after your WhatsApp:** link your own WhatsApp in Settings (like WhatsApp Web, by scanning a code).
+  Jarvis answers your contacts' messages that don't need you, saying it's your assistant, and tells you about anything
+  urgent; it picks up calls you miss after 20 seconds, talks with the caller in its own voice, takes a message and
+  tells you what they wanted. It also reads and sends WhatsApp messages when you ask, without touching the screen.
+  It never answers groups or strangers, stays out of chats you're writing in, and sends at most 20 replies an hour.
+- **Your mic slider is yours:** Jarvis evens out your voice by itself, so the slider can sit wherever your calls need
+  it. Quiet or loud, the wake word and Gemini hear you at the same level (it adapts within a few seconds of talking,
+  and never to its own voice).
 
 ### Fixed
 - **Jarvis hears you again with the mic turned up:** since PipeWire 1.6.10 the microphone arrived with its bytes
   swapped, so only very quiet speech got through, and at a volume loud enough for calls Jarvis heard nothing. It now
   asks PipeWire for plain samples.
+- **Echo cancelling holds:** the system's "follow the default mic" could move Jarvis off the echo-cancelled mic onto
+  the raw one, and Jarvis heard and answered itself. It now stays put, and if it ever isn't on it, the mic is off while
+  Jarvis talks. After a restart it no longer catches the last run's canceller on its way out, a "mute all mics" from an
+  earlier run no longer comes back, and a click just before a reply no longer lets Jarvis's own voice through.
 
 ## 1.14.0 — 2026-10-22
 

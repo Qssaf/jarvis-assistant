@@ -117,7 +117,11 @@ mid-connection makes it start a whole new browser sign-in.
 
 **OS layer.** Everything platform-specific goes in `system.py`, never in the other modules. It picks the best
 available tool at call time:
-- Audio: PipeWire `pw-record`/`pw-play`, else sounddevice.
+- Audio: PipeWire `pw-record`/`pw-play`, else sounddevice. The mic slider is the user's (calls, Discord): `MicLevel`
+  in `voice_loop` brings speech back to ~4000 RMS whatever the slider or card gain (-20..+40 dB, adapting over ~3 s
+  of talking, never on Jarvis's own voice), so the wake word, `feed`'s fixed thresholds and Gemini get a steady level.
+  A few seconds after each start `mic_source` logs the node pw-record really reads ("[voice] the microphone is ...");
+  if that isn't the echo canceller, the echo-cancelled gate is switched off (half-duplex) instead of hearing itself.
 - Screenshots: KDE `jarvis-shot` helper → spectacle → grim → gnome-screenshot → mss.
 - Input: wdotool/ydotool on Wayland, pynput otherwise.
 - Windows: kdotool on KDE Wayland, pywinctl otherwise.
@@ -144,7 +148,8 @@ screenshot. The voice model can't see images, so `act` from voice refuses coordi
 
 **Echo cancelling** (`echo_cancel`, Linux/PipeWire): `start_echo_cancel` loads `module-echo-cancel` in `monitor.mode`, so
 the reference is everything the default output plays (games, calls, Jarvis), not only Jarvis's voice; the mic reads
-`jarvis-ec-source` and `Speaker.echo_cancelled` swaps the half-duplex mic gate for a level gate: while Jarvis talks,
+`jarvis-ec-source` (pinned with `node.dont-move`: WirePlumber's "follow the default mic" otherwise moved it onto the raw
+mic, and Jarvis heard itself; check with `pw-link -l`) and `Speaker.echo_cancelled` swaps the half-duplex mic gate for a level gate: while Jarvis talks,
 `feed` sends silence unless the user is clearly talking (the canceller leaves a faint echo Gemini hears as the user). The module lives as long as its
 `pw-cli` process: `atexit` stops it, so a restart must run the exit handlers (`restart_soon` does before `execv`).
 
@@ -161,6 +166,22 @@ Jetpack Compose (`Screens.kt` takes plain state, so `ScreensTest`'s Paparazzi re
 `test_jarvis.py` and the app's `HandshakeTest` (`./gradlew testDebugUnitTest`). Build the APK with the SDK in
 `~/.bubblewrap` (`ANDROID_HOME=~/.bubblewrap/android_sdk JAVA_HOME=~/.bubblewrap/jdk ./gradlew assembleDebug`); test
 the relay locally with `npx wrangler dev` in `relay/`.
+
+**WhatsApp.** `whatsapp.py` runs WhatsApp Web in a headless Chromium on its own profile (`DATA/whatsapp`), driven
+over the DevTools protocol (`system.Devtools`: a pipe on Linux, a 127.0.0.1 port on Windows). WhatsApp never sends a
+QR code to a browser whose brands say headless, so the page's user agent and brands are overridden; it also holds back
+QR codes after many link attempts in a row (keep experiments few), and a phone refuses to link a profile left over
+from earlier tries (a new link starts from a fresh profile). WhatsApp works in one tab only: a browser left running on
+the profile, or tabs restored from the last run, leave Jarvis's tab on "open in another window", so `Devtools` ends a
+stale browser and `serve` closes extra tabs. Calling is "deferred" until someone uses the page, so `SETUP_JS` starts
+it (`ensureVoipInitialized()`); incoming calls show up as the call collection's active call. `INIT_JS` runs before WhatsApp's scripts: the
+page's microphone is a stream Jarvis's call voice is played into (`__jarvisSpeak`), and whatever the page plays is
+tapped at `AudioNode.connect(destination)` and sent back as 16 kHz PCM through the `jarvisWA` binding while a call is
+on. `SETUP_JS` uses WhatsApp Web's own modules (`window.require('WAWeb...')`, the names whatsapp-web.js uses) for new
+messages, calls, sending, chats and history (message keys have no `_serialized`: use `toString()`). Auto-replies go through
+`brain._generate` with only that chat (no tools, no memory); answered calls are a separate Gemini Live session
+(`CallSession`). The agent's `whatsapp_read`/`whatsapp_send` reach it through `brain.whatsapp_link`; sending follows the
+`whatsapp` account mode and `confirmed`, and a name must match exactly one chat.
 
 **State.** `store.py` keeps settings (unknown keys dropped, types coerced, `*_models`, `language`, `safety`... validated),
 plugins, `memory.md`, reminders (optionally repeating: `next_time`), routines, the change log and sessions under

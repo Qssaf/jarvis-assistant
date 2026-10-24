@@ -185,6 +185,15 @@ live.feed(frame(50))
 live.feed(frame(3000))
 live.feed(frame(50))
 assert [any(np.frombuffer(b, np.int16)) for b in live.backlog] == [False, True, True], "echo gate"
+# Jarvis answers right after the user stops: the start of its reply isn't let through as the second after their speech
+live.speaker.until, live.voice_at = 0.0, 0.0
+live.backlog.clear()
+live.feed(frame(3000))  # the end of the request
+live.speaker.play(b"\0" * 48000)
+live.speaker.since = time.time()  # (the reply reaches the speakers now, not 0.25 s later)
+live.feed(frame(50))  # its echo
+assert [any(np.frombuffer(b, np.int16)) for b in live.backlog] == [True, False], "echo gate at the start of a reply"
+live.speaker.stop()
 live.speaker.echo_cancelled, live.speaker.until = False, 0.0
 
 # keys: common names become xkb's, several chains run in order; only portal errors are blamed on the permission prompt
@@ -863,12 +872,44 @@ system.time = types.SimpleNamespace(time=time.time, sleep=lambda seconds: None)
 system.have = lambda program: program == "pw-record"
 mic = system.mic_frames()
 assert next(mic)[0] == 1 and next(mic)[0] == 2
-# raw samples in our byte order: to a pipe pw-record 1.6.10 writes big-endian .au, and loud speech came in as noise
+# on the echo canceller the stream is pinned there: WirePlumber's "follow the default mic" moved it onto the raw mic
 started = []
 system.subprocess.Popen = lambda args, **k: started.append(args) or Recorder(b"\1\0" * 1280)
-next(system.mic_frames())
+next(system.mic_frames("jarvis-ec-source"))
+assert started[0][1:5] == ["--target", "jarvis-ec-source", "-P", "{ node.dont-move = true }"], started
+# raw samples in our byte order: to a pipe pw-record 1.6.10 writes big-endian .au, and loud speech came in as noise
 assert "--raw" in started[0], started
 system.subprocess, system.time, system.have, system.IS_WINDOWS = real_mic
+
+# which mic pw-record really reads: its node's client is the process, and a link runs into that node
+dump = [{"id": 70, "type": "PipeWire:Interface:Client", "info": {"props": {"application.process.id": 4733}}},
+        {"id": 73, "type": "PipeWire:Interface:Node", "info": {"props": {"node.name": "pw-record", "client.id": 70}}},
+        {"id": 36, "type": "PipeWire:Interface:Node", "info": {"props": {"node.name": "alsa_input.x"}}},
+        {"id": 90, "type": "PipeWire:Interface:Link", "info": {"output-node-id": 36, "input-node-id": 73}}]
+real_subprocess = system.subprocess
+system.subprocess = types.SimpleNamespace(run=lambda *a, **k: types.SimpleNamespace(stdout=json.dumps(dump)),
+                                          TimeoutExpired=real_subprocess.TimeoutExpired)
+assert system.mic_source(4733) == "alsa_input.x" and system.mic_source(1) == ""
+system.subprocess = real_subprocess
+
+# Jarvis's own volume control: quiet or loud speech comes out about the same; noise and Jarvis's own voice don't count
+for loudness in (40, 400, 20000):
+    mic = jarvis.MicLevel()
+    for _ in range(25):
+        mic(frame(2))  # a quiet room
+    for _ in range(150):
+        out = mic(frame(loudness))
+    assert 2500 < np.sqrt(np.mean(out.astype(np.float32) ** 2)) < 6000, (loudness, mic.gain)
+mic = jarvis.MicLevel()
+for _ in range(100):
+    mic(frame(30000), own_voice=True)
+assert mic.gain == 1.0
+# the slider pushed up between two sentences: the first loud word is already turned down, not clipped
+mic = jarvis.MicLevel()
+for _ in range(150):
+    mic(frame(300))
+out = mic(frame(6000))
+assert np.sqrt(np.mean(out.astype(np.float32) ** 2)) < 6000 and not (np.abs(out) == 32767).any(), mic.gain
 
 # a long name with underscores is looked up by name; only when no file has it is it taken for an id
 db.connected, calls = {"googledrive"}, []
@@ -1638,5 +1679,98 @@ to_pc, to_phone = phone.derive(pc_key.exchange(phone.ec.ECDH(), phone.point(vb("
                                phone_key.exchange(phone.ec.ECDH(), phone.point(welcome[1:66])), vb("phone_public"), welcome[1:66])
 pc_side = phone.Channel(to_phone, to_pc, sent=1)
 assert pc_side.open(vb("phone_frame")) == {"op": "hello"} and phone.Channel(to_pc, to_phone, got=1).open(vb("frame"))["name"] == "test-pc"
+
+# WhatsApp: Jarvis answers saved contacts after a burst of messages, leaves chats the user is writing in, keeps to its
+# hourly limit, and never sends to a name that isn't exactly one chat (the page itself is faked: no browser, no account)
+import sys, types, whatsapp
+whatsapp.SETTLE, whatsapp.ANSWER_AFTER = 0.05, 0.05
+decided = ['{"reply": "Hi, it\'s Jarvis, Q\'s assistant!", "tell_user": ""}']
+asked_model = []
+wa_logs, wa_told, page_calls = [], [], []
+wa = whatsapp.WhatsApp(types.SimpleNamespace(_generate=lambda contents, **kw: asked_model.append(contents) or [{"text": decided[0]}]),
+                       notify=wa_logs.append, tell=wa_told.append, name=lambda: "Q")
+chats = [{"chat": "1@c.us", "name": "Sam Lee"}, {"chat": "2@c.us", "name": "Sam"}, {"chat": "3@c.us", "name": "Maya"}]
+
+
+def fake_page(js, timeout=30):
+    page_calls.append(js)
+    if js.startswith("window.__jarvisHistory"):
+        return [{"id": "m1", "me": False, "text": "hey, you around?", "at": 0}]
+    if js.startswith("window.__jarvisSend"):
+        return f"sent{len(page_calls)}"
+    if js.startswith("window.__jarvisChats"):
+        return chats
+    if js.startswith("window.__jarvisCall"):
+        return "over"  # (the user picked up on the phone)
+    return True
+
+
+wa.evaluate, wa.state = fake_page, "connected"
+
+
+def wa_says(**e):
+    wa.event({"ev": "msg", "id": "m1", "chat": "1@c.us", "me": False, "text": "hey", "name": "Sam Lee", "contact": True, **e})
+
+
+def sends():
+    return [c for c in page_calls if c.startswith("window.__jarvisSend")]
+
+
+wa_says()
+wa_says(id="m2")  # (a second line: still one reply, after the burst)
+for _ in range(100):
+    if sends():
+        break
+    time.sleep(0.02)
+time.sleep(0.1)
+assert len(sends()) == 1 and "Hi, it's Jarvis" in sends()[0] and wa.mine and "Jarvis replied" in wa_logs[-1]
+assert "Sam Lee: hey, you around?" in asked_model[0][0]["parts"][0]["text"] and "Q's AI assistant" in asked_model[0][0]["parts"][0]["text"]
+wa.event({"ev": "msg", "id": next(iter(wa.mine)), "chat": "1@c.us", "me": True, "text": "Hi, it's Jarvis", "name": "Sam Lee", "contact": True})
+assert "1@c.us" not in wa.user_wrote  # (Jarvis's own message isn't the user chatting)
+wa_says(chat="9@c.us", name="Stranger", contact=False)
+assert "9@c.us" not in wa.pending and "Stranger" in wa_logs[-1]  # not a saved contact: shown, not answered
+wa.event({"ev": "msg", "id": "u1", "chat": "3@c.us", "me": True, "text": "omw", "name": "Maya", "contact": True})
+wa_says(chat="3@c.us", name="Maya")
+time.sleep(0.3)
+assert len(sends()) == 1 and "you're chatting with them" in wa_logs[-1]  # the user is talking to Maya themselves
+wa.replies = [time.time()] * whatsapp.REPLY_LIMIT
+wa_says(chat="2@c.us", name="Sam")
+time.sleep(0.3)
+assert len(sends()) == 1 and "a lot this hour" in wa_logs[-1]
+wa.replies, decided[0] = [], 'Sure:\n```json\n{"reply": "", "tell_user": "Sam says his car broke down and needs a lift"}\n```'
+wa_says(chat="2@c.us", name="Sam")
+time.sleep(0.3)
+assert len(sends()) == 1 and wa_told == ["WhatsApp from Sam: Sam says his car broke down and needs a lift"]
+assert wa.find("sam")[0]["chat"] == "2@c.us" and wa.find("Sam Le")[1]["close_matches"] == ["Sam Lee", "Sam"]
+wa_told.clear()
+wa._ring({"id": "c1", "name": "Maya", "contact": True, "video": False, "group": False, "outgoing": False})
+assert "Maya is calling" in wa_told[0] and wa.call is None  # picked up on the phone: Jarvis stays out
+store.update_settings({"whatsapp_calls": "decline"})
+wa._ring({"id": "c2", "name": "Maya", "contact": True, "video": False, "group": False, "outgoing": False})
+assert page_calls[-1] == "window.__jarvisButton('decline')"
+store.update_settings({"whatsapp_calls": "answer"})
+try:
+    store.update_settings({"whatsapp_calls": "maybe"})
+    raise AssertionError("a bad WhatsApp calls setting was saved")
+except ValueError:
+    pass
+# the agent's tools: an exact chat name only, and a message the user didn't confirm isn't sent
+brain.whatsapp_link[0] = wa
+assert set(brain.TOOLS["whatsapp_send"][0]("Sammy", "hi")["close_matches"]) == {"Sam Lee", "Sam"} and len(sends()) == 1
+assert brain.TOOLS["whatsapp_send"][0]("Maya", "on my way")["error"] == brain.NEEDS_YES and len(sends()) == 1
+assert brain.TOOLS["whatsapp_send"][0]("Maya", "on my way", confirmed=True) == {"result": "sent to Maya"} and len(sends()) == 2
+assert "whatsapp_read" in brain.OUTSIDE_CONTENT and brain.TOOLS["whatsapp_read"][0]()["chats"] == chats
+brain.whatsapp_link[0] = None
+if not system.IS_WINDOWS:  # the DevTools pipe: commands on fd 3, replies on fd 4, each JSON ending in a NUL
+    fake_browser = os.path.join(tempfile.mkdtemp(), "browser")
+    with open(fake_browser, "w") as f:
+        f.write(f"#!{sys.executable}\nimport json, os\nbuf = b''\nwhile True:\n    c = os.read(3, 65536)\n    if not c: break\n"
+                "    buf += c\n    while b'\\0' in buf:\n        m, buf = buf.split(b'\\0', 1)\n"
+                "        os.write(4, json.dumps({'id': json.loads(m)['id'], 'result': {'ok': 1}}).encode() + b'\\0')\n")
+    os.chmod(fake_browser, 0o755)
+    dt = system.Devtools(fake_browser, tempfile.mkdtemp(), [])
+    dt.send({"id": 7, "method": "Browser.getVersion"})
+    assert dt.recv() == {"id": 7, "result": {"ok": 1}}
+    dt.close()
 
 print("ok")

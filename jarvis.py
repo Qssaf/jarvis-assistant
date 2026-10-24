@@ -16,7 +16,7 @@ import system
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HUD_PORT = store.APP_PORT
-VERSION = "1.14.0"
+VERSION = "2.0.0"
 TOKEN = secrets.token_urlsafe(24)  # only the app window (and `jarvis --listen`, via TOKEN_FILE) gets this
 TOKEN_FILE = os.path.join(store.DATA, "app.token")
 
@@ -49,6 +49,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - The screen (what's open, an error, a page): look with a specific question. Solving or judging something on screen (homework, a quiz, a graph, which option is right, a game situation): look with careful: true and ask it to work out the answer. A whole puzzle (Sudoku, a nonogram, a long sum): a look only reads it exactly (a grid as rows of digits; solving it in a look times out), run_command works it out in Python, then do_task fills it in.
 - Desktop apps: one act that launches, presses controls by their accessible names, reads the result with a look step and closes, e.g. act([{launch: "kcalc"}, {press: ["Seven", "Multiply", "Eight", "Equals"]}, {look: "What does the display show?"}, {close: "kcalc"}]).
 - Websites and chat apps (Discord, OpenCode, VS Code and other Electron apps show no controls: never ui_controls them): act with click_on naming the exact field ("the message box at the bottom", "the prompt box"), never just the app's name, and end that same act with a look step. Browser tabs: focus_window the browser, then [{keys: "ctrl+shift+a"}, {type: "tab name"}, {keys: "Return"}].
+- WhatsApp: whatsapp_read (chats, or one chat's messages) and whatsapp_send (to: the chat's name), never the screen. A message the user dictated to someone they named: whatsapp_send with confirmed: true at once.
 - Messaging: [{click_on: "the chat named 'Sam Lee' in the left list"}, {expect: "the open conversation is with Sam Lee"}, {click_on: "the message box at the bottom"}, {type: "..."}, {keys: "Return"}, {look: "Is the message in the conversation?"}].
 - System info, files, volume, clipboard: run_command. {SYSTEM} Open apps with act launch, not run_command.
 - Pictures: make_image, show_image. Local files: read_file. Time: set_reminder (repeat for "every day/weekday/week"), list_reminders, cancel_reminder.
@@ -140,7 +141,7 @@ VOICE_ACT = ("Do a whole job on screen in one go, in order. Each step is one of:
              "{scroll: 3} (scroll under mouse: positive = down toward newer messages, negative = up toward older messages), {wait: seconds}.").replace("kcalc", system.CALC)
 SCREEN_TOOLS = {"act", "look", "show_image", "ui_controls", "list_windows", "focus_window", "close_window", "open_url", "run_command"}
 QUERY_TOOLS = {"look", "web_search", "read_webpage", "youtube_search", "read_file", "briefing", "ui_controls", "list_windows", "list_reminders",
-               "recall", "selection"}
+               "recall", "selection", "whatsapp_read"}
 VOICE_RESULT_LIMIT = 12000  # characters of one tool result the voice model gets
 # tools the voice may call for one thing the user said: looking for an app that isn't open, it once called list_windows
 # and look over 100 times in a minute without a word to the user
@@ -149,7 +150,7 @@ VOICE_TOOL_LIMIT = 12
 LIVE_TOOLS = ["run_command", "web_search", "read_webpage", "youtube_search", "open_url", "remember", "forget", "set_reminder", "list_reminders",
               "cancel_reminder", "list_windows", "focus_window", "close_window", "act", "look", "ui_controls", "make_image",
               "show_image", "read_file", "briefing", "account_settings", "weather", "classroom_due", "classroom_announcements", "drive_file", "routine",
-              "recall", "selection", "media", "notes", "recent_changes", "watch", "checks"]
+              "recall", "selection", "media", "notes", "recent_changes", "watch", "checks", "whatsapp_read", "whatsapp_send"]
 
 # what the user asked to be called, from what Jarvis remembers ("prefers to be called Q", "call me Sam, not sir")
 # ponytail: a pattern over remember()'s usual wording, not understanding; unmatched memory falls back to the prompt's rule
@@ -181,7 +182,8 @@ TOOL_LABELS = {"run_command": "Running a command", "web_search": "Searching the 
                "classroom_due": "Checking Classroom", "classroom_announcements": "Checking Classroom", "drive_file": "Reading from Drive", "ask_user": "Asking you",
                "routine": "Running a routine", "recall": "Searching past conversations", "selection": "Reading your selection",
                "media": "Controlling the music", "notes": "Taking notes", "recent_changes": "Checking what changed", "watch": "Watching the screen",
-               "plan": "Planning", "checks": "Updating your checks"}
+               "plan": "Planning", "checks": "Updating your checks", "whatsapp_read": "Reading WhatsApp",
+               "whatsapp_send": "Sending a WhatsApp message"}
 
 
 def tool_label(name):
@@ -228,11 +230,14 @@ class Speaker:
         self.out = system.AudioOut()
         self.echo_cancelled = False  # the mic has the PC's own sound taken out: it can stay open while Jarvis talks
         self.until = 0.0
+        self.since = 0.0  # when the current burst reaches the speakers
         threading.Thread(target=self._run, daemon=True).start()
 
     def play(self, pcm):
-        start = self.until if self.busy() else time.time() + 0.25  # a fresh burst takes ~0.25 s to reach the speakers
-        self.until = start + len(pcm) / 48000  # 24 kHz * 2 bytes
+        now = time.time()
+        if now >= self.until:
+            self.since = now + 0.25  # a fresh burst takes ~0.25 s to reach the speakers
+        self.until = max(self.until, self.since) + len(pcm) / 48000  # 24 kHz * 2 bytes
         self.q.put(pcm)
 
     def busy(self):
@@ -355,9 +360,10 @@ class Live:
         self.level = min(1.0, max(0.0, (level - self.floor) / 2500))
         if level > max(250.0, 4 * self.floor):  # the user is talking (Gemini only transcribes at the end of a long request)
             self.voice_at = time.time()
-        elif time.time() <= self.speaker.until + 0.5 and time.time() - self.voice_at > 1.0:
+        elif time.time() <= self.speaker.until + 0.5 and (time.time() - self.voice_at > 1.0 or self.voice_at < self.speaker.since):
             # Jarvis is talking: echo cancelling leaves a faint copy of its voice (peaks ~50 against ~10000 for the user),
-            # which Gemini heard as the user and answered, over and over. Only clear speech (and the second after it) gets through
+            # which Gemini heard as the user and answered, over and over. Only clear speech (and the second after it) gets through,
+            # and only speech since Jarvis started: a click or the echo itself just before a reply mustn't open that second
             frame = np.zeros_like(frame)
         s, data = self.session, frame.tobytes()
         if s is None:  # still connecting: keep the audio, or the start of the request ("open You-") is lost
@@ -513,8 +519,13 @@ class Live:
                 + (f"- The user's routines (say one and you run it): {', '.join(store.routines())}.\n" if store.routines() else "")
                 + f"- Connected accounts with direct tools: {apps}."
                 + (f" Also connected (use do_task for these): {others}." if others else "")
-                + " Others (Slack, Notion, Google Tasks, Drive, YouTube, WhatsApp...) can be connected in Jarvis's Connections "
+                + " Others (Slack, Notion, Google Tasks, Drive, YouTube...) can be connected in Jarvis's Connections "
                 "page, or ask do_task to connect them.\n"
+                + ("- The user's own WhatsApp (whatsapp_read, whatsapp_send). On its own, Jarvis also answers their contacts' "
+                   "messages that don't need them, and picks up calls they miss and takes a message.\n"
+                   if brain_mod.whatsapp_link[0] and brain_mod.whatsapp_link[0].saved.get("linked") else
+                   "- WhatsApp: not linked yet; the user can link it in Settings → WhatsApp (then you can read, send and "
+                   "answer messages and calls).\n")
                 + (f"- {brain_mod.account_policy()}\n" if brain_mod.account_policy() else "")
                 + f"- Plugins (MCP servers): {', '.join(plugins) or 'none'}; more can be added in Jarvis's Plugins page.\n"
                 "- A background agent (do_task) for long jobs. You run on Google Gemini; the user built and develops you.")
@@ -641,7 +652,7 @@ class Live:
         while True:
             await asyncio.sleep(0.25)
             if self.primed and time.time() - self.last > 20:  # the wake word never came: don't hold the line open
-                print(f"[voice] connected early (score {self.primed_score:.2f}), but no wake word: hanging up", flush=True)
+                print(f"[voice] connected early (best score {self.primed_score:.2f}), but no wake word: hanging up", flush=True)
                 self.primed = False
                 self._end_session()
                 return
@@ -1159,7 +1170,8 @@ def deadline_loop(brain):
 EC_MODULE = ("{ library.name = aec/libspa-aec-webrtc audio.rate = 16000 audio.channels = 1 "
              "aec.args = \"webrtc.noise_suppression=true webrtc.transient_suppression=true\" monitor.mode = true "
              "capture.props = { node.name = jarvis-ec-capture node.passive = true } "
-             "source.props = { node.name = jarvis-ec-source node.description = \"Jarvis echo-cancelled mic\" } "
+             "source.props = { node.name = jarvis-ec-source node.description = \"Jarvis echo-cancelled mic\" "
+             "state.restore-props = false } "  # (WirePlumber would bring back a mute from a "mute all mics" in an earlier run)
              "sink.props = { node.name = jarvis-ec-reference node.passive = true } }")
 
 
@@ -1168,6 +1180,10 @@ def start_echo_cancel():
     if not system.have("pw-cli"):
         print("[voice] echo cancelling needs PipeWire", flush=True)
         return False
+    for _ in range(50):  # a restart: the last run's canceller goes away a moment after it quits, and a mic attached to
+        if "jarvis-ec-source" not in subprocess.run(["pw-cli", "ls", "Node"], capture_output=True, text=True).stdout:
+            break  # it falls back to the raw microphone, which the echo-cancelled mic gate then chops up
+        time.sleep(0.1)
     proc = subprocess.Popen(["pw-cli", "-m", "load-module", "libpipewire-module-echo-cancel", EC_MODULE],
                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     for _ in range(40):
@@ -1252,6 +1268,25 @@ class VoiceLearner:
 learner = VoiceLearner()
 
 
+class MicLevel:
+    """Jarvis's own volume control. The mic slider, the jack and the card's gain belong to the user's calls and change
+    the user's loudness by 40 dB or more; this brings their speech back to about the same level, so the wake word, the
+    echo gate (thresholds in Live.feed) and Gemini always get what they were tuned on."""
+    TARGET = 4000.0  # speech RMS per 80 ms frame (peaks ~4x that: no clipping)
+
+    def __init__(self):
+        self.floor, self.speech, self.gain = 30.0, None, 1.0
+
+    def __call__(self, frame, own_voice=False):
+        level = float(np.sqrt(np.mean(frame.astype(np.float32) ** 2)))
+        self.floor = min(level, self.floor * 1.002) + 0.05  # background noise: drops at once, creeps up slowly
+        if not own_voice and level > max(4 * self.floor, 20.0):  # the user talking (never Jarvis's own voice)
+            # louder at once (the slider went up: the boosted "Hey Jarvis" would clip), quieter over ~3 s of talking
+            self.speech = level if self.speech is None or level > 2 * self.speech else self.speech * 0.97 + level * 0.03
+            self.gain = min(100.0, max(0.1, self.TARGET / self.speech))
+        return frame if self.gain == 1.0 else np.clip(frame * self.gain, -32768, 32767).astype(np.int16)
+
+
 def voice_loop(live, mic_target=None):
     import openwakeword.utils
     openwakeword.utils.download_models(["hey_jarvis"])
@@ -1259,7 +1294,18 @@ def voice_loop(live, mic_target=None):
     print('Voice online. Say "Hey Jarvis".', flush=True)
     cfg, last_wake, prime_at = store.settings(), 0.0, 0.0
     recent = collections.deque(maxlen=25)  # the last 2 s: the wake word itself, for learning the user's voice
-    for i, f in enumerate(system.mic_frames(mic_target)):
+    level, logged_gain = MicLevel(), 1.0
+
+    def heard_from(source):  # what pw-record really reads, a few seconds in: WirePlumber may have moved it
+        print(f"[voice] the microphone is {source or 'unknown'}", flush=True)
+        if mic_target and source and source != mic_target and live.speaker.echo_cancelled:
+            live.speaker.echo_cancelled = False  # full duplex on a raw mic: Jarvis would hear and answer itself
+            print("[voice] not on the echo canceller: the mic stays off while Jarvis talks", flush=True)
+    for i, f in enumerate(system.mic_frames(mic_target, on_source=heard_from)):
+        f = level(f, own_voice=time.time() <= live.speaker.until + 0.5)
+        if abs(np.log10(level.gain / logged_gain)) > 0.3:  # (a change of more than ~6 dB)
+            logged_gain = level.gain
+            print(f"[voice] speech came in at {level.speech:.0f}: Jarvis's own gain is now {20 * np.log10(level.gain):+.0f} dB", flush=True)
         recent.append(f)
         live.mic_seen = time.time()  # (the Health page: the microphone is delivering)
         live.raw_level = min(1.0, float(np.sqrt(np.mean(f.astype(np.float32) ** 2))) / 3000)  # (the setup's mic test)
@@ -1269,6 +1315,8 @@ def voice_loop(live, mic_target=None):
                 learner.updated.clear()
                 wake = learner.wake_model()
         score = wake.predict(f)["hey_jarvis"]
+        if live.primed and score > live.primed_score:
+            live.primed_score = score  # (the best score of a near miss, for the log)
         # while Jarvis talks its own voice reaches the mic, so only a clear "Hey Jarvis" counts; and one per 2 s
         need = max(cfg["wake_threshold"], 0.85) if live.speaker.busy() else cfg["wake_threshold"]
         if score >= need * 0.4 and not live.mic and time.time() - prime_at > 10:  # probably being said: connect now
@@ -1337,6 +1385,8 @@ def api_get(path, brain):
         return remote_ref[0].status() if remote_ref[0] else {"token": False, "paired": "", "code": "", "error": "not running"}
     if path == "/api/phone":
         return phone_ref[0].status() if phone_ref[0] else {"relay": "", "connected": False, "error": "not running", "devices": []}
+    if path == "/api/whatsapp":
+        return whatsapp_ref[0].status() if whatsapp_ref[0] else {"state": "off", "linked": False, "error": "not running"}
     if path == "/api/report":
         return {"text": diagnostics(brain)}
     if path == "/api/update":
@@ -1358,6 +1408,7 @@ def api_get(path, brain):
 live_ref = [None]  # the running Live, for the Health page
 remote_ref = [None]  # the Telegram link, for Settings
 phone_ref = [None]  # the Jarvis phone app's link through the relay, for Settings
+whatsapp_ref = [None]  # the user's WhatsApp, linked like WhatsApp Web, for Settings
 
 
 def health(live, brain):
@@ -1682,6 +1733,12 @@ def api_post(path, data, live, brain):
     elif path == "/api/phone/unpair":
         phone_ref[0].unpair(str(data.get("device", "")))
         return phone_ref[0].status()
+    elif path == "/api/whatsapp/link":
+        whatsapp_ref[0].link()
+        return whatsapp_ref[0].status()
+    elif path == "/api/whatsapp/unlink":
+        whatsapp_ref[0].unlink()
+        return whatsapp_ref[0].status()
     elif path == "/api/data/delete":
         live.barge_in()
         live.close()
@@ -2118,6 +2175,11 @@ def main():
     import phone
     phone_ref[0] = phone.PhoneLink(brain, notify=lambda text: emit("log", who="system", text=text))
     background(phone_ref[0].run, restart=True)
+    import whatsapp
+    whatsapp_ref[0] = brain_mod.whatsapp_link[0] = whatsapp.WhatsApp(
+        brain, notify=lambda text: emit("log", who="system", text=text), tell=lambda text: tell(live, text),
+        name=lambda: preferred_name(store.memory()))
+    background(whatsapp_ref[0].run, restart=True)
     if not args.no_voice:
         background(voice_loop, live, "jarvis-ec-source" if echo else None, restart=True)
         background(morning_briefing, live)

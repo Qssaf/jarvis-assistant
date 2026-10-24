@@ -26,6 +26,10 @@ everything Jarvis keeps about me* removes memory, conversations, reminders, rout
 - **Composio** (only for accounts you connect): the account actions Jarvis runs for you, like reading or sending email.
 - **Telegram** (only if you set up *Jarvis on your phone*): the tasks you send your bot and Jarvis's replies. Only the
   chat you paired is answered.
+- **WhatsApp** (only if you link it in Settings): Jarvis runs WhatsApp Web in a hidden browser on this computer, with
+  its own profile in the data folder (`whatsapp`). To answer a message it sends that chat's recent messages to the
+  agent's models (not your memory or other chats); a call it picks up goes to Gemini Live, and a summary is shown to
+  you. Unlink in Settings, or from your phone's *Linked devices*.
 - **Your Google account** (only if you *Sign in with Google* on the Models page): the same as Gemini, through Google's
   Antigravity service. The sign-in is kept in Jarvis's data folder (`google.json`, readable only by your user).
 - **Other model providers** you add on the Models page: the same as Gemini, for the jobs you give them.

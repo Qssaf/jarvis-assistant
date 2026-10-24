@@ -78,6 +78,18 @@ app with a notch at the top of the screen and a native dashboard window.
 - **Telegram**: Settings → *Jarvis on Telegram*: make a bot with @BotFather, paste its token, send it the pairing code,
   and message it tasks (*"what's due this week?"*, *"turn the volume down"*). `/stop` stops a task.
 
+### WhatsApp
+Settings → *WhatsApp* → *Link WhatsApp*, then scan the code from your phone (WhatsApp → Linked devices), the same way
+as WhatsApp Web. Jarvis then:
+- answers your saved contacts' messages that don't need you, saying it's your assistant (never groups, never in a chat
+  you're writing in yourself, at most 20 replies an hour), and tells you out loud about anything urgent;
+- picks up calls you don't answer within 20 seconds, talks with the caller in its own voice, takes a message and tells
+  you what they wanted (or declines calls, or lets them ring);
+- reads and sends WhatsApp messages when you ask (*"what did Sam send me?"*, *"tell Maya I'm on my way"*).
+
+What it tells people (*"I'm in class until 5"*) goes in the same section. This isn't an official WhatsApp feature:
+WhatsApp may block numbers that act like bots, which is why Jarvis stays this careful.
+
 ### Routines and reminders
 Say *"when I say study mode, close Discord, open my notes and set a 50-minute timer"*, then just *"study mode"*.
 Reminders can repeat: *"remind me every weekday at 8 to check Classroom"*.
@@ -215,6 +227,8 @@ The full picture is in [PRIVACY.md](PRIVACY.md); contributing: [CONTRIBUTING.md]
 - **Ask before risky actions** (on by default): shell commands that delete, install, kill or shut down, and changes to
   accounts in *ask* mode (sending email, creating events), are refused until the model passes `confirmed: true`, which
   it may only do when you asked for exactly that or said yes. Turn it off in Settings if you'd rather it just acts.
+- **WhatsApp** (if you link it) runs in a hidden browser on its own profile; Jarvis answers only saved contacts and
+  never shares anything about you with them.
 - **Free-tier quotas**: when a model's daily quota runs out, Jarvis says so and uses the next model in that job's list
   until it resets (midnight Pacific); the Health page shows each model's requests today.
 

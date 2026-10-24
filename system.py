@@ -46,16 +46,22 @@ def describe():
 
 
 # ---------------------------------------------------------------- microphone and speaker
-def mic_frames(target=None):
+def mic_frames(target=None, on_source=None):
     """16 kHz mono int16 frames of 80 ms (1280 samples): PipeWire's pw-record when there (it can use the echo canceller),
-    otherwise PortAudio through sounddevice (Windows, PulseAudio/ALSA systems)."""
+    otherwise PortAudio through sounddevice (Windows, PulseAudio/ALSA systems). on_source gets the name of the node
+    pw-record really reads, a few seconds after each start."""
     import numpy as np
     if not IS_WINDOWS and have("pw-record"):
         while True:  # pw-record quits when PipeWire restarts (an update, a new device): start it again, or Jarvis goes deaf
+            # dont-move: otherwise WirePlumber's "follow the default mic" (target.node -1 in its metadata) moves the stream
+            # off the echo canceller onto the raw mic, and Jarvis hears its own voice with nothing taken out
+            pin = ["--target", target, "-P", "{ node.dont-move = true }"] if target else []
             # --raw: to a pipe pw-record otherwise writes an .au stream, big-endian since PipeWire 1.6.10. Read as ours,
             # quiet sound came through and anything loud enough for a call was noise: Jarvis went deaf as the mic went up
-            p = subprocess.Popen(["pw-record", *(["--target", target] if target else []), "--raw", "--rate", "16000", "--channels", "1",
+            p = subprocess.Popen(["pw-record", *pin, "--raw", "--rate", "16000", "--channels", "1",
                                   "--format", "s16", "-"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            if on_source:
+                threading.Timer(3, lambda pid=p.pid: on_source(mic_source(pid))).start()
             started = time.time()
             while chunk := p.stdout.read(2560):
                 if len(chunk) == 2560:
@@ -67,6 +73,22 @@ def mic_frames(target=None):
         while True:
             frames, _ = stream.read(1280)
             yield frames[:, 0].copy()
+
+
+def mic_source(pid):
+    """The name of the node a pw-record process really reads ('' if unknown), whatever it asked for."""
+    try:
+        objects = json.loads(subprocess.run(["pw-dump"], capture_output=True, text=True, timeout=5).stdout or "[]")
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        return ""
+    props = lambda kind: {o["id"]: (o.get("info") or {}).get("props") or {} for o in objects if o.get("type", "").endswith(kind)}
+    nodes, clients = props(":Node"), props(":Client")
+    mine = {i for i, p in nodes.items() if str(clients.get(p.get("client.id"), {}).get("application.process.id")) == str(pid)}
+    for o in objects:
+        link = o.get("info") or {}
+        if o.get("type", "").endswith(":Link") and link.get("input-node-id") in mine:
+            return nodes.get(link.get("output-node-id"), {}).get("node.name", "")
+    return ""
 
 
 class AudioOut:
@@ -556,6 +578,83 @@ def headless_browser():
             if os.path.exists(path):
                 return path
     return None
+
+
+class Devtools:
+    """A headless Chromium driven over the DevTools protocol (Jarvis's WhatsApp): JSON messages, one per send()/recv().
+    On Linux through a pipe, so nothing listens; Windows can't hand the browser a pipe, so a port on 127.0.0.1."""
+
+    def __init__(self, browser, profile, args):
+        cmd = [browser, f"--user-data-dir={profile}", "--headless=new", "--no-first-run", "--no-default-browser-check", *args]
+        self.ws = None
+        if not IS_WINDOWS:  # a browser still running on this profile (left by a crash) would get this one's page as a tab
+            try:
+                stale = int(os.readlink(os.path.join(profile, "SingletonLock")).rsplit("-", 1)[1])
+                if profile in open(f"/proc/{stale}/cmdline").read():
+                    os.kill(stale, 15)
+                    for _ in range(50):
+                        if not os.path.exists(f"/proc/{stale}"):
+                            break
+                        time.sleep(0.1)
+            except (OSError, ValueError, IndexError):
+                pass
+        import atexit
+        atexit.register(self.close)  # (Jarvis quitting closes it too)
+        if IS_WINDOWS:
+            port_file = os.path.join(profile, "DevToolsActivePort")
+            if os.path.exists(port_file):
+                os.remove(port_file)
+            self.proc = subprocess.Popen(cmd + ["--remote-debugging-port=0", "about:blank"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            for _ in range(100):
+                if os.path.exists(port_file) and len(open(port_file).read().split()) == 2:
+                    break
+                time.sleep(0.1)
+            port, path = open(port_file).read().split()
+            from websockets.sync.client import connect
+            self.ws = connect(f"ws://127.0.0.1:{port}{path}", max_size=None)
+            return
+        import fcntl
+        to_browser, self.out = os.pipe()
+        self.inp, from_browser = os.pipe()
+
+        def fds():  # the browser reads commands on fd 3 and writes replies to fd 4
+            a, b = fcntl.fcntl(to_browser, fcntl.F_DUPFD, 10), fcntl.fcntl(from_browser, fcntl.F_DUPFD, 10)
+            os.dup2(a, 3)
+            os.dup2(b, 4)
+        self.proc = subprocess.Popen(cmd + ["--remote-debugging-pipe", "about:blank"], preexec_fn=fds, close_fds=False,
+                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        os.close(to_browser)
+        os.close(from_browser)
+        self.buf = b""
+
+    def send(self, msg):
+        data = json.dumps(msg)
+        if self.ws:
+            self.ws.send(data)
+        else:
+            os.write(self.out, data.encode() + b"\0")
+
+    def recv(self):
+        """The next message; raises EOFError when the browser is gone."""
+        if self.ws:
+            try:
+                return json.loads(self.ws.recv())
+            except Exception as e:
+                raise EOFError(str(e))
+        while b"\0" not in self.buf:
+            chunk = os.read(self.inp, 1 << 20)
+            if not chunk:
+                raise EOFError("the browser closed")
+            self.buf += chunk
+        msg, self.buf = self.buf.split(b"\0", 1)
+        return json.loads(msg)
+
+    def close(self):
+        try:
+            self.proc.terminate()
+            self.proc.wait(5)
+        except Exception:
+            self.proc.kill()
 
 
 # ---------------------------------------------------------------- notifications, media, stats, login
