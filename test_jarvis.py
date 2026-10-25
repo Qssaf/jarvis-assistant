@@ -135,6 +135,18 @@ a.backends, a.down_until, a.notify, a.plugins, a.app_tools = {"x": OneShot()}, {
 a.contents, a.cancel, a.ask_lock, a.remote = [], brain.threading.Event(), brain.threading.Lock(), False
 a._system = lambda: ""
 assert a.ask("12 times 12 then close it") == "144, sir. Closed it." and OneShot.calls == 1
+# after a check is added, "I'll tell you if one fails" is the answer: no "don't announce it" nudge (it then read the email now)
+class AddsCheck:
+    calls = 0
+
+    def generate(self, contents, model, thinking, **kw):
+        AddsCheck.calls += 1
+        return ([{"functionCall": {"name": "checks", "args": {"action": "add", "text": "a failed payment"}}}] if AddsCheck.calls == 1
+                else [{"text": "I'll tell you if a payment fails."}])
+real_checks, brain.TOOLS["checks"] = brain.TOOLS["checks"], (lambda action, text="": {"result": brain.CHECK_ADDED},) + brain.TOOLS["checks"][1:]
+a.backends = {"x": AddsCheck()}
+assert a.ask("tell me if a payment fails") == "I'll tell you if a payment fails." and AddsCheck.calls == 2
+brain.TOOLS["checks"] = real_checks
 # a scheduled task or background check runs on its own history, and can't confirm a change itself: nobody said yes
 class SelfConfirms:
     seen = []
@@ -282,8 +294,26 @@ brain.pointer[0] = None
 # the voice model can't see, so a coordinate click is refused before anything runs
 import asyncio
 live.turn_calls, live.user_spoke_at = [0.0, 0], 0.0
+live.last_heard = live.last_said = ""
+live.working = live.task_screen = live.announcing = False
 refused = asyncio.run(live._tool(types.SimpleNamespace(name="act", args={"steps": [{"type": "hi"}, {"click": [500, 500]}]})))
 assert "click_on" in refused["error"]
+# after "Shall I send it?", noise ("a pretzel") isn't a yes: the confirmed send is refused, a real yes goes through
+send_it = types.SimpleNamespace(name="whatsapp_send", args={"to": "Sam", "text": "hi", "confirmed": True})
+live.last_said, live.last_heard = "I'll tell Sam the plan. Shall I proceed with this message, Q?", "a pretzel"
+assert "isn't a clear yes" in asyncio.run(live._tool(send_it))["error"]
+live.last_heard = "no, wait"
+assert "isn't a clear yes" in asyncio.run(live._tool(send_it))["error"]
+assert not jarvis.asked_yes("Who should I send it to?") and not jarvis.asked_yes("Can I help with anything else, Q?")
+assert jarvis.said_yes("Yeah, go ahead.") and jarvis.said_yes("oui") and not jarvis.said_yes("")
+# while the agent works on the screen, the voice keeps its hands off it (both once sent the same Discord message)
+live.working = live.task_screen = True
+assert "background task is using the screen" in asyncio.run(live._tool(types.SimpleNamespace(name="act", args={"steps": [{"keys": "Return"}]})))["error"]
+live.working = live.task_screen = False
+live.last_said = live.last_heard = ""
+# noise gets no answer at all ("Yes?" after every sound wore the user out), and the watchdog doesn't re-ask it
+live.inflight = {"text": None, "heard": "desde", "since": time.time(), "tool": False, "answered": False, "recovered": False}
+assert asyncio.run(live._tool(types.SimpleNamespace(name="ignore", args={}))) == {"result": "ignored"} and live.inflight is None
 import threading
 # the agent asks the user mid-task: the voice says the question, its answer_task hands the answer back, and Stop ends the wait
 asked_voice, real_notify = [], system.notify
@@ -298,6 +328,17 @@ assert live.mic and live.question, "the question wasn't said with the mic left o
 assert asyncio.run(live._tool(types.SimpleNamespace(name="answer_task", args={"answer": "Sam Lee"})))["result"]
 waiter.join(2)
 assert got_answer == ["Sam Lee"] and live.question is None, got_answer
+# what the user really said rides along with the voice's answer (noise once came back as "yes")
+asked_voice.clear()
+waiter = threading.Thread(target=lambda: got_answer.append(live.ask_from_task("Send it?", threading.Event())))
+waiter.start()
+while not asked_voice:
+    time.sleep(0.01)
+live.last_heard = "a pretzel"
+asyncio.run(live._tool(types.SimpleNamespace(name="answer_task", args={"answer": "yes"})))
+waiter.join(2)
+assert got_answer[-1] == 'yes (the user\'s exact words: "a pretzel")', got_answer
+live.last_heard = ""
 assert "error" in asyncio.run(live._tool(types.SimpleNamespace(name="answer_task", args={"answer": "late"})))  # nothing waiting
 stopped = threading.Event()
 stopped.set()
@@ -495,6 +536,12 @@ tokens = brain.oauth_provider("acme", base + "/mcp", print).context.storage
 assert asyncio.run(tokens.get_tokens()).access_token == "new1" and b"r1" in refreshes[0]  # 10 minutes left: renewed now
 again = asyncio.run(tokens.get_tokens())
 assert again.access_token == "new1" and 3500 < again.expires_in <= 3600 and len(refreshes) == 1  # fresh: kept, with what's left
+# the server refuses a token that hasn't expired: renewed with the refresh token, no sign-in tab (one opened out of the blue)
+try:
+    asyncio.run(brain.oauth_provider("acme", base + "/mcp", print).context.redirect_handler(base + "/authorize"))
+    raise AssertionError("went to the browser")
+except RuntimeError as e:
+    assert "renewed" in str(e) and len(refreshes) == 2, e
 auth.shutdown()
 
 # your own providers: keys stay out of settings, never go over plain http to another machine
@@ -1196,7 +1243,7 @@ system.media = real_media
 for r in store.reminders():
     store.cancel_reminder(r["id"])
 now = time.mktime((2026, 10, 16, 9, 0, 0, 0, 0, -1))
-iso = lambda t: time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(t)) + time.strftime("%z")[:3] + ":" + time.strftime("%z")[3:]
+iso = lambda t: time.strftime("%Y-%m-%dT%H:%M:%S%z", time.localtime(t))[:-2] + ":" + time.strftime("%z", time.localtime(t))[-2:]  # (that day's offset: summer time ends in October)
 events = {"items": [{"id": "e1", "summary": "Physics lab", "start": {"dateTime": iso(now + 3600)}},
                     {"id": "e2", "summary": "Holiday", "start": {"date": "2026-10-16"}}]}
 cal = types.SimpleNamespace(app_data=lambda slug, args: events)
@@ -1601,7 +1648,21 @@ live.user_spoke_at = time.time() + 2
 live.typed = {"hi": {"at": time.time(), "sent": False}}  # a cancelled act typed it, then stopped before Return
 asyncio.run(live._tool(send, halt))
 assert sent_steps[-1] == [{"keys": "Return"}], sent_steps[-1]
+# a chat opened by typing its name, then a send, with no check of which chat opened: a misheard "Brian" for Ryan is refused
+live.user_spoke_at = time.time() + 3
+brian = types.SimpleNamespace(name="act", args={"steps": [{"keys": "ctrl+k"}, {"type": "Brian"}, {"keys": "Return"},
+                                                          {"type": "hello"}, {"keys": "Return"}]})
+assert "expect" in asyncio.run(live._tool(brian, halt))["error"] and len(sent_steps) == 4
 live.brain = real_brain
+# something Jarvis announces is in the chat once: tell() logged it, so the spoken copy isn't added again
+logged, real_emit = [], jarvis.emit
+jarvis.emit = lambda kind, **kw: logged.append(kw.get("text"))
+live.heard, live.said, live.announcing = "", "Maya is calling on WhatsApp.", True
+live._flush()
+live.said, live.announcing = "Sure, Q.", False
+live._flush()
+jarvis.emit = real_emit
+assert logged == ["Sure, Q."] and live.last_said == "Sure, Q.", logged
 
 # the phone app's link: the handshake proves the PC, frames are sealed and counted, pairing trades the one-time secret
 # for a token, and a phone that isn't paired gets nothing done
@@ -1760,6 +1821,57 @@ assert set(brain.TOOLS["whatsapp_send"][0]("Sammy", "hi")["close_matches"]) == {
 assert brain.TOOLS["whatsapp_send"][0]("Maya", "on my way")["error"] == brain.NEEDS_YES and len(sends()) == 1
 assert brain.TOOLS["whatsapp_send"][0]("Maya", "on my way", confirmed=True) == {"result": "sent to Maya"} and len(sends()) == 2
 assert "whatsapp_read" in brain.OUTSIDE_CONTENT and brain.TOOLS["whatsapp_read"][0]()["chats"] == chats
+# groups are found and read too, each message by who wrote it (Jarvis said a group the user was in didn't exist)
+chats.append({"chat": "9@g.us", "name": "Chess Club", "group": True})
+wa.evaluate = lambda js, timeout=30: ([{"id": "g1", "me": False, "text": "contest at 5", "at": 0, "by": "Alex"}]
+                                      if js.startswith("window.__jarvisHistory") else fake_page(js))
+assert brain.TOOLS["whatsapp_read"][0]("chess club")["messages"][0]["from"] == "Alex"
+# a voice message is listened to (it said "can't listen to voice notes"): the bytes go to the model as audio
+heard_media, real_vision = [], brain.vision[0]
+brain.vision[0] = lambda contents: heard_media.append(contents[0]["parts"][0]["inlineData"]) or [{"text": "See you at 5."}]
+wa.evaluate = lambda js, timeout=30: ({"id": "v1", "type": "ptt", "mime": "audio/ogg", "at": 0, "caption": "", "by": None, "me": False,
+                                       "data": "T2dnUw=="} if js.startswith("window.__jarvisMedia") else fake_page(js))
+got = brain.TOOLS["whatsapp_media"][0]("maya")
+assert got["voice message"] == "See you at 5." and got["from"] == "Maya" and heard_media == [{"mimeType": "audio/ogg", "data": "T2dnUw=="}], got
+wa.evaluate = lambda js, timeout=30: None if js.startswith("window.__jarvisMedia") else fake_page(js)
+assert "no voice message" in brain.TOOLS["whatsapp_media"][0]("maya")["error"]
+brain.vision[0] = real_vision
+# a call Jarvis places: refused without a yes; with one it rings, and nobody picking up is said (and the call is ended)
+wa_told.clear()
+assert brain.TOOLS["whatsapp_call"][0]("Maya", "dinner's at 8")["error"] == brain.NEEDS_YES
+wa.evaluate = lambda js, timeout=30: ({"id": "k1"} if js.startswith("window.__jarvisDial") else "over" if js.startswith("window.__jarvisCall")
+                                      else fake_page(js))
+assert "calling Maya" in brain.TOOLS["whatsapp_call"][0]("Maya", "dinner's at 8", confirmed=True)["result"]
+for _ in range(50):
+    if wa_told and not wa.dialing:
+        break
+    time.sleep(0.1)
+assert wa_told == ["Maya didn't pick up my WhatsApp call."] and wa.call is None, wa_told
+wa.dialing = True
+try:
+    wa.dial({"chat": "3@c.us", "name": "Maya"}, "hi")
+    raise AssertionError("two calls at once")
+except RuntimeError as e:
+    assert "already on" in str(e)
+wa.dialing = False
+# on the call, Jarvis can't hang up before they've answered (it gave the message and hung up on a "hello")
+dialed = whatsapp.CallSession(wa, {"id": "k2", "name": "Maya"}, "dinner's at 8")
+dialed.lines, dialed.spoke_at = ["Maya: Hello?", "Jarvis: Hi Maya, it's Jarvis: Q says dinner's at 8."], time.time()
+assert not dialed.may_hang_up()
+dialed.lines.append("Maya: Great, see you then.")
+assert dialed.may_hang_up()
+dialed.lines, dialed.spoke_at = ["Jarvis: Hi Maya, it's Jarvis: Q says dinner's at 8."], time.time() - 20  # (silent for 20 s)
+assert dialed.may_hang_up()
+# calls speak the user's language, and switch only to the one other they allow (it answered in Korean on a noisy line)
+assert "Speak English. Never" in whatsapp.call_languages({"language": "en-US", "call_language": ""})
+assert "answer in French" in whatsapp.call_languages({"language": "en-US", "call_language": "fr-FR"})
+try:
+    store.update_settings({"call_language": "klingon"})
+    raise AssertionError("a bad call language was saved")
+except ValueError:
+    pass
+wa.evaluate = fake_page
+chats.pop()
 brain.whatsapp_link[0] = None
 if not system.IS_WINDOWS:  # the DevTools pipe: commands on fd 3, replies on fd 4, each JSON ending in a NUL
     fake_browser = os.path.join(tempfile.mkdtemp(), "browser")

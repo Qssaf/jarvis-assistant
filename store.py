@@ -39,6 +39,7 @@ DEFAULT_SETTINGS = {
     "whatsapp_replies": "contacts",  # contacts: Jarvis answers saved contacts' messages that don't need you; off: just shows them
     "whatsapp_calls": "answer",    # answer: picks up contacts' calls you don't and takes a message; decline; off: lets them ring
     "whatsapp_note": "",           # what Jarvis tells people on WhatsApp ("I'm in class until 5")
+    "call_language": "",           # on WhatsApp calls, the one language besides `language` Jarvis switches to (store.LANGUAGES)
     "echo_cancel": False,          # PipeWire echo cancelling (Linux): talk over Jarvis on speakers (experimental)
     "learn_my_voice": True,        # learn from real wake-ups to ignore things that aren't you saying "Hey Jarvis"
     "safety": "ask",               # ask: risky commands and account changes wait for your yes; full: Jarvis just does them
@@ -130,6 +131,8 @@ def update_settings(changes):
             raise ValueError("check every 15-1440 minutes")
         if key == "whatsapp_replies" and value not in ("contacts", "off"):
             raise ValueError("WhatsApp replies are contacts or off")
+        if key == "call_language" and value and value not in LANGUAGES:
+            raise ValueError(f"the call language is empty or one of {', '.join(LANGUAGES)}")
         if key == "whatsapp_calls" and value not in ("answer", "decline", "off"):
             raise ValueError("WhatsApp calls are answer, decline or off")
         s[key] = value

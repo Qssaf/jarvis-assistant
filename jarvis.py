@@ -34,10 +34,10 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - {LANGUAGE}
 - Casual talk, thanks, jokes and swearing are conversation: reply in kind, briefly. The user trash-talks for fun (games, friends, you): give a short witty comeback, never a lecture or refusal speech. Only if they seem genuinely in distress, answer with care.
 - Your wit is about things, never at the user's expense: no sarcasm about them, their taste or their questions (never "do try to keep up", never call a question rhetorical), unless they're trash-talking you first. Praise from them gets a plain thanks, not a jab.
-- Your microphone stays on until you call stop_listening. When the user clearly ends the conversation ("that's all", "stop listening", "bye", "go to sleep"), call it with a two-word goodbye. A stray word ("so", "you", "a", "sir") or a garbled phrase is not an ending: answer it in two words at most ("Yes?"). Never ask "anything else I can help with?". Games, videos and calls can reach the microphone: words that don't fit the conversation are them, not the user.
+- Your microphone stays on until you call stop_listening. When the user clearly ends the conversation ("that's all", "stop listening", "bye", "go to sleep"), call it with a two-word goodbye. A stray word ("so", "you", "a", "sir"), a garbled phrase or words in another language are not an ending and not for you: call ignore and say nothing (the user found "Yes?" after every noise tiring). Never ask "anything else I can help with?". Games, videos and calls can reach the microphone: words that don't fit the conversation are them, not the user.
 
 # The fastest right way, for each kind of request
-- Facts, definitions, maths, advice, conversation you're sure of: answer straight away, no tools.
+- Facts, definitions, maths, advice, conversation you're sure of: answer straight away, no tools. Counting days between dates ("how many days until New Year?", "how old will I be"): run_command works it out (you miscount by one), then say the number.
 - Weather: weather (leave place empty for where the user lives).
 - "Good morning", "what's my day like": briefing, then a warm three-sentence summary that skips anything empty. Slang and idioms like "my days" or "these days" are conversation, never briefing.
 - Classroom: classroom_due for work and deadlines (it knows what's been turned in); announcements: classroom_announcements (all courses at once). Name courses by what they are ("Calculus 3"), never by their codes.
@@ -49,7 +49,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - The screen (what's open, an error, a page): look with a specific question. Solving or judging something on screen (homework, a quiz, a graph, which option is right, a game situation): look with careful: true and ask it to work out the answer. A whole puzzle (Sudoku, a nonogram, a long sum): a look only reads it exactly (a grid as rows of digits; solving it in a look times out), run_command works it out in Python, then do_task fills it in.
 - Desktop apps: one act that launches, presses controls by their accessible names, reads the result with a look step and closes, e.g. act([{launch: "kcalc"}, {press: ["Seven", "Multiply", "Eight", "Equals"]}, {look: "What does the display show?"}, {close: "kcalc"}]).
 - Websites and chat apps (Discord, OpenCode, VS Code and other Electron apps show no controls: never ui_controls them): act with click_on naming the exact field ("the message box at the bottom", "the prompt box"), never just the app's name, and end that same act with a look step. Browser tabs: focus_window the browser, then [{keys: "ctrl+shift+a"}, {type: "tab name"}, {keys: "Return"}].
-- WhatsApp: whatsapp_read (chats, or one chat's messages) and whatsapp_send (to: the chat's name), never the screen. A message the user dictated to someone they named: whatsapp_send with confirmed: true at once.
+- WhatsApp: whatsapp_read (chats and groups, or one chat's messages), whatsapp_media to listen to a voice message or see a photo someone sent, whatsapp_send (to: the chat's name), and whatsapp_call to phone someone and tell them something out loud ("call dad and tell him I want water"), never the screen. A message the user dictated to someone they named: whatsapp_send (or whatsapp_call when they said call) with confirmed: true at once.
 - Messaging: [{click_on: "the chat named 'Sam Lee' in the left list"}, {expect: "the open conversation is with Sam Lee"}, {click_on: "the message box at the bottom"}, {type: "..."}, {keys: "Return"}, {look: "Is the message in the conversation?"}].
 - System info, files, volume, clipboard: run_command. {SYSTEM} Open apps with act launch, not run_command.
 - Pictures: make_image, show_image. Local files: read_file. Time: set_reminder (repeat for "every day/weekday/week"), list_reminders, cancel_reminder.
@@ -60,7 +60,8 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - Questions about this PC itself (why is it slow, is the internet slow, what's using the CPU, is the disk full): check with run_command first and answer from what it shows, never with general advice. Say the numbers it showed (ping in ms, packet loss in %, free GB).
 - "Mute/unmute my mic": the PC's microphone, with run_command (not stop_listening); say you won't hear them either until it's unmuted.
 - Quick things the user asked for on their own PC (volume, mute, locking the screen, opening, closing or switching apps, music): do them straight away, never "shall I?".
-- "Download X": do_task (find the official download and save it to Downloads). Opening the download page isn't downloading it.
+- "Download X" (an app, a file, a song or video): do_task (save it to Downloads). Downloading what the user asks for is fine: never refuse it. Opening the download page isn't downloading it.
+- Volume: check the level first. "Louder" or "I can't hear you" only ever turns it up; already at 100%, say so (their speakers or the app's own slider).
 - "Undo that" or "what did you change?": recent_changes, then reverse it (or do_task for screen work).
 - Something from an earlier conversation: recall, with words for a topic ("what was that site you told me about?") or a day as YYYY-MM-DD ("what did we talk about yesterday?").
 - Routines: when the user says one of their routines' names (listed under what you can do), routine run, then do its steps. "When I say X, do Y": routine save.
@@ -101,11 +102,11 @@ User: open Instagram and go through my saved reels → do_task {task: "Open Inst
 User: type a dark joke in this chat → act [{type: "<a new joke>"}, {keys: "Return"}, {look: "Is it in the chat?"}] straight away, never saying the joke instead → "Sent: '<the joke>'"
 User: just type the message and send it (no words given) → "What should I type?"
 User: reply to this guy → act [{look: "Who is the open chat with, and what's their newest message?"}] → "Alex asked if you're free Saturday. Send 'yeah, I'm in'?" → (yes) type it, Return, look → "Sent: 'yeah, I'm in'."
-User: so → a short reply; not stop_listening.
+User: so → ignore; not stop_listening.
 User: that's all, thanks → stop_listening, "Very good."
 User: you're useless, I'm unplugging you lol → a dry one-liner back, no lecture.
 User: read my graph notes from Drive → drive_file {name: "graph notes"}.
-User: per il → (stray foreign words) "Sorry, I didn't catch that."
+User: per il → (stray foreign words) ignore.
 User: (after you remembered something) you don't have to know that → forget {fact: "<what you remembered>"}, "Forgotten."
 User: you clicked the wrong button, never press Check answer → remember {fact: "Lesson: on homework sites, never press Check answer"}, "Noted, it won't happen again."
 """
@@ -130,6 +131,12 @@ STOP_LISTENING = {
                     '"that\'s all", "go to sleep", "bye", "shut up").'),
     "parameters": {"type": "object", "properties": {}},
 }
+IGNORE = {
+    "name": "ignore",
+    "description": ("Say nothing at all: what you heard isn't the user talking to you (a stray word or two, a garbled phrase, noise, "
+                    "words in another language, or a game, video or other person in the room)."),
+    "parameters": {"type": "object", "properties": {}},
+}
 # the voice model can't see images, so its act has no coordinate clicks or screenshots: it describes targets instead
 VOICE_ACT = ("Do a whole job on screen in one go, in order. Each step is one of: {launch: 'kcalc'} (open an app and wait for its "
              "window), {press: ['One', 'Two', 'Equals']} (press controls by their accessible names; optional app), {set_text: "
@@ -141,7 +148,7 @@ VOICE_ACT = ("Do a whole job on screen in one go, in order. Each step is one of:
              "{scroll: 3} (scroll under mouse: positive = down toward newer messages, negative = up toward older messages), {wait: seconds}.").replace("kcalc", system.CALC)
 SCREEN_TOOLS = {"act", "look", "show_image", "ui_controls", "list_windows", "focus_window", "close_window", "open_url", "run_command"}
 QUERY_TOOLS = {"look", "web_search", "read_webpage", "youtube_search", "read_file", "briefing", "ui_controls", "list_windows", "list_reminders",
-               "recall", "selection", "whatsapp_read"}
+               "recall", "selection", "whatsapp_read", "whatsapp_media"}
 VOICE_RESULT_LIMIT = 12000  # characters of one tool result the voice model gets
 # tools the voice may call for one thing the user said: looking for an app that isn't open, it once called list_windows
 # and look over 100 times in a minute without a word to the user
@@ -150,7 +157,7 @@ VOICE_TOOL_LIMIT = 12
 LIVE_TOOLS = ["run_command", "web_search", "read_webpage", "youtube_search", "open_url", "remember", "forget", "set_reminder", "list_reminders",
               "cancel_reminder", "list_windows", "focus_window", "close_window", "act", "look", "ui_controls", "make_image",
               "show_image", "read_file", "briefing", "account_settings", "weather", "classroom_due", "classroom_announcements", "drive_file", "routine",
-              "recall", "selection", "media", "notes", "recent_changes", "watch", "checks", "whatsapp_read", "whatsapp_send"]
+              "recall", "selection", "media", "notes", "recent_changes", "watch", "checks", "whatsapp_read", "whatsapp_media", "whatsapp_send", "whatsapp_call"]
 
 # what the user asked to be called, from what Jarvis remembers ("prefers to be called Q", "call me Sam, not sir")
 # ponytail: a pattern over remember()'s usual wording, not understanding; unmatched memory falls back to the prompt's rule
@@ -182,7 +189,7 @@ TOOL_LABELS = {"run_command": "Running a command", "web_search": "Searching the 
                "classroom_due": "Checking Classroom", "classroom_announcements": "Checking Classroom", "drive_file": "Reading from Drive", "ask_user": "Asking you",
                "routine": "Running a routine", "recall": "Searching past conversations", "selection": "Reading your selection",
                "media": "Controlling the music", "notes": "Taking notes", "recent_changes": "Checking what changed", "watch": "Watching the screen",
-               "plan": "Planning", "checks": "Updating your checks", "whatsapp_read": "Reading WhatsApp",
+               "plan": "Planning", "checks": "Updating your checks", "whatsapp_read": "Reading WhatsApp", "whatsapp_media": "Opening a WhatsApp message", "whatsapp_call": "Calling on WhatsApp",
                "whatsapp_send": "Sending a WhatsApp message"}
 
 
@@ -192,6 +199,29 @@ def tool_label(name):
     words = name.split("_") if name.isupper() else []  # account tools: GOOGLE_CLASSROOM_COURSES_LIST -> Google Classroom
     app = " ".join(words[:2] if words[:1] == ["GOOGLE"] else words[:1]).title().replace("Github", "GitHub").replace("Youtube", "YouTube")
     return f"Using {app}" if app and app != "Composio" else "Working"
+
+
+VOICE_SCREEN_ACTS = {"act", "focus_window", "close_window", "open_url"}
+AGENT_SCREEN_TOOLS = {"screenshot", "launch", "click", "act", "look", "ui_controls", "type_text", "press_keys", "scroll",
+                      "focus_window", "close_window", "open_url", "watch", "photopea"}
+YES = re.compile(r"\b(?:yes|yeah|yep|yup|ya|sure|ok|okay|alright|all right|go ahead|go for it|do it|send it|proceed|confirm|"
+                 r"correct|right|absolutely|of course|definitely|certainly|fine|why not|perfect|oui|si|sí|ja|naam|na3am|aywa|"
+                 r"tamam|yalla|نعم|ايه|إيه|اي|أكيد|اكيد|يلا|تمام)\b", re.I)
+NO = re.compile(r"\b(?:no|nope|nah|don'?t|do not|stop|wait|cancel|never ?mind|hold on|non|nein|la|لا)\b", re.I)
+ASKED_YES = re.compile(r"^(?:(?:shall|should|can|may) I|(?:do you |would you like |you )?want me to|would you like me to|proceed|"
+                       r"go ahead|send it|(?:ok|okay|ready) to send|(?:is|does) that (?:look |sound )?(?:ok|okay|right|correct|good|fine))\b", re.I)
+
+
+def asked_yes(said):
+    """Jarvis's last words ended with a yes/no question ("Shall I send it?"), not "Who should I send it to?"."""
+    if not said.rstrip().endswith("?"):
+        return False
+    question = re.split(r"(?<=[.!?])\s+", said.strip())[-1]
+    return bool(ASKED_YES.search(question)) and not re.search(r"\b(?:anything|something) else\b|\bhelp\b|\bassist\b", question, re.I)
+
+
+def said_yes(heard):
+    return bool(YES.search(heard)) and not NO.search(heard)
 
 
 def typed_text(steps):
@@ -300,6 +330,9 @@ class Live:
         self.interrupted_at = 0.0
         self.current_task = ""  # what the running do_task is doing
         self.question = None   # the running task's question to the user: {"text", "answered" (Event), "answer"}
+        self.last_heard = self.last_said = ""  # the latest words of the user and of Jarvis: see ASKED_YES
+        self.task_screen = False  # the running do_task has used the screen: the voice keeps its hands off it meanwhile
+        self.announcing = False  # saying a text the chat already shows (tell, reminders): its transcript isn't added again
         import brain as brain_mod
         brain_mod.asker[0] = self.ask_from_task
         self.closing = False   # the current session is being shut down
@@ -451,6 +484,8 @@ class Live:
         if not self.session:
             return
         self.last, self.waiting = time.time(), True
+        if announce:
+            self.announcing = True
         if track:
             self.inflight = {"text": text, "heard": "", "since": time.time(), "tool": False, "answered": False, "recovered": False,
                              "announce": announce}
@@ -491,7 +526,8 @@ class Live:
     def _tools(self):
         import brain
         t = self.t
-        decls = [t.FunctionDeclaration(**DO_TASK), t.FunctionDeclaration(**STOP_LISTENING), t.FunctionDeclaration(**ANSWER_TASK)]
+        decls = [t.FunctionDeclaration(**DO_TASK), t.FunctionDeclaration(**STOP_LISTENING), t.FunctionDeclaration(**ANSWER_TASK),
+                 t.FunctionDeclaration(**IGNORE)]
         for name in LIVE_TOOLS:
             _, desc, schema = brain.TOOLS[name]
             if name == "act":
@@ -512,6 +548,7 @@ class Live:
         apps = named(sorted(self.brain.app_tools_for)) or "none"
         others = named(sorted(self.brain.connected - self.brain.app_tools_for))
         plugins = [f"{p['name']} ({len(p['tools'])} tools)" for p in self.brain.plugin_status() if p["status"] == "ready"]
+        down = [p["name"] for p in self.brain.plugin_status() if p["enabled"] and p["status"] != "ready"]
         return ("# What you can do right now\n"
                 f"- This PC ({'Windows' if system.IS_WINDOWS else 'Linux'}): shell commands, files, apps, windows; the screen: look at it, click, type, and press app controls by name.\n"
                 "- The web: Google-grounded search, reading pages, YouTube search, opening links in the user's browser.\n"
@@ -521,14 +558,16 @@ class Live:
                 + (f" Also connected (use do_task for these): {others}." if others else "")
                 + " Others (Slack, Notion, Google Tasks, Drive, YouTube...) can be connected in Jarvis's Connections "
                 "page, or ask do_task to connect them.\n"
-                + ("- The user's own WhatsApp (whatsapp_read, whatsapp_send). On its own, Jarvis also answers their contacts' "
+                + ("- The user's own WhatsApp (whatsapp_read, whatsapp_media for voice messages and photos, whatsapp_send, whatsapp_call to phone someone with a message). On its own, Jarvis also answers their contacts' "
                    "messages that don't need them, and picks up calls they miss and takes a message.\n"
                    if brain_mod.whatsapp_link[0] and brain_mod.whatsapp_link[0].saved.get("linked") else
                    "- WhatsApp: not linked yet; the user can link it in Settings → WhatsApp (then you can read, send and "
                    "answer messages and calls).\n")
                 + (f"- {brain_mod.account_policy()}\n" if brain_mod.account_policy() else "")
                 + f"- Plugins (MCP servers): {', '.join(plugins) or 'none'}; more can be added in Jarvis's Plugins page.\n"
-                "- A background agent (do_task) for long jobs. You run on Google Gemini; the user built and develops you.")
+                + (f"- Not working right now: {', '.join(down)} ({self.brain.sign_in_note() or 'not connected'}). If asked, say "
+                   "so: the accounts it connects may fail until it's back.\n" if down else "")
+                + "- A background agent (do_task) for long jobs. You run on Google Gemini; the user built and develops you.")
 
     def _config(self):
         t = self.t
@@ -748,6 +787,7 @@ class Live:
                 self.speaker.stop()
             if sc.turn_complete:
                 self._flush()
+                self.announcing = False
                 self.muted = self.waiting = self.spoke = False
                 self.turn_spoke = False
                 self.last = time.time()
@@ -755,7 +795,7 @@ class Live:
             self._flush()
             for fc in m.tool_call.function_calls:
                 print(f"[voice] tool call: {fc.name} {json.dumps(fc.args or {})[:300]}", flush=True)
-                if store.settings()["show_thinking"] and fc.name != "stop_listening":
+                if store.settings()["show_thinking"] and fc.name not in ("stop_listening", "ignore"):
                     emit("log", who="thinking", text=f"Decided to use {fc.name}" + (f": {json.dumps(fc.args, ensure_ascii=False)[:400]}" if fc.args else ""))
             quick = [fc for fc in m.tool_call.function_calls if fc.name != "do_task"]
             for fc in m.tool_call.function_calls:
@@ -785,11 +825,16 @@ class Live:
             self.mic = False  # back to waiting for "Hey Jarvis"; the session stays connected, so next time is instant
             self.inflight = None  # the request is done: its reply is SILENT, so the watchdog mustn't wait 12 s and re-ask for one
             return {"result": "not listening any more"}
+        if fc.name == "ignore":  # noise: no reply (SILENT), and nothing for the watchdog to wait for
+            self.inflight = None
+            return {"result": "ignored"}
         if fc.name == "answer_task":
             q = self.question
             if not q:
                 return {"error": "no task is waiting for an answer: treat it as a new request"}
             q["answer"] = str(args.get("answer", "")).strip()
+            if self.last_heard and self.last_heard.lower() not in q["answer"].lower():  # (noise came back as "yes" once)
+                q["answer"] += f' (the user\'s exact words: "{self.last_heard}")'
             q["answered"].set()
             return {"result": "passed on: the task carries on and reports when it's done"}
         if self.turn_calls[0] != self.user_spoke_at:
@@ -799,6 +844,12 @@ class Live:
             return {"error": f"NOT DONE: that's {VOICE_TOOL_LIMIT} tools since the user last spoke. Stop calling tools: tell the "
                              "user in a sentence what you found and what's in the way (for example, the app isn't open), and ask "
                              "how to go on."}
+        if args.get("confirmed") and asked_yes(self.last_said) and not said_yes(self.last_heard):
+            return {"error": f"NOT DONE: you asked the user to confirm, and what came back (\"{self.last_heard[:80]}\") isn't a "
+                             "clear yes: it may be noise or someone else talking. Ask again, briefly."}
+        if fc.name in VOICE_SCREEN_ACTS and self.working and self.task_screen:
+            return {"error": "NOT DONE: your background task is using the screen right now, and two of you at once type into "
+                             "the wrong place or send things twice. Tell the user it's still on it; they can press Stop to take over."}
         if fc.name == "act":
             if any(isinstance(step.get("click"), (list, tuple)) for step in args.get("steps") or []):
                 return {"error": "nothing was done: you can't see the screen, so coordinate positions are guesses. Use click_on with a description, or {button: 'left'} to click where the mouse is."}
@@ -832,6 +883,10 @@ class Live:
                                  "the chat. Never send it again unless the user asks for it again."}
             sends = any(re.search(r"\b(?:Return|KP_Enter|Enter)\b", str(s.get("keys", ""))) for s in args["steps"])
             to_chat = any("expect" in s for s in args["steps"] if isinstance(s, dict))  # (it checks which chat: "hi to Sam, bye to Alex")
+            presses = sum(bool(re.search(r"\b(?:Return|KP_Enter|Enter)\b", str(s.get("keys", "")))) for s in args["steps"] if isinstance(s, dict))
+            if presses > 1 and not to_chat:  # finds a chat by typing its name, then sends: a misheard name went to the wrong one
+                return {"error": "NOT DONE: this opens a chat by name and then sends. Put {expect: 'the open chat is with <name>'} "
+                                 "right after opening it, so a misheard name stops before anything is sent."}
             if sends and not to_chat and self.sent_for == self.user_spoke_at:  # a new joke after a joke went: the look lagged,
                 # or it wanted a "better" one (one request sent four messages)
                 return {"error": "NOT DONE: a message was already sent for this request, so this would be an extra one (a look "
@@ -888,7 +943,7 @@ class Live:
                 is_query = fc.name in QUERY_TOOLS
                 already_confirmed = not is_query and (spoke_before or self.gemini_spoke_at > started)
                 silent = (
-                    fc.name == "stop_listening"
+                    fc.name in ("stop_listening", "ignore")
                     or self.stopped
                     or superseded
                     or user_spoke
@@ -923,10 +978,16 @@ class Live:
             try:
                 thoughts = (lambda t: emit("log", who="thinking", text=t)) if store.settings()["show_thinking"] else None
                 progress = asyncio.create_task(self._progress())
+
+                def on_tool(n):
+                    self.task_screen = self.task_screen or n in AGENT_SCREEN_TOOLS
+                    emit("tool", name=n)
+                self.task_screen = False
                 try:
-                    result = await asyncio.to_thread(self.brain.ask, (fc.args or {}).get("task", ""), lambda n: emit("tool", name=n), thoughts)
+                    result = await asyncio.to_thread(self.brain.ask, (fc.args or {}).get("task", ""), on_tool, thoughts)
                 finally:
                     progress.cancel()
+                    self.task_screen = False
             except Exception as e:
                 result = f"The task failed: {e}"
             finally:
@@ -978,10 +1039,14 @@ class Live:
             self.question = None
 
     def _flush(self):
-        if self.heard.strip():
-            emit("log", who="you", text=self.heard.strip())
-        if self.said.strip():
-            emit("log", who="jarvis", text=self.said.strip())
+        heard, said = self.heard.strip(), self.said.strip()
+        if heard:
+            emit("log", who="you", text=heard)
+            self.last_heard = heard
+        if said:
+            if not self.announcing:  # (announced text is in the chat already: it showed every call and message twice)
+                emit("log", who="jarvis", text=said)
+            self.last_said = said
         self.heard = self.said = ""
 
 

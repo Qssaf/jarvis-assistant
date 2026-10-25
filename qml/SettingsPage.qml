@@ -358,6 +358,11 @@ ScrollPage {
                          model: [{ value: "answer", label: "Pick up if I don't (20 s)" }, { value: "decline", label: "Decline them" },
                                  { value: "off", label: "Let them ring" }] } }
         }
+        Setting { label: "Also speak on calls"
+            Select { Layout.fillWidth: true; value: page.s.call_language || ""; onPicked: v => page.set("call_language", v)
+                     model: [{ value: "", label: "Only " + (page.languages[page.s.language || "en-US"] || "English") }]
+                            .concat(Object.keys(page.languages).filter(k => k !== (page.s.language || "en-US"))
+                            .map(k => ({ value: k, label: page.languages[k] + ", when they speak it" }))) } }
         Setting { label: "What Jarvis tells people"
             Area { text: page.s.whatsapp_note || ""; placeholder: "e.g. I'm in class until 5, I'll answer after"
                    onDone: v => page.set("whatsapp_note", v) } }

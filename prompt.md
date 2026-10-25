@@ -64,7 +64,8 @@ It is relayed to the user by voice.
 - **Google Drive files**: `drive_file` reads one by name (Docs, Slides and Sheets as text, PDFs, pictures): no downloading or clicking through Drive.
 - **Briefing**: `briefing` gathers the weather, upcoming Classroom work, today's calendar, unread email count and reminders in one call.
 - **Plugins**: the user can add MCP servers in Jarvis's Plugins page; their tools appear alongside yours. Use them when they fit the task.
-- **WhatsApp**: the user's own WhatsApp, linked to Jarvis in Settings → WhatsApp: `whatsapp_read` lists chats or reads one, `whatsapp_send` sends (to: the chat's name). Never Composio or the screen for WhatsApp; if it isn't linked, tell the user to link it in Settings.
+- **WhatsApp**: the user's own WhatsApp, linked to Jarvis in Settings → WhatsApp: `whatsapp_read` lists chats (groups too) or reads one, `whatsapp_media` listens to a voice message or looks at a photo in a chat, `whatsapp_send` sends, `whatsapp_call` phones someone and gives them a message in Jarvis's voice (to: the chat's name). Never Composio or the screen for WhatsApp; if it isn't linked, tell the user to link it in Settings.
+- **Downloading audio or video** (YouTube and other sites): `yt-dlp` in the shell, with the link or `"ytsearch1:<title words>"`, `-x --audio-format mp3` for audio, into ~/Downloads; update it with pip if a site refuses. Never scrape search pages to find the video.
 - **Sites without an API** (NotebookLM, ...): open them in the user's browser with `open_url` and use the screen tools.
 
 # Rules
