@@ -27,7 +27,7 @@ def have(program):
 def run(args, timeout=15, env=None):
     """A short command's output (stdout and stderr), '' if it isn't installed."""
     try:
-        r = subprocess.run(args, capture_output=True, text=True, timeout=timeout, env=env)
+        r = subprocess.run(args, capture_output=True, text=True, errors="replace", timeout=timeout, env=env)  # (a copied picture isn't UTF-8)
     except (OSError, subprocess.TimeoutExpired):
         return ""
     return (r.stdout + r.stderr).strip()
@@ -35,12 +35,14 @@ def run(args, timeout=15, env=None):
 
 def describe():
     """A few lines for the models: what this computer is and how to do common things on it."""
+    # (the home folder said outright: a model guessed /home/<user name>, and the two differed)
+    home = f"The user's home folder is {os.path.expanduser('~')}. "
     if IS_WINDOWS:
-        return ("The computer runs Windows. run_command runs PowerShell (e.g. Get-ChildItem $HOME\\Downloads, Get-Clipboard, "
+        return (home + "The computer runs Windows. run_command runs PowerShell (e.g. Get-ChildItem $HOME\\Downloads, Get-Clipboard, "
                 "Set-Clipboard 'text'). Open apps with act launch (notepad, calc, explorer, msedge, spotify...); "
                 "media keys: act([{keys: \"XF86AudioPlay\"}]).")
     desktop = os.environ.get("XDG_CURRENT_DESKTOP", "Linux")
-    return (f"The computer runs Linux ({desktop}, {'Wayland' if WAYLAND else 'X11'}). run_command runs bash (e.g. ls ~/Downloads; "
+    return (home + f"The computer runs Linux ({desktop}, {'Wayland' if WAYLAND else 'X11'}). run_command runs bash (e.g. ls ~/Downloads; "
             "volume: wpctl set-volume @DEFAULT_AUDIO_SINK@ 50% or pactl; clipboard: wl-paste / xclip). Open apps with act "
             "launch (firefox, dolphin, nautilus, kcalc...); media keys: act([{keys: \"XF86AudioPlay\"}]).")
 

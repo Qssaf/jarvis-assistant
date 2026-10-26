@@ -134,7 +134,10 @@ a = brain.Brain.__new__(brain.Brain)
 a.backends, a.down_until, a.notify, a.plugins, a.app_tools = {"x": OneShot()}, {}, (lambda t: None), {}, {}
 a.contents, a.cancel, a.ask_lock, a.remote = [], brain.threading.Event(), brain.threading.Lock(), False
 a._system = lambda: ""
+asked_saved = []
+brain.on_asked[0] = asked_saved.append
 assert a.ask("12 times 12 then close it") == "144, sir. Closed it." and OneShot.calls == 1
+assert asked_saved == [a.contents]  # (saved with the conversation, whoever asked: only voice tasks were)
 # after a check is added, "I'll tell you if one fails" is the answer: no "don't announce it" nudge (it then read the email now)
 class AddsCheck:
     calls = 0
@@ -160,6 +163,8 @@ a.backends, kept, ran, real_shell = {"x": SelfConfirms()}, list(a.contents), [],
 brain.system.shell = lambda command, timeout: ran.append(command) or (0, "")
 assert a.ask("reboot at 3", unattended=True) == "It needs your yes first."
 assert ran == [] and "not run" in SelfConfirms.seen[0]["error"] and a.contents == kept and not (a.unattended or a.remote)
+assert len(asked_saved) == 2  # (a scheduled task's own history isn't saved over the conversation's)
+brain.on_asked[0] = lambda contents: None
 a.unattended = True  # ...while the voice's own tools, run meanwhile, keep the user's real yes
 assert "error" not in a._run_tool("run_command", {"command": "sudo reboot", "confirmed": True})[0] and ran == ["sudo reboot"]
 a.unattended = False
@@ -170,7 +175,7 @@ assert a.contents[-1] == {"role": "model", "parts": [{"text": "Two failed: offer
 assert brain.page_text('<div data-x="a<b>c</ref>">Hello&nbsp;<b>world</b></div><script>var x="<p>no</p>"</script> ok') == "Hello world ok"
 
 # the mic's speech detector: talking keeps Jarvis listening; a steady hum (fan, hiss) soon stops counting as talking
-import collections, types
+import collections, sys, types
 import numpy as np
 import jarvis
 live = jarvis.Live.__new__(jarvis.Live)
@@ -543,6 +548,29 @@ try:
 except RuntimeError as e:
     assert "renewed" in str(e) and len(refreshes) == 2, e
 auth.shutdown()
+auth.server_close()
+# the login server is out of reach (a Composio outage): a login with time left is kept, and no sign-in tab opens
+brain.renewed_at.clear()
+opened, real_open = [], system.open_target
+system.open_target = opened.append
+store.write_json(os.path.join(store.DATA, "mcp", "acme.json"), {"client": {"client_id": "jarvis", "redirect_uris": [f"{base}/cb"]},
+    "tokens": {"access_token": "old", "token_type": "Bearer", "refresh_token": "r1", "expires_in": 3600, "expires_at": time.time() + 600}})
+assert asyncio.run(tokens.get_tokens()).access_token == "old"
+try:
+    asyncio.run(brain.oauth_provider("acme", base + "/mcp", print).context.redirect_handler(base + "/authorize"))
+    raise AssertionError("went to the browser")
+except ConnectionError as e:
+    assert "couldn't reach" in str(e) and not opened and brain.unreachable(e), e
+system.open_target = real_open
+# a plugin out of reach (the PC started before its network): marked so, to be tried again, and said once, not at every try
+mcp_loop = asyncio.new_event_loop()
+threading.Thread(target=mcp_loop.run_forever, daemon=True).start()
+said = []
+gone = brain.McpServer("gone", {"url": "http://127.0.0.1:9/mcp"}, mcp_loop, said.append)
+gone.connect()
+gone.connect()
+assert gone.status == "error" and gone.offline and len(said) == 1, (gone.error, said)
+assert not brain.unreachable(RuntimeError("composio sign-in timed out")) and brain.unreachable(ExceptionGroup("g", [ConnectionRefusedError()]))
 
 # your own providers: keys stay out of settings, never go over plain http to another machine
 store.set_secret("openai", "sk-test-123")
@@ -1009,7 +1037,7 @@ assert live.stopped is False
 # then nothing hung up idle sessions or closed the mic for the rest of that session)
 async def watch_after_stop():
     now = time.time()
-    live.primed, live.stopped, live.working, live.running, live.question, live.waiting, live.mic = False, True, False, 0, None, False, False
+    live.stopped, live.working, live.running, live.question, live.waiting, live.mic = True, False, 0, None, False, False
     live.last = live.last_msg = live.voice_at = now - 20
     live.speaker = types.SimpleNamespace(until=0.0, busy=lambda: False, stop=lambda: None)
     live.inflight = {"text": None, "heard": "what's the weather like today", "since": now - 20, "tool": False, "answered": False, "recovered": False}
@@ -1163,6 +1191,15 @@ jarvis.run_unattended(check_live, "check", check=True)
 jarvis.system.notify = real_notify
 assert told == ["Your card payment failed."] and all(u for _, u in check_asks)
 assert turns == [("check", "Your card payment failed.")]  # (so "yes, do it" from the phone has the context; NOTHING isn't kept)
+# what happens on WhatsApp joins it too ("call him back" from the phone called the person Jarvis had phoned last)
+jarvis.system.notify = lambda *a: None
+jarvis.tell(check_live, "Sam is calling on WhatsApp.", event="WhatsApp")
+jarvis.system.notify = real_notify
+for _ in range(50):
+    if len(turns) == 2:
+        break
+    time.sleep(0.02)
+assert turns[-1] == ("(What happened on WhatsApp just now?)", "Sam is calling on WhatsApp.") and told[-1] == "Sam is calling on WhatsApp."
 
 # other programs on this PC: `jarvis --task` runs unattended and gets the reply, `--say` speaks; the MCP server wraps both
 api_live = types.SimpleNamespace(announce=told.append)
@@ -1232,6 +1269,12 @@ assert brain.tool_selection() == {"selected": "the selected words", "clipboard":
 system.selected_text = lambda: ("", "")
 assert "nothing is selected" in brain.tool_selection()["error"]
 system.selected_text = real_sel
+# a picture on the clipboard isn't text: no crash, and no bytes passed off as the user's text
+assert system.run([sys.executable, "-c", "import sys; sys.stdout.buffer.write(bytes([0x81]) + b'PNG')"]) == "\ufffdPNG"  # (0x81: invalid in UTF-8 and cp1252 alike)
+system.selected_text = lambda: ("", "\ufffdPNG\r\n")
+assert "nothing is selected" in brain.tool_selection()["error"]
+system.selected_text = real_sel
+assert os.path.expanduser("~") in system.describe()
 
 # media keys go to the player
 pressed, real_media = [], system.media
@@ -1847,6 +1890,7 @@ for _ in range(50):
         break
     time.sleep(0.1)
 assert wa_told == ["Maya didn't pick up my WhatsApp call."] and wa.call is None, wa_told
+assert not any("Called Maya" in c["what"] for c in store.changes())  # (a call that never connected isn't a change)
 wa.dialing = True
 try:
     wa.dial({"chat": "3@c.us", "name": "Maya"}, "hi")

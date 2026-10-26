@@ -74,7 +74,7 @@ def read_json(path, default):
 
 def write_json(path, data, private=False):
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    tmp = f"{path}.tmp"
+    tmp = f"{path}.{threading.get_ident()}.tmp"  # (its own: two threads saving one file at once never mix their writes)
     fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600 if private else 0o644)
     with os.fdopen(fd, "w") as f:
         json.dump(data, f, indent=1)
@@ -91,6 +91,11 @@ def settings():
 
 def update_settings(changes):
     """Validate and save; returns the new settings. Raises ValueError on bad input."""
+    with _lock:  # (read and written together: two changes at once, from the window and a tool, both stick)
+        return _update_settings(changes)
+
+
+def _update_settings(changes):
     s = settings()
     for key, value in changes.items():
         if key not in DEFAULT_SETTINGS:
@@ -136,8 +141,7 @@ def update_settings(changes):
         if key == "whatsapp_calls" and value not in ("answer", "decline", "off"):
             raise ValueError("WhatsApp calls are answer, decline or off")
         s[key] = value
-    with _lock:
-        write_json(SETTINGS_FILE, {k: v for k, v in s.items() if v != DEFAULT_SETTINGS[k]})
+    write_json(SETTINGS_FILE, {k: v for k, v in s.items() if v != DEFAULT_SETTINGS[k]})
     return s
 
 

@@ -150,9 +150,12 @@ window.__jarvisDial = async jid => {  // a voice call to a contact, started the 
   const wid = R('WAWebWidFactory').createWid(jid), chat = Chat.get(wid);
   const started = R('WAWebVoipStartCall').startWAWebVoipCall(chat && chat.contact ? chat.contact.id : wid, false, 0, 0, null,
                                                               {entryTrust: 'user_gesture'});
-  await R('WAWebVoipStartingCallSettle').waitForStartingCallToSettle(started);
-  const ok = await started, c = calls.activeCall;
-  return c && c.outgoing ? {id: c.id} : {error: ok === false ? 'WhatsApp wouldn\'t start the call' : 'the call didn\'t start'};
+  // (it once never settled: the call hung for a minute, then blocked the next one. A call it did start is used, so it
+  // rings out and gets hung up as usual)
+  const ok = await Promise.race([R('WAWebVoipStartingCallSettle').waitForStartingCallToSettle(started).then(() => started),
+                                 new Promise(r => setTimeout(r, 20000, 'stuck'))]), c = calls.activeCall;
+  return c && c.outgoing ? {id: c.id} : {error: ok === 'stuck' ? 'WhatsApp got stuck starting the call'
+                                         : ok === false ? 'WhatsApp wouldn\'t start the call' : 'the call didn\'t start'};
 };
 window.__jarvisButton = words => {  // press a button in the call screen whose label has one of these words
   const re = new RegExp(words, 'i');
@@ -597,17 +600,18 @@ class WhatsApp:
         if transcript:
             self.tell(f"I answered {c['name']}'s WhatsApp call. {self.summary(c['name'], transcript)}")
 
-    def dial(self, found, message):
-        """Phone a contact and give them the message in Jarvis's voice; the user is told how it went when it ends."""
+    def dial(self, found, message, on_answer=lambda: None):
+        """Phone a contact and give them the message in Jarvis's voice; the user is told how it went when it ends.
+        on_answer runs once they pick up (the change log: a call that never connected isn't something Jarvis did)."""
         self._need()
         if self.call or self.dialing:
             raise RuntimeError("Jarvis is already on a WhatsApp call")
         if found.get("group"):
             raise RuntimeError("Jarvis calls one person, not a group")
         self.dialing = True
-        threading.Thread(target=self._dial, args=(found, message), daemon=True).start()
+        threading.Thread(target=self._dial, args=(found, message, on_answer), daemon=True).start()
 
-    def _dial(self, found, message):
+    def _dial(self, found, message, on_answer):
         name = found["name"]
         try:
             got = self.evaluate(f"window.__jarvisDial({json.dumps(found['chat'])})", timeout=60) or {"error": "no answer from WhatsApp"}
@@ -625,6 +629,7 @@ class WhatsApp:
                 self.tell(f"{name} didn't pick up my WhatsApp call.")
                 return
             print(f"[whatsapp] {name} picked up", flush=True)
+            on_answer()
             self.call = CallSession(self, {"id": got["id"], "name": name}, message)
             transcript = self.call.run()
             self.tell(f"I called {name} on WhatsApp. {self.summary(name, transcript, message)}" if transcript
@@ -670,11 +675,16 @@ class CallSession:
         self.done = threading.Event()
 
     def heard(self, pcm):
-        if self.queue:
+        if self.queue and not self.done.is_set():  # (the call's loop closes once it's over)
             self.loop.call_soon_threadsafe(self.queue.put_nowait, pcm)
 
     def run(self):
-        threading.Thread(target=self.loop.run_until_complete, args=(self._talk(),), daemon=True).start()
+        def talk():
+            try:
+                self.loop.run_until_complete(self._talk())
+            finally:
+                self.loop.close()  # (one loop per call: left open, each call kept its file descriptors for good)
+        threading.Thread(target=talk, daemon=True).start()
         self.wa.evaluate("window.__jarvisListening = true")
         try:
             end = time.time() + CALL_LIMIT + 30

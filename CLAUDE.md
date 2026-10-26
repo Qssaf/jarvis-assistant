@@ -113,7 +113,9 @@ keeps one connection, and concurrent calls open their own. Composio is the defau
 `COMPOSIO_MULTI_EXECUTE_TOOL`; `app_data` unwraps Composio's double-wrapped results (None when a call failed: keep
 that distinct from "nothing there", as `briefing` and `classroom_work` do). Remote logins are renewed `REFRESH_EARLY`
 before they expire: the MCP SDK counts a stored token's lifetime from when it's loaded, and a token refused
-mid-connection makes it start a whole new browser sign-in.
+mid-connection makes it start a whole new browser sign-in. Only a refresh the server refuses (`rejected`: 400/401/403) may lead to a sign-in tab;
+when it's out of reach the old token is kept, and a plugin that couldn't connect for that reason (`unreachable`) is
+retried with backoff (it used to stay broken until a restart).
 
 **OS layer.** Everything platform-specific goes in `system.py`, never in the other modules. It picks the best
 available tool at call time:

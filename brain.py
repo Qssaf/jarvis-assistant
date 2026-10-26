@@ -833,6 +833,7 @@ def tool_run_command(command, timeout=30, confirmed=False, permanent=False):
 
 on_change = [lambda what: None]  # set by the app: shows a change in the Activity page
 on_plan = [lambda steps: None]  # set by the app: shows a long task's plan in the chat
+on_asked = [lambda contents: None]  # set by the app: saves the agent's history with the conversation after each task
 
 
 def changed(what):
@@ -1252,7 +1253,8 @@ def tool_recall(query="", day=""):
 
 def tool_selection():
     selected, clipboard = system.selected_text()
-    no_text = lambda t: not t.strip() or "No selection" in t or "Nothing is copied" in t or "error" in t.lower()[:40]
+    no_text = lambda t: (not t.strip() or "No selection" in t or "Nothing is copied" in t or "error" in t.lower()[:40]
+                         or "\ufffd" in t[:16])  # (a copied picture: bytes, not text)
     if no_text(selected) and no_text(clipboard):
         return {"error": "nothing is selected or copied: ask the user to select (or copy) the text first"}
     return {**({"selected": selected[:12000]} if not no_text(selected) else {}),
@@ -1510,8 +1512,7 @@ def tool_whatsapp_call(to, message, confirmed=False):
         return {**problem, "result": "no call made: ask the user who they mean"}
     if needs_yes("WHATSAPP_SEND_MESSAGE") and not confirmed:
         return {"error": NEEDS_YES, "to": found["name"]}
-    wa.dial(found, message)
-    changed(f"Called {found['name']} on WhatsApp to say: {message[:200]}")
+    wa.dial(found, message, on_answer=lambda: changed(f"Called {found['name']} on WhatsApp to say: {message[:200]}"))
     return {"result": f"calling {found['name']} now: when the call ends, Jarvis tells the user how it went (say only that you're calling)"}
 
 
@@ -1759,6 +1760,11 @@ refreshing = threading.Lock()  # ponytail: one global lock; refreshes are rare
 renewed_at = {}  # plugin -> when a refused login was last renewed without asking (see open_browser)
 
 
+def rejected(e):
+    """The login server said no to a refresh token (only a sign-in helps), not that it was down or out of reach."""
+    return isinstance(e, requests.HTTPError) and e.response is not None and e.response.status_code in (400, 401, 403)
+
+
 def oauth_provider(name, url, notify, signing=lambda waiting: None):
     """OAuth for a remote MCP server, with the token kept in ~/.local/share/jarvis/mcp/<name>.json. signing(True) while
     a sign-in page is waiting in the browser."""
@@ -1809,9 +1815,13 @@ def oauth_provider(name, url, notify, signing=lambda waiting: None):
             if time.time() > expires_at - REFRESH_EARLY and d.get("refresh_token"):
                 try:
                     return await asyncio.to_thread(refresh, d)
-                except Exception as e:  # refresh token no longer valid: the SDK falls back to a browser sign-in
+                except Exception as e:
                     print(f"[{name}] token refresh failed: {e}", flush=True)
-                    d["access_token"] = ""
+                    if rejected(e):  # refresh token no longer valid: the SDK falls back to a browser sign-in
+                        d["access_token"] = ""
+                    elif time.time() > expires_at:  # out of reach and run out: this connection fails, a later one retries
+                        raise
+                    # (out of reach with time left: keep using it. Blanking it opened a sign-in tab in a Composio outage)
             d["expires_in"] = max(0, int(expires_at - time.time()))  # what's left of it, not its original lifetime
             return OAuthToken.model_validate(d)
 
@@ -1833,12 +1843,14 @@ def oauth_provider(name, url, notify, signing=lambda waiting: None):
         if d.get("refresh_token") and time.time() - renewed_at.get(name, 0) > 600:
             # the server refused a token that hadn't expired (it once opened a sign-in tab out of the blue, which then
             # timed out): try the refresh token first; the failed call reconnects with the new one (once per 10 minutes)
-            renewed_at[name] = time.time()
             try:
                 await asyncio.to_thread(renew_now)
             except Exception as e:
                 print(f"[{name}] token refresh failed: {e}", flush=True)
+                if not rejected(e):  # the login server is down or out of reach: its sign-in page wouldn't load either
+                    raise ConnectionError(f"couldn't reach {name} to renew its login: {describe(e)}")
             else:
+                renewed_at[name] = time.time()
                 print(f"[{name}] the login was refused: renewed it without a sign-in", flush=True)
                 raise RuntimeError(f"{name}'s login was renewed: connect again")
         signing(True)
@@ -1883,12 +1895,20 @@ def describe(e):
     return str(e) or type(e).__name__
 
 
+def unreachable(e):
+    """The network or the server was out of reach (worth trying again later), not a login or a setup problem."""
+    while isinstance(e, BaseExceptionGroup) and e.exceptions:
+        e = e.exceptions[0]
+    return isinstance(e, OSError) or any(c.__name__ == "TransportError" for c in type(e).__mro__)  # (httpx's)
+
+
 class McpServer:
     """One plugin: an MCP server reached by URL (signing in with OAuth when it asks) or started as a local command."""
 
     def __init__(self, name, cfg, loop, notify):
         self.name, self.cfg, self.loop, self.notify = name, cfg, loop, notify
         self.tools, self.status, self.error = [], "connecting", ""
+        self.offline = False  # the last connect failed only because the server was out of reach
         self.signing_in = False  # a sign-in page is open in the browser, waiting for the user
         self.session = self.stopped = None
         self.opened_at = 0.0
@@ -1938,7 +1958,7 @@ class McpServer:
                         ready.set()
                         await self.stopped.wait()
                 except Exception as e:
-                    self.error = describe(e)
+                    self.error, self.offline = describe(e), unreachable(e)
                 finally:
                     self.session = None
                     ready.set()
@@ -1971,14 +1991,18 @@ class McpServer:
             self.busy -= 1
 
     def connect(self):
+        self.offline = False
         try:
             tools = self._run(self._with(lambda s: s.list_tools()), timeout=660).tools
             allow = self.cfg.get("tools")
             self.tools = [t for t in tools if not allow or t.name in allow]
             self.status, self.error = "ready", ""
         except Exception as e:
-            self.status, self.error = "error", describe(e)[:300]
-            self.notify(f"Plugin {self.name} isn't working: {self.error}")
+            error = describe(e)[:300]
+            self.offline = (self.offline or unreachable(e)) and "sign-in" not in error  # (a retry never opens a sign-in tab)
+            if (self.status, self.error) != ("error", error):  # (said once, not at every retry)
+                self.notify(f"Plugin {self.name} isn't working: {error}")
+            self.status, self.error = "error", error
 
     def call(self, tool, args, limit=20000):
         """Run a tool; the text is capped at `limit` characters (for the model; None = everything)."""
@@ -2236,6 +2260,15 @@ class Brain:
 
                 def start(srv=srv):
                     srv.connect()
+                    wait = 30
+                    # out of reach (the PC started before its network, or the server was down): try again, or it stayed
+                    # broken, with no account tools, until Jarvis restarted
+                    while srv.status != "ready" and srv.offline and self.plugins.get(srv.name) is srv:
+                        if srv.name == "composio":
+                            self.tools_ready.set()  # (the voice doesn't wait for it meanwhile)
+                        time.sleep(wait)
+                        wait = min(wait * 2, 600)
+                        srv.connect()
                     if srv.name == "composio":
                         self.refresh_app_tools() if srv.status == "ready" else self.tools_ready.set()
                 threading.Thread(target=start, daemon=True).start()
@@ -2725,6 +2758,8 @@ class Brain:
                 self.remote = self.unattended = False
                 if unattended and self.contents is own:  # (unless New conversation reset it meanwhile)
                     self.contents = saved
+                elif not unattended:  # (voice, typed and phone tasks alike: only voice ones were saved, so a reopened chat
+                    on_asked[0](self.contents)  # forgot what the phone had asked)
 
     def _ask(self, text, on_tool, on_thought):
         self.cancel.clear()
