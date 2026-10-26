@@ -1,7 +1,7 @@
 """Jarvis's brain: a Gemini agent with PC tools, web search, Photopea and plugins (MCP servers, e.g. Composio).
 Models come from your Google AI Studio API key (GEMINI_API_KEY, in the environment or the env file in Jarvis's config
 folder). An optional local_backends.py can add more backends (see the README). The "agent_models" setting decides the order."""
-import asyncio, base64, hashlib, ipaddress, json, os, re, select, shutil, socket, subprocess, tempfile, threading, time, uuid
+import asyncio, base64, hashlib, ipaddress, json, logging, os, re, select, shutil, socket, subprocess, tempfile, threading, time, uuid
 from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 from urllib.parse import parse_qs, quote, urlencode, urlparse
 
@@ -1902,6 +1902,14 @@ def unreachable(e):
     return isinstance(e, OSError) or any(c.__name__ == "TransportError" for c in type(e).__mro__)  # (httpx's)
 
 
+def _one_line(record):  # (the reason reaches the Plugins page; the MCP library's 60-line traceback at each retry swamped the log)
+    record.exc_info = record.exc_text = None
+    return True
+
+
+logging.getLogger("mcp.client.streamable_http").addFilter(_one_line)
+
+
 class McpServer:
     """One plugin: an MCP server reached by URL (signing in with OAuth when it asks) or started as a local command."""
 
@@ -1909,6 +1917,8 @@ class McpServer:
         self.name, self.cfg, self.loop, self.notify = name, cfg, loop, notify
         self.tools, self.status, self.error = [], "connecting", ""
         self.offline = False  # the last connect failed only because the server was out of reach
+        self.retry_at = 0.0  # when it's tried again by itself (status "retrying")
+        self.wake = threading.Event()  # "Try now" on the Plugins page
         self.signing_in = False  # a sign-in page is open in the browser, waiting for the user
         self.session = self.stopped = None
         self.opened_at = 0.0
@@ -1991,7 +2001,7 @@ class McpServer:
             self.busy -= 1
 
     def connect(self):
-        self.offline = False
+        self.offline, before = False, self.error  # (hold() overwrites self.error with the raw reason meanwhile)
         try:
             tools = self._run(self._with(lambda s: s.list_tools()), timeout=660).tools
             allow = self.cfg.get("tools")
@@ -1999,8 +2009,11 @@ class McpServer:
             self.status, self.error = "ready", ""
         except Exception as e:
             error = describe(e)[:300]
-            self.offline = (self.offline or unreachable(e)) and "sign-in" not in error  # (a retry never opens a sign-in tab)
-            if (self.status, self.error) != ("error", error):  # (said once, not at every retry)
+            # (a web address only: a local command that's missing is an OSError too, and no retry brings it back)
+            self.offline = bool(self.cfg.get("url")) and (self.offline or unreachable(e)) and "sign-in" not in error
+            if self.offline:  # ("ConnectError" alone told the user nothing)
+                error = f"Can't reach {urlparse(self.cfg['url']).hostname}"
+            if error != before:  # (said once, not at every retry)
                 self.notify(f"Plugin {self.name} isn't working: {error}")
             self.status, self.error = "error", error
 
@@ -2266,8 +2279,11 @@ class Brain:
                     while srv.status != "ready" and srv.offline and self.plugins.get(srv.name) is srv:
                         if srv.name == "composio":
                             self.tools_ready.set()  # (the voice doesn't wait for it meanwhile)
-                        time.sleep(wait)
+                        srv.status, srv.retry_at = "retrying", time.time() + wait
+                        srv.wake.wait(wait)
+                        srv.wake.clear()
                         wait = min(wait * 2, 600)
+                        srv.status = "connecting"
                         srv.connect()
                     if srv.name == "composio":
                         self.refresh_app_tools() if srv.status == "ready" else self.tools_ready.set()
@@ -2281,14 +2297,31 @@ class Brain:
             srv = self.plugins.get(name)
             out.append({"name": name, "config": cfg, "enabled": cfg.get("enabled", True),
                         "status": srv.status if srv else "off", "error": srv.error if srv else "",
+                        "retry_in": max(0, round(srv.retry_at - time.time())) if srv and srv.status == "retrying" else 0,
                         "tools": [t.name for t in srv.tools] if srv else []})
         return out
+
+    def retry_plugin(self, name):
+        """Connect a plugin again now ("Try now"): wakes its retry, or starts a new try after any other failure."""
+        srv = self.plugins.get(name)
+        if not srv:
+            raise KeyError(name)
+        if srv.status == "retrying":
+            srv.wake.set()
+        elif srv.status == "error":
+            srv.status = "connecting"
+
+            def again():
+                srv.connect()
+                if srv.name == "composio" and srv.status == "ready":
+                    self.refresh_app_tools()
+            threading.Thread(target=again, daemon=True).start()
 
     # ---- Composio workspaces (Connections page)
     def _composio(self, toolkits):
         srv = self.plugins.get("composio")
         if not srv or srv.status != "ready":
-            raise RuntimeError("the Composio plugin isn't connected (see Plugins)")
+            raise RuntimeError(self.accounts_down() or "the Composio plugin is turned off (see Plugins)")
         out = srv.call("COMPOSIO_MANAGE_CONNECTIONS", {"toolkits": toolkits})
         if "error" in out:
             raise RuntimeError(out["error"][:300])
@@ -2399,6 +2432,17 @@ class Brain:
                                   "link": a.get("alternateLink", "")} for c, a in posts[:max(1, min(int(count), 20))]] or "none"}
         missed = [c.get("name", "") for c, data in found if data is None]
         return {**out, "couldnt_check": missed} if missed else out  # (never taken for "nothing posted")
+
+    def accounts_down(self):
+        """Why the user's accounts can't be reached right now ('' when they can): the agent once told the user Gmail
+        "isn't connected" during a Composio outage."""
+        srv = self.plugins.get("composio")
+        if not srv or srv.status == "ready":
+            return ""
+        why = "Composio, which connects them, can't be reached right now" if srv.offline or srv.status == "retrying" else \
+            self.sign_in_note() or f"Composio, which connects them, isn't working ({srv.error or srv.status})"
+        return (f"The user's accounts (Gmail, Calendar, Classroom...) are still connected, but {why}; Jarvis keeps trying. "
+                "Say exactly that if they're needed, never that an account isn't connected or needs connecting.")
 
     def sign_in_note(self):
         """Which plugins wait for the user to sign in again in the browser ('' if none): why their tools hang."""
@@ -2583,8 +2627,8 @@ class Brain:
         extra = store.settings()["extra_instructions"].strip()
         if extra:
             prompt += f"\n\n# The user's own instructions\n{extra}"
-        if account_policy():
-            prompt += f"\n\n# Accounts\n{account_policy()}"
+        if account_policy() or self.accounts_down():
+            prompt += f"\n\n# Accounts\n{account_policy()}\n{self.accounts_down()}".rstrip()
         if store.memory():
             prompt += f"\n\n# What you remember about the user\n{store.memory()}"
         return prompt

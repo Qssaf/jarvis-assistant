@@ -34,7 +34,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - {LANGUAGE}
 - Casual talk, thanks, jokes and swearing are conversation: reply in kind, briefly. The user trash-talks for fun (games, friends, you): give a short witty comeback, never a lecture or refusal speech. Only if they seem genuinely in distress, answer with care.
 - Your wit is about things, never at the user's expense: no sarcasm about them, their taste or their questions (never "do try to keep up", never call a question rhetorical), unless they're trash-talking you first. Praise from them gets a plain thanks, not a jab.
-- Your microphone stays on until you call stop_listening. When the user clearly ends the conversation ("that's all", "stop listening", "bye", "go to sleep"), call it with a two-word goodbye. A stray word ("so", "you", "a", "sir"), a garbled phrase or words in another language are not an ending and not for you: call ignore and say nothing (the user found "Yes?" after every noise tiring). But "huh?", "what?", "sorry?" or "pardon?" right after you spoke is the user not catching it: say it again, shorter. Never ask "anything else I can help with?". Games, videos and calls can reach the microphone: words that don't fit the conversation are them, not the user.
+- Your microphone stays on until you call stop_listening. When the user clearly ends the conversation ("that's all", "stop listening", "bye", "go to sleep"), call it with a two-word goodbye. A stray word ("so", "you", "a", "sir"), a garbled phrase or words in another language are not an ending and not for you: call ignore and say nothing (the user found "Yes?" after every noise tiring). But "huh?", "what?", "sorry?" or "pardon?" right after you spoke is the user not catching it: repeat what you just said, shorter (never "how can I help?"). Never ask "anything else I can help with?". Games, videos and calls can reach the microphone: words that don't fit the conversation are them, not the user.
 
 # The fastest right way, for each kind of request
 - Facts, definitions, maths, advice, conversation you're sure of: answer straight away, no tools. Counting days between dates ("how many days until New Year?", "how old will I be"): run_command works it out (you miscount by one), then say the number.
@@ -558,8 +558,8 @@ class Live:
                    "answer messages and calls).\n")
                 + (f"- {brain_mod.account_policy()}\n" if brain_mod.account_policy() else "")
                 + f"- Plugins (MCP servers): {', '.join(plugins) or 'none'}; more can be added in Jarvis's Plugins page.\n"
-                + (f"- Not working right now: {', '.join(down)} ({self.brain.sign_in_note() or 'not connected'}). If asked, say "
-                   "so: the accounts it connects may fail until it's back.\n" if down else "")
+                + (f"- Not working right now: {', '.join(down)}. {self.brain.accounts_down() or self.brain.sign_in_note()}\n"
+                   if down else "")
                 + "- A background agent (do_task) for long jobs. You run on Google Gemini; the user built and develops you.")
 
     def _config(self):
@@ -569,6 +569,8 @@ class Live:
         name = preferred_name(store.memory())
         address = (f'Call the user "{name}" whenever you address them, never "sir".' if name else
                    'Address the user the way they asked in what you remember above; only if nothing is there, "sir".')
+        if len(name) == 1:  # ("Q" was said as a word, "que")
+            address += f' "{name}" is a single letter: say it the way the letter is said when spelling aloud, never as a word.'
         language = store.LANGUAGES[cfg["language"]].split(" (")[0]
         rule = (f"Always speak {language}. A transcript in another language is mishearing or background noise: don't switch "
                 f"language or act on it.") if language == "English" else (
@@ -1815,6 +1817,8 @@ def api_post(path, data, live, brain):
     elif path == "/api/plugins":
         add_plugin(data)
         brain.load_plugins()
+    elif m := re.fullmatch(r"/api/plugins/([\w-]+)/retry", path):
+        brain.retry_plugin(m[1])
     elif m := re.fullmatch(r"/api/plugins/([\w-]+)/(toggle|delete)", path):
         plugins = store.plugins()
         if m[1] not in plugins:

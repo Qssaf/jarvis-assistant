@@ -14,7 +14,9 @@ ScrollPage {
     function load() { Api.get("/api/plugins", d => items = d) }
     function preset(name, how, value, more) { pname.text = name; kind = how; target.text = value; extra.text = more || "" }
     Component.onCompleted: load()
-    Timer { interval: 4000; running: page.visible && page.items.some(p => p.status === "connecting"); repeat: true; onTriggered: page.load() }
+    function wait(seconds) { return seconds >= 90 ? Math.round(seconds / 60) + " min" : seconds + " s" }
+    Timer { interval: 4000; running: page.visible && page.items.some(p => p.status === "connecting" || p.status === "retrying")
+            repeat: true; onTriggered: page.load() }
 
     actions: Pill { text: "Refresh"; symbol: "refresh"; onClicked: page.load() }
 
@@ -59,17 +61,25 @@ ScrollPage {
                                 Layout.fillWidth: true
                                 spacing: 8
                                 StatusDot {
+                                    // (out of reach and retrying by itself: orange, not red)
                                     status: row.modelData.status === "ready" ? "ok" : row.modelData.status === "error" ? "error"
                                           : row.modelData.status === "off" ? "off" : "working"
                                 }
                                 Txt {
                                     kind: "small"; Layout.fillWidth: true; elide: Text.ElideRight; wrapMode: Text.NoWrap
-                                    text: row.modelData.error ? row.modelData.error
+                                    text: row.modelData.status === "retrying" ? `${row.modelData.error} · trying again in ${page.wait(row.modelData.retry_in)}`
+                                        : row.modelData.status === "connecting" && row.modelData.error ? "Trying again…"
+                                        : row.modelData.error ? row.modelData.error
                                         : row.modelData.status === "ready" ? (row.modelData.config.url || row.modelData.config.command)
                                         : row.modelData.status === "off" ? "Turned off" : "Connecting… (a sign-in page may open in your browser)"
-                                    color: row.modelData.error ? Theme.red : row.modelData.status === "off" ? Theme.text3 : Theme.text2
+                                    color: row.modelData.status === "error" ? Theme.red : row.modelData.status === "off" ? Theme.text3 : Theme.text2
                                 }
                             }
+                        }
+                        Pill {
+                            visible: row.modelData.status === "error" || row.modelData.status === "retrying"
+                            text: "Try now"; symbol: "refresh"
+                            onClicked: Api.post(`/api/plugins/${row.modelData.name}/retry`, {}, page.load)
                         }
                         Toggle {
                             implicitWidth: 44

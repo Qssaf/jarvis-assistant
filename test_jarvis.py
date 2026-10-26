@@ -569,7 +569,19 @@ said = []
 gone = brain.McpServer("gone", {"url": "http://127.0.0.1:9/mcp"}, mcp_loop, said.append)
 gone.connect()
 gone.connect()
-assert gone.status == "error" and gone.offline and len(said) == 1, (gone.error, said)
+assert gone.status == "error" and gone.offline and len(said) == 1 and gone.error == "Can't reach 127.0.0.1", (gone.error, said)
+missing = brain.McpServer("missing", {"command": "/no/such/mcp-server"}, mcp_loop, said.append)
+missing.connect()
+assert missing.status == "error" and not missing.offline  # (a missing command: no retry brings it back)
+# ...and its accounts are still connected: the agent said Gmail "isn't connected" during a Composio outage
+down_brain = brain.Brain.__new__(brain.Brain)
+down_brain.plugins = {"composio": gone}
+assert "still connected" in down_brain.accounts_down() and "never that an account isn't connected" in down_brain.accounts_down()
+try:
+    down_brain._composio([])
+    raise AssertionError("no error")
+except RuntimeError as e:
+    assert "still connected" in str(e)
 assert not brain.unreachable(RuntimeError("composio sign-in timed out")) and brain.unreachable(ExceptionGroup("g", [ConnectionRefusedError()]))
 
 # your own providers: keys stay out of settings, never go over plain http to another machine
@@ -653,7 +665,7 @@ jarvis.sessions = real_sessions
 assert os.environ["TQDM_DISABLE"] == "1"  # (tqdm's \r bars hid whole conversations in the log)
 
 # the prompts describe this computer, and nothing personal or private ships
-prompt = brain.Brain._system(None)
+prompt = brain.Brain._system(types.SimpleNamespace(accounts_down=lambda: ""))
 assert "{SYSTEM}" not in prompt and ("Windows" in prompt or "Linux" in prompt)
 assert "{SYSTEM}" not in jarvis.LIVE_PROMPT.replace("{SYSTEM}", system.describe())
 assert "kcalc" not in jarvis.VOICE_ACT or system.CALC == "kcalc"
