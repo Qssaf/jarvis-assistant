@@ -31,6 +31,8 @@ EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py
   before importing anything; keep that first so tests never touch real settings, memory or reminders.
 - `openwakeword` is installed with `--no-deps` (its tflite dependency has no current wheels); don't add it to
   `requirements.txt`.
+- Finding the running Jarvis: never `pgrep -f`/`pkill -f` with "jarvis.py" in the pattern (it matches the shell running
+  the command, which then kills itself); match `[.]venv/bin/python .../jarvis.py` in `ps -eo pid,args` instead.
 - Running a second copy alongside an installed Jarvis: set `JARVIS_HUD_PORT` to another port and point the XDG dirs
   elsewhere, otherwise `main()` finds the running instance and just opens its window.
 - In a fresh config dir, write `{}` to `<config>/jarvis/plugins.json` first. Otherwise the default Composio plugin
@@ -67,7 +69,7 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   Independent calls (accounts, plugins, `PARALLEL_TOOLS`) run in parallel; screen tools keep their order.
 - `Live` has resilience logic that's easy to break: request tracking (`inflight`), session resumption, `_recover`
   and `_relisten` after drops, the `_watch` silence watchdog, and half-duplex mic gating while the speaker plays.
-  A tool reply sent with `scheduling="SILENT"` (always for `stop_listening`) gets no spoken answer, so the request
+  A tool reply sent with `scheduling="SILENT"` (always for `stop_listening` and `ignore`, the voice's "say nothing" for noise) gets no spoken answer, so the request
   must be cleared (`inflight = None`) or the watchdog reconnects 12 s later and re-asks. Something Jarvis says on its
   own (`announce`: reminders, scheduled tasks, `--say`) waits 25 s instead, and never asks the user to repeat it. Code in `_run`'s `except`
   that schedules a reconnect must read `self.mic` first: the `finally` turns it off before the callback runs.
@@ -92,7 +94,7 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
 sources (`OUTSIDE_CONTENT`, accounts, plugins) get the `UNTRUSTED` note. To add a tool: put it in `TOOLS`, in
 `LIVE_TOOLS` if the voice model should run it directly (`QUERY_TOOLS` if its result must be spoken), and in
 `TOOL_LABELS` for the notch/chat label. brain.py never imports jarvis.py: what a tool needs from the app is a
-module-level one-item list the app fills in `main()` (`asker`, `on_image`, `on_change`, `on_plan`, `notes_done`), and
+module-level one-item list the app fills in `main()` (`asker`, `on_image`, `on_change`, `on_plan`, `on_asked`, `notes_done`), and
 Brain fills the model ones (`vision`, `pointer`, `painter`, `grounder`, `notes`).
 
 **Safety in code, not only prompts.** With the `safety` setting on "ask" (the default), risky shell commands
