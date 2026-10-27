@@ -96,8 +96,8 @@ def connect(pc_key):
 
 
 class PhoneLink:
-    def __init__(self, brain, notify=print):
-        self.brain, self.notify = brain, notify
+    def __init__(self, brain, notify=print, chat=lambda who, text: print(f"[{who}] {text}")):
+        self.brain, self.notify, self.chat = brain, notify, chat  # notify: a notice; chat: a line of the conversation
         self.state = store.read_json(STATE_FILE, {})
         if not self.state.get("sign"):
             pem = lambda: ec.generate_private_key(ec.SECP256R1()).private_bytes(
@@ -259,7 +259,7 @@ class PhoneLink:
             return await self._refuse(c, phone, "This phone isn't paired with Jarvis any more: pair it again.", unpaired=True)
         if op == "ask" and str(m.get("text", "")).strip():
             text = str(m["text"]).strip()
-            self.notify(f"📱 From your phone: {text}")
+            self.chat("you", f"📱 {text}")  # (as notices, a conversation held only from the phone was never saved)
             await self._send(c, {"op": "working", "id": m.get("id"), "queued": self.brain.ask_lock.locked()})
             threading.Thread(target=self._task, args=(phone["device"], m.get("id"), text), daemon=True).start()
         elif op == "stop":
@@ -271,6 +271,7 @@ class PhoneLink:
             reply = self.brain.ask(REMOTE_NOTE + text, remote=True)
         except Exception as e:
             reply = f"The task failed: {e}"
+        self.chat("jarvis", f"📱 {reply}")  # (the chat at the PC showed the question, never the answer)
         self._call(self._deliver(device, {"op": "reply", "id": request, "text": reply}))
 
     def push(self, text):

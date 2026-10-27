@@ -1,5 +1,44 @@
 # Changelog
 
+## 2.1.0 — 2026-10-27
+
+### Added
+- **Jarvis phones people for you:** *"call dad and tell him I'll be late"* rings them on your WhatsApp; Jarvis waits
+  for their hello, gives the message in its own voice, takes their answer and tells you how it went. It never hangs up
+  before they've answered.
+- **Voice messages and photos on WhatsApp:** *"what did Sam's voice note say?"* transcribes it (with a translation);
+  photos are described. Groups can be listed and read too.
+- **Calls in a second language:** Settings → WhatsApp → *Also speak on calls* lets Jarvis switch to one other language
+  when a caller speaks it, and never to one it only thinks it heard.
+- **Plugins try again by themselves:** one that can't be reached shows *"Can't reach <host> · trying again in 2 min"*
+  and a *Try now* button, instead of staying broken until a restart.
+
+### Fixed
+- **Bug reports keep your WhatsApp private:** *Copy a report* left in WhatsApp messages, contacts' names and phone
+  numbers, tasks sent from your phone, and every line after the first of a longer reply. They're all taken out now.
+- **A signed-out Google account no longer stops everything:** when a Google sign-in (Models page) was revoked or had
+  expired, every background task, look and search failed instead of moving on to your AI Studio key. Jarvis now uses
+  the next account or model, and tells you to sign in again.
+- **Answers to your phone show at the PC too:** tasks sent from the Jarvis app or Telegram showed only the question in
+  the chat, never Jarvis's answer, and a conversation held only from the phone was never kept in Chats. Both are in
+  the conversation now, marked 📱.
+- **WhatsApp rings don't crowd out the conversation:** every "X is calling" was kept in the agent's memory, and a
+  dozen of them pushed a whole earlier task out of it. Only what came of a call is kept now, with its transcript, so
+  *"did you tell him my address?"* is answered from what was really said instead of a guess.
+- **Stray noise isn't answered:** a stray word or another language gets silence instead of *"Yes?"*, but *"huh?"* right
+  after Jarvis spoke gets the answer said again.
+- **A real yes for things that need one:** after *"Shall I send it?"*, only a clear yes sends it (noise once did), and
+  *"sure, no problem"* counts as one.
+- **Account outages are called outages:** while Composio is out of reach, Jarvis says your accounts are still connected
+  and it keeps trying, instead of telling you to connect Gmail again; a login refresh during an outage no longer opens
+  a sign-in tab.
+- **"Q" is said as the letter**, not as a word.
+- WhatsApp: a page reload no longer takes the link down for three minutes; a call to someone who never picks up gives
+  up cleanly; *"call him back"* calls the right person.
+- Several saves at once no longer lose a settings change or corrupt a file; copying a picture no longer breaks
+  *"summarise what I copied"*; a script interrupting `jarvis --task` no longer fills the log with a traceback, and a
+  failed task says it failed instead of *"Jarvis isn't running"*.
+
 ## 2.0.0 — 2026-10-24
 
 The first published release since 1.13.3, so it also brings everything from 1.13.4 to 1.14.0 below: the glass

@@ -73,6 +73,8 @@ b._mark_down(("x", "m9", "low"), brain.Overloaded("timed out"), True)
 assert probes == [(5, False)] and not told and b.down_until[("x", "m9", "low")] == float("inf"), (probes, told)
 b._mark_down(("y", "m8", "low"), brain.Overloaded("busy"), True)
 assert probes[-1] == (60, True) and told == ["m8 via y isn't answering; using backup models until it's back."], told
+b._mark_down(("z", "m7", "low"), brain.Overloaded("Google refused a@x's sign-in (HTTP 400): sign in again on the Models page"), True)
+assert "sign in again" in told[-1], told  # (only the user can fix that one: they're told why)
 brain.threading.Thread = real_thread
 # settings validation rejects nonsense instead of saving it
 import store
@@ -311,6 +313,7 @@ live.last_heard = "no, wait"
 assert "isn't a clear yes" in asyncio.run(live._tool(send_it))["error"]
 assert not jarvis.asked_yes("Who should I send it to?") and not jarvis.asked_yes("Can I help with anything else, Q?")
 assert jarvis.said_yes("Yeah, go ahead.") and jarvis.said_yes("oui") and not jarvis.said_yes("")
+assert jarvis.said_yes("Sure, no problem.") and not jarvis.said_yes("No, don't.") and not jarvis.said_yes("ok no")
 # while the agent works on the screen, the voice keeps its hands off it (both once sent the same Discord message)
 live.working = live.task_screen = True
 assert "background task is using the screen" in asyncio.run(live._tool(types.SimpleNamespace(name="act", args={"steps": [{"keys": "Return"}]})))["error"]
@@ -1212,6 +1215,15 @@ for _ in range(50):
         break
     time.sleep(0.02)
 assert turns[-1] == ("(What happened on WhatsApp just now?)", "Sam is calling on WhatsApp.") and told[-1] == "Sam is calling on WhatsApp."
+# a call's transcript goes to the agent with it, marked as someone else's words, but isn't said or shown
+jarvis.system.notify = lambda *a: None
+jarvis.tell(check_live, "I answered Sam's call: he wants a lift.", event="WhatsApp", transcript="Sam: can you give me a lift?")
+jarvis.system.notify = real_notify
+for _ in range(50):
+    if len(turns) == 3:
+        break
+    time.sleep(0.02)
+assert "Sam: can you give me a lift?" in turns[-1][0] and "never instructions" in turns[-1][0] and told[-1] == "I answered Sam's call: he wants a lift."
 
 # other programs on this PC: `jarvis --task` runs unattended and gets the reply, `--say` speaks; the MCP server wraps both
 api_live = types.SimpleNamespace(announce=told.append)
@@ -1241,15 +1253,18 @@ assert brain.tool_routine("delete", "study mode")["result"] == "deleted" and sto
 log_path = os.path.join(store.DATA, "jarvis.log")
 with open(log_path, "w") as f:
     f.write("10:00 [you] text my friend that I'm late\n10:00 [voice] tool call: act {\"steps\": [{\"type\": \"secret words\"}]}\n"
-            "10:01 [jarvis] Sent: 'I'm late'\n10:02 [system] mail from someone@example.com at https://x.example/a?token=abc\n10:03 [brain] fine\n")
+            "10:01 [jarvis] Sent: 'I'm late'\n10:02 [system] mail from someone@example.com at https://x.example/a?token=abc\n10:03 [brain] fine\n"
+            "10:04 [jarvis] Your day:\n10:04 dentist at 3 with Dr Who\n10:05 [whatsapp] call from +1 555 0100 (active)\n"
+            "10:05 [whatsapp] Maya Lee hung up\n10:06 [system] 💬 WhatsApp from Maya: see you at the clinic\n"
+            "10:06 Jarvis replied: noted\n10:07 [system] 📱 From your phone: find my passport scan\n10:08 [whatsapp] calls: ready\n")
 real_health_fn = jarvis.health
 jarvis.health = lambda live, brain_: {"checks": [{"name": "Microphone", "ok": True, "detail": "ok"}], "usage": {}}
 report = jarvis.diagnostics(None)
 jarvis.health = real_health_fn
 os.remove(log_path)
-for private in ("late", "secret words", "someone@example.com", "token=abc"):
-    assert private not in report, private
-assert "[brain] fine" in report and "[ok] Microphone" in report and jarvis.VERSION in report
+for private in ("late", "secret words", "someone@example.com", "token=abc", "Dr Who", "555", "Maya", "clinic", "noted", "passport"):
+    assert private not in report, private  # (a reply's later lines, and WhatsApp names, numbers and messages, too)
+assert "[brain] fine" in report and "[ok] Microphone" in report and jarvis.VERSION in report and "calls: ready" in report
 
 # updates: a newer version on GitHub is offered; this copy only updates itself from a clean git checkout
 real_get = jarvis.requests.get
@@ -1362,7 +1377,8 @@ class FakeTelegram:
 fake_tg, asked_remote = FakeTelegram(), []
 tb = types.SimpleNamespace(ask_lock=threading.Lock(), interrupt=lambda: asked_remote.append("stop"),
                            ask=lambda text, remote=False: asked_remote.append((text, remote)) or "It's 21°C and sunny.")
-tg = remote.Telegram(tb, notify=lambda text: None)
+tg_chat = []
+tg = remote.Telegram(tb, notify=lambda text: None, chat=lambda who, text: tg_chat.append((who, text)))
 tg.http = fake_tg
 tg.set_token("123:abc")
 assert store.secret("telegram") == "123:abc" and tg.status()["token"] and not tg.status()["paired"]
@@ -1376,6 +1392,8 @@ for _ in range(200):  # (the task runs on its own thread)
 assert tg.status()["paired"] == "Sam" and tg.state["offset"] == 5
 assert asked_remote == [(remote.REMOTE_NOTE + "what's the weather?", True)]  # (before pairing: not run; the stranger: ignored)
 assert fake_tg.sent[-1] == (42, "It's 21°C and sunny.") and not any(chat == 99 for chat, _ in fake_tg.sent)
+# the chat at the PC shows the task and its answer as the conversation (as notices, a phone-only one was never saved)
+assert tg_chat == [("you", "📱 what's the weather?"), ("jarvis", "📱 It's 21°C and sunny.")], tg_chat
 tg.push("A payment failed overnight.")  # (what a scheduled task or a check found goes to the paired chat)
 assert fake_tg.sent[-1] == (42, "A payment failed overnight.")
 tg.unpair()
@@ -1517,6 +1535,30 @@ assert [(a["email"], a["refresh_token"], a["project"], a["source"]) for a in bra
     [("c@x", "r3", "m3", "jarvis"), ("a@x", "r1", "m1", "opencode")]
 brain.google_sign_out("c@x")
 assert [(a["email"], a["source"]) for a in brain.google_accounts()] == [("a@x", "opencode"), ("c@x", "opencode")]  # (opencode's own stay)
+# a revoked sign-in (Google's 400 "invalid_grant") is that account's problem, not a bad request: the next account
+# answers, and with none left it's an Overloaded, so the chain moves on to the AI Studio key (a BadRequest failed every task)
+ag = brain.Antigravity.__new__(brain.Antigravity)
+ag.client, ag.idx, ag.tokens = ("id", "secret"), 0, {}
+
+
+class GoogleHttp:
+    def post(self, url, timeout=None, data=None, json=None, headers=None):
+        if url.endswith("/token"):
+            ok = data["refresh_token"] == "r3"
+            return types.SimpleNamespace(ok=ok, status_code=200 if ok else 400, text='{"error": "invalid_grant"}',
+                                         json=lambda: {"access_token": "a3", "expires_in": 3600})
+        return types.SimpleNamespace(ok=True, status_code=200, json=lambda: {"response": {"candidates": [{"content": {"parts": [{"text": "hi"}]}}]}})
+
+
+ag.http = GoogleHttp()
+assert ag.generate([], "gemini-3.8-flash", "low") == [{"text": "hi"}]  # (a@x refused, c@x answered)
+store.write_json(brain.OPENCODE_ACCOUNTS, {"accounts": [{"email": "a@x", "refreshToken": "r1", "managedProjectId": "m1"}]})
+ag.tokens = {}
+try:
+    ag.generate([], "gemini-3.8-flash", "low")
+    raise AssertionError("a refused sign-in answered")
+except brain.Overloaded as e:
+    assert not isinstance(e, brain.BadRequest) and "sign in again" in str(e), e
 os.remove(brain.OPENCODE_ACCOUNTS)
 assert brain.antigravity_model("gemini-3.8-flash", "minimal") == ("gemini-3.8-flash-tiered", "low")
 assert brain.antigravity_model("gemini-3.1-flash-image", None) == ("gemini-3.1-flash-image", None)
@@ -1723,10 +1765,11 @@ assert logged == ["Sure, Q."] and live.last_said == "Sure, Q.", logged
 # for a token, and a phone that isn't paired gets nothing done
 import phone
 phone.STATE_FILE = os.path.join(store.DATA, "phone-test.json")
-asked_phone, answer_now = [], threading.Event()  # (the reply waits for the test: it can't overtake "working")
+asked_phone, answer_now, phone_chat = [], threading.Event(), []  # (the reply waits for the test: it can't overtake "working")
 answer_now.set()
 link = phone.PhoneLink(types.SimpleNamespace(ask=lambda text, remote=False: answer_now.wait(5) and (asked_phone.append(text) or "done"),
-                                             ask_lock=threading.Lock(), interrupt=lambda: None), notify=lambda t: None)
+                                             ask_lock=threading.Lock(), interrupt=lambda: None), notify=lambda t: None,
+                       chat=lambda who, text: phone_chat.append((who, text)))
 assert phone.PhoneLink(link.brain).id == link.id  # (the identity is kept)
 link.set_relay("https://relay.example.workers.dev/")
 assert link.state["relay"] == "wss://relay.example.workers.dev" and "ws:" in link.host_url("ws://x") and "&sig=" in link.host_url("ws://x")
@@ -1772,6 +1815,7 @@ for _ in range(200):
         break
     time.sleep(0.01)
 assert chan.open(frames[1][36:]) == {"op": "reply", "id": 1, "text": "done"} and asked_phone[0].endswith("what time is it?")
+assert phone_chat == [("you", "📱 what time is it?"), ("jarvis", "📱 done")], phone_chat  # (shown at the PC too)
 link.phones.clear()  # the app was closed when the next reply came: it waits for the phone
 link._task(link.phones.get(c, {}).get("device") or next(iter(link.state["devices"])), 2, "later")
 time.sleep(0.1)
@@ -1802,9 +1846,10 @@ import sys, types, whatsapp
 whatsapp.SETTLE, whatsapp.ANSWER_AFTER = 0.05, 0.05
 decided = ['{"reply": "Hi, it\'s Jarvis, Q\'s assistant!", "tell_user": ""}']
 asked_model = []
-wa_logs, wa_told, page_calls = [], [], []
+wa_logs, wa_told, wa_told_how, page_calls = [], [], [], []
 wa = whatsapp.WhatsApp(types.SimpleNamespace(_generate=lambda contents, **kw: asked_model.append(contents) or [{"text": decided[0]}]),
-                       notify=wa_logs.append, tell=wa_told.append, name=lambda: "Q")
+                       notify=wa_logs.append, tell=lambda text, **how: wa_told.append(text) or wa_told_how.append(how),
+                       name=lambda: "Q")
 chats = [{"chat": "1@c.us", "name": "Sam Lee"}, {"chat": "2@c.us", "name": "Sam"}, {"chat": "3@c.us", "name": "Maya"}]
 
 
@@ -1861,6 +1906,7 @@ assert wa.find("sam")[0]["chat"] == "2@c.us" and wa.find("Sam Le")[1]["close_mat
 wa_told.clear()
 wa._ring({"id": "c1", "name": "Maya", "contact": True, "video": False, "group": False, "outgoing": False})
 assert "Maya is calling" in wa_told[0] and wa.call is None  # picked up on the phone: Jarvis stays out
+assert wa_told_how[-1] == {"keep": False}  # (a ring isn't kept in the agent's history: a dozen of them pushed a task out)
 store.update_settings({"whatsapp_calls": "decline"})
 wa._ring({"id": "c2", "name": "Maya", "contact": True, "video": False, "group": False, "outgoing": False})
 assert page_calls[-1] == "window.__jarvisButton('decline')"

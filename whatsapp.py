@@ -262,8 +262,9 @@ class Restart(Exception):
 
 
 class WhatsApp:
-    def __init__(self, brain, notify=print, tell=print, name=lambda: ""):
-        self.brain, self.notify, self.tell = brain, notify, tell  # notify: the chat log; tell: out loud and to the phones
+    def __init__(self, brain, notify=print, tell=lambda text, **kw: print(text), name=lambda: ""):
+        # notify: the chat log; tell(text, keep=True, transcript=""): out loud, to the phones and (keep) the agent's history
+        self.brain, self.notify, self.tell = brain, notify, tell
         self.name = name  # what the user likes to be called (from memory), for "I'm Jarvis, <name>'s assistant"
         self.saved = store.read_json(STATE_FILE, {})
         self.state, self.qr, self.error = "off", "", ""
@@ -384,8 +385,9 @@ class WhatsApp:
                     time.sleep(2)
                     continue
                 if ready:  # never "online": the phone keeps showing notifications
-                    self.evaluate("window.__jarvisOffline()")
-                    voip = self.evaluate("window.__jarvisVoip()")
+                    # (guarded: a reload between the check above and these took WhatsApp down for 3 minutes)
+                    self.evaluate("window.__jarvisOffline && window.__jarvisOffline()")
+                    voip = self.evaluate("window.__jarvisVoip ? window.__jarvisVoip() : 'starting'")
                     if voip != self.voip:
                         self.voip = voip
                         print(f"[whatsapp] calls: {voip}", flush=True)
@@ -577,7 +579,8 @@ class WhatsApp:
         if self.call:
             self.notify(f"📞 WhatsApp {kind} from {c['name']} (Jarvis is on another call)")
             return
-        self.tell(f"{c['name']} is calling on WhatsApp. I'll pick up in {ANSWER_AFTER} seconds if you don't.")
+        # (not kept in the agent's history: a dozen rings pushed a whole task out of it, and the outcome comes later)
+        self.tell(f"{c['name']} is calling on WhatsApp. I'll pick up in {ANSWER_AFTER} seconds if you don't.", keep=False)
         end = time.time() + ANSWER_AFTER
         while time.time() < end:
             time.sleep(1)
@@ -597,8 +600,8 @@ class WhatsApp:
             transcript = self.call.run()
         finally:
             self.call = None
-        if transcript:
-            self.tell(f"I answered {c['name']}'s WhatsApp call. {self.summary(c['name'], transcript)}")
+        if transcript:  # (the transcript too, for the agent: asked "did you tell him my address?", it could only guess)
+            self.tell(f"I answered {c['name']}'s WhatsApp call. {self.summary(c['name'], transcript)}", transcript=transcript)
 
     def dial(self, found, message, on_answer=lambda: None):
         """Phone a contact and give them the message in Jarvis's voice; the user is told how it went when it ends.
@@ -633,7 +636,7 @@ class WhatsApp:
             self.call = CallSession(self, {"id": got["id"], "name": name}, message)
             transcript = self.call.run()
             self.tell(f"I called {name} on WhatsApp. {self.summary(name, transcript, message)}" if transcript
-                      else f"I called {name} on WhatsApp, but the call ended before anything was said.")
+                      else f"I called {name} on WhatsApp, but the call ended before anything was said.", transcript=transcript)
         except Exception as e:
             print(f"[whatsapp] call to {name}: {e}", flush=True)
             self.tell(f"My WhatsApp call to {name} failed: {e}")
@@ -685,17 +688,17 @@ class CallSession:
             finally:
                 self.loop.close()  # (one loop per call: left open, each call kept its file descriptors for good)
         threading.Thread(target=talk, daemon=True).start()
-        self.wa.evaluate("window.__jarvisListening = true")
         try:
+            self.wa.evaluate("window.__jarvisListening = true")
             end = time.time() + CALL_LIMIT + 30
             while not self.done.wait(1) and time.time() < end:
                 if self.wa.evaluate(f"window.__jarvisCall({json.dumps(self.c['id'])})") == "over":
                     print(f"[whatsapp] {self.who} hung up", flush=True)
                     break
         finally:
+            self.done.set()  # (first: with the browser gone, the evaluates below raise, and the voice session stayed open)
             self.wa.evaluate("window.__jarvisListening = false; window.__jarvisHush()")
             self.wa.evaluate("window.__jarvisButton('end call|hang up|leave')")
-            self.done.set()
         return "\n".join(self.lines)
 
     async def _talk(self):

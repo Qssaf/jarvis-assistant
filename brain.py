@@ -308,8 +308,9 @@ class Antigravity:
             r = self.http.post("https://oauth2.googleapis.com/token", timeout=20, data={
                 "client_id": self.client[0], "client_secret": self.client[1], "grant_type": "refresh_token",
                 "refresh_token": acct["refresh_token"]})
-            if not r.ok:
-                raise http_error(r)
+            if not r.ok:  # (a revoked sign-in is a 400 "invalid_grant": as a BadRequest it failed every task, no fallback)
+                raise Overloaded(f"Google refused {acct.get('email') or 'an account'}'s sign-in (HTTP {r.status_code}): sign in again "
+                                 "on the Models page")
             tok, exp = r.json()["access_token"], time.time() + r.json().get("expires_in", 3600)
             self.tokens[acct["refresh_token"]] = (tok, exp)
         return tok
@@ -329,6 +330,7 @@ class Antigravity:
         if not accounts:
             raise RuntimeError("signed out of Google")
         model, thinking = antigravity_model(model, thinking)
+        refused = None
         for _ in range(len(accounts) * 2):
             acct = accounts[self.idx % len(accounts)]
             try:
@@ -338,6 +340,9 @@ class Antigravity:
                     READ_TIMEOUT.get(thinking, 60))
             except requests.Timeout:
                 raise Overloaded("timed out")
+            except Overloaded as e:  # this account's sign-in was refused: the next one
+                refused, self.idx = e, self.idx + 1
+                continue
             if r.status_code == 401:
                 self.tokens.pop(acct["refresh_token"], None)
                 continue
@@ -347,7 +352,7 @@ class Antigravity:
             if not r.ok:
                 raise http_error(r)
             return reply_parts(r.json().get("response", {}))
-        raise Overloaded("every Google account is rate-limited", retry_after=60)
+        raise refused or Overloaded("every Google account is rate-limited", retry_after=60)
 
     def models(self):
         """The chat models these accounts can use, for picking on the Models page ("-tiered" ones by their plain names,
@@ -2769,8 +2774,9 @@ class Brain:
         # check again in a few seconds, and only say it's down if that fails too
         timed_out = "timed out" in str(e)
         told = is_main and not timed_out
-        if told:
-            self.notify(f"{model} via {backend} isn't answering; using backup models until it's back.")
+        if told:  # (a refused sign-in says so: only the user can fix that one)
+            self.notify(f"{model} via {backend} isn't answering; using backup models until it's back."
+                        + (f" ({e})" if "sign in again" in str(e) else ""))
 
         def probe(delay, told):
             while True:

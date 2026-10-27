@@ -185,7 +185,8 @@ on. `SETUP_JS` uses WhatsApp Web's own modules (`window.require('WAWeb...')`, th
 messages, calls, sending, chats and history (message keys have no `_serialized`: use `toString()`). Auto-replies go through
 `brain._generate` with only that chat (no tools, no memory); answered calls are a separate Gemini Live session
 (`CallSession`). The agent's `whatsapp_read`/`whatsapp_send` reach it through `brain.whatsapp_link`; sending follows the
-`whatsapp` account mode and `confirmed`, and a name must match exactly one chat.
+`whatsapp` account mode and `confirmed`, and a name must match exactly one chat. What WhatsApp `tell`s the user joins the
+agent's history (`add_turn`, with a call's transcript), except rings (`keep=False`): the history is capped at 80 messages.
 
 **State.** `store.py` keeps settings (unknown keys dropped, types coerced, `*_models`, `language`, `safety`... validated),
 plugins, `memory.md`, reminders (optionally repeating: `next_time`), routines, the change log and sessions under
@@ -224,7 +225,8 @@ prompts.
 **Google sign-in.** The `antigravity` backend (brain.py) uses Google accounts signed in from the Models page
 (`google_sign_in`: Antigravity's OAuth client, read by `google_client()` from an installed opencode-antigravity-auth
 plugin or the env file and never committed (GitHub's push protection blocks it), PKCE, a callback on `localhost:51121`, then `loadCodeAssist` /
-`onboardUser` for the account's project) plus any from the opencode plugin's `antigravity-accounts.json`, rotating on 429.
+`onboardUser` for the account's project) plus any from the opencode plugin's `antigravity-accounts.json`, rotating on 429
+and on a refused token refresh (raised as `Overloaded`, never `BadRequest`: that would stop the whole model chain).
 Opt-in and warned about (Google may suspend accounts used this way). With no account its constructor raises
 `LookupError`, so its entries (first in every built-in list) are skipped and Brain says nothing. Tests point
 `OPENCODE_ACCOUNTS` and `PLUGIN_CONSTANTS` at temp files.

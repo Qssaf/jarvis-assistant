@@ -128,7 +128,7 @@ def main():
     if page == "home-empty":
         CANNED["/api/conversation"] = {**CANNED["/api/conversation"], "messages": []}
     win = window.Window(get=get, post=lambda p, d: {"ok": True}, tool_label=jarvis.tool_label, live=live,
-                        shown_state=[state], version="2.0.0", show=True)
+                        shown_state=[state], version="2.1.0", show=True)
     root = win.engine.rootObjects()[0]
     root.setProperty("width", w)
     root.setProperty("height", h)

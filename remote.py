@@ -14,8 +14,8 @@ REMOTE_NOTE = ("[Sent from the user's phone: they're away from the PC, can't see
 
 
 class Telegram:
-    def __init__(self, brain, notify=print):
-        self.brain, self.notify = brain, notify
+    def __init__(self, brain, notify=print, chat=lambda who, text: print(f"[{who}] {text}")):
+        self.brain, self.notify, self.chat = brain, notify, chat  # notify: a notice; chat: a line of the conversation
         self.code = f"{secrets.randbelow(10 ** 6):06d}"  # what the user sends to pair, shown in Settings (new each run)
         self.state = store.read_json(STATE_FILE, {})
         self.error = ""
@@ -97,7 +97,7 @@ class Telegram:
             self.brain.interrupt()
             self.send(token, chat, "Stopped.")
             return
-        self.notify(f"📱 From your phone: {text}")
+        self.chat("you", f"📱 {text}")  # (as notices, a conversation held only from the phone was never saved)
         if self.brain.ask_lock.locked():
             self.send(token, chat, "Jarvis is busy with another task; yours starts when it's done.")
         # (off the polling thread: while it runs, /stop and new messages still get read)
@@ -108,6 +108,7 @@ class Telegram:
             reply = self.brain.ask(REMOTE_NOTE + text, remote=True)
         except Exception as e:
             reply = f"The task failed: {e}"
+        self.chat("jarvis", f"📱 {reply}")  # (the chat at the PC showed the question, never the answer)
         try:
             self.send(token, chat, reply)
         except requests.RequestException as e:

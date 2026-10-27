@@ -85,7 +85,10 @@ as WhatsApp Web. Jarvis then:
   you're writing in yourself, at most 20 replies an hour), and tells you out loud about anything urgent;
 - picks up calls you don't answer within 20 seconds, talks with the caller in its own voice, takes a message and tells
   you what they wanted (or declines calls, or lets them ring);
-- reads and sends WhatsApp messages when you ask (*"what did Sam send me?"*, *"tell Maya I'm on my way"*).
+- reads and sends WhatsApp messages when you ask (*"what did Sam send me?"*, *"tell Maya I'm on my way"*), listens to
+  voice messages and looks at photos (*"what did his voice note say?"*);
+- phones people for you and gives them a message in its own voice (*"call dad and tell him I'll be late"*), then tells
+  you what they said.
 
 What it tells people (*"I'm in class until 5"*) goes in the same section. This isn't an official WhatsApp feature:
 WhatsApp may block numbers that act like bots, which is why Jarvis stays this careful.
@@ -238,6 +241,9 @@ The full picture is in [PRIVACY.md](PRIVACY.md); contributing: [CONTRIBUTING.md]
 jarvis.py        tray app, wake word, Gemini Live session, notch, local API
 brain.py         the agent: models, tools, accounts (Composio), plugins (MCP), Photopea
 system.py        everything OS-specific: audio, screenshots, input, windows, apps, notifications
+whatsapp.py      your WhatsApp, linked like WhatsApp Web: replies, calls, reading and sending
+phone.py         the Jarvis app's encrypted link through your relay (relay/: the Cloudflare Worker; android/: the app)
+remote.py        Jarvis on Telegram
 window.py        the window's bridge to Python, its icons   qml/  the window (Qt Quick)   assets/  its font
 store.py         settings, plugins, memory, reminders and sessions on disk
 atspi_helper.py  presses app controls by name on Linux (runs under the system Python)
