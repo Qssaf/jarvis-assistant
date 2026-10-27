@@ -108,6 +108,15 @@ Brain fills the model ones (`vision`, `pointer`, `painter`, `grounder`, `notes`)
 passes `confirmed: true` (`with_confirmed` adds it to those schemas; it's stripped before Composio sees it). A plain
 `rm` is rewritten to `gio trash` unless `permanent: true`. Every change that runs is logged (`brain.changed` →
 `store.log_change`) for `recent_changes` / "undo that".
+With a spoken passphrase set (`store.PASSPHRASE`, a secret), a voice `confirmed: true` also needs it in `last_heard`
+(`Live._tool`; typed text counts), and an agent task's needs an `ask_user` answer that carried it (`passphrase_ok`;
+phone tasks are exempt). `emit` and `ask_user` replace it with `•••`, so it's never in the chat, sessions or log.
+
+**Wake word.** `wake_word` is a `store.WAKE_WORDS` key or the path of the user's own `.onnx`; `store.wake_phrase` is
+what every message tells the user to say. `VoiceLearner` keeps clips and verifier per wake word (`wake_folder`:
+"Hey Jarvis" at the folder's root, a custom model by its contents' hash), and `voice_loop` reloads when the word
+changes. openWakeWord's verifier score replaces the model's from `custom_verifier_threshold` (0.1) up, so "Only wake
+for my voice" raises the score needed (`wake_bar`, `ONLY_ME`), not that threshold (raising it skips verification).
 
 **Models per job.** `MODEL_JOBS` (agent, look, point, point_strong, search, image) each run on `models_for(job)`: the
 `<job>_models` setting (lines `"backend model thinking"`) or the built-in list. `_generate` skips entries in

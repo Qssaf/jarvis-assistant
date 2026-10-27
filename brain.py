@@ -2209,6 +2209,7 @@ def turned_in_at(submission):
 
 class Brain:
     unattended = False  # a scheduled task or background check is running: nobody is there to say yes
+    passphrase_ok = False  # the user said their spoken passphrase in an answer to this task's ask_user
 
     def __init__(self, notify=print):
         self.backends = {}
@@ -2545,7 +2546,8 @@ class Brain:
         answer = asker[0](question, self.cancel)
         if answer is None:
             return {"error": "the user didn't answer (or stopped the task): end your reply with the question instead"}
-        return {"answer": answer}
+        self.passphrase_ok = self.passphrase_ok or store.said_passphrase(answer)
+        return {"answer": store.hide_passphrase(answer)}
 
     def run_app_tool(self, slug, args):
         if account_block(slug):
@@ -2798,7 +2800,7 @@ class Brain:
         """unattended: a scheduled task or a background check, on its own history (the conversation isn't touched), where
         changes that wait for the user's yes are refused even if the model says it has one."""
         with self.ask_lock:
-            self.remote, self.unattended = remote or unattended, unattended
+            self.remote, self.unattended, self.passphrase_ok = remote or unattended, unattended, False
             saved = self.contents
             if unattended:
                 own = self.contents = []
@@ -2846,6 +2848,11 @@ class Brain:
                     args = call.get("args") or {}
                     if self.unattended:  # (here, not in _run_tool: the voice runs its tools there meanwhile, with real yeses)
                         args = {k: v for k, v in args.items() if k != "confirmed"}
+                    # a task from the voice (or the window) with a spoken passphrase set: a yes needs it too, asked with
+                    # ask_user (from the phone it can't be said, and that chat is the user's own: their yes there is enough)
+                    elif args.get("confirmed") and not (self.remote or self.passphrase_ok) and store.secret(store.PASSPHRASE):
+                        return {"error": "NOT DONE: the user has a spoken passphrase. Ask with ask_user for their yes and "
+                                         "their passphrase (you don't know it: never guess it), then call again."}, None
                     try:
                         out = self._run_tool(call["name"], args)
                     except Exception as e:

@@ -15,6 +15,9 @@ LANGUAGES = {"en-US": "English", "en-GB": "English (UK)", "ar-XA": "Arabic", "fr
              "ja-JP": "Japanese", "ko-KR": "Korean", "cmn-CN": "Chinese (Mandarin)", "ru-RU": "Russian", "nl-NL": "Dutch",
              "pl-PL": "Polish", "id-ID": "Indonesian", "vi-VN": "Vietnamese", "th-TH": "Thai"}
 
+# openWakeWord's own pretrained wake phrases (it also ships "timer" and "weather", which aren't wake words)
+WAKE_WORDS = {"hey_jarvis": "Hey Jarvis", "alexa": "Alexa", "hey_mycroft": "Hey Mycroft", "hey_rhasspy": "Hey Rhasspy"}
+
 DEFAULT_SETTINGS = {
     "voice": "Charon",
     "language": "en-US",           # what Jarvis speaks and expects to hear (store.LANGUAGES)
@@ -25,6 +28,7 @@ DEFAULT_SETTINGS = {
     "follow_up_seconds": 8,
     "keep_session_seconds": 300,   # after that, the voice session stays connected (mic off) for an instant next "Hey Jarvis"
     "wake_threshold": 0.5,
+    "wake_word": "hey_jarvis",     # one of WAKE_WORDS, or the full path of the user's own openWakeWord .onnx model
     "extra_instructions": "",
     "home_city": "",               # for the weather on the Chat page; empty = guess from your network
     "speak_typed_replies": True,   # off: typed messages get text-only answers
@@ -45,7 +49,8 @@ DEFAULT_SETTINGS = {
     "whatsapp_always": [],         # names Jarvis never answers for and always tells the user about out loud (even in quiet hours)
     "whatsapp_never": [],          # names Jarvis never answers for or speaks about: only shown in the chat
     "echo_cancel": False,          # PipeWire echo cancelling (Linux): talk over Jarvis on speakers (experimental)
-    "learn_my_voice": True,        # learn from real wake-ups to ignore things that aren't you saying "Hey Jarvis"
+    "learn_my_voice": True,        # learn from real wake-ups to ignore things that aren't you saying the wake word
+    "only_my_voice": False,        # on (once learned): the wake word wakes Jarvis only when the learned verifier is sure it's you
     "safety": "ask",               # ask: risky commands and account changes wait for your yes; full: Jarvis just does them
     "setup_done": False,           # the first-run setup has been gone through (or skipped)
     # "backend model thinking-level", tried top to bottom; busy or rate-limited ones are skipped
@@ -101,6 +106,14 @@ def spoken(cfg):
     return list(dict.fromkeys(LANGUAGES[c].split(" (")[0] for c in [cfg["language"], *cfg["languages"]]))
 
 
+def wake_phrase(cfg=None):
+    """What the user says to wake Jarvis: a built-in phrase, or what their own model's file is called
+    ("hey_computer_v0.1.onnx": "Hey Computer")."""
+    word = (cfg or settings())["wake_word"]
+    stem = re.sub(r"_v\d[\w.]*$", "", os.path.splitext(os.path.basename(word))[0])
+    return WAKE_WORDS.get(word) or " ".join(stem.replace("-", "_").split("_")).title()
+
+
 def quiet_now(cfg=None, now=None):
     """Do not disturb, or within quiet hours: Jarvis doesn't speak up on its own (what the user asks is still answered)."""
     cfg = cfg or settings()
@@ -142,6 +155,10 @@ def _update_settings(changes):
             value = str(value)
         if key == "wake_threshold" and not 0.05 <= value <= 0.99:
             raise ValueError("wake threshold must be between 0.05 and 0.99")
+        if key == "wake_word" and value not in WAKE_WORDS:
+            value = os.path.abspath(os.path.expanduser(value.strip()))
+            if not (value.lower().endswith(".onnx") and os.path.isfile(value)):
+                raise ValueError("the wake word is one of the list, or the full path of your own openWakeWord .onnx model")
         if key == "follow_up_seconds" and not 0 <= value <= 120:
             raise ValueError("follow-up must be 0-120 seconds")
         if key == "keep_session_seconds" and not 0 <= value <= 600:
@@ -387,6 +404,25 @@ def set_secret(name, value):
             keys[name] = value
         if keys or os.path.exists(KEYS_FILE):
             write_json(KEYS_FILE, keys, private=True)
+
+
+PASSPHRASE = "voice_passphrase"  # (a secret like a key: the keychain, never settings.json or the log)
+
+
+def _passphrase():
+    """The spoken passphrase as a pattern that forgives case, punctuation and spacing ("Blue-bird" is "bluebird"), or None."""
+    chars = re.sub(r"[\W_]", "", secret(PASSPHRASE).lower())
+    return re.compile(r"(?<!\w)" + r"[\W_]*".join(map(re.escape, chars)) + r"(?!\w)", re.I) if chars else None
+
+
+def said_passphrase(text):
+    p = _passphrase()
+    return bool(p and p.search(text or ""))
+
+
+def hide_passphrase(text):
+    p = _passphrase()
+    return p.sub("•••", text) if p and text else text
 
 
 # ---------------------------------------------------------------- your own OpenAI-compatible providers (name -> base URL)

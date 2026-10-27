@@ -22,13 +22,16 @@ app with a notch at the top of the screen and a native dashboard window.
 ## Features
 
 ### Talk to it
-- **"Hey Jarvis"** wakes it. The wake word is detected locally, so nothing leaves your PC until then. A notch drops
+- **"Hey Jarvis"** wakes it (or *Alexa*, *Hey Mycroft*, *Hey Rhasspy*, or your own openWakeWord model: Settings →
+  *Wake word*). The wake word is detected locally, so nothing leaves your PC until then. A notch drops
   down at the top of the screen showing what it's doing.
 - **Real-time voice** with Gemini Live: it hears you directly, with no separate speech-to-text step, and speaks back.
   Follow-ups within a few seconds don't need the wake word, and long requests are fine.
 - **Pause** (⏸ in the notch or chat) turns listening off or on without stopping a reply or a task. **Stop** (the red
   button, or say *"that's all"*) ends everything. Saying **"Hey Jarvis"** while it talks cuts it short.
-- **Learns your voice**: real wake-ups and dismissed ones train a small verifier, so the TV stops waking it.
+- **Learns your voice**: real wake-ups and dismissed ones train a small verifier, so the TV stops waking it. With
+  **Only wake for my voice** on, someone else saying the wake word doesn't wake it either.
+- **A spoken passphrase** (Settings, optional): sends, calls and other changes you confirm out loud also need it.
 - **Push-to-talk**: bind `jarvis --listen` to a key. Or just type in the window.
 - **Ask about part of the screen**: bind `jarvis --region` to a key, drag over a chart, an error or a question, and ask.
 - **19 languages** and three personalities (classic Jarvis, friendly, brief), in Settings. Pick more than one
@@ -163,7 +166,7 @@ check, Jarvis's voice, and how careful it should be. Run it again from Settings.
 
 ## Usage tips
 - Say *"stop listening"* or *"that's all"* to end a conversation. The connection stays warm for two minutes, so the next
-  "Hey Jarvis" answers instantly.
+  wake word answers instantly. The home screen always shows the wake word you picked.
 - If it cuts you off mid-sentence, raise **Settings → Pause before Jarvis answers**. If it wakes up by itself, raise
   **Wake word sensitivity** a little.
 - On speakers, Jarvis doesn't hear itself while it talks, so start talking a moment after it finishes, or use

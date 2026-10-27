@@ -21,6 +21,16 @@
   Jarvis never replies or picks up, and their messages are only shown in the chat.
 - **Plugins try again by themselves:** one that can't be reached shows *"Can't reach <host> · trying again in 2 min"*
   and a *Try now* button, instead of staying broken until a restart.
+- **Choose the wake word:** Settings → Listening → *Wake word* picks *Hey Jarvis*, *Alexa*, *Hey Mycroft* or *Hey
+  Rhasspy*, or *Your own model* (the path of an openWakeWord `.onnx` file you trained; its file name is the phrase Jarvis
+  tells you to say). It switches over within seconds, no restart. What Jarvis learns of your voice is kept for each wake
+  word on its own, so one never judges another.
+- **Only wake for my voice:** a Settings switch that, once *Learn my voice* has learned how you say the wake word, wakes
+  Jarvis only when it's sure it's you. Until something is learned, it says so and wakes as before. Talk and push to talk
+  always work.
+- **A spoken passphrase:** set one in Settings → Listening, and everything Jarvis asks your yes for out loud (sending
+  messages, calls, account changes, risky commands) also needs you to say it, so someone else in the room can't. It's
+  kept in your keychain, never shown or said back, and hidden in the chat. Tasks from your phone don't need it.
 
 ### Fixed
 - **Bug reports keep your WhatsApp private:** *Copy a report* left in WhatsApp messages, contacts' names and phone

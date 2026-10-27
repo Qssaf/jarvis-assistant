@@ -5,7 +5,7 @@ import QtQuick.Shapes
 import Jarvis
 
 // The first run: what Jarvis does and what leaves the PC, a Gemini key, a microphone check, a voice, how careful to be,
-// then a first "Hey Jarvis". Every step can be skipped; it doesn't come back once finished.
+// then a first wake word ("Hey Jarvis", or the one picked in Settings). Every step can be skipped; it doesn't come back once finished.
 Rectangle {
     id: wiz
     signal finished(string goTo)
@@ -15,6 +15,7 @@ Rectangle {
     readonly property var names: ["Welcome", "Gemini key", "Microphone", "Voice", "Safety", "Ready"]
     property var s: ({})
     property var voices: []
+    property string wake: "Hey Jarvis"
     property bool keyOk: false
     property string keyDetail: ""
     // (no key saved at all is the normal first visit, not an error: brain.api_key's message, or empty)
@@ -31,7 +32,7 @@ Rectangle {
     radius: Window.window && Window.window.visibility === Window.Maximized ? 0 : Theme.radiusWindow
 
     function load() {
-        Api.get("/api/settings", d => { s = d.settings; voices = d.voices })
+        Api.get("/api/settings", d => { s = d.settings; voices = d.voices; wake = d.wake_phrase })
         checkKey()
     }
     function checkKey() {
@@ -127,12 +128,12 @@ Rectangle {
                 Step {
                     symbol: "sparkle"
                     title: "Hi, I’m Jarvis"
-                    lead: "Say “Hey Jarvis” and ask for anything: questions, what’s on your screen, your apps, email, calendar, "
+                    lead: `Say “${wiz.wake}” and ask for anything: questions, what’s on your screen, your apps, email, calendar, `
                           + "Classroom, reminders. A couple of minutes of setup and you’re ready."
                     Inset {
                         symbol: "shield"
                         title: "What leaves this PC"
-                        detail: "What you say after “Hey Jarvis”, and screenshots when a task needs the screen, go to Google "
+                        detail: `What you say after “${wiz.wake}”, and screenshots when a task needs the screen, go to Google `
                                 + "Gemini. Account actions go through Composio, only for the accounts you connect. Memory, "
                                 + "reminders and conversations stay on this computer."
                     }
@@ -295,7 +296,7 @@ Rectangle {
                                 Layout.fillWidth: true
                                 spacing: 2
                                 Txt { kind: "label"; text: "Try it now"; color: Theme.accent }
-                                Txt { kind: "heading"; text: "“Hey Jarvis, what’s the weather?”"; Layout.fillWidth: true }
+                                Txt { kind: "heading"; text: `“${wiz.wake}, what’s the weather?”`; Layout.fillWidth: true }
                             }
                         }
                     }

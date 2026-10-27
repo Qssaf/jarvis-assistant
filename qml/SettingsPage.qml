@@ -11,6 +11,11 @@ ScrollPage {
     property var s: ({})
     property var voices: []
     property var languages: ({})
+    property var wakeWords: ({})
+    property bool learned: false  // a verifier is learned for the chosen wake word
+    property bool passphraseSet: false
+    property bool ownWake: false  // "Your own model" picked, before its path is in
+    readonly property bool customWake: !!page.s.wake_word && !(page.s.wake_word in page.wakeWords)
     property bool confirmDelete: false
     property var remote: ({})
     property var phone: ({})
@@ -34,7 +39,7 @@ ScrollPage {
     }
 
     function load() {
-        Api.get("/api/settings", d => { s = d.settings; voices = d.voices; languages = d.languages })
+        Api.get("/api/settings", d => { took(d); voices = d.voices; languages = d.languages })
         Api.get("/api/remote", d => remote = d)
         Api.get("/api/phone", d => phone = d)
         Api.get("/api/whatsapp", d => wa = d)
@@ -48,10 +53,15 @@ ScrollPage {
         const all = current && list.indexOf(current) < 0 ? [current].concat(list) : list
         return all.map(v => ({ value: v, label: v }))
     }
+    function took(d) { s = d.settings; wakeWords = d.wake_words; learned = d.voice_learned; passphraseSet = d.passphrase }
     function set(key, value) {
         const change = {}
         change[key] = value
-        Api.post("/api/settings", change, d => { s = d.settings; Theme.scale = d.settings.text_size || 1 }, e => { Backend.toast(e.error, true); load() })
+        Api.post("/api/settings", change, d => { took(d); Theme.scale = d.settings.text_size || 1 }, e => { Backend.toast(e.error, true); load() })
+    }
+    function setPassphrase(text) {
+        Api.post("/api/passphrase", { passphrase: text }, d => { passphraseSet = d.passphrase; passphrase.text = ""
+                 Backend.toast(d.passphrase ? "Passphrase saved" : "Passphrase removed", false) }, e => Backend.toast(e.error, true))
     }
     Component.onCompleted: load()
 
@@ -104,6 +114,19 @@ ScrollPage {
         title: "Listening"
         description: "When Jarvis wakes up, and how long it keeps listening."
         Row2 {
+            Setting { label: "Wake word"
+                Select { Layout.fillWidth: true; value: page.customWake || page.ownWake ? "custom" : (page.s.wake_word || "hey_jarvis")
+                         model: Object.keys(page.wakeWords).map(k => ({ value: k, label: page.wakeWords[k] }))
+                                .concat([{ value: "custom", label: "Your own model…" }])
+                         onPicked: v => { page.ownWake = v === "custom"; if (v !== "custom") page.set("wake_word", v); else ownModel.forceActiveFocus() } } }
+            Setting { label: "Path of your own openWakeWord .onnx model"
+                visible: page.customWake || page.ownWake
+                Field { id: ownModel; Layout.fillWidth: true; text: page.customWake ? page.s.wake_word : ""
+                        placeholderText: "Full path, e.g. /home/you/hey_computer.onnx"
+                        onEditingFinished: if (text.trim() && text !== page.s.wake_word) page.set("wake_word", text.trim()) } }
+            Item { Layout.fillWidth: true; visible: !page.customWake && !page.ownWake }
+        }
+        Row2 {
             Slide { label: "Pause before Jarvis answers"; key: "end_of_speech_ms"; from: 200; to: 2000; step: 50; unit: " ms"
                     hint: "Lower is snappier; higher cuts you off less" }
             Slide { label: "Wake word sensitivity"; key: "wake_threshold"; from: 0.05; to: 0.95; step: 0.05; unit: ""; decimals: 2
@@ -119,8 +142,26 @@ ScrollPage {
             Toggle { Layout.fillWidth: true; text: "Learn my voice"; hint: "Wake-ups you dismiss teach Jarvis what isn't you"
                      checked: !!page.s.learn_my_voice; onToggled: page.set("learn_my_voice", checked) }
             Line {}
+            Toggle { Layout.fillWidth: true; text: "Only wake for my voice"
+                     hint: !page.learned ? "Nothing learned for this wake word yet (Learn my voice needs a few wake-ups first): until then anyone can wake Jarvis"
+                           : !page.s.learn_my_voice ? "Needs Learn my voice on: until then anyone can wake Jarvis"
+                           : "Someone else saying the wake word doesn't wake Jarvis. Talk and push to talk always work"
+                     checked: !!page.s.only_my_voice; onToggled: page.set("only_my_voice", checked) }
+            Line {}
             Toggle { Layout.fillWidth: true; text: "Echo cancelling"; hint: "Keeps the PC's own sound (Jarvis, games, videos, calls) out of the mic, so it isn't heard as you, and you can talk over Jarvis (PipeWire; restart Jarvis to apply)"
                      checked: !!page.s.echo_cancel; onToggled: page.set("echo_cancel", checked) }
+        }
+        Setting { label: "Spoken passphrase: asked for with every yes said out loud (sends, calls, account changes, risky commands). Never shown or said back"
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+                Field { id: passphrase; Layout.fillWidth: true; echoMode: TextInput.Password
+                        placeholderText: page.passphraseSet ? "Passphrase set · type a new one to replace it" : "A few words only you know"
+                        onAccepted: if (text.trim()) page.setPassphrase(text) }
+                Pill { implicitHeight: 44; text: "Save"; kind: passphrase.text.trim() !== "" ? "primary" : ""; enabled: passphrase.text.trim() !== ""
+                       onClicked: page.setPassphrase(passphrase.text) }
+                Pill { implicitHeight: 44; kind: "ghost"; text: "Remove"; visible: page.passphraseSet; onClicked: page.setPassphrase("") }
+            }
         }
         ColumnLayout {  // push to talk
             Layout.fillWidth: true

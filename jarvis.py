@@ -126,7 +126,7 @@ ANSWER_TASK = {
 ASK_WAIT = 120  # seconds the agent waits for an answer to its question
 STOP_LISTENING = {
     "name": "stop_listening",
-    "description": ('Turn your microphone off until the user says "Hey Jarvis" again. You keep hearing everything until you call '
+    "description": ('Turn your microphone off until the user says the wake word again. You keep hearing everything until you call '
                     'this, so call it whenever the user asks you to stop listening or ends the conversation ("stop listening", '
                     '"that\'s all", "go to sleep", "bye", "shut up").'),
     "parameters": {"type": "object", "properties": {}},
@@ -238,6 +238,7 @@ def emit(kind, **data):
         kind, data = "log", {"who": "tool", "text": data["name"]}
     data["kind"] = kind
     if kind == "log":
+        data["text"] = store.hide_passphrase(data["text"])  # (the passphrase is never kept or shown: chat, sessions, log)
         sessions.add({k: v for k, v in data.items() if k != "kind"})
         print(f"[{data['who']}] {data['text']}", flush=True)
         who, text = data["who"], data["text"]
@@ -475,6 +476,7 @@ class Live:
 
     async def _type(self, text):
         emit("log", who="you", text=text)
+        self.last_heard = text  # (a typed "yes" is a yes too)
         await self._send(text)
 
     async def _send(self, text, track=True, announce=False):
@@ -587,6 +589,11 @@ class Live:
                 f"transcript in a language that is neither is mishearing or background noise: don't act on it.")
         prompt = (LIVE_PROMPT.replace("{SYSTEM}", system.describe()).replace("{ADDRESS}", address).replace("{LANGUAGE}", rule)
                   .replace("{PERSONA}", PERSONAS.get(cfg["personality"], PERSONAS["jarvis"]))) + f"\n\nIt is now {time.strftime('%A %d %B %Y, %H:%M')}." + "\n\n" + self._abilities()
+        if store.secret(store.PASSPHRASE):
+            prompt += ("\n\nThe user has a spoken passphrase, so someone else in the room can't make you change things. Everything "
+                       "you'd pass confirmed: true (also a message they dictated) first needs it: when you ask for their yes, ask "
+                       "for their passphrase too (\"Your passphrase?\"), and pass confirmed: true only after they said it. It's "
+                       "the one code you ask for. You don't know it: never guess it, say it, repeat it or put it in a tool.")
         if cfg["extra_instructions"].strip():
             prompt += f"\n\nThe user's own instructions:\n{cfg['extra_instructions'].strip()}"
         if store.memory():  # first, so the user's preferences (like what to call them) win over the defaults below
@@ -799,7 +806,7 @@ class Live:
         if m.tool_call:
             self._flush()
             for fc in m.tool_call.function_calls:
-                print(f"[voice] tool call: {fc.name} {json.dumps(fc.args or {})[:300]}", flush=True)
+                print(f"[voice] tool call: {fc.name} {store.hide_passphrase(json.dumps(fc.args or {}))[:300]}", flush=True)
                 if store.settings()["show_thinking"] and fc.name not in ("stop_listening", "ignore"):
                     emit("log", who="thinking", text=f"Decided to use {fc.name}" + (f": {json.dumps(fc.args, ensure_ascii=False)[:400]}" if fc.args else ""))
             quick = [fc for fc in m.tool_call.function_calls if fc.name != "do_task"]
@@ -837,7 +844,7 @@ class Live:
             q = self.question
             if not q:
                 return {"error": "no task is waiting for an answer: treat it as a new request"}
-            q["answer"] = str(args.get("answer", "")).strip()
+            q["answer"] = store.hide_passphrase(str(args.get("answer", "")).strip())  # (only the user's own words carry it)
             if self.last_heard and self.last_heard.lower() not in q["answer"].lower():  # (noise came back as "yes" once)
                 q["answer"] += f' (the user\'s exact words: "{self.last_heard}")'
             q["answered"].set()
@@ -850,8 +857,11 @@ class Live:
                              "user in a sentence what you found and what's in the way (for example, the app isn't open), and ask "
                              "how to go on."}
         if args.get("confirmed") and asked_yes(self.last_said) and not said_yes(self.last_heard):
-            return {"error": f"NOT DONE: you asked the user to confirm, and what came back (\"{self.last_heard[:80]}\") isn't a "
-                             "clear yes: it may be noise or someone else talking. Ask again, briefly."}
+            return {"error": f"NOT DONE: you asked the user to confirm, and what came back (\"{store.hide_passphrase(self.last_heard)[:80]}\") "
+                             "isn't a clear yes: it may be noise or someone else talking. Ask again, briefly."}
+        if args.get("confirmed") and store.secret(store.PASSPHRASE) and not store.said_passphrase(self.last_heard):
+            return {"error": "NOT DONE: this needs the user's spoken passphrase, and they haven't said it since you last asked. "
+                             "Ask for their yes and their passphrase, then call again with confirmed: true. Never guess or say it."}
         if fc.name in VOICE_SCREEN_ACTS and self.working and self.task_screen:
             return {"error": "NOT DONE: your background task is using the screen right now, and two of you at once type into "
                              "the wrong place or send things twice. Tell the user it's still on it; they can press Stop to take over."}
@@ -1284,23 +1294,63 @@ def start_echo_cancel():
 
 listen_now = threading.Event()  # set by the tray's Talk item or `jarvis --listen`
 WAKE_DIR = os.path.join(store.DATA, "wake")
-WAKE_MODEL = "hey_jarvis_v0.1.onnx"
+ONLY_ME = 0.8  # "Only wake for my voice": the learned verifier's own score a wake-up needs (see wake_bar)
+
+
+def wake_folder(word):
+    """Where a wake word's clips and verifier live: each its own, as one learned on "Hey Jarvis" would judge "Alexa"
+    by the wrong sound (a custom model by its contents: a file trained again for another phrase starts over)."""
+    if word == "hey_jarvis":
+        return WAKE_DIR  # (where 2.0 kept what it learned)
+    if word in store.WAKE_WORDS:
+        return os.path.join(WAKE_DIR, word)
+    import hashlib
+    try:
+        with open(word, "rb") as f:
+            digest = hashlib.sha1(f.read()).hexdigest()[:10]
+    except OSError:
+        digest = "gone"
+    return os.path.join(WAKE_DIR, f"{os.path.splitext(os.path.basename(word))[0]}-{digest}")
+
+
+def wake_model_file(word):
+    """The .onnx file for a wake word: openWakeWord's own (downloaded the first time) or the user's."""
+    if word not in store.WAKE_WORDS:
+        return word
+    import openwakeword, openwakeword.utils
+    openwakeword.utils.download_models([word])
+    return openwakeword.MODELS[word]["model_path"].replace(".tflite", ".onnx")
+
+
+def wake_bar(cfg, busy, verified):
+    """The score a wake-up needs. While Jarvis talks its own voice reaches the mic, so only a clear one counts. With
+    "Only wake for my voice" and a verifier learned, the score is the verifier's: how sure it is that this is the user
+    (0.5 is a coin flip; ONLY_ME is 4 to 1: a verifier learned from a handful of wake-ups held to more would miss the
+    user's own tired or far-off ones)."""
+    need = max(cfg["wake_threshold"], 0.85) if busy else cfg["wake_threshold"]
+    return max(need, ONLY_ME) if cfg["only_my_voice"] and verified else need
 
 
 class VoiceLearner:
-    """Learns what the user's "Hey Jarvis" sounds like, from real use: a wake-up followed by a request was them; one
+    """Learns what the user's wake word sounds like, from real use: a wake-up followed by a request was them; one
     dismissed with Stop at once, without a word, wasn't; and their requests are what other speech sounds like. With
     enough of each, a small verifier is trained on top of the wake word model, so the room stops waking Jarvis."""
 
     def __init__(self):
-        self.dirs = {k: os.path.join(WAKE_DIR, k) for k in ("yes", "no")}
-        for d in self.dirs.values():
-            os.makedirs(d, exist_ok=True)
-        self.model = os.path.join(WAKE_DIR, "verifier.pkl")
-        self.stamp = os.path.join(WAKE_DIR, "trained.json")
-        self.pending = None  # (when, audio) of the latest wake-up, until it's clear whether it was real
         self.training = threading.Lock()
         self.updated = threading.Event()  # a new verifier is ready to load
+        self.loaded, self.verified = None, False  # (wake word, learn_my_voice) of the model in use; its verifier is on
+        self.use(store.settings()["wake_word"])
+
+    def use(self, word):
+        """Learn for this wake word, in its own folder."""
+        self.word, folder = word, wake_folder(word)
+        self.dirs = {k: os.path.join(folder, k) for k in ("yes", "no")}
+        for d in self.dirs.values():
+            os.makedirs(d, exist_ok=True)
+        self.model = os.path.join(folder, "verifier.pkl")
+        self.stamp = os.path.join(folder, "trained.json")
+        self.pending = None  # (when, audio) of the latest wake-up, until it's clear whether it was real
 
     def woke(self, audio):
         self.pending = (time.time(), audio)
@@ -1330,13 +1380,13 @@ class VoiceLearner:
         if not self.training.acquire(blocking=False):
             return
         try:
-            import glob, openwakeword
+            import glob
             from openwakeword.custom_verifier_model import train_custom_verifier
-            clips = {k: sorted(glob.glob(os.path.join(d, "*.wav"))) for k, d in self.dirs.items()}
-            base = os.path.join(os.path.dirname(openwakeword.__file__), "resources", "models", WAKE_MODEL)
-            train_custom_verifier(clips["yes"], clips["no"], self.model + ".new", base, inference_framework="onnx")
-            os.replace(self.model + ".new", self.model)
-            store.write_json(self.stamp, {"clips": len(clips["yes"]) + len(clips["no"]), "at": time.time()})
+            word, dirs, model, stamp = self.word, self.dirs, self.model, self.stamp  # (the wake word may change meanwhile)
+            clips = {k: sorted(glob.glob(os.path.join(d, "*.wav"))) for k, d in dirs.items()}
+            train_custom_verifier(clips["yes"], clips["no"], model + ".new", wake_model_file(word), inference_framework="onnx")
+            os.replace(model + ".new", model)
+            store.write_json(stamp, {"clips": len(clips["yes"]) + len(clips["no"]), "at": time.time()})
             print(f"[voice] learned your voice from {len(clips['yes'])} wake-ups and {len(clips['no'])} other clips", flush=True)
             self.updated.set()
         except Exception as e:
@@ -1344,11 +1394,18 @@ class VoiceLearner:
         finally:
             self.training.release()
 
-    def wake_model(self):
+    def wake_model(self, cfg):
+        """openWakeWord listening for the chosen wake word, with the user's verifier once one is learned for it."""
         from openwakeword.model import Model
-        use = store.settings()["learn_my_voice"] and os.path.exists(self.model)
-        return Model(wakeword_models=["hey_jarvis"], inference_framework="onnx", vad_threshold=0.5,
-                     **({"custom_verifier_models": {"hey_jarvis": self.model}, "custom_verifier_threshold": 0.1} if use else {}))
+        if cfg["wake_word"] != self.word:
+            self.use(cfg["wake_word"])
+        path = wake_model_file(self.word)
+        self.loaded, self.verified = (cfg["wake_word"], cfg["learn_my_voice"]), cfg["learn_my_voice"] and os.path.exists(self.model)
+        # (the verifier's score replaces the model's from 0.1 up, so every score that could wake it is the verifier's;
+        # raising that bar instead would let what scores between it and the wake threshold through unverified)
+        return Model(wakeword_models=[path], inference_framework="onnx", vad_threshold=0.5,
+                     **({"custom_verifier_models": {os.path.splitext(os.path.basename(path))[0]: self.model},
+                         "custom_verifier_threshold": 0.1} if self.verified else {}))
 
 
 learner = VoiceLearner()
@@ -1373,12 +1430,21 @@ class MicLevel:
         return frame if self.gain == 1.0 else np.clip(frame * self.gain, -32768, 32767).astype(np.int16)
 
 
+def load_wake(cfg):
+    """The wake word model for these settings; if the user's own model can't be loaded, "Hey Jarvis" meanwhile."""
+    try:
+        return learner.wake_model(cfg)
+    except Exception as e:
+        print(f"[voice] couldn't load the wake word {cfg['wake_word']} ({e}): listening for \"Hey Jarvis\" meanwhile", flush=True)
+        wake = learner.wake_model({**cfg, "wake_word": "hey_jarvis"})
+        learner.loaded = (cfg["wake_word"], cfg["learn_my_voice"])  # (not tried again every few seconds)
+        return wake
+
+
 def voice_loop(live, mic_target=None):
-    import openwakeword.utils
-    openwakeword.utils.download_models(["hey_jarvis"])
-    wake = learner.wake_model()
-    print('Voice online. Say "Hey Jarvis".', flush=True)
     cfg, last_wake = store.settings(), 0.0
+    wake = load_wake(cfg)
+    print(f'Voice online. Say "{store.wake_phrase(cfg)}".', flush=True)
     recent = collections.deque(maxlen=25)  # the last 2 s: the wake word itself, for learning the user's voice
     level, logged_gain = MicLevel(), 1.0
 
@@ -1395,14 +1461,13 @@ def voice_loop(live, mic_target=None):
         recent.append(f)
         live.mic_seen = time.time()  # (the Health page: the microphone is delivering)
         live.raw_level = min(1.0, float(np.sqrt(np.mean(f.astype(np.float32) ** 2))) / 3000)  # (the setup's mic test)
-        if i % 50 == 0:  # pick up settings changes every few seconds
+        if i % 50 == 0:  # pick up settings changes every few seconds (a new wake word too)
             cfg = store.settings()
-            if learner.updated.is_set():
+            if learner.updated.is_set() or learner.loaded != (cfg["wake_word"], cfg["learn_my_voice"]):
                 learner.updated.clear()
-                wake = learner.wake_model()
-        score = wake.predict(f)["hey_jarvis"]
-        # while Jarvis talks its own voice reaches the mic, so only a clear "Hey Jarvis" counts; and one per 2 s
-        need = max(cfg["wake_threshold"], 0.85) if live.speaker.busy() else cfg["wake_threshold"]
+                wake = load_wake(cfg)
+        score = max(wake.predict(f).values())
+        need = wake_bar(cfg, live.speaker.busy(), learner.verified)  # (and one wake-up per 2 s)
         if (score >= need and time.time() - last_wake > 2) or listen_now.is_set():
             last_wake = time.time()
             wake.reset()
@@ -1434,7 +1499,10 @@ def api_get(path, brain):
     if m := re.fullmatch(r"/api/sessions/([\w-]+)", path):
         return sessions.get(m[1])
     if path == "/api/settings":
-        return {"settings": store.settings(), "voices": store.VOICES, "languages": store.LANGUAGES}
+        cfg = store.settings()
+        return {"settings": cfg, "voices": store.VOICES, "languages": store.LANGUAGES, "wake_words": store.WAKE_WORDS,
+                "wake_phrase": store.wake_phrase(cfg), "passphrase": bool(store.secret(store.PASSPHRASE)),
+                "voice_learned": os.path.exists(os.path.join(wake_folder(cfg["wake_word"]), "verifier.pkl"))}
     if path == "/api/models":
         return models_info()
     if path == "/api/models/jobs":
@@ -1480,7 +1548,7 @@ def api_get(path, brain):
             return {"ok": False, "detail": brain_mod.describe(e)[:200]}
     if path == "/api/today":
         import brain as brain_mod
-        return {"weather": weather(), "wake": "Hey Jarvis", "reminders": api_get("/api/reminders", brain)[:4],
+        return {"weather": weather(), "wake": store.wake_phrase(), "reminders": api_get("/api/reminders", brain)[:4],
                 "remembered": len([l for l in store.memory().splitlines() if l.strip()]),
                 "tools": len(brain_mod.TOOLS) + sum(len(p["tools"]) for p in brain.plugin_status()) + len(brain.app_tools)}
     raise KeyError(path)
@@ -1519,6 +1587,12 @@ def health(live, brain):
         fresh = time.time() - live.mic_seen < 3
         check("Microphone", fresh, f"listening (level {getattr(live, 'raw_level', 0):.2f})" if fresh else "no audio for a while",
               "check the input device in your system's sound settings, then restart Jarvis")
+    cfg = store.settings()
+    learned = os.path.exists(os.path.join(wake_folder(cfg["wake_word"]), "verifier.pkl"))
+    check("Wake word", cfg["wake_word"] in store.WAKE_WORDS or os.path.isfile(cfg["wake_word"]),
+          f'"{store.wake_phrase(cfg)}"' + ("" if not cfg["only_my_voice"] else ", only your voice" if learned and cfg["learn_my_voice"]
+                                           else ", only your voice once learned: nothing yet, so anyone can wake it for now"),
+          "your own model's file is gone: pick another wake word in Settings", "settings")
     check("Speaker", system.IS_WINDOWS or system.have("pw-play") or _importable("sounddevice"),
           "PipeWire" if system.have("pw-play") else "sounddevice", "install PipeWire (pw-play) or the sounddevice package")
     try:
@@ -1753,9 +1827,21 @@ def api_post(path, data, live, brain):
                 brain.reset()
             sessions.delete(m[1])
     elif path == "/api/settings":
+        if str(data.get("wake_word", "hey_jarvis")) not in store.WAKE_WORDS:  # (a file that isn't a model would leave Jarvis deaf)
+            try:
+                from openwakeword.model import Model
+                Model(wakeword_models=[os.path.abspath(os.path.expanduser(str(data["wake_word"]).strip()))], inference_framework="onnx")
+            except Exception as e:
+                raise ValueError(f"that isn't an openWakeWord model Jarvis can run ({str(e)[:120]})")
         new = store.update_settings(data)
         store.sync_autostart(new["start_at_login"])
-        return {"settings": new}
+        return api_get("/api/settings", brain)
+    elif path == "/api/passphrase":  # set (or with "" remove) the spoken passphrase; it's never sent back
+        phrase = " ".join(str(data.get("passphrase", "")).split())
+        if phrase and not (len(re.sub(r"[\W_]", "", phrase)) >= 4 and len(phrase) <= 60):
+            raise ValueError("a passphrase is 4 to 60 letters or digits, like a couple of words")
+        store.set_secret(store.PASSPHRASE, phrase)
+        return {"passphrase": bool(phrase)}
     elif m := re.fullmatch(r"/api/keys/(\w+)", path):
         import brain as brain_mod
         key = str(data.get("key", "")).strip()
@@ -2128,7 +2214,7 @@ def run_tray(live, show=False):
     tray.activated.connect(lambda reason: show_hud() if reason == QSystemTrayIcon.ActivationReason.Trigger else None)
     tray.show()
     system.notifier[0] = lambda title, text: tray.showMessage(title, text, tray.icon(), 6000)
-    tray.showMessage("J.A.R.V.I.S.", 'Running in the tray. Say "Hey Jarvis".', tray.icon(), 4000)
+    tray.showMessage("J.A.R.V.I.S.", f'Running in the tray. Say "{store.wake_phrase()}".', tray.icon(), 4000)
     notch = make_notch(live)  # kept referenced for the app's lifetime
     import window
     app.setWindowIcon(icons["idle"])

@@ -11,11 +11,11 @@ user:
 - **Memory**: the facts you asked it to remember (editable on the Memory page).
 - **Conversations**: what you and Jarvis said, and the agent's working history (the Chats page).
 - **Reminders and routines.**
-- **Wake word clips**: a few seconds of audio around each "Hey Jarvis", used only on this computer to learn your voice
-  (Settings → *Learn my voice*).
+- **Wake word clips**: a few seconds of audio around each wake word, used only on this computer to learn your voice
+  (Settings → *Learn my voice*), kept apart for each wake word.
 - **A log** of what Jarvis did, for troubleshooting.
 
-API keys are kept in your system keychain (or, without one, a file only your user can read). Settings → *Delete
+API keys and your spoken passphrase are kept in your system keychain (or, without one, a file only your user can read). Settings → *Delete
 everything Jarvis keeps about me* removes memory, conversations, reminders, routines, voice clips and the log.
 
 ## What leaves your computer

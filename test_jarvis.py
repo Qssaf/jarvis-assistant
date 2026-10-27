@@ -170,6 +170,13 @@ brain.on_asked[0] = lambda contents: None
 a.unattended = True  # ...while the voice's own tools, run meanwhile, keep the user's real yes
 assert "error" not in a._run_tool("run_command", {"command": "sudo reboot", "confirmed": True})[0] and ran == ["sudo reboot"]
 a.unattended = False
+# with a spoken passphrase set, a task from the voice can't confirm a change until ask_user brought the passphrase back;
+# one from the phone can (it can't be said there, and that chat is the user's own)
+store.set_secret(store.PASSPHRASE, "blue bird")
+SelfConfirms.seen, ran = [], []
+assert a.ask("reboot now") == "It needs your yes first." and ran == [] and "passphrase" in SelfConfirms.seen[0]["error"]
+assert a.ask("reboot now", remote=True) == "It needs your yes first." and ran == ["sudo reboot"]
+store.set_secret(store.PASSPHRASE, "")
 brain.system.shell = real_shell
 a.add_turn("[check] failed payments", "Two failed: offer a free month?")
 assert a.contents[-1] == {"role": "model", "parts": [{"text": "Two failed: offer a free month?"}]} and a.contents[-2]["role"] == "user"
@@ -314,6 +321,39 @@ assert "isn't a clear yes" in asyncio.run(live._tool(send_it))["error"]
 assert not jarvis.asked_yes("Who should I send it to?") and not jarvis.asked_yes("Can I help with anything else, Q?")
 assert jarvis.said_yes("Yeah, go ahead.") and jarvis.said_yes("oui") and not jarvis.said_yes("")
 assert jarvis.said_yes("Sure, no problem.") and not jarvis.said_yes("No, don't.") and not jarvis.said_yes("ok no")
+# a spoken passphrase: every confirmed: true from the voice also needs it in what the user just said (case, punctuation,
+# spacing and extra words don't matter); it's saved as a secret, never in settings, never shown back or logged
+import json
+try:
+    jarvis.api_post("/api/passphrase", {"passphrase": "a b"}, live, None)
+    raise AssertionError("a two-letter passphrase was taken")
+except ValueError:
+    pass
+assert jarvis.api_post("/api/passphrase", {"passphrase": "  Blue  bird 42 "}, live, None) == {"passphrase": True}
+assert store.secret(store.PASSPHRASE) == "Blue bird 42" and "bird" not in json.dumps([store.settings(), jarvis.api_get("/api/settings", None)])
+assert jarvis.api_get("/api/settings", None)["passphrase"] is True
+assert all(map(store.said_passphrase, ["yes, blue bird 42", "Bluebird-42!", "ok BLUE-bird, 42 go"]))
+assert not any(map(store.said_passphrase, ["yes", "blue bird", "bluebird 421", ""]))
+assert store.hide_passphrase("yes, Blue-bird 42 send it") == "yes, ••• send it"
+async def sent_it(fc, args):
+    return {"result": "sent"}
+live._answer = sent_it
+live.last_said, live.last_heard = "Shall I send it? Your passphrase?", "yes"
+assert "passphrase" in asyncio.run(live._tool(send_it))["error"]  # a yes alone isn't enough...
+live.last_said = ""
+assert "passphrase" in asyncio.run(live._tool(send_it))["error"]  # ...nor a dictated message sent at once
+assert "passphrase" not in json.dumps(asyncio.run(live._tool(types.SimpleNamespace(name="act", args={"steps": [{"keys": "Return"}]}))))
+live.last_said, live.last_heard = "Shall I send it? Your passphrase?", "yes, blue bird 42"
+assert asyncio.run(live._tool(send_it)) == {"result": "sent"}
+async def no_send(text, **kw):
+    pass
+live._send, logged_pass = no_send, []
+jarvis.clients.append(types.SimpleNamespace(put=logged_pass.append))
+asyncio.run(live._type("yes, bluebird 42"))
+jarvis.clients.pop()
+assert logged_pass[0]["text"] == "yes, •••" and live.last_heard == "yes, bluebird 42"  # (typed counts too; never shown)
+del live._answer, live._send
+assert jarvis.api_post("/api/passphrase", {"passphrase": ""}, live, None) == {"passphrase": False} and not store.secret(store.PASSPHRASE)
 # while the agent works on the screen, the voice keeps its hands off it (both once sent the same Discord message)
 live.working = live.task_screen = True
 assert "background task is using the screen" in asyncio.run(live._tool(types.SimpleNamespace(name="act", args={"steps": [{"keys": "Return"}]})))["error"]
@@ -366,9 +406,15 @@ stopped.set()
 assert live.ask_from_task("Delete 37 emails?", stopped) is None  # Stop pressed: no answer, the agent ends with its question
 brain_asker = brain.asker[0]
 brain.asker[0] = lambda q, cancel: "yes"
-assert brain.Brain.ask_user(types.SimpleNamespace(cancel=None, remote=False), "ok?") == {"answer": "yes"}
+assert brain.Brain.ask_user(types.SimpleNamespace(cancel=None, remote=False, passphrase_ok=False), "ok?") == {"answer": "yes"}
+# with a passphrase, the agent's answer from the user carries it (hidden from the agent, which only learns it was said)
+store.set_secret(store.PASSPHRASE, "blue bird")
+brain.asker[0] = lambda q, cancel: 'yes (the user\'s exact words: "yes, blue bird")'
+asker_self = types.SimpleNamespace(cancel=None, remote=False, passphrase_ok=False)
+assert brain.Brain.ask_user(asker_self, "ok?") == {"answer": 'yes (the user\'s exact words: "yes, •••")'} and asker_self.passphrase_ok
+store.set_secret(store.PASSPHRASE, "")
 brain.asker[0] = lambda q, cancel: None
-assert "end your reply" in brain.Brain.ask_user(types.SimpleNamespace(cancel=None, remote=False), "ok?")["error"]
+assert "end your reply" in brain.Brain.ask_user(types.SimpleNamespace(cancel=None, remote=False, passphrase_ok=False), "ok?")["error"]
 brain.asker[0], system.notify = brain_asker, real_notify
 # clicking where the mouse is (button without coordinates) works in-place
 clicked = []
@@ -438,6 +484,38 @@ lrn.woke(clip); lrn.judge(True)
 lrn.woke(clip); lrn.judge(False)
 lrn.woke(clip); lrn.pending = (lrn.pending[0] - 60, clip); lrn.judge(True)  # too long ago to tell: dropped
 assert (len(os.listdir(lrn.dirs["yes"])), len(os.listdir(lrn.dirs["no"]))) == (1, 1)
+# the wake word is a choice: each has its own clips and verifier ("Hey Jarvis" keeps 2.0's), a custom model by its contents
+assert jarvis.wake_folder("hey_jarvis") == jarvis.WAKE_DIR and jarvis.wake_folder("alexa") == os.path.join(jarvis.WAKE_DIR, "alexa")
+own = os.path.join(tempfile.mkdtemp(), "hey_computer_v0.1.onnx")
+open(own, "wb").write(b"not really a model")
+first_folder = jarvis.wake_folder(own)
+open(own, "wb").write(b"trained again, for another phrase")
+assert first_folder != jarvis.wake_folder(own) and os.path.basename(first_folder).startswith("hey_computer_v0.1-")
+lrn.woke(clip)
+lrn.use("alexa")
+assert lrn.pending is None and lrn.dirs["yes"] == os.path.join(jarvis.WAKE_DIR, "alexa", "yes") and not os.listdir(lrn.dirs["yes"])
+assert store.wake_phrase({"wake_word": "hey_mycroft"}) == "Hey Mycroft" and store.wake_phrase({"wake_word": own}) == "Hey Computer"
+for bad in ("timer", "/nowhere/hey.onnx", own[:-5] + ".txt"):
+    try:
+        store.update_settings({"wake_word": bad})
+        raise AssertionError(f"{bad} was taken as a wake word")
+    except ValueError:
+        pass
+try:  # (a file that isn't a model is refused before it's saved: Jarvis would stop hearing its wake word)
+    jarvis.api_post("/api/settings", {"wake_word": own}, None, None)
+    raise AssertionError("a file that isn't a model was taken")
+except ValueError as e:
+    assert "openWakeWord" in str(e) and store.settings()["wake_word"] == "hey_jarvis"
+assert store.update_settings({"wake_word": own})["wake_word"] == own  # (the store checks it's an .onnx file that's there)
+store.update_settings({"wake_word": "alexa"})
+open(os.path.join(jarvis.WAKE_DIR, "alexa", "verifier.pkl"), "wb").close()
+got = jarvis.api_get("/api/settings", None)
+assert got["wake_phrase"] == "Alexa" and got["voice_learned"] and got["wake_words"]["hey_rhasspy"] == "Hey Rhasspy"
+store.update_settings({"wake_word": "hey_jarvis"})
+# "Only wake for my voice": with a verifier learned, a wake-up needs it to be sure it's the user; without one, as before
+cfg = {**store.settings(), "wake_threshold": 0.5, "only_my_voice": True}
+assert jarvis.wake_bar(cfg, False, True) == jarvis.ONLY_ME > 0.5 and jarvis.wake_bar(cfg, False, False) == 0.5
+assert jarvis.wake_bar({**cfg, "only_my_voice": False}, False, True) == 0.5 and jarvis.wake_bar(cfg, True, True) == 0.85
 
 # session search finds words inside conversations, not just titles
 ss = store.Sessions.__new__(store.Sessions)
