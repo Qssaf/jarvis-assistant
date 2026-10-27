@@ -31,7 +31,10 @@ app with a notch at the top of the screen and a native dashboard window.
 - **Learns your voice**: real wake-ups and dismissed ones train a small verifier, so the TV stops waking it.
 - **Push-to-talk**: bind `jarvis --listen` to a key. Or just type in the window.
 - **Ask about part of the screen**: bind `jarvis --region` to a key, drag over a chart, an error or a question, and ask.
-- **19 languages** and three personalities (classic Jarvis, friendly, brief), in Settings.
+- **19 languages** and three personalities (classic Jarvis, friendly, brief), in Settings. Pick more than one
+  language and Jarvis answers in whichever of them you speak.
+- **Quiet hours**: set them in Settings (or switch on *Do not disturb*, also in the tray menu) and Jarvis doesn't speak
+  up on its own: reminders and news go to the chat, notifications and your phone. It still answers you.
 
 ### It does the work
 - **Web**: Google-grounded search, reading any public page, YouTube search, opening links in your browser.
@@ -90,7 +93,9 @@ as WhatsApp Web. Jarvis then:
 - phones people for you and gives them a message in its own voice (*"call dad and tell him I'll be late"*), then tells
   you what they said.
 
-What it tells people (*"I'm in class until 5"*) goes in the same section. This isn't an official WhatsApp feature:
+What it tells people (*"I'm in class until 5"*) goes in the same section, with two lists of names: *Always let
+through* (never answered by Jarvis, always told to you out loud, even in quiet hours) and *Never answer* (only shown
+in the chat). This isn't an official WhatsApp feature:
 WhatsApp may block numbers that act like bots, which is why Jarvis stays this careful.
 
 ### Routines and reminders

@@ -8,8 +8,17 @@
   before they've answered.
 - **Voice messages and photos on WhatsApp:** *"what did Sam's voice note say?"* transcribes it (with a translation);
   photos are described. Groups can be listed and read too.
-- **Calls in a second language:** Settings → WhatsApp → *Also speak on calls* lets Jarvis switch to one other language
-  when a caller speaks it, and never to one it only thinks it heard.
+- **More than one language:** Settings → Voice → *Also speaks and understands* lets you pick other languages besides
+  your main one. Jarvis answers in whichever of them you speak to it in, and never switches to one it only thinks it
+  heard. WhatsApp calls and replies keep to the same list (the old *Also speak on calls* choice carries over).
+- **Quiet hours and Do not disturb:** set quiet hours (*22:00* to *07:00*) in Settings → Your day, or switch on *Do not
+  disturb* there or from the tray menu. Jarvis then doesn't speak up on its own: reminders, scheduled tasks, checks,
+  WhatsApp news and *"jarvis --say"* still reach the chat, a notification and your phone, but aren't said out loud. It
+  still answers when you talk to it, and the morning briefing waits until quiet hours end. The tray tooltip says when
+  it's quiet.
+- **WhatsApp people you choose:** Settings → WhatsApp has two lists. *Always let through*: Jarvis never answers their
+  messages or picks up their calls, and always tells you about them out loud, even in quiet hours. *Never answer*:
+  Jarvis never replies or picks up, and their messages are only shown in the chat.
 - **Plugins try again by themselves:** one that can't be reached shows *"Can't reach <host> · trying again in 2 min"*
   and a *Try now* button, instead of staying broken until a restart.
 

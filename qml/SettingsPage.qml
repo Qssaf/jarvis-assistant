@@ -77,6 +77,20 @@ ScrollPage {
                 Select { Layout.fillWidth: true; model: Object.keys(page.languages).map(k => ({ value: k, label: page.languages[k] }))
                          value: page.s.language || "en-US"; onPicked: v => page.set("language", v) } }
         }
+        Setting { label: "Also speaks and understands, when you (or someone on WhatsApp) speak them. Anything else is taken as mishearing."
+            Flow {
+                Layout.fillWidth: true
+                spacing: 8
+                Repeater {
+                    model: Object.keys(page.languages).filter(k => page.languages[k].split(" (")[0]  // (English (UK) is still English)
+                                                                    !== (page.languages[page.s.language || "en-US"] || "").split(" (")[0])
+                    Chip { required property string modelData; text: page.languages[modelData]
+                           checked: (page.s.languages || []).indexOf(modelData) >= 0
+                           onClicked: page.set("languages", checked ? page.s.languages.filter(k => k !== modelData)
+                                                                     : (page.s.languages || []).concat([modelData])) }
+                }
+            }
+        }
         Switches {
             Toggle { Layout.fillWidth: true; text: "Fast voice"; hint: "Answer without thinking first: about 0.3 s quicker, a little less sharp"
                      checked: !!page.s.fast_voice; onToggled: page.set("fast_voice", checked) }
@@ -134,11 +148,22 @@ ScrollPage {
             Toggle { Layout.fillWidth: true; text: "Morning briefing"; hint: "The first time Jarvis starts in a morning, it tells you about your day"
                      checked: !!page.s.morning_briefing; onToggled: page.set("morning_briefing", checked) }
             Line {}
+            Toggle { Layout.fillWidth: true; text: "Do not disturb"; hint: "Jarvis doesn't speak up on its own: reminders, results and messages only go to the chat, notifications and your phone. It still answers you (also in the tray menu)"
+                     checked: !!page.s.do_not_disturb; onToggled: page.set("do_not_disturb", checked) }
+            Line {}
             Toggle { Layout.fillWidth: true; text: "Classroom deadlines"; hint: "Reminders a day and two hours before work is due (skipped once you've turned it in)"
                      checked: !!page.s.deadline_reminders; onToggled: page.set("deadline_reminders", checked) }
             Line {}
             Toggle { Layout.fillWidth: true; text: "Calendar heads-up"; hint: "A reminder ten minutes before each Google Calendar event"
                      checked: !!page.s.calendar_reminders; onToggled: page.set("calendar_reminders", checked) }
+        }
+        Row2 {
+            Setting { label: "Quiet hours from (empty: none)"
+                Field { Layout.fillWidth: true; text: page.s.quiet_from || ""; placeholderText: "e.g. 22:00"
+                        onEditingFinished: if (text !== page.s.quiet_from) page.set("quiet_from", text) } }
+            Setting { label: "Until (the morning briefing waits for it)"
+                Field { Layout.fillWidth: true; text: page.s.quiet_until || ""; placeholderText: "e.g. 07:00"
+                        onEditingFinished: if (text !== page.s.quiet_until) page.set("quiet_until", text) } }
         }
         Setting { label: "Keep an eye on (one per line: Jarvis checks your accounts and the web, and tells you only when something needs you)"
             Area { text: (page.s.checks || []).join("\n"); placeholder: "e.g. Tell me if a payment fails or my professor emails"
@@ -358,11 +383,12 @@ ScrollPage {
                          model: [{ value: "answer", label: "Pick up if I don't (20 s)" }, { value: "decline", label: "Decline them" },
                                  { value: "off", label: "Let them ring" }] } }
         }
-        Setting { label: "Also speak on calls"
-            Select { Layout.fillWidth: true; value: page.s.call_language || ""; onPicked: v => page.set("call_language", v)
-                     model: [{ value: "", label: "Only " + (page.languages[page.s.language || "en-US"] || "English") }]
-                            .concat(Object.keys(page.languages).filter(k => k !== (page.s.language || "en-US"))
-                            .map(k => ({ value: k, label: page.languages[k] + ", when they speak it" }))) } }
+        Row2 {
+            Setting { label: "Always let through (one name per line, as WhatsApp shows it): never answered by Jarvis, always told to you out loud, even in quiet hours"
+                Area { text: (page.s.whatsapp_always || []).join("\n"); placeholder: "e.g. Alex"; onDone: v => page.set("whatsapp_always", v) } }
+            Setting { label: "Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat"
+                Area { text: (page.s.whatsapp_never || []).join("\n"); placeholder: "e.g. Sam"; onDone: v => page.set("whatsapp_never", v) } }
+        }
         Setting { label: "What Jarvis tells people"
             Area { text: page.s.whatsapp_note || ""; placeholder: "e.g. I'm in class until 5, I'll answer after"
                    onDone: v => page.set("whatsapp_note", v) } }

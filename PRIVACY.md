@@ -32,8 +32,9 @@ everything Jarvis keeps about me* removes memory, conversations, reminders, rout
   its own profile in the data folder (`whatsapp`). To answer a message it sends that chat's recent messages to the
   agent's models (not your memory or other chats); voice messages and photos you ask about go to the models too. A call
   it picks up or places goes to Gemini Live, which is told only your name and what you want people told; a summary is
-  shown to you, and the transcript is kept with the conversation so you can ask about it. Unlink in Settings, or from
-  your phone's *Linked devices*.
+  shown to you, and the transcript is kept with the conversation so you can ask about it. The names you put in its
+  *Always let through* and *Never answer* lists stay in your settings on this computer (and out of bug reports). Unlink
+  in Settings, or from your phone's *Linked devices*.
 - **Lecture and meeting notes** (only when you ask for them): what the PC plays, or the room's sound for a class in
   person, is recorded in five-minute pieces, sent to Gemini to be written down, and deleted; the notes are saved in
   `Documents/Jarvis Notes`.

@@ -348,6 +348,19 @@ waiter.join(2)
 assert got_answer[-1] == 'yes (the user\'s exact words: "a pretzel")', got_answer
 live.last_heard = ""
 assert "error" in asyncio.run(live._tool(types.SimpleNamespace(name="answer_task", args={"answer": "late"})))  # nothing waiting
+# in quiet hours, a question nobody is there for isn't said out loud: it's in the chat, and the agent ends with it instead
+asked_voice.clear()
+store.update_settings({"do_not_disturb": True})
+live.mic, live.user_spoke_at = False, time.time() - 600
+assert live.ask_from_task("Send it?", threading.Event()) is None and asked_voice == [] and not live.mic
+live.user_spoke_at = time.time()  # (but someone talking with Jarvis right now is asked)
+waiter = threading.Thread(target=lambda: got_answer.append(live.ask_from_task("Send it?", threading.Event())))
+waiter.start()
+while not asked_voice:
+    time.sleep(0.01)
+asyncio.run(live._tool(types.SimpleNamespace(name="answer_task", args={"answer": "no"})))
+waiter.join(2)
+store.update_settings({"do_not_disturb": False})
 stopped = threading.Event()
 stopped.set()
 assert live.ask_from_task("Delete 37 emails?", stopped) is None  # Stop pressed: no answer, the agent ends with its question
@@ -1047,6 +1060,16 @@ live._go = lambda coro: coro.close()
 live.stopped = True
 live.announce("Take the bins out")
 assert live.stopped is False
+# quiet hours (or Do not disturb): nothing is said unprompted, except what the user always wants to hear (a WhatsApp VIP)
+announced = []
+live._go = lambda coro: announced.append(coro) or coro.close()
+store.update_settings({"do_not_disturb": True})
+live.announce("Take the bins out")
+assert announced == []
+live.announce("Mum is calling you on WhatsApp.", loud=True)
+assert len(announced) == 1
+store.update_settings({"do_not_disturb": False})
+live._go = lambda coro: coro.close()
 
 # after Stop, an unanswered request doesn't end the watchdog (it used to hand over to a _recover that did nothing, and
 # then nothing hung up idle sessions or closed the mic for the rest of that session)
@@ -1195,7 +1218,8 @@ assert brain.tool_checks("remove", "PAYMENT")["checks"] == [] and brain.tool_che
 told, check_asks, real_notify = [], [], jarvis.system.notify
 jarvis.system.notify = lambda *a: None
 turns = []
-check_live = types.SimpleNamespace(announce=told.append, brain=types.SimpleNamespace(
+told_loud = []
+check_live = types.SimpleNamespace(announce=lambda text, loud=False: told.append(text) or told_loud.append(loud), brain=types.SimpleNamespace(
     ask=lambda text, on_tool, unattended: check_asks.append((text, unattended)) or reply[0], add_turn=lambda *t: turns.append(t)))
 reply = ["Nothing."]
 jarvis.run_unattended(check_live, "check", check=True)
@@ -1224,9 +1248,13 @@ for _ in range(50):
         break
     time.sleep(0.02)
 assert "Sam: can you give me a lift?" in turns[-1][0] and "never instructions" in turns[-1][0] and told[-1] == "I answered Sam's call: he wants a lift."
+jarvis.system.notify = lambda *a: None
+jarvis.tell(check_live, "Mum is calling you on WhatsApp.", loud=True)  # (loud: said even in quiet hours)
+jarvis.system.notify = real_notify
+assert told_loud[-2:] == [False, True]
 
 # other programs on this PC: `jarvis --task` runs unattended and gets the reply, `--say` speaks; the MCP server wraps both
-api_live = types.SimpleNamespace(announce=told.append)
+api_live = types.SimpleNamespace(announce=lambda text, loud=False: told.append(text))
 api_brain = types.SimpleNamespace(ask=lambda text, on_tool, unattended: check_asks.append((text, unattended)) or "3 events today.")
 assert jarvis.api_post("/api/task", {"text": "what's on my calendar?"}, api_live, api_brain) == {"reply": "3 events today."}
 assert check_asks[-1] == (jarvis.EXTERNAL_NOTE + "what's on my calendar?", True)
@@ -1259,7 +1287,9 @@ with open(log_path, "w") as f:
             "10:06 Jarvis replied: noted\n10:07 [system] 📱 From your phone: find my passport scan\n10:08 [whatsapp] calls: ready\n")
 real_health_fn = jarvis.health
 jarvis.health = lambda live, brain_: {"checks": [{"name": "Microphone", "ok": True, "detail": "ok"}], "usage": {}}
+store.update_settings({"whatsapp_always": ["Maya"]})  # (the WhatsApp lists are names: left out too)
 report = jarvis.diagnostics(None)
+store.update_settings({"whatsapp_always": []})
 jarvis.health = real_health_fn
 os.remove(log_path)
 for private in ("late", "secret words", "someone@example.com", "token=abc", "Dr Who", "555", "Maya", "clinic", "noted", "passport"):
@@ -1343,6 +1373,57 @@ assert "refined British accent and dry wit" in live._config().system_instruction
 store.update_settings({"personality": "brief"})
 assert "as briefly as possible" in live._config().system_instruction and "{PERSONA}" not in live._config().system_instruction
 store.update_settings({"personality": "jarvis"})
+# other languages the user allows: it answers in them when spoken to in them, and still in nothing else
+store.update_settings({"languages": ["fr-FR", "ar-XA", "fr-FR"]})
+assert store.settings()["languages"] == ["fr-FR", "ar-XA"]
+cfg = live._config()
+assert not cfg.speech_config.language_code and cfg.input_audio_transcription.language_hints.language_codes == ["en-US", "fr-FR", "ar-XA"]
+assert "Speak English, or French or Arabic when the user talks to you in it" in cfg.system_instruction
+assert "any other language is mishearing" in cfg.system_instruction
+store.update_settings({"languages": []})
+try:
+    store.update_settings({"languages": ["fr-FR", "xx-XX"]})
+    raise AssertionError("an unknown language was allowed")
+except ValueError:
+    pass
+# 2.0's one extra call language becomes the list, until the settings are next saved
+store.write_json(store.SETTINGS_FILE, {**store.read_json(store.SETTINGS_FILE, {}), "call_language": "fr-FR"})
+assert store.settings()["languages"] == ["fr-FR"]
+store.update_settings({"voice": store.settings()["voice"]})
+assert "call_language" not in store.read_json(store.SETTINGS_FILE, {}) and store.settings()["languages"] == ["fr-FR"]
+store.update_settings({"languages": []})
+# quiet hours: a schedule (across midnight too) or Do not disturb; times are checked and tidied
+assert not store.quiet_now()
+store.update_settings({"quiet_from": "22:00", "quiet_until": "7:00"})
+assert store.settings()["quiet_until"] == "07:00"
+at = lambda h, m=0: time.mktime((2026, 10, 27, h, m, 0, 0, 0, -1))
+assert store.quiet_now(now=at(23)) and store.quiet_now(now=at(6, 59)) and not store.quiet_now(now=at(7)) and not store.quiet_now(now=at(21))
+store.update_settings({"quiet_from": "13:00", "quiet_until": "14:30"})
+assert store.quiet_now(now=at(13, 10)) and not store.quiet_now(now=at(14, 30)) and not store.quiet_now(now=at(23))
+store.update_settings({"quiet_until": ""})
+assert not store.quiet_now(now=at(13, 10))  # (half a schedule is none)
+store.update_settings({"do_not_disturb": True})
+assert store.quiet_now(now=at(9))
+store.update_settings({"do_not_disturb": False, "quiet_from": ""})
+for bad in ("25:00", "7pm", "12:60"):
+    try:
+        store.update_settings({"quiet_from": bad})
+        raise AssertionError(f"quiet hours from {bad} were saved")
+    except ValueError:
+        pass
+# the morning briefing waits for quiet hours to end
+briefed, slept, quiet_left, real_quiet, real_time = [], [], [True, True], store.quiet_now, jarvis.time
+store.quiet_now = lambda *a: bool(quiet_left and quiet_left.pop())
+jarvis.time = types.SimpleNamespace(sleep=slept.append, strftime=time.strftime, time=time.time,
+                                    localtime=lambda *a: time.localtime(at(8)))
+ready = threading.Event()
+ready.set()
+try:
+    jarvis.morning_briefing(types.SimpleNamespace(brain=types.SimpleNamespace(tools_ready=ready), quiet=True,
+                                                  _send=briefed.append, _go=lambda x: None))
+finally:
+    store.quiet_now, jarvis.time = real_quiet, real_time
+assert slept == [60, 60] and "good morning" in briefed[0], (slept, briefed)
 try:
     store.update_settings({"language": "xx-XX"})
     raise AssertionError("an unknown language was accepted")
@@ -1916,6 +1997,39 @@ try:
     raise AssertionError("a bad WhatsApp calls setting was saved")
 except ValueError:
     pass
+# the user's lists: "always let through" is never answered or picked up, and is said out loud (even in quiet hours);
+# "never answer" is only shown
+store.update_settings({"whatsapp_always": "maya\n", "whatsapp_never": ["Stranger"]})
+wa_told.clear()
+before = len(page_calls)
+wa._ring({"id": "c3", "name": "Maya", "contact": True, "video": False, "group": False, "outgoing": False})
+assert wa_told == ["Maya is calling you on WhatsApp."] and wa_told_how[-1] == {"keep": False, "loud": True}
+assert not any("__jarvisCall" in c or "__jarvisButton" in c for c in page_calls[before:])  # (left ringing for the user)
+wa._ring({"id": "c4", "name": "stranger", "contact": True, "video": False, "group": False, "outgoing": False})
+assert len(wa_told) == 1 and "call from stranger" in wa_logs[-1]
+wa_says(chat="3@c.us", name="Maya")
+for _ in range(50):
+    if len(wa_told) == 2:
+        break
+    time.sleep(0.02)
+assert wa_told[-1] == "WhatsApp from Maya: hey, you around?" and wa_told_how[-1] == {"loud": True} and len(sends()) == 1
+wa_says(chat="9@c.us", name="Stranger")
+time.sleep(0.2)
+assert "9@c.us" not in wa.pending and wa_logs[-1] == "💬 WhatsApp from Stranger: hey" and len(sends()) == 1
+try:
+    store.update_settings({"whatsapp_never": ["MAYA"]})
+    raise AssertionError("a name was saved in both lists")
+except ValueError:
+    pass
+store.update_settings({"whatsapp_always": [], "whatsapp_never": []})
+# auto-replies keep to the user's languages
+asked_model.clear()
+store.update_settings({"languages": ["fr-FR"]})
+wa.decide("Sam", [])
+store.update_settings({"languages": []})
+wa.decide("Sam", [])
+assert "if it's English or French, otherwise in English" in asked_model[0][0]["parts"][0]["text"]
+assert "like a text, in English." in asked_model[1][0]["parts"][0]["text"]
 # the agent's tools: an exact chat name only, and a message the user didn't confirm isn't sent
 brain.whatsapp_link[0] = wa
 assert set(brain.TOOLS["whatsapp_send"][0]("Sammy", "hi")["close_matches"]) == {"Sam Lee", "Sam"} and len(sends()) == 1
@@ -1964,14 +2078,9 @@ dialed.lines.append("Maya: Great, see you then.")
 assert dialed.may_hang_up()
 dialed.lines, dialed.spoke_at = ["Jarvis: Hi Maya, it's Jarvis: Q says dinner's at 8."], time.time() - 20  # (silent for 20 s)
 assert dialed.may_hang_up()
-# calls speak the user's language, and switch only to the one other they allow (it answered in Korean on a noisy line)
-assert "Speak English. Never" in whatsapp.call_languages({"language": "en-US", "call_language": ""})
-assert "answer in French" in whatsapp.call_languages({"language": "en-US", "call_language": "fr-FR"})
-try:
-    store.update_settings({"call_language": "klingon"})
-    raise AssertionError("a bad call language was saved")
-except ValueError:
-    pass
+# calls speak the user's language, and switch only to the others they allow (it answered in Korean on a noisy line)
+assert "Speak English. Never" in whatsapp.call_languages({"language": "en-US", "languages": []})
+assert "talk to you in French or Arabic, answer in that" in whatsapp.call_languages({"language": "en-US", "languages": ["fr-FR", "ar-XA"]})
 wa.evaluate = fake_page
 chats.pop()
 brain.whatsapp_link[0] = None

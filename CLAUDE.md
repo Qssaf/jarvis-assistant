@@ -73,6 +73,12 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   must be cleared (`inflight = None`) or the watchdog reconnects 12 s later and re-asks. Something Jarvis says on its
   own (`announce`: reminders, scheduled tasks, `--say`) waits 25 s instead, and never asks the user to repeat it. Code in `_run`'s `except`
   that schedules a reconnect must read `self.mic` first: the `finally` turns it off before the callback runs.
+- Quiet hours (`store.quiet_now`: the `quiet_from`/`quiet_until` schedule or `do_not_disturb`): `announce` says nothing
+  unless `loud` (WhatsApp's "always let through" names), and every other unprompted line (`_progress`, a result after the
+  session closed, the morning briefing, which waits) checks it too; the chat, notification and phones still get it. The
+  agent's question (`ask_from_task`) is then asked only if the user is talking with Jarvis (mic on, or spoke < 2 min ago).
+- Languages: `language` is the main one, `languages` the others allowed (`store.spoken` names them); the voice, WhatsApp
+  calls and auto-replies all follow both. An old `call_language` is read as `languages` until settings are next saved.
 - Each batch of quick tool calls has its own `halt` event (`quick_tasks`: task -> halt), passed to `tool_act`;
   `_cancel_quick` sets it and cancels the task. Voice acts check only their halt, agent acts only the global
   `interrupt_act` flag (Stop / New conversation), so cutting the voice off never stops the agent and a superseded
@@ -145,7 +151,7 @@ screenshot. The voice model can't see images, so `act` from voice refuses coordi
 - Voice persona: `LIVE_PROMPT` in jarvis.py. The agent's instructions: `prompt.md`.
 - Both contain `{SYSTEM}`, replaced at runtime with `system.describe()` (OS-specific hints). Keep them generic:
   nothing about a particular user, machine or distro. `LIVE_PROMPT` also has `{ADDRESS}`, filled from
-  `preferred_name(memory)` (the persona otherwise drifts back to "sir"), `{LANGUAGE}` (the `language` setting) and
+  `preferred_name(memory)` (the persona otherwise drifts back to "sir"), `{LANGUAGE}` (`language` and `languages`) and
   `{PERSONA}` (`PERSONAS[personality]`). `prompt.md` changes are checked with `evals/agent_eval.py`.
 - Messaging on screen relies on `act`'s `expect` step (a vision yes/no that stops the plan) and on `locate` refusing
   near-miss names: together they keep a misheard name from sending a message to the wrong chat.

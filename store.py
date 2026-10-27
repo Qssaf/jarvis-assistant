@@ -1,5 +1,5 @@
 """Jarvis's saved state: settings, plugins (MCP servers) and conversation sessions."""
-import json, os, sys, threading, time, uuid
+import json, os, re, sys, threading, time, uuid
 
 import system
 
@@ -18,6 +18,7 @@ LANGUAGES = {"en-US": "English", "en-GB": "English (UK)", "ar-XA": "Arabic", "fr
 DEFAULT_SETTINGS = {
     "voice": "Charon",
     "language": "en-US",           # what Jarvis speaks and expects to hear (store.LANGUAGES)
+    "languages": [],               # others it may speak and understand, when the user (or a WhatsApp contact) speaks them
     "text_size": 1.0,              # the window's text, 0.9-1.5 times the normal size
     "personality": "jarvis",       # how it talks: jarvis (British, dry wit), friendly or brief
     "live_model": "gemini-3.8-live",
@@ -32,6 +33,8 @@ DEFAULT_SETTINGS = {
     "start_at_login": False,
     "show_thinking": False,        # the chat shows the agent's thinking and the voice model's decisions (never the notch)
     "morning_briefing": True,      # the first time Jarvis starts in a morning, it gives the day's briefing out loud
+    "do_not_disturb": False,       # on: Jarvis never speaks up on its own (see quiet_now); it still answers the user
+    "quiet_from": "", "quiet_until": "",  # quiet hours, "22:00" to "07:00" (crossing midnight); empty = none
     "deadline_reminders": True,    # reminders a day and two hours before Google Classroom work is due
     "calendar_reminders": True,    # a reminder ten minutes before each Google Calendar event
     "checks": [],                  # things Jarvis keeps an eye on in the background ("tell me if a payment fails"), one per line
@@ -39,7 +42,8 @@ DEFAULT_SETTINGS = {
     "whatsapp_replies": "contacts",  # contacts: Jarvis answers saved contacts' messages that don't need you; off: just shows them
     "whatsapp_calls": "answer",    # answer: picks up contacts' calls you don't and takes a message; decline; off: lets them ring
     "whatsapp_note": "",           # what Jarvis tells people on WhatsApp ("I'm in class until 5")
-    "call_language": "",           # on WhatsApp calls, the one language besides `language` Jarvis switches to (store.LANGUAGES)
+    "whatsapp_always": [],         # names Jarvis never answers for and always tells the user about out loud (even in quiet hours)
+    "whatsapp_never": [],          # names Jarvis never answers for or speaks about: only shown in the chat
     "echo_cancel": False,          # PipeWire echo cancelling (Linux): talk over Jarvis on speakers (experimental)
     "learn_my_voice": True,        # learn from real wake-ups to ignore things that aren't you saying "Hey Jarvis"
     "safety": "ask",               # ask: risky commands and account changes wait for your yes; full: Jarvis just does them
@@ -86,7 +90,27 @@ SETTINGS_FILE = os.path.join(CONFIG, "settings.json")
 
 
 def settings():
-    return {**DEFAULT_SETTINGS, **{k: v for k, v in read_json(SETTINGS_FILE, {}).items() if k in DEFAULT_SETTINGS}}  # (minus retired ones)
+    saved = read_json(SETTINGS_FILE, {})
+    if saved.get("call_language") in LANGUAGES and "languages" not in saved:  # (2.0's one extra language for calls)
+        saved["languages"] = [saved["call_language"]]
+    return {**DEFAULT_SETTINGS, **{k: v for k, v in saved.items() if k in DEFAULT_SETTINGS}}  # (minus retired ones)
+
+
+def spoken(cfg):
+    """The languages Jarvis speaks and understands, by name, the main one first (English and English (UK) are one)."""
+    return list(dict.fromkeys(LANGUAGES[c].split(" (")[0] for c in [cfg["language"], *cfg["languages"]]))
+
+
+def quiet_now(cfg=None, now=None):
+    """Do not disturb, or within quiet hours: Jarvis doesn't speak up on its own (what the user asks is still answered)."""
+    cfg = cfg or settings()
+    start, end = cfg["quiet_from"], cfg["quiet_until"]
+    if cfg["do_not_disturb"]:
+        return True
+    if not start or not end:
+        return False
+    t = time.strftime("%H:%M", time.localtime(now))
+    return start <= t < end if start <= end else t >= start or t < end  # ("22:00" to "07:00" crosses midnight)
 
 
 def update_settings(changes):
@@ -136,11 +160,20 @@ def _update_settings(changes):
             raise ValueError("check every 15-1440 minutes")
         if key == "whatsapp_replies" and value not in ("contacts", "off"):
             raise ValueError("WhatsApp replies are contacts or off")
-        if key == "call_language" and value and value not in LANGUAGES:
-            raise ValueError(f"the call language is empty or one of {', '.join(LANGUAGES)}")
+        if key == "languages":
+            if any(v not in LANGUAGES for v in value):
+                raise ValueError(f"languages are from {', '.join(LANGUAGES)}")
+            value = list(dict.fromkeys(value))
+        if key in ("quiet_from", "quiet_until") and value:
+            hm = re.fullmatch(r"(\d{1,2})[:.](\d{2})", value.strip())
+            if not hm or int(hm[1]) > 23 or int(hm[2]) > 59:
+                raise ValueError("quiet hours are times like 22:00, or empty")
+            value = f"{int(hm[1]):02d}:{hm[2]}"  # (so they compare as text)
         if key == "whatsapp_calls" and value not in ("answer", "decline", "off"):
             raise ValueError("WhatsApp calls are answer, decline or off")
         s[key] = value
+    if {n.lower() for n in s["whatsapp_always"]} & {n.lower() for n in s["whatsapp_never"]}:
+        raise ValueError("a name can't be both always let through and never answered")
     write_json(SETTINGS_FILE, {k: v for k, v in s.items() if v != DEFAULT_SETTINGS[k]})
     return s
 

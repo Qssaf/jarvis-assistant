@@ -226,7 +226,7 @@ between {NAME} and {WHO}; the last messages are from {WHO} and nobody has answer
 
 Decide what to do and answer with JSON only: {{"reply": "...", "tell_user": "..."}}
 - reply: what to send {WHO} now, or "" when nothing needs an answer ("ok", "thanks", an emoji, a goodbye).
-  Short and warm, like a text, in the language {WHO} writes in. If none of the earlier messages is from you (Jarvis), \
+  Short and warm, like a text, {LANGUAGE}. If none of the earlier messages is from you (Jarvis), \
 start by saying you're Jarvis, {NAME}'s assistant. Answer small talk and simple questions that need nothing private; \
 for anything else say {NAME} will get back to them. Never pretend to be {NAME}, never agree to plans, promise things, \
 lend or pay anything for them, and never share anything about them (where they are, what they're doing, their plans, \
@@ -263,7 +263,8 @@ class Restart(Exception):
 
 class WhatsApp:
     def __init__(self, brain, notify=print, tell=lambda text, **kw: print(text), name=lambda: ""):
-        # notify: the chat log; tell(text, keep=True, transcript=""): out loud, to the phones and (keep) the agent's history
+        # notify: the chat log; tell(text, keep=True, transcript="", loud=False): out loud (loud: even in quiet hours), to the
+        # phones and (keep) the agent's history
         self.brain, self.notify, self.tell = brain, notify, tell
         self.name = name  # what the user likes to be called (from memory), for "I'm Jarvis, <name>'s assistant"
         self.saved = store.read_json(STATE_FILE, {})
@@ -465,8 +466,8 @@ class WhatsApp:
                     self._cancel(e["chat"])
                 return
             print(f"[whatsapp] message from {e['name']}", flush=True)
-            mode = store.settings()["whatsapp_replies"]
-            if mode == "off" or not e["contact"]:
+            mode, rule = store.settings()["whatsapp_replies"], contact_rule(e["name"])
+            if rule == "never" or (rule != "always" and (mode == "off" or not e["contact"])):  # (shown, never answered or said)
                 self.notify(f"💬 WhatsApp from {e['name']}: {e['text'][:300]}")
                 return
             self._cancel(e["chat"])
@@ -490,6 +491,9 @@ class WhatsApp:
         history = self.evaluate(f"window.__jarvisHistory({json.dumps(chat)}, 20)") or []
         recent = [m for m in history if not m["me"]][-3:]
         said = " / ".join(m["text"] for m in recent)[:300]
+        if contact_rule(name) == "always":  # (never answered by Jarvis: said to the user, even in quiet hours)
+            self.tell(f"WhatsApp from {name}: {said}", loud=True)
+            return
         if time.time() - self.user_wrote.get(chat, 0) < QUIET:
             self.notify(f"💬 WhatsApp from {name}: {said} (you're chatting with them, so Jarvis left it)")
             return
@@ -510,7 +514,10 @@ class WhatsApp:
         """What to answer: {"reply", "tell_user"} from the agent's models, with no tools and nothing private."""
         me = self._me()
         lines = "\n".join(f"{'Jarvis (you)' if m['id'] in self.mine else me if m['me'] else name}: {m['text']}" for m in history)
-        prompt = (REPLY_PROMPT.replace("{NAME}", me).replace("{WHO}", name).replace("{CHAT}", lines)
+        langs = store.spoken(store.settings())
+        language = (f"in the language {name} writes in if it's {' or '.join(langs)}, otherwise in {langs[0]}" if len(langs) > 1
+                    else f"in {langs[0]}")
+        prompt = (REPLY_PROMPT.replace("{LANGUAGE}", language).replace("{NAME}", me).replace("{WHO}", name).replace("{CHAT}", lines)
                   .replace("{NOTE}", self._note()).replace("{NOW}", time.strftime("%A %H:%M")))
         parts = self.brain._generate([{"role": "user", "parts": [{"text": prompt}]}])
         text = "".join(p.get("text", "") for p in parts if not p.get("thought"))
@@ -567,14 +574,20 @@ class WhatsApp:
 
     # ---- calls
     def _ring(self, c):
-        mode = store.settings()["whatsapp_calls"]
+        mode, rule = store.settings()["whatsapp_calls"], contact_rule(c["name"])
         kind = "video call" if c["video"] else "call"
+        if rule == "always":  # (let ring for the user, and said even in quiet hours)
+            self.tell(f"{c['name']} is calling you on WhatsApp.", keep=False, loud=True)
+            return
         if c["group"] or c["video"] or mode == "off" or not c["contact"]:  # (video: Jarvis has no face to show)
             self.notify(f"📞 WhatsApp {kind} from {c['name']}")
             return
         if mode == "decline":
             self.evaluate("window.__jarvisButton('decline')")
             self.notify(f"📞 Declined a WhatsApp {kind} from {c['name']}")
+            return
+        if rule == "never":
+            self.notify(f"📞 WhatsApp {kind} from {c['name']}")
             return
         if self.call:
             self.notify(f"📞 WhatsApp {kind} from {c['name']} (Jarvis is on another call)")
@@ -655,12 +668,17 @@ class WhatsApp:
         return "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
 
 
+def contact_rule(name):
+    """"always" (let through), "never" (never answer) or "": the user's lists in Settings → WhatsApp, case aside."""
+    cfg, name = store.settings(), name.strip().lower()
+    return next((rule for rule in ("always", "never") if name in (n.lower() for n in cfg[f"whatsapp_{rule}"])), "")
+
+
 def call_languages(cfg):
-    """The language rule for a call: the user's language, and the one other they allow (Settings → WhatsApp)."""
-    main = store.LANGUAGES[cfg["language"]].split(" (")[0]
-    other = store.LANGUAGES[cfg["call_language"]].split(" (")[0] if cfg["call_language"] else ""
-    switch = (f"If they talk to you in {other}, answer in {other} from then on (their dialect if you can). " if other and other != main
-              else "")
+    """The language rule for a call: the user's language, and the others they allow (Settings → Voice)."""
+    main, *others = store.spoken(cfg)
+    switch = (f"If they talk to you in {' or '.join(others)}, answer in that language from then on (their dialect if you can). "
+              if others else "")
     return (f"Speak {main}. {switch}Never speak any other language, even if you seem to hear one: that's the line "
             f"mishearing them")
 
@@ -712,11 +730,11 @@ class CallSession:
                   .replace("{LANGUAGE}", call_languages(cfg)))
         config = t.LiveConnectConfig(
             response_modalities=["AUDIO"], system_instruction=prompt,
-            speech_config=t.SpeechConfig(**({} if cfg["call_language"] else {"language_code": cfg["language"]}),
+            speech_config=t.SpeechConfig(**({} if cfg["languages"] else {"language_code": cfg["language"]}),
                                          voice_config=t.VoiceConfig(prebuilt_voice_config=t.PrebuiltVoiceConfig(voice_name=cfg["voice"]))),
             # (hearing only these: it "heard" Korean or Spanish in a noisy call, and answered in it)
             input_audio_transcription=t.AudioTranscriptionConfig(language_hints=t.LanguageHints(
-                language_codes=list(dict.fromkeys(filter(None, [cfg["language"], cfg["call_language"]]))))),
+                language_codes=list(dict.fromkeys([cfg["language"], *cfg["languages"]])))),
             output_audio_transcription={},
             tools=[{"function_declarations": [{"name": "end_call", "description": "Hang up: the conversation is over."}]}])
         try:
