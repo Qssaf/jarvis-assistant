@@ -2366,8 +2366,8 @@ system.record_audio, system.stop_recording = fake_record, (lambda proc: None)
 brain.NOTES_DIR = os.path.join(store.DATA, "notes-test")
 done = []
 brain.notes_done[0] = lambda text, path: done.append((text, path))
-heard = iter(["Today: derivatives. The slope is rise over run.", "(silence)", "Homework: exercises 1 to 5, due Friday."])
-n = brain.Notes(transcribe=lambda audio: next(heard), summarise=lambda t: "Derivatives; homework 1-5 due Friday." if "Homework" in t else "?")
+heard = iter(["**Speaker 1:** Today: derivatives. The slope is rise over run.", "(silence)", "Homework: exercises 1 to 5, due Friday."])
+n = brain.Notes(transcribe=lambda audio, prompt: next(heard), summarise=lambda t: "Derivatives; homework 1-5 due Friday." if "Homework" in t else "?")
 n.CHUNK = 0.15
 assert "taking notes of the room" in n.start("Calculus 2", "room")["result"] and "error" in n.start("again")
 time.sleep(0.4)
@@ -2379,7 +2379,29 @@ while not done and time.time() < end:
 text, path = done[0]
 saved = open(path, encoding="utf-8").read()
 assert "homework 1-5 due Friday" in text and "# Calculus 2" in saved and "rise over run" in saved and "(silence)" not in saved
+assert "Speaker 1" not in saved  # (one person talked: no labels)
 assert set(recorded) == {"room"}
+# several people: each chunk is told the labels used so far, so they stay the same; the summary is asked to credit them
+import itertools
+prompts, summarised, done[:] = [], [], []
+heard = itertools.chain(["**Dr. Lee:** Today, entropy.\n**Speaker 2:** Is it on the exam?", "**Dr. Lee:** Yes, chapter 4."], itertools.repeat("(silence)"))
+n = brain.Notes(transcribe=lambda audio, prompt: prompts.append(prompt) or next(heard), summarise=lambda t: summarised.append(t) or "Entropy.")
+n.CHUNK = 0.15
+n.start("Thermo", "pc")
+end = time.time() + 3
+while len(prompts) < 3 and time.time() < end:
+    time.sleep(0.05)
+n.stop()
+end = time.time() + 3
+while not done and time.time() < end:
+    time.sleep(0.05)
+assert "Speaker 1" in prompts[0] and "earlier parts" not in prompts[0], prompts[0]
+assert "earlier parts called the speakers: Dr. Lee, Speaker 2." in prompts[1] and "ended: ...**Dr. Lee:** Today" in prompts[1], prompts[1]
+assert "Dr. Lee, Speaker 2." in prompts[2] and "Yes, chapter 4." in prompts[2]
+assert "**Speaker 2:** Is it on the exam?" in summarised[0] and "**Speaker 2:** Is it on the exam?" in open(done[0][1], encoding="utf-8").read()
+assert "one person has spoken so far" in n._prompt(["Just the lecturer, no labels."])
+assert "Speaker 1, Speaker 2." in n._prompt(["**Speaker 1**: Hi.\n**Speaker 2**: Hello."])  # (colon outside the bold too)
+assert brain.Notes.SPEAKER.sub("", "**Speaker 1**: Hi.\n**Speaker 1:** Bye.") == "Hi.\nBye."
 system.record_audio, system.stop_recording = real_rec
 import wave
 def wav(samples):
