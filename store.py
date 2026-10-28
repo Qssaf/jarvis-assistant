@@ -590,7 +590,7 @@ class Sessions:
 BACKUP_FORMAT = 1
 BACKUP_LIMIT = 512 << 20  # unpacked bytes (years of chats and every wake-word clip are far less)
 # conversations, and the wake-word clips (not the verifier: it's a pickle, so loading one from a file would run its code)
-BACKUP_FOLDERS = re.compile(r"sessions/[A-Za-z0-9-]{1,80}\.json|wake/(?:(?!\.)[\w .-]{1,100}/)?(?:yes|no)/\d{1,12}(?:\.\d{1,6})?\.wav")
+BACKUP_FOLDERS = re.compile(r'sessions/[A-Za-z0-9-]{1,80}\.json|wake/(?:(?!\.\.?/)[^/\\:*?"<>|\x00-\x1f]{1,100}/)?(?:yes|no)/\d{1,12}(?:\.\d{1,6})?\.wav')
 
 
 def _number(v):
@@ -608,7 +608,8 @@ BACKUP_CHECKS = {  # what a sound file looks like, so a bad one can't break a lo
         re.fullmatch(r"[a-z0-9_-]{1,32}", n) and isinstance(p, dict) and isinstance(p.get("url") or p.get("command"), str)
         and not {"headers", "env"} & set(p) for n, p in d.items()),
     "connectors.json": lambda d: isinstance(d, dict) and all(v in CONNECTOR_MODES for v in d.values()),
-    "providers.json": lambda d: isinstance(d, dict) and all(isinstance(v, str) and v.startswith(("https://", "http://")) for v in d.values()),
+    "providers.json": lambda d: isinstance(d, dict) and all(
+        re.fullmatch(r"[a-z0-9_]{1,24}", n) and isinstance(v, str) and v.startswith(("https://", "http://")) for n, v in d.items()),
 }
 
 
@@ -623,12 +624,17 @@ def export_data(path, version):
     the change log, conversations and wake-word clips to a .zip; returns how many files it holds. Never keys, sign-ins,
     WhatsApp or the phone's pairing: they're in the keychain or in files this leaves out."""
     import zipfile
-    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_BINARY", 0), 0o600)  # (it's as private as what it holds)
+    with os.fdopen(fd, "wb") as f, zipfile.ZipFile(f, "w", zipfile.ZIP_DEFLATED) as z:
         z.writestr("manifest.json", json.dumps({"format": BACKUP_FORMAT, "jarvis": version, "made": time.time()}))
         for name, file in _backup_files().items():
-            if name == "plugins.json" and os.path.exists(file):
+            if not os.path.exists(file):
+                continue
+            if name == "plugins.json":
                 z.writestr(name, json.dumps({n: {k: v for k, v in p.items() if k not in ("headers", "env")} for n, p in plugins().items()}, indent=1))
-            elif os.path.exists(file):
+            elif name == "settings.json":  # (as read: a 2.0 call_language comes as languages)
+                z.writestr(name, json.dumps({k: v for k, v in settings().items() if v != DEFAULT_SETTINGS[k]}, indent=1))
+            else:
                 z.write(file, name)
         for inside, folder in (("sessions", SESSIONS_DIR), ("wake", os.path.join(DATA, "wake"))):
             for root, _, files in os.walk(folder):
@@ -639,10 +645,11 @@ def export_data(path, version):
         return len(z.namelist()) - 1
 
 
-def import_data(path):
+def import_data(path, taken=()):
     """Replace this PC's settings, memory, reminders, routines, plugins, account modes, providers, change log and wake-word
     clips with a backup's, and add its conversations. All of it is checked first: anything that isn't a sound Jarvis
-    backup raises ValueError with nothing changed. Returns the settings this PC couldn't take (e.g. a wake-word file not here)."""
+    backup raises ValueError with nothing changed. taken: the built-in providers' names (a backup's can't replace them).
+    Returns the settings this PC couldn't take (e.g. a wake-word file not here)."""
     import shutil, zipfile
     try:
         z = zipfile.ZipFile(path)
@@ -678,6 +685,8 @@ def import_data(path):
             isinstance(d.get("title"), str) and _number(d.get("updated")) and isinstance(d.get("messages"), list)
         if not ok:
             raise ValueError(f"the backup's {n} isn't right")
+    if set(data.get("providers.json", {})) & set(taken):  # (it would get this PC's key for that provider)
+        raise ValueError("the backup's providers.json replaces a built-in provider")
     try:
         notes = files.get("memory.md", b"").decode()
     except UnicodeDecodeError:
@@ -688,9 +697,19 @@ def import_data(path):
     for name, file in _backup_files().items():  # (one the backup hasn't: that PC had none either)
         if name in ("settings.json", "memory.md"):
             continue
-        if name == "plugins.json" and name in data:  # a plugin already here keeps its own headers and env (its keys)
-            here = read_json(file, {})
-            data[name] = {n: {**p, **{k: here[n][k] for k in ("headers", "env") if k in here.get(n, {})}} for n, p in data[name].items()}
+        if name == "plugins.json" and name in data:  # this PC's keys and sign-ins only go where they went before
+            here = plugins()
+            for n, p in data[name].items():
+                h, token = here.get(n, {}), os.path.join(DATA, "mcp", f"{n}.json")
+                if (p.get("url"), p.get("command")) == (h.get("url"), h.get("command")):
+                    p.update({k: h[k] for k in ("headers", "env") if k in h})
+                elif h and os.path.exists(token):  # (signed in here: the backup's address would get that sign-in)
+                    data[name][n] = h
+                else:
+                    if os.path.exists(token):  # (a sign-in left by a plugin removed here)
+                        os.remove(token)
+                    if p.get("command"):  # a command from a backup runs only once the user turns it on (Plugins page)
+                        p["enabled"] = False
         if name in data:
             write_json(file, data[name], private=True)
         elif os.path.exists(file):
@@ -711,6 +730,6 @@ def import_data(path):
     for k, v in data.get("settings.json", {}).items():
         try:
             update_settings({k: v})
-        except (ValueError, TypeError, AttributeError):
+        except Exception:  # (any value the checks refuse, e.g. 1e999 for a number)
             skipped.append(k)
     return skipped
