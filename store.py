@@ -584,3 +584,133 @@ class Sessions:
         os.remove(self._path(sid))
         if self.current["id"] == sid:
             self.new()
+
+
+# ---------------------------------------------------------------- moving to another computer: one .zip, never a secret
+BACKUP_FORMAT = 1
+BACKUP_LIMIT = 512 << 20  # unpacked bytes (years of chats and every wake-word clip are far less)
+# conversations, and the wake-word clips (not the verifier: it's a pickle, so loading one from a file would run its code)
+BACKUP_FOLDERS = re.compile(r"sessions/[A-Za-z0-9-]{1,80}\.json|wake/(?:(?!\.)[\w .-]{1,100}/)?(?:yes|no)/\d{1,12}(?:\.\d{1,6})?\.wav")
+
+
+def _number(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+BACKUP_CHECKS = {  # what a sound file looks like, so a bad one can't break a loop after the restart
+    "settings.json": lambda d: isinstance(d, dict),
+    "reminders.json": lambda d: isinstance(d, list) and all(
+        isinstance(r, dict) and isinstance(r.get("id"), str) and _number(r.get("at")) and isinstance(r.get("text"), str)
+        and r.get("repeat", "") in ("", *REPEATS) for r in d),
+    "routines.json": lambda d: isinstance(d, dict) and all(isinstance(v, str) for v in d.values()),
+    "changes.json": lambda d: isinstance(d, list) and all(isinstance(c, dict) and _number(c.get("at")) and isinstance(c.get("what"), str) for c in d),
+    "plugins.json": lambda d: isinstance(d, dict) and all(  # (headers and env may hold API keys: a backup never has them)
+        re.fullmatch(r"[a-z0-9_-]{1,32}", n) and isinstance(p, dict) and isinstance(p.get("url") or p.get("command"), str)
+        and not {"headers", "env"} & set(p) for n, p in d.items()),
+    "connectors.json": lambda d: isinstance(d, dict) and all(v in CONNECTOR_MODES for v in d.values()),
+    "providers.json": lambda d: isinstance(d, dict) and all(isinstance(v, str) and v.startswith(("https://", "http://")) for v in d.values()),
+}
+
+
+def _backup_files():
+    """Name in the backup -> the file on this PC (looked up each time: tests point them elsewhere)."""
+    return {"settings.json": SETTINGS_FILE, "memory.md": MEMORY_FILE, "reminders.json": REMINDERS_FILE, "routines.json": ROUTINES_FILE,
+            "changes.json": CHANGES_FILE, "plugins.json": PLUGINS_FILE, "connectors.json": CONNECTORS_FILE, "providers.json": PROVIDERS_FILE}
+
+
+def export_data(path, version):
+    """Save settings (with the checks), memory, reminders and scheduled tasks, routines, plugins, account modes, providers,
+    the change log, conversations and wake-word clips to a .zip; returns how many files it holds. Never keys, sign-ins,
+    WhatsApp or the phone's pairing: they're in the keychain or in files this leaves out."""
+    import zipfile
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("manifest.json", json.dumps({"format": BACKUP_FORMAT, "jarvis": version, "made": time.time()}))
+        for name, file in _backup_files().items():
+            if name == "plugins.json" and os.path.exists(file):
+                z.writestr(name, json.dumps({n: {k: v for k, v in p.items() if k not in ("headers", "env")} for n, p in plugins().items()}, indent=1))
+            elif os.path.exists(file):
+                z.write(file, name)
+        for inside, folder in (("sessions", SESSIONS_DIR), ("wake", os.path.join(DATA, "wake"))):
+            for root, _, files in os.walk(folder):
+                for f in files:
+                    name = f"{inside}/{os.path.relpath(os.path.join(root, f), folder).replace(os.sep, '/')}"
+                    if BACKUP_FOLDERS.fullmatch(name):
+                        z.write(os.path.join(root, f), name)
+        return len(z.namelist()) - 1
+
+
+def import_data(path):
+    """Replace this PC's settings, memory, reminders, routines, plugins, account modes, providers, change log and wake-word
+    clips with a backup's, and add its conversations. All of it is checked first: anything that isn't a sound Jarvis
+    backup raises ValueError with nothing changed. Returns the settings this PC couldn't take (e.g. a wake-word file not here)."""
+    import shutil, zipfile
+    try:
+        z = zipfile.ZipFile(path)
+    except (OSError, zipfile.BadZipFile):
+        raise ValueError("that isn't a Jarvis backup (a .zip)")
+    with z:
+        infos = z.infolist()
+        if len(infos) > 20000 or sum(i.file_size for i in infos) > BACKUP_LIMIT:
+            raise ValueError("that's too big to be a Jarvis backup")
+        if "manifest.json" not in z.namelist():
+            raise ValueError("that isn't a Jarvis backup (it has no manifest)")
+        for i in infos:  # only the names Jarvis writes: no ../, no absolute paths, no keys or sign-ins
+            if i.filename not in ("manifest.json", *_backup_files()) and not BACKUP_FOLDERS.fullmatch(i.filename):
+                raise ValueError(f"the backup holds {i.filename[:80]}, which a Jarvis backup never does")
+        try:
+            files = {i.filename: z.read(i) for i in infos}
+        except Exception as e:  # (a bad checksum, an odd compression or a password)
+            raise ValueError(f"the backup is damaged ({e})")
+
+    def parsed(name):
+        try:
+            return json.loads(files[name])
+        except ValueError:
+            raise ValueError(f"the backup's {name} is damaged")
+    made = parsed("manifest.json")
+    made = made.get("format") if isinstance(made, dict) else None
+    if made != BACKUP_FORMAT:
+        raise ValueError("that backup is from a newer Jarvis: update this one first" if _number(made) and made > BACKUP_FORMAT
+                         else "that isn't a Jarvis backup")
+    data = {n: parsed(n) for n in files if n.endswith(".json") and n != "manifest.json"}
+    for n, d in data.items():
+        ok = BACKUP_CHECKS[n](d) if n in BACKUP_CHECKS else isinstance(d, dict) and d.get("id") == n[9:-5] and \
+            isinstance(d.get("title"), str) and _number(d.get("updated")) and isinstance(d.get("messages"), list)
+        if not ok:
+            raise ValueError(f"the backup's {n} isn't right")
+    try:
+        notes = files.get("memory.md", b"").decode()
+    except UnicodeDecodeError:
+        raise ValueError("the backup's memory.md is damaged")
+    if any(n.endswith(".wav") and not b.startswith(b"RIFF") for n, b in files.items()):
+        raise ValueError("the backup's wake-word clips are damaged")
+
+    for name, file in _backup_files().items():  # (one the backup hasn't: that PC had none either)
+        if name in ("settings.json", "memory.md"):
+            continue
+        if name == "plugins.json" and name in data:  # a plugin already here keeps its own headers and env (its keys)
+            here = read_json(file, {})
+            data[name] = {n: {**p, **{k: here[n][k] for k in ("headers", "env") if k in here.get(n, {})}} for n, p in data[name].items()}
+        if name in data:
+            write_json(file, data[name], private=True)
+        elif os.path.exists(file):
+            os.remove(file)
+    set_memory(notes)
+    for n, d in data.items():
+        if n.startswith("sessions/"):
+            write_json(os.path.join(SESSIONS_DIR, n[9:]), d, private=True)
+    shutil.rmtree(os.path.join(DATA, "wake"), ignore_errors=True)  # (the voice is learned again from these clips)
+    for n, b in files.items():
+        if n.endswith(".wav"):
+            os.makedirs(os.path.dirname(os.path.join(DATA, *n.split("/"))), exist_ok=True)
+            with open(os.path.join(DATA, *n.split("/")), "wb") as f:
+                f.write(b)
+    if os.path.exists(SETTINGS_FILE):  # settings last, each through the Settings page's checks
+        os.remove(SETTINGS_FILE)
+    skipped = []
+    for k, v in data.get("settings.json", {}).items():
+        try:
+            update_settings({k: v})
+        except (ValueError, TypeError, AttributeError):
+            skipped.append(k)
+    return skipped

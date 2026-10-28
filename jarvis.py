@@ -1611,6 +1611,8 @@ class VoiceLearner:
             self.use(cfg["wake_word"])
         path = wake_model_file(self.word)
         self.loaded, self.verified = (cfg["wake_word"], cfg["learn_my_voice"]), cfg["learn_my_voice"] and os.path.exists(self.model)
+        if cfg["learn_my_voice"] and not self.verified and all(len(os.listdir(d)) >= 6 for d in self.dirs.values()):
+            threading.Thread(target=self._train, daemon=True).start()  # (clips brought from another PC: learn from them now)
         # (the verifier's score replaces the model's from 0.1 up, so every score that could wake it is the verifier's;
         # raising that bar instead would let what scores between it and the wake threshold through unverified)
         return Model(wakeword_models=[path], inference_framework="onnx", vad_threshold=0.5,
@@ -1927,6 +1929,15 @@ def update_now():
     return {"result": "updated; restarting"}
 
 
+def local_path(text):
+    """A path from the window's file dialogs, which give file:// URLs."""
+    if not text.startswith("file:"):
+        return text
+    from urllib.parse import urlparse
+    from urllib.request import url2pathname
+    return url2pathname(urlparse(text).path)
+
+
 def shutil_which(program):
     import shutil
     return shutil.which(program)
@@ -2138,6 +2149,15 @@ def api_post(path, data, live, brain):
         brain.reset()
         store.delete_data()
         sessions.new()
+    elif path == "/api/data/export":
+        target = local_path(str(data.get("path", "")))
+        target += "" if target.lower().endswith(".zip") else ".zip"
+        return {"files": store.export_data(target, VERSION), "path": target}
+    elif path == "/api/data/import":
+        skipped = store.import_data(local_path(str(data.get("path", ""))))
+        store.sync_autostart(store.settings()["start_at_login"])
+        restart_soon()
+        return {"skipped": skipped}
     elif path == "/api/update":
         out = update_now()
         restart_soon()
