@@ -224,9 +224,9 @@ Item {
 
     Today {
         id: today
-        x: home.wide ? home.width - width - 12 : (home.width - home.column) / 2
+        x: home.wide ? home.width - width - 12 : (home.width - home.column) / 2 + (backup.visible ? backup.width + 12 : 0)
         y: 52
-        width: home.wide ? 300 : home.column - (fresh.visible ? fresh.width + 12 : 0)
+        width: home.wide ? 300 : home.column - (fresh.visible ? fresh.width + 12 : 0) - (backup.visible ? backup.width + 12 : 0)
         height: home.wide ? home.height - y - 24 : 56
         compact: !home.wide
         latency: home.latency
