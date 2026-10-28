@@ -1655,12 +1655,16 @@ assert brain.tool_media("next")["result"] == "pressed next" and pressed == ["Nex
 system.media = real_media
 
 # Windows: what's playing and the media buttons go through one PowerShell (no console window) kept running for the
-# system media controls; it's started again when it has gone, and the media keys are the fallback
-shells, answers, keys = [], [], []
+# system media controls; it's started again when it has gone, ended when it doesn't answer in time, and the media keys
+# are the fallback
+shells, answers, keys, killed, shells_done = [], [], [], [], threading.Event()
 def fake_popen(args, **kw):
     shells.append((args, kw, io.StringIO()))
     out = answers.pop(0)
-    return types.SimpleNamespace(stdin=shells[-1][2], stdout=io.StringIO(out), poll=lambda: None if out else 1)
+    def stdout():  # (a running PowerShell's output stays open)
+        yield from [out] if out else []
+        out and shells_done.wait()
+    return types.SimpleNamespace(stdin=shells[-1][2], stdout=stdout(), poll=lambda: None if out else 1, kill=lambda: killed.append(1))
 real_sub, real_windows, real_keys = system.subprocess, system.IS_WINDOWS, system.press_keys
 system.subprocess = types.SimpleNamespace(Popen=fake_popen, PIPE=real_sub.PIPE, DEVNULL=real_sub.DEVNULL)
 system.IS_WINDOWS, system.press_keys = True, lambda k: keys.append(k) or ""
@@ -1675,21 +1679,31 @@ assert playing == {"player": "SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify", "ap
                    "title": "Café", "artist": "A Band", "length": 200.5}, playing
 assert art.startswith("file:") and open(system._art[0], "rb").read() == cover
 old_art = system._art[0]
-system._media_shell[0].stdout = io.StringIO('{"player": "Spotify.exe", "art": "' + base64.b64encode(b"another").decode() + '"}\n')
+system._media_shell[0].lines.put('{"player": "Spotify.exe", "art": "' + base64.b64encode(b"another").decode() + '"}\n')
 assert system.now_playing()["app"] == "Spotify" and not os.path.exists(old_art) and system._art[0] != old_art
 os.remove(system._art[0])
-system._media_shell[0].stdout = io.StringIO('{"done": true}\n')
+system._media_shell[0].lines.put('{"done": true}\n')
 system.media("Next")
 assert shells[1][2].getvalue().endswith("\nTrySkipNextAsync\n") and keys == []
-system._media_shell[0].stdout = io.StringIO("{}\n")  # no media session: the media key
+system._media_shell[0].lines.put("{}\n")  # no media session: the media key
 system.media("PlayPause")
 assert keys == ["XF86AudioPlay"]
+real_wait, system.MEDIA_WAIT = system.MEDIA_WAIT, 0.2
+system._media_shell[0].lines.put('{"player": "Spotify.exe", "title": "Song"}\n')
+assert system.now_playing()["title"] == "Song"
+with system._media_lock:  # another call waiting: a poll gets the last answer at once, a button press its key
+    assert system.now_playing()["title"] == "Song"
+    system.media("Next")
+assert keys == ["XF86AudioPlay", "XF86AudioNext"]
+assert system.now_playing() == {} and killed == [1] and system._media_shell[0] is None  # no answer in time: that PowerShell ended
+system.MEDIA_WAIT = real_wait
+shells_done.set()
 def no_powershell(*a, **kw):
     raise FileNotFoundError("powershell")
 system._media_shell[0], system.subprocess.Popen = None, no_powershell
 assert system.now_playing() == {}
 system.subprocess, system.IS_WINDOWS, system.press_keys = real_sub, real_windows, real_keys
-system._media_shell[0], system._art[0] = None, ""
+system._media_shell[0], system._art[0], system._media_last[0] = None, "", {}
 
 # calendar heads-up: ten minutes before each timed event; a moved event's reminder moves, a cancelled one's goes
 for r in store.reminders():
@@ -2148,7 +2162,7 @@ assert len(inputs) > 4
 system.type_text, system.press_keys, system.paste_text = real_type, real_keys, real_paste
 
 # Windows types the whole text in one SendInput call: each UTF-16 unit a KEYEVENTF_UNICODE down and up (an emoji as its
-# surrogate pair), line breaks as Enter
+# surrogate pair), line breaks as Enter, tabs as Tab
 import ctypes
 sendinput, real_windll, real_windows, real_wayland = [], getattr(ctypes, "windll", None), system.IS_WINDOWS, system.WAYLAND
 def fake_sendinput(n, events, size):
@@ -2157,11 +2171,12 @@ def fake_sendinput(n, events, size):
 sendinput_takes = []
 ctypes.windll = types.SimpleNamespace(user32=types.SimpleNamespace(SendInput=fake_sendinput))
 system.IS_WINDOWS, system.WAYLAND = True, False
-assert system.type_text("hé🎵\r\nx") == ""
+assert system.type_text("hé🎵\r\nx\ty") == ""
 (n, events, size), = sendinput
 down, up = lambda u: (1, 0, u, 4), lambda u: (1, 0, u, 6)
-assert n == 12 and events == [down(0x68), up(0x68), down(0xE9), up(0xE9), down(0xD83C), up(0xD83C), down(0xDFB5), up(0xDFB5),
-                              (1, 0x0D, 0, 0), (1, 0x0D, 0, 2), down(0x78), up(0x78)], events
+assert n == 16 and events == [down(0x68), up(0x68), down(0xE9), up(0xE9), down(0xD83C), up(0xD83C), down(0xDFB5), up(0xDFB5),
+                              (1, 0x0D, 0, 0), (1, 0x0D, 0, 2), down(0x78), up(0x78), (1, 0x09, 0, 0), (1, 0x09, 0, 2),
+                              down(0x79), up(0x79)], events
 assert size == (40 if ctypes.sizeof(ctypes.c_void_p) == 8 else 28)  # (Windows refuses the call when it's not sizeof(INPUT))
 sendinput_takes[:] = [0]  # (a window running as administrator)
 assert "0 of 2" in system.type_text("a") and system.type_text("") == "" and len(sendinput) == 2

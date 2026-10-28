@@ -381,8 +381,8 @@ def type_text(text):
 
 def _send_text(text):
     """Windows: the whole text in one SendInput call, each UTF-16 unit as a KEYEVENTF_UNICODE key down and up (so
-    characters past the BMP go as their surrogate pair) and line breaks as Enter. pynput's key by key was slow and lost
-    characters."""
+    characters past the BMP go as their surrogate pair), line breaks as Enter and tabs as Tab (to the next field, as
+    pynput did). pynput's key by key was slow and lost characters."""
     import ctypes
 
     class KEYBDINPUT(ctypes.Structure):
@@ -399,12 +399,13 @@ def _send_text(text):
         _anonymous_ = ("u",)
         _fields_ = [("type", ctypes.c_uint32), ("u", _U)]
 
-    UNICODE, UP, RETURN = 0x0004, 0x0002, 0x0D
+    UNICODE, UP, KEYS = 0x0004, 0x0002, {"\n": 0x0D, "\t": 0x09}
     events = []
-    for line_no, line in enumerate(re.split(r"\r\n|\r|\n", text)):
-        if line_no:
-            events += [(RETURN, 0, 0), (RETURN, 0, UP)]
-        units = line.encode("utf-16-le")
+    for part in re.split(r"([\n\t])", re.sub(r"\r\n?", "\n", text)):
+        if part in KEYS:
+            events += [(KEYS[part], 0, 0), (KEYS[part], 0, UP)]
+            continue
+        units = part.encode("utf-16-le")
         for i in range(0, len(units), 2):
             unit = int.from_bytes(units[i:i + 2], "little")
             events += [(0, unit, UNICODE), (0, unit, UNICODE | UP)]
@@ -773,7 +774,7 @@ WIN_MEDIA = r"""
 Add-Type -AssemblyName System.Runtime.WindowsRuntime
 $asTask = [System.WindowsRuntimeSystemExtensions].GetMethods() | ? { $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and
     $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1' } | select -First 1
-function Await($op, [type]$type) { $task = $asTask.MakeGenericMethod($type).Invoke($null, @($op)); if ($task.Wait(5000)) { $task.Result } }
+function Await($op, [type]$type) { $task = $asTask.MakeGenericMethod($type).Invoke($null, @($op)); if ($task.Wait(1500)) { $task.Result } }
 $M = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager, Windows.Media.Control, ContentType=WindowsRuntime]
 while ($null -ne ($action = [Console]::In.ReadLine())) {
     $out = @{}
@@ -785,13 +786,15 @@ while ($null -ne ($action = [Console]::In.ReadLine())) {
         if (-not $s) { $s = $all | select -First 1 }
         if ($s -and $action) { $out = @{done = [bool](Await ($s.$action()) ([bool]))} } elseif ($s) {
             $p = Await ($s.TryGetMediaPropertiesAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties])
-            $art = ''
-            try {
-                $r = Await ($p.Thumbnail.OpenReadAsync()) ([Windows.Storage.Streams.IRandomAccessStreamWithContentType, Windows.Storage.Streams, ContentType=WindowsRuntime])
-                $bytes = New-Object IO.MemoryStream
-                [IO.WindowsRuntimeStreamExtensions]::AsStreamForRead($r).CopyTo($bytes)
-                $art = [Convert]::ToBase64String($bytes.ToArray())
-            } catch {}
+            if ($p.Title -ne $lastTitle -or -not $art) {  # (the cover is read again only for a new song: it's the slow part)
+                $lastTitle, $art = $p.Title, ''
+                try {
+                    $r = Await ($p.Thumbnail.OpenReadAsync()) ([Windows.Storage.Streams.IRandomAccessStreamWithContentType, Windows.Storage.Streams, ContentType=WindowsRuntime])
+                    $bytes = New-Object IO.MemoryStream
+                    [IO.WindowsRuntimeStreamExtensions]::AsStreamForRead($r).CopyTo($bytes)
+                    $art = [Convert]::ToBase64String($bytes.ToArray())
+                } catch {}
+            }
             $t = $s.GetTimelineProperties()
             $out = @{player = $s.SourceAppUserModelId; status = [string]$s.GetPlaybackInfo().PlaybackStatus; title = [string]$p.Title
                      artist = [string]$p.Artist; art = $art; length = ($t.EndTime - $t.StartTime).TotalSeconds}
@@ -802,26 +805,43 @@ while ($null -ne ($action = [Console]::In.ReadLine())) {
 }
 """
 _media_shell, _media_lock = [None], threading.Lock()  # (kept running: starting one each time the Today page asks costs a second of CPU)
+_media_last, MEDIA_WAIT = [{}], 6  # the last answer about what's playing; seconds an answer may take
 _art = [""]  # the cover art file now_playing wrote last
 
 
 def _win_media(action=""):
-    """WIN_MEDIA's answer to one line ({} when there's no session or it failed); its PowerShell has no console window."""
-    import base64
-    with _media_lock:
+    """WIN_MEDIA's answer to one line ({} when there's no session or it failed); its PowerShell has no console window.
+    One that takes over MEDIA_WAIT seconds (a player stuck answering) is ended, and the next call starts a fresh one;
+    a poll while another call waits gets the last answer, so the Today page's polls can't pile up."""
+    import base64, queue
+    if not _media_lock.acquire(timeout=MEDIA_WAIT if action else 0):
+        return {} if action else _media_last[0]
+    try:
         for _ in range(2):  # (again with a fresh PowerShell when the last one has gone)
             try:
-                if not _media_shell[0] or _media_shell[0].poll() is not None:
-                    _media_shell[0] = subprocess.Popen(
+                shell = _media_shell[0]
+                if not shell or shell.poll() is not None:
+                    shell = _media_shell[0] = subprocess.Popen(
                         ["powershell", "-NoProfile", "-NonInteractive", "-EncodedCommand", base64.b64encode(WIN_MEDIA.encode("utf-16-le")).decode()],
                         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
                         creationflags=0x08000000)  # (CREATE_NO_WINDOW)
-                _media_shell[0].stdin.write(action + "\n")
-                _media_shell[0].stdin.flush()
-                return json.loads(_media_shell[0].stdout.readline())
+                    shell.lines = queue.Queue()  # (read on a thread, so the wait for an answer has a limit; '' when it ends)
+                    threading.Thread(target=lambda s=shell: [s.lines.put(line) for line in s.stdout] + [s.lines.put("")], daemon=True).start()
+                shell.stdin.write(action + "\n")
+                shell.stdin.flush()
+                answer = json.loads(shell.lines.get(timeout=MEDIA_WAIT))
+                if not action:
+                    _media_last[0] = answer
+                return answer
+            except queue.Empty:
+                shell.kill()
+                _media_shell[0] = None
+                break
             except (OSError, ValueError):
                 pass
-    return {}
+        return {}
+    finally:
+        _media_lock.release()
 
 
 def _windows_playing():
