@@ -372,9 +372,49 @@ def type_text(text):
         tool = _wayland_tool()
         return _wdo("type", "--", text, timeout=60) if tool == "wdotool" else run(["ydotool", "type", "--", text], 60) and "" if tool else \
             "typing on Wayland needs wdotool or ydotool"
+    if IS_WINDOWS:
+        return _send_text(text)
     from pynput.keyboard import Controller
     Controller().type(text)
     return ""
+
+
+def _send_text(text):
+    """Windows: the whole text in one SendInput call, each UTF-16 unit as a KEYEVENTF_UNICODE key down and up (so
+    characters past the BMP go as their surrogate pair), line breaks as Enter and tabs as Tab (to the next field, as
+    pynput did). pynput's key by key was slow and lost characters."""
+    import ctypes
+
+    class KEYBDINPUT(ctypes.Structure):
+        _fields_ = [("wVk", ctypes.c_uint16), ("wScan", ctypes.c_uint16), ("dwFlags", ctypes.c_uint32),
+                    ("time", ctypes.c_uint32), ("dwExtraInfo", ctypes.c_size_t)]
+
+    class MOUSEINPUT(ctypes.Structure):  # (only for the union's size: it's the biggest member)
+        _fields_ = [("dx", ctypes.c_int32), ("dy", ctypes.c_int32), ("mouseData", ctypes.c_uint32), ("dwFlags", ctypes.c_uint32),
+                    ("time", ctypes.c_uint32), ("dwExtraInfo", ctypes.c_size_t)]
+
+    class INPUT(ctypes.Structure):
+        class _U(ctypes.Union):
+            _fields_ = [("ki", KEYBDINPUT), ("mi", MOUSEINPUT)]
+        _anonymous_ = ("u",)
+        _fields_ = [("type", ctypes.c_uint32), ("u", _U)]
+
+    UNICODE, UP, KEYS = 0x0004, 0x0002, {"\n": 0x0D, "\t": 0x09}
+    events = []
+    for part in re.split(r"([\n\t])", re.sub(r"\r\n?", "\n", text)):
+        if part in KEYS:
+            events += [(KEYS[part], 0, 0), (KEYS[part], 0, UP)]
+            continue
+        units = part.encode("utf-16-le")
+        for i in range(0, len(units), 2):
+            unit = int.from_bytes(units[i:i + 2], "little")
+            events += [(0, unit, UNICODE), (0, unit, UNICODE | UP)]
+    if not events:
+        return ""
+    inputs = (INPUT * len(events))(*[INPUT(type=1, ki=KEYBDINPUT(wVk=vk, wScan=scan, dwFlags=flags)) for vk, scan, flags in events])
+    sent = ctypes.windll.user32.SendInput(len(events), inputs, ctypes.sizeof(INPUT))
+    return "" if sent == len(events) else \
+        f"Windows took {sent} of {len(events)} key events (a window running as administrator can't be typed into)"
 
 
 def press_keys(keys):
@@ -726,9 +766,113 @@ def paste_text(text):
     return problem
 
 
+# Windows' media controls (GlobalSystemMediaTransportControls) through Windows PowerShell's WinRT access (PowerShell 7
+# has none). It stays running and answers each line it reads with one line of JSON about the session that's playing
+# (else the one Windows calls current, else the first): '' for its details, or the method to call on it. Non-ASCII
+# goes out as \u escapes, whatever the console's code page.
+WIN_MEDIA = r"""
+Add-Type -AssemblyName System.Runtime.WindowsRuntime
+$asTask = [System.WindowsRuntimeSystemExtensions].GetMethods() | ? { $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and
+    $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1' } | select -First 1
+function Await($op, [type]$type) { $task = $asTask.MakeGenericMethod($type).Invoke($null, @($op)); if ($task.Wait(1500)) { $task.Result } }
+$M = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager, Windows.Media.Control, ContentType=WindowsRuntime]
+while ($null -ne ($action = [Console]::In.ReadLine())) {
+    $out = @{}
+    try {
+        $manager = Await ($M::RequestAsync()) $M
+        $all = @($manager.GetSessions())
+        $s = $all | ? { $_.GetPlaybackInfo().PlaybackStatus -eq 'Playing' } | select -First 1
+        if (-not $s) { $s = $manager.GetCurrentSession() }
+        if (-not $s) { $s = $all | select -First 1 }
+        if ($s -and $action) { $out = @{done = [bool](Await ($s.$action()) ([bool]))} } elseif ($s) {
+            $p = Await ($s.TryGetMediaPropertiesAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties])
+            if ($p.Title -ne $lastTitle -or -not $art) {  # (the cover is read again only for a new song: it's the slow part)
+                $lastTitle, $art = $p.Title, ''
+                try {
+                    $r = Await ($p.Thumbnail.OpenReadAsync()) ([Windows.Storage.Streams.IRandomAccessStreamWithContentType, Windows.Storage.Streams, ContentType=WindowsRuntime])
+                    $bytes = New-Object IO.MemoryStream
+                    [IO.WindowsRuntimeStreamExtensions]::AsStreamForRead($r).CopyTo($bytes)
+                    $art = [Convert]::ToBase64String($bytes.ToArray())
+                } catch {}
+            }
+            $t = $s.GetTimelineProperties()
+            $out = @{player = $s.SourceAppUserModelId; status = [string]$s.GetPlaybackInfo().PlaybackStatus; title = [string]$p.Title
+                     artist = [string]$p.Artist; art = $art; length = ($t.EndTime - $t.StartTime).TotalSeconds}
+        }
+    } catch {}
+    [Console]::Out.WriteLine([regex]::Replace(($out | ConvertTo-Json -Compress), '[^\x00-\x7f]', { param($m) '\u{0:x4}' -f [int]$m.Value[0] }))
+    [Console]::Out.Flush()
+}
+"""
+_media_shell, _media_lock = [None], threading.Lock()  # (kept running: starting one each time the Today page asks costs a second of CPU)
+_media_last, MEDIA_WAIT = [{}], 6  # the last answer about what's playing; seconds an answer may take
+_art = [""]  # the cover art file now_playing wrote last
+
+
+def _win_media(action=""):
+    """WIN_MEDIA's answer to one line ({} when there's no session or it failed); its PowerShell has no console window.
+    One that takes over MEDIA_WAIT seconds (a player stuck answering) is ended, and the next call starts a fresh one;
+    a poll while another call waits gets the last answer, so the Today page's polls can't pile up."""
+    import base64, queue
+    if not _media_lock.acquire(timeout=MEDIA_WAIT if action else 0):
+        return {} if action else _media_last[0]
+    try:
+        for _ in range(2):  # (again with a fresh PowerShell when the last one has gone)
+            try:
+                shell = _media_shell[0]
+                if not shell or shell.poll() is not None:
+                    shell = _media_shell[0] = subprocess.Popen(
+                        ["powershell", "-NoProfile", "-NonInteractive", "-EncodedCommand", base64.b64encode(WIN_MEDIA.encode("utf-16-le")).decode()],
+                        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+                        creationflags=0x08000000)  # (CREATE_NO_WINDOW)
+                    shell.lines = queue.Queue()  # (read on a thread, so the wait for an answer has a limit; '' when it ends)
+                    threading.Thread(target=lambda s=shell: [s.lines.put(line) for line in s.stdout] + [s.lines.put("")], daemon=True).start()
+                shell.stdin.write(action + "\n")
+                shell.stdin.flush()
+                answer = json.loads(shell.lines.get(timeout=MEDIA_WAIT))
+                if not action:
+                    _media_last[0] = answer
+                return answer
+            except queue.Empty:
+                shell.kill()
+                _media_shell[0] = None
+                break
+            except (OSError, ValueError):
+                pass
+        return {}
+    finally:
+        _media_lock.release()
+
+
+def _windows_playing():
+    info = _win_media()
+    if not info.get("player"):
+        return {}
+    app = re.sub(r"\.exe$", "", info["player"].split("!")[-1], flags=re.I).split(".")[-1]  # Spotify.exe, ...!Microsoft.ZuneMusic
+    art = ""
+    if info.get("art"):  # the cover as a file the window can show, kept until the next one
+        import base64, hashlib, pathlib
+        data = base64.b64decode(info["art"])
+        path = os.path.join(tempfile.gettempdir(), f"jarvis-art-{hashlib.sha1(data).hexdigest()[:12]}")
+        if path != _art[0]:
+            with open(path, "wb") as f:
+                f.write(data)
+            try:
+                _art[0] and os.remove(_art[0])
+            except OSError:  # (gone already, or the window still reading it)
+                pass
+            _art[0] = path
+        art = pathlib.Path(path).as_uri()
+    return {"player": info["player"], "app": app[:1].upper() + app[1:], "status": info.get("status") or "",
+            "title": info.get("title") or "", "artist": info.get("artist") or "", "art": art, "length": info.get("length") or 0}
+
+
 def now_playing():
-    """The media player that's playing (or the first one): {player, app, status, title, artist, art}. Linux (MPRIS) only."""
-    if IS_WINDOWS or not have("busctl"):
+    """The media player that's playing (or the first one): {player, app, status, title, artist, art, length}. Linux
+    (MPRIS) and Windows (its media controls)."""
+    if IS_WINDOWS:
+        return _windows_playing()
+    if not have("busctl"):
         return {}
     out = run(["busctl", "--user", "--json=short", "call", "org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "ListNames"], 5)
     try:
@@ -756,12 +900,14 @@ def now_playing():
 
 
 def media(action):
-    """PlayPause, Next or Previous for the current player (media keys where MPRIS isn't available)."""
-    player = now_playing().get("player")
-    if player:
+    """PlayPause, Next or Previous for the current player (media keys where MPRIS or Windows' media controls can't)."""
+    if IS_WINDOWS:
+        if _win_media({"PlayPause": "TryPlayPauseAsync", "Next": "TrySkipNextAsync", "Previous": "TrySkipPreviousAsync"}[action]).get("done"):
+            return
+    elif player := now_playing().get("player"):
         run(["busctl", "--user", "call", player, "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2.Player", action], 5)
-    else:
-        press_keys({"PlayPause": "XF86AudioPlay", "Next": "XF86AudioNext", "Previous": "XF86AudioPrev"}[action])
+        return
+    press_keys({"PlayPause": "XF86AudioPlay", "Next": "XF86AudioNext", "Previous": "XF86AudioPrev"}[action])
 
 
 def system_stats():
