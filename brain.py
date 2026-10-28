@@ -1299,7 +1299,7 @@ class Notes:
     writes a summary and the transcript to a file. One recording at a time; three hours at most. When several people
     talk, turns start with **Speaker 1:** or a name, kept the same across chunks (each is told the labels used so far)."""
     CHUNK, LONGEST = 300, 3 * 3600
-    SPEAKER = re.compile(r"^\*\*([^*\n:]{1,40}):\*\* ?", re.M)
+    SPEAKER = re.compile(r"^\*\*([^*\n:]{1,40})(?::\*\*|\*\*:) ?", re.M)  # (**Name:** or **Name**:)
 
     def __init__(self, transcribe, summarise):
         self.transcribe, self.summarise = transcribe, summarise
@@ -1340,7 +1340,8 @@ class Notes:
         return prompt + (f"\nThis continues a longer recording whose earlier parts called the speakers: {', '.join(speakers)}. Use "
                          "the same labels for the same people, and new ones only for new voices." if speakers else
                          "\nThis continues a longer recording where one person has spoken so far (no labels). If someone else "
-                         "speaks now, label everyone, that person first.") + f"\nThe previous part ended: ...{heard[-1][-300:]}"
+                         "speaks now, label everyone: the person who has been speaking is **Speaker 1:** (or their name), the "
+                         "new voice **Speaker 2:**.") + f"\nThe previous part ended: ...{heard[-1][-300:]}"
 
     def _transcribe_file(self, path, on):
         try:

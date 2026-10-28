@@ -1877,6 +1877,8 @@ assert "earlier parts called the speakers: Dr. Lee, Speaker 2." in prompts[1] an
 assert "Dr. Lee, Speaker 2." in prompts[2] and "Yes, chapter 4." in prompts[2]
 assert "**Speaker 2:** Is it on the exam?" in summarised[0] and "**Speaker 2:** Is it on the exam?" in open(done[0][1], encoding="utf-8").read()
 assert "one person has spoken so far" in n._prompt(["Just the lecturer, no labels."])
+assert "Speaker 1, Speaker 2." in n._prompt(["**Speaker 1**: Hi.\n**Speaker 2**: Hello."])  # (colon outside the bold too)
+assert brain.Notes.SPEAKER.sub("", "**Speaker 1**: Hi.\n**Speaker 1:** Bye.") == "Hi.\nBye."
 system.record_audio, system.stop_recording = real_rec
 import wave
 def wav(samples):
