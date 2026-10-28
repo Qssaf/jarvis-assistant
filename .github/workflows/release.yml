@@ -24,13 +24,14 @@ jobs:
       - name: Build
         run: >
           .venv\Scripts\pyinstaller --noconfirm --windowed --name Jarvis --icon icon.ico
-          --add-data "qml;qml" --add-data "assets;assets" --add-data "prompt.md;." --add-data "icon.svg;." --add-data "icon.ico;."
+          --add-data "qml;qml" --add-data "assets;assets" --add-data "relay;relay" --add-data "prompt.md;." --add-data "icon.svg;." --add-data "icon.ico;."
           --collect-data openwakeword --collect-submodules openwakeword
           --hidden-import window --hidden-import remote
           jarvis.py
       - name: Smoke test (starts headless, writes its log, stays up)
         shell: pwsh
         run: |
+          if (-not (Test-Path dist\Jarvis\_internal\relay\worker.js)) { throw "the relay isn't in the build" }   # (Settings sets it up from there)
           $env:QT_QPA_PLATFORM = "offscreen"
           $env:APPDATA = Join-Path $env:RUNNER_TEMP "appdata"
           New-Item -ItemType Directory -Force (Join-Path $env:APPDATA "Jarvis") | Out-Null

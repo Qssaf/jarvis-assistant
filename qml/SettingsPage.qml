@@ -16,6 +16,7 @@ ScrollPage {
     property var phone: ({})
     property var wa: ({})
     property bool changingRelay: false
+    readonly property var relaySetup: phone.setup || ({})
     function setRelay(url) {
         Api.post("/api/phone/relay", { relay: url }, d => { phone = d; relayUrl.text = ""; changingRelay = false }, e => Backend.toast(e.error, true))
     }
@@ -218,10 +219,25 @@ ScrollPage {
         title: "The Jarvis app"
         description: "The Jarvis Android app reaches this PC from anywhere through your own private relay. It's end-to-end encrypted: "
                      + "the relay only passes on scrambled data, and nothing on this PC is open to the internet."
-        ColumnLayout {  // setting the relay up, until there is one
+        RowLayout {  // setting the relay up, until there is one: Jarvis runs wrangler itself...
+            Layout.fillWidth: true
+            visible: !page.phone.relay || page.changingRelay
+            spacing: 14
+            Pill { kind: "primary"; symbol: "link"; enabled: !page.relaySetup.running
+                   text: page.relaySetup.running ? "Setting up…" : "Set up my relay"
+                   onClicked: Api.post("/api/phone/relay/setup", {}, d => page.phone = d, e => Backend.toast(e.error, true)) }
+            Txt { kind: "small"; Layout.fillWidth: true
+                  text: "Signs in to your free Cloudflare account in your browser, puts the relay online and saves its address." }
+        }
+        Txt { visible: (!page.phone.relay || page.changingRelay) && (page.relaySetup.log || []).length > 0
+              text: (page.relaySetup.log || []).join("\n"); color: Theme.text3; Layout.fillWidth: true
+              font.family: Theme.mono; font.pixelSize: Theme.px(12); wrapMode: Text.WrapAnywhere }
+        Txt { kind: "small"; visible: (!page.phone.relay || page.changingRelay) && !!page.relaySetup.error; text: page.relaySetup.error || ""; color: Theme.red; Layout.fillWidth: true }
+        ColumnLayout {  // ...or the user does, and pastes the address
             Layout.fillWidth: true
             spacing: 8
             visible: !page.phone.relay || page.changingRelay
+            Txt { kind: "label"; text: "Or by hand"; Layout.fillWidth: true }
             Step { number: 1; text: "In the relay folder of Jarvis's files, sign in to a free Cloudflare account:"; code: "npx wrangler login" }
             Step { number: 2; text: "Put the relay online:"; code: "npx wrangler deploy" }
             Step { number: 3; text: "Paste the address it prints here." }
@@ -311,6 +327,14 @@ ScrollPage {
         Timer {  // while a code is up: notice when the phone has paired, and keep the relay's status fresh
             interval: 2000; repeat: true; running: !!page.phone.pairing || (!!page.phone.relay && !page.phone.connected)
             onTriggered: Api.get("/api/phone", d => page.phone = d)
+        }
+        Timer {  // while wrangler works: its progress, then the relay it put online
+            interval: 500; repeat: true; running: !!page.relaySetup.running
+            onTriggered: Api.get("/api/phone", d => {
+                if (!d.setup.running && !d.setup.error)
+                    page.changingRelay = false
+                page.phone = d
+            })
         }
     }
 

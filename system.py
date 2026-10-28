@@ -33,6 +33,22 @@ def run(args, timeout=15, env=None):
     return (r.stdout + r.stderr).strip()
 
 
+def run_lines(args, on_line, cwd=None, timeout=600):
+    """A long command (npx on Windows is npx.cmd: it's found on PATH), each line it prints passed to on_line as it comes.
+    Nothing can be typed to it, and it's stopped after timeout seconds. Its exit code."""
+    proc = subprocess.Popen([shutil.which(args[0]) or args[0], *args[1:]], cwd=cwd, stdin=subprocess.DEVNULL,
+                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace",
+                            creationflags=subprocess.CREATE_NO_WINDOW if IS_WINDOWS else 0)
+    timer = threading.Timer(timeout, proc.kill)
+    timer.start()
+    try:
+        for line in proc.stdout:
+            on_line(line.rstrip())
+        return proc.wait()
+    finally:
+        timer.cancel()
+
+
 def describe():
     """A few lines for the models: what this computer is and how to do common things on it."""
     if IS_WINDOWS:

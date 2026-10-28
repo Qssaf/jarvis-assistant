@@ -1,5 +1,5 @@
 """Quick checks for the non-model logic: run with `.venv/bin/python test_jarvis.py` (Windows: .venv\\Scripts\\python)."""
-import os, tempfile
+import os, sys, tempfile
 
 _home = tempfile.mkdtemp()  # never the user's real settings, memory or reminders
 os.environ.update(XDG_CONFIG_HOME=os.path.join(_home, "config"), XDG_DATA_HOME=os.path.join(_home, "data"), APPDATA=_home,
@@ -1614,6 +1614,49 @@ link = phone.PhoneLink(types.SimpleNamespace(ask=lambda text, remote=False: answ
 assert phone.PhoneLink(link.brain).id == link.id  # (the identity is kept)
 link.set_relay("https://relay.example.workers.dev/")
 assert link.state["relay"] == "wss://relay.example.workers.dev" and "ws:" in link.host_url("ws://x") and "&sig=" in link.host_url("ws://x")
+# "Set up my relay": wrangler signs in only when it isn't yet, deploys a copy of relay/, and its address becomes the relay
+said = []
+assert system.run_lines([sys.executable, "-c", "print('one'); print('two')"], said.append) == 0 and said == ["one", "two"]
+real_run_lines, real_have, wrangler = system.run_lines, system.have, []
+WRANGLER_SAYS = {"whoami": (0, ["You are not authenticated. Please run `wrangler login`."]),
+                 "login": (0, ["Attempting to login via OAuth...", "Successfully logged in."]),
+                 "deploy": (0, ["\x1b[33mUploaded jarvis-relay (2.1 sec)\x1b[0m", "Deployed jarvis-relay triggers (1.9 sec)",
+                                "  https://jarvis-relay.someone.workers.dev", "Current Version ID: 1234"])}
+
+
+def fake_wrangler(args, on_line, cwd=None, timeout=600):
+    assert args[:3] == ["npx", "--yes", "wrangler"] and os.path.exists(os.path.join(cwd, "worker.js"))
+    wrangler.append(args[3])
+    code, lines = WRANGLER_SAYS[args[3]]
+    for line in lines:
+        on_line(line)
+    return code
+
+
+def set_up_relay():
+    link.set_up_relay()
+    for _ in range(200):
+        if not link.setup["running"]:
+            return link.status()["setup"]
+        time.sleep(0.01)
+
+
+system.run_lines, system.have = fake_wrangler, lambda program: program == "npx"
+setup = set_up_relay()
+assert wrangler == ["whoami", "login", "deploy"] and not setup["error"], (wrangler, setup)
+assert link.state["relay"] == "wss://jarvis-relay.someone.workers.dev" and "Uploaded jarvis-relay (2.1 sec)" in setup["log"]
+assert setup["log"][-1].endswith("https://jarvis-relay.someone.workers.dev") and len(setup["log"]) <= 6
+wrangler.clear()  # signed in already, and Cloudflare refuses: its error is shown, the relay stays as it was
+WRANGLER_SAYS["whoami"] = (0, ["You are logged in with an OAuth Token."])
+WRANGLER_SAYS["deploy"] = (1, ["✘ [ERROR] Could not automatically register \"relay\" as your workers.dev subdomain."])
+link.set_relay("https://relay.example.workers.dev/")
+setup = set_up_relay()
+assert wrangler == ["whoami", "deploy"] and "Could not automatically register" in setup["error"]
+assert link.state["relay"] == "wss://relay.example.workers.dev"
+system.have = lambda program: False  # no Node: how to get it
+link.set_up_relay()
+assert "nodejs.org" in link.status()["setup"]["error"] and not link.setup["running"]
+system.run_lines, system.have = real_run_lines, real_have
 frames = []
 
 

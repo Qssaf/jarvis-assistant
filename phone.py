@@ -8,7 +8,7 @@ The handshake: the phone sends a fresh P-256 key; the PC answers with its own fr
 Both sides derive one AES-256-GCM key each way from ECDH(PC's long-term key, phone's fresh key) + ECDH(both fresh
 keys), so only the PC holding its private key can answer, and a recorded session can't be read later. Frames are
 counted, never sent twice, in order (the relay keeps them in order), and the counter is the nonce."""
-import asyncio, base64, hashlib, hmac, json, os, secrets, socket, threading, time
+import asyncio, base64, hashlib, hmac, json, os, re, secrets, shutil, socket, tempfile, threading, time
 
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -17,12 +17,16 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 import store
+import system
 from remote import REMOTE_NOTE
 
 STATE_FILE = os.path.join(store.DATA, "phone.json")  # {"relay": url, "sign"/"enc": PEM keys, "devices": {id: {...}}}
 PAIR_SECONDS = 600  # how long a pairing QR code works
 HELLO, WELCOME, DATA = 1, 2, 3  # the first byte of every frame between the phone and the PC
 INFO = b"jarvis-relay-v1"
+RELAY_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "relay")  # (the Windows build carries it too)
+NODE_HELP = ("Setting the relay up needs Node.js: install it from nodejs.org (on Linux, your package manager's nodejs and "
+             "npm), then try again.")
 
 
 def b64url(data):
@@ -109,6 +113,7 @@ class PhoneLink:
         self.id = b64url(hashlib.sha256(raw(self.sign_key.public_key())).digest())  # what the relay knows this PC by
         self.pairing = None  # {"secret": the QR code's one-time secret, "until": when it stops working}
         self.error, self.connected = "", False
+        self.setup = {}  # "Set up my relay": {"running", "log": wrangler's last lines, "error"}
         self.loop = self.ws = self.changed = None
         self.phones = {}  # relay connection id -> {"channel": Channel, "device": paired device id or None, "tries": n}
         self.pending = {}  # device -> replies it hasn't received yet (the app was closed when they came)
@@ -124,7 +129,8 @@ class PhoneLink:
             link = self.pair_link()
             pairing = {"link": link, "qr": segno.make(link, error="m").png_data_uri(scale=6, border=2)}
         return {"relay": self.state.get("relay", ""), "connected": self.connected, "error": self.error, "pairing": pairing,
-                "devices": [{"id": d, "name": v["name"]} for d, v in self.state["devices"].items()]}
+                "devices": [{"id": d, "name": v["name"]} for d, v in self.state["devices"].items()],
+                "setup": {**self.setup, "log": self.setup.get("log", [])[-6:]}}
 
     def set_relay(self, url):
         url = url.strip().rstrip("/").replace("https://", "wss://", 1).replace("http://", "ws://", 1)
@@ -133,6 +139,46 @@ class PhoneLink:
         self.state["relay"], self.error, self.connected = url, "", False
         self.save()
         self._kick()
+
+    def set_up_relay(self):
+        """Puts the user's own relay online with Cloudflare's wrangler, in the background: a sign-in in the browser if
+        there's none yet, then a deploy, whose workers.dev address becomes the relay."""
+        if self.setup.get("running"):
+            return
+        if not system.have("npx"):
+            self.setup = {"running": False, "log": [], "error": NODE_HELP}
+            return
+        self.setup = {"running": True, "log": [], "error": ""}
+        threading.Thread(target=self._set_up_relay, daemon=True).start()
+
+    def _set_up_relay(self):
+        log, deployed, npx = self.setup["log"], [], ["npx", "--yes", "wrangler"]
+
+        def show(line):
+            line = re.sub(r"\x1b\[[0-9;]*m", "", line).strip()  # (wrangler's colours)
+            if line:
+                log.append(line)
+                del log[:-50]
+        try:
+            # a copy of the relay folder: wrangler writes its own files next to the worker, and Jarvis's may be read-only
+            with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as folder:
+                shutil.copytree(RELAY_FOLDER, folder, dirs_exist_ok=True)
+                said = []  # (not shown: it names the account)
+                system.run_lines(npx + ["whoami"], said.append, cwd=folder, timeout=120)
+                if "not authenticated" in "\n".join(said):
+                    show("Sign in to Cloudflare in your browser…")
+                    if system.run_lines(npx + ["login"], show, cwd=folder):
+                        raise RuntimeError("the Cloudflare sign-in didn't finish")
+                show("Putting the relay online…")
+                code = system.run_lines(npx + ["deploy"], lambda line: show(line) or deployed.append(line), cwd=folder)
+            urls = re.findall(r"https://[\w.-]+\.workers\.dev\b", "\n".join(deployed))
+            if code or not urls:
+                raise RuntimeError(next((line for line in reversed(log) if "ERROR" in line), "wrangler didn't print the relay's address"))
+            self.set_relay(urls[-1])
+            show(f"The relay is online at {urls[-1]}")
+            self.setup["running"] = False
+        except Exception as e:
+            self.setup.update(running=False, error=str(e)[:300] or type(e).__name__)
 
     def start_pairing(self):
         if not self.state.get("relay"):

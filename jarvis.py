@@ -1728,6 +1728,9 @@ def api_post(path, data, live, brain):
     elif path == "/api/phone/relay":
         phone_ref[0].set_relay(str(data.get("relay", "")))
         return phone_ref[0].status()
+    elif path == "/api/phone/relay/setup":
+        phone_ref[0].set_up_relay()
+        return phone_ref[0].status()
     elif path == "/api/phone/pair":
         return phone_ref[0].start_pairing()
     elif path == "/api/phone/unpair":
