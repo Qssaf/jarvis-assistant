@@ -29,6 +29,10 @@
   `.apk` attached to every release, and an AUR package for Arch and CachyOS in `packaging/aur`.
 - **Set up my relay:** one button in Settings → *The Jarvis app* signs in to Cloudflare, deploys your relay and saves
   its address (needs Node.js).
+- **The window in your language:** Settings → *Window language* lists the languages the window, tray and notch use,
+  in order of preference: each text comes from the first that has it, and English ends the list. 17 languages besides
+  English (machine-translated and checked; corrections welcome), with Arabic laid out right to left and dates in the
+  window's language. It changes at once, no restart; English stays the default.
 - **Notes say who's talking:** lecture and meeting notes label each speaker (*Speaker 1*, or a name when it comes up)
   consistently across the recording, and the summary says who made each point. One speaker stays unlabelled.
 

@@ -231,7 +231,13 @@ QML gotchas: `AbstractButton` has a FINAL `icon` (ours is `symbol`); local
 `Label.qml`/`Page.qml` get shadowed by QtQuick.Controls (ours are `Txt`, `ScrollPage`); `#AARRGGBB` colours; font sizes go
 through `Theme.px(n)` (the text-size setting, rounded to whole pixels); QtSvg only reads `#rrggbb`; `window.py` forces the
 Basic style (Windows' native one ignores custom backgrounds). The first-run `SetupWizard` covers the window until
-`setup_done`. Never start apps on a private `dbus-run-session` here: its AT-SPI launcher takes over the
+`setup_done`. Every user-visible QML text goes through `qsTr()` (`.arg()` for values, `%n` plurals; Python's tray/notch
+texts through `QCoreApplication.translate`); `window_languages` (priority list, `store.WINDOW_LANGUAGES`) installs
+`translations/jarvis_<code>.qm` up to the first `en` (`Window.languages`, live `retranslate`). After changing texts run
+the lupdate/lrelease commands in window.py's `TRANSLATIONS` comment: the tests check each `.qm` matches its `.ts`. Arabic
+mirrors the layout, so place things with anchors, not `x:` (a mirrored anchor against an unmirrored `x` ends up off
+screen); `Txt` aligns left by default so mirroring moves it. `docs/screens.py` takes `WINDOW_LANGUAGES="ar"` to render a
+language. Never start apps on a private `dbus-run-session` here: its AT-SPI launcher takes over the
 session's accessibility socket. Web fetches (`fetch`, the headless browser, `show_image`) go through the `Guard` proxy in brain.py. Over real HTTP,
 `serve_app` only accepts `/api/listen`, `/api/show`, `/api/region`, `/api/task` and `/api/say`, and only with the per-run token and a
 matching Host header. `/api/task` (`jarvis --task`, `jarvis --mcp`) runs unattended, like a scheduled task.

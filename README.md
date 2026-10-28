@@ -119,6 +119,10 @@ weather, what's next and system load. Other pages: **Chats** (saved and searchab
 **Plugins**, **Models**, **Memory**, **Health** (is the key, mic, screen, input, accounts and each model working, and
 how many requests each model has used today) and **Settings**. Press **Ctrl+K** to jump anywhere or ask anything.
 
+The window, tray and notch speak 18 languages (Settings → *Window language*): pick them in order of preference, and a
+text missing in the first comes from the next (English stops the list). Arabic lays the window out right to left.
+What Jarvis itself writes (replies, Health's checks, errors) stays in the language it answers in or in English.
+
 ---
 
 ## Install
