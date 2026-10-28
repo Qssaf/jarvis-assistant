@@ -8,7 +8,29 @@
   a speaking model says it (Gemini's text-to-speech in Jarvis's voice, OpenAI's, or the computer's own voice as a last
   resort). The chat says why it switched, and Gemini Live is tried again five minutes later. Pick the models on the
   Models page (*Hearing you*, *Speaking*); Settings → *Always use the backup voice* is for keys without Live. Health
-  says what it would hear and speak with.
+  says what it would hear and speak with. With `--offline-voice` (`-OfflineVoice` on Windows) at install it can also
+  hear with faster-whisper and speak with Piper on your PC, with no service at all. A Speaking line on OpenAI lets you
+  pick its voice, and the notch, Home and the tray say when the backup voice is answering.
+- **Windows catches up:** *"what's playing?"*, the Today page's music and the play/next/previous buttons work through
+  Windows' own media controls; typing sends the whole text at once (fast, with emoji and accents) instead of key by
+  key; and **Echo cancelling** now works there too (WebRTC's canceller fed with what the speakers play; experimental,
+  and Health says whether it's really on).
+- **Move to another computer:** Settings → *Save a backup* puts settings, memory, reminders, routines, checks,
+  plugins, account modes, conversations and wake-word clips in one .zip; *Bring one in* restores it and restarts.
+  Keys, sign-ins, WhatsApp and paired phones never go in a backup.
+- **Edit reminders, scheduled tasks, routines and checks in the window** (Memory page): change, pause, delete or add
+  them. The checks list and how often they run moved there from Settings.
+- **Keep conversations and logs for…** (Settings → Your data): a week to a year, or forever (the default). Older ones
+  are deleted once a day, and the log starts a new file past 5 MB.
+- **Update now:** Settings installs a new version for you: a source copy pulls from git and reinstalls its packages
+  (it refuses if you changed files or are on another branch); `Jarvis.exe` downloads the release, checks it against
+  GitHub's checksum and swaps itself after it closes.
+- **Installers:** a Windows installer (`Jarvis-Setup-<version>.exe`, no admin rights; unsigned), the Android app's
+  `.apk` attached to every release, and an AUR package for Arch and CachyOS in `packaging/aur`.
+- **Set up my relay:** one button in Settings → *The Jarvis app* signs in to Cloudflare, deploys your relay and saves
+  its address (needs Node.js).
+- **Notes say who's talking:** lecture and meeting notes label each speaker (*Speaker 1*, or a name when it comes up)
+  consistently across the recording, and the summary says who made each point. One speaker stays unlabelled.
 
 ### Fixed
 - A spoken passphrase said in the same breath as a request is no longer kept in the saved conversation.

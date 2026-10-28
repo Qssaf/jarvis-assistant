@@ -56,14 +56,16 @@ app with a notch at the top of the screen and a native dashboard window.
 - **Memory and reminders**: *"Remember that I prefer short answers"*, *"Remind me in 20 minutes to stretch"*,
   *"every weekday at 8"*. *"What was that site you told me about?"* searches past conversations.
 - **Notes**: *"Take notes of this lecture"* records what's playing (or the room), transcribes it as it goes, and saves a
-  summary with key points, dates and homework when you say *"stop the notes"*.
+  summary with key points, dates and homework when you say *"stop the notes"*. When more than one person talks, the
+  notes say who said what (*Speaker 1*, or a name when it comes up).
 - **Your selection and music**: *"Summarise what I selected"*, *"translate this"*, *"next song"*, *"what's playing?"*.
 - **Undo**: everything Jarvis changes is logged; *"undo that"* reverses it. Deleted files go to the trash.
 - **Heads-ups**: a reminder ten minutes before calendar events, and a day and two hours before Classroom work is due.
 - **Scheduled tasks and checks**: *"Every weekday at 8, check my inbox and tell me what matters"* runs the task at that
-  time. *"Keep an eye on failed payments"* (or the list in Settings) is checked every hour or so with your accounts and
+  time. *"Keep an eye on failed payments"* (or the list on the Memory page) is checked every hour or so with your accounts and
   the web, and you only hear about it when something needs you. Results are said, shown, and sent to your phone, so
-  you can answer *"yes, do it"* from there.
+  you can answer *"yes, do it"* from there. Reminders, scheduled tasks, routines and checks can all be edited, paused
+  or deleted on the **Memory** page.
 - **For scripts and other AI agents**: `jarvis --task "what's on my calendar?"` prints Jarvis's reply, `jarvis --say
   "the build finished"` says it out loud, and `jarvis --mcp` is an MCP server, so Claude Code or Codex can hand Jarvis
   tasks (`claude mcp add jarvis -- jarvis --mcp`). Like scheduled tasks, nothing that needs your yes is done. (On
@@ -79,11 +81,14 @@ app with a notch at the top of the screen and a native dashboard window.
 
 ### On your phone
 - **The Jarvis app** (Android, in `android/`): reaches your PC from anywhere through your own private relay, a tiny
-  Cloudflare Worker in `relay/` on your free Cloudflare account (`npx wrangler login`, then `npx wrangler deploy` in that
-  folder). The PC and the phone both dial out to it, so nothing on the PC is open to the internet, and everything
+  Cloudflare Worker in `relay/` on your free Cloudflare account. Press Settings → *The Jarvis app* → *Set up my relay*
+  (it needs [Node.js](https://nodejs.org)): it signs you in to Cloudflare in your browser, deploys the relay and saves
+  its address. (By hand: `npx wrangler login`, then `npx wrangler deploy` in that folder.) The PC and the phone both dial out to it, so nothing on the PC is open to the internet, and everything
   between them is end-to-end encrypted: the relay only passes on ciphertext. Paste the relay's address in Settings →
   *The Jarvis app*, tap *Pair a phone* and scan the code with the app. Type or speak tasks; replies that finish while
   the app is closed arrive when you open it. With your own Gemini key in the app, it still answers when the PC is off.
+  Get the app from the `.apk` attached to each [release](https://github.com/Qssaf/jarvis-assistant/releases) (open it on
+  the phone and allow installing it).
 - **Telegram**: Settings → *Jarvis on Telegram*: make a bot with @BotFather, paste its token, send it the pairing code,
   and message it tasks (*"what's due this week?"*, *"turn the volume down"*). `/stop` stops a task.
 
@@ -124,6 +129,9 @@ page instead of the env file below.
 
 ### Windows
 
+Download `Jarvis-Setup-<version>.exe` from the [latest release](https://github.com/Qssaf/jarvis-assistant/releases) and run
+it (no admin rights needed; Windows may warn that it's unsigned: *More info* → *Run anyway*). Or from source:
+
 ```powershell
 git clone https://github.com/Qssaf/jarvis-assistant
 cd jarvis-assistant
@@ -131,11 +139,13 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 notepad $env:APPDATA\Jarvis\env      # write: GEMINI_API_KEY=your-key
 ```
 
-Then start **Jarvis** from the Start Menu and say *"Hey Jarvis"*.
+Then start **Jarvis** from the Start Menu and say *"Hey Jarvis"*. Add `-OfflineVoice` to `install.ps1` for the offline
+backup voice (below).
 
 ### Linux
 
-Install [`uv`](https://docs.astral.sh/uv/), then:
+On Arch or CachyOS, build the AUR package in `packaging/aur` (`makepkg -si` there); it sets up its Python packages the
+first time you run `jarvis`. Elsewhere, install [`uv`](https://docs.astral.sh/uv/), then:
 
 ```bash
 git clone https://github.com/Qssaf/jarvis-assistant && cd jarvis-assistant
@@ -143,7 +153,9 @@ git clone https://github.com/Qssaf/jarvis-assistant && cd jarvis-assistant
 echo 'GEMINI_API_KEY=your-key' > ~/.config/jarvis/env && chmod 600 ~/.config/jarvis/env
 ```
 
-Then start **Jarvis** from the app menu (or run `jarvis`). `install.sh` lists any system packages your desktop is
+Then start **Jarvis** from the app menu (or run `jarvis`). `./install.sh --offline-voice` also installs the offline
+backup voice: [faster-whisper](https://github.com/SYSTRAN/faster-whisper) hears and [Piper](https://github.com/rhasspy/piper)
+speaks on your PC when no service can (their models download into Jarvis's data folder the first time). `install.sh` lists any system packages your desktop is
 still missing:
 
 | Needed for | Packages |
@@ -166,6 +178,11 @@ check, Jarvis's voice, and how careful it should be. Run it again from Settings.
   input. Allow it (tick *Always allow* if offered).
 - **Accounts**: open **Accounts** and press Connect, or just say *"Connect my Google Calendar"*.
 - **Start at login**: Settings → *Start Jarvis when I log in*.
+- **Updates**: when a new version is out, Settings says so; *Update now* installs it and restarts Jarvis (a source copy
+  pulls from git; `Jarvis.exe` downloads the release and checks its checksum first).
+- **Moving to another computer**: Settings → *Move to another computer* → *Save a backup* puts your settings, memory,
+  reminders, routines, checks, plugins, conversations and wake-word clips in one .zip; *Bring one in* on the new PC.
+  Keys, account sign-ins, WhatsApp and paired phones are never in it.
 
 ## Usage tips
 - Say *"stop listening"* or *"that's all"* to end a conversation. The connection stays warm for two minutes, so the next
@@ -173,12 +190,14 @@ check, Jarvis's voice, and how careful it should be. Run it again from Settings.
 - If it cuts you off mid-sentence, raise **Settings → Pause before Jarvis answers**. If it wakes up by itself, raise
   **Wake word sensitivity** a little.
 - On speakers, Jarvis doesn't hear itself while it talks, so start talking a moment after it finishes, or use
-  headphones. Linux with PipeWire can also turn on **Echo cancelling** (Settings, experimental): it takes everything the PC
+  headphones. Or turn on **Echo cancelling** (Settings, experimental; PipeWire on Linux, WebRTC's canceller on Windows,
+  where Health says whether it's really working): it takes everything the PC
   plays (Jarvis, games, videos, calls) out of the mic, so game sound isn't taken for you talking.
 - On Linux, browsers and Electron apps (Discord, VS Code, Spotify...) only show their buttons to Jarvis when Jarvis
   starts them. Ones you opened yourself still work, through the screen, which is a little slower. To always get the
   fast way, start them with `--force-renderer-accessibility` and `ACCESSIBILITY_ENABLED=1`.
-- Everything is logged with timings in Jarvis's data folder (`jarvis.log`).
+- Everything is logged with timings in Jarvis's data folder (`jarvis.log`, a new file past 5 MB, two old ones kept).
+  Settings → *Keep conversations and logs for* deletes older ones once a day (forever by default).
 
 ## Models
 

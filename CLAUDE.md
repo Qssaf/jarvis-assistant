@@ -16,8 +16,12 @@ EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py
 ```
 
 - CI (`.github/workflows/tests.yml`) runs lint and tests on Linux and Windows. `release.yml` builds `Jarvis.exe` with
-  PyInstaller, starts it headless as a smoke test, and attaches the zip to the GitHub release when a `v*` tag is pushed
-  (only new releases get a Windows build). Pushing a tag publishes a public release: ask first.
+  PyInstaller, starts it headless as a smoke test, compiles `packaging/windows/jarvis.iss` (Inno Setup) into
+  `Jarvis-Setup-<version>.exe` (signed only when `WINDOWS_CERT_*` secrets exist), builds the Android APK (release-signed
+  with `ANDROID_KEYSTORE_*` secrets, else `-debug`), and a last job attaches the zip, installer and APK to the GitHub
+  release when a `v*` tag is pushed. The auto-updater (`update_now`) downloads `Jarvis-windows.zip` and checks the
+  asset's `digest`: keep that name. `packaging/aur` is the Arch package (/opt install, per-user venv on first run).
+  Pushing a tag publishes a public release: ask first.
 - `evals/agent_eval.py` runs the real `Brain.ask` on real models against simulated tools (nothing on the PC or in
   accounts is touched) and checks the moves the agent made. Run it before and after prompt or tool changes. Keep eval
   harnesses in the repo, not a temp dir.
@@ -142,7 +146,9 @@ available tool at call time:
   A few seconds after each start `mic_source` logs the node pw-record really reads ("[voice] the microphone is ...");
   if that isn't the echo canceller, the echo-cancelled gate is switched off (half-duplex) instead of hearing itself.
 - Screenshots: KDE `jarvis-shot` helper → spectacle → grim → gnome-screenshot → mss.
-- Input: wdotool/ydotool on Wayland, pynput otherwise.
+- Input: wdotool/ydotool on Wayland, pynput otherwise; text on Windows goes in one `SendInput` (`_send_text`).
+- Media: MPRIS on Linux; on Windows a long-lived PowerShell (`WIN_MEDIA`, GSMTC) answers one JSON line per request, with
+  a timeout that kills it (a stalled app's media session must never block the window's thread pool).
 - Windows: kdotool on KDE Wayland, pywinctl otherwise.
 - Accessibility: AT-SPI on Linux via `atspi_helper.py` under `/usr/bin/python3` (it needs `gi`); pywinauto UIA on
   Windows. Both share the same `ask({"cmd": ...})` protocol. On Linux, Chromium and Electron apps only expose their
@@ -165,7 +171,9 @@ screenshot. The voice model can't see images, so `act` from voice refuses coordi
 - Messaging on screen relies on `act`'s `expect` step (a vision yes/no that stops the plan) and on `locate` refusing
   near-miss names: together they keep a misheard name from sending a message to the wrong chat.
 
-**Echo cancelling** (`echo_cancel`, Linux/PipeWire): `start_echo_cancel` loads `module-echo-cancel` in `monitor.mode`, so
+**Echo cancelling** (`echo_cancel`). On Windows, `system.mic_frames` with a target runs livekit's WebRTC canceller fed
+by a soundcard WASAPI loopback of the default speakers (Windows-only requirements), falling back to the plain mic via
+`on_source` if it can't start; Health's "Echo cancelling" row says which. On Linux/PipeWire, `start_echo_cancel` loads `module-echo-cancel` in `monitor.mode`, so
 the reference is everything the default output plays (games, calls, Jarvis), not only Jarvis's voice; the mic reads
 `jarvis-ec-source` (pinned with `node.dont-move`: WirePlumber's "follow the default mic" otherwise moved it onto the raw
 mic, and Jarvis heard itself; check with `pw-link -l`) and `Speaker.echo_cancelled` swaps the half-duplex mic gate for a level gate: while Jarvis talks,
@@ -206,7 +214,10 @@ agent's history (`add_turn`, with a call's transcript), except rings (`keep=Fals
 **State.** `store.py` keeps settings (unknown keys dropped, types coerced, `*_models`, `language`, `safety`... validated),
 plugins, `memory.md`, reminders (optionally repeating: `next_time`), routines, the change log and sessions under
 `system.CONFIG` / `system.DATA`. Files holding tokens are written with `private=True`. `delete_data` removes everything
-personal by its module constants (tests point some of them elsewhere).
+personal by its module constants (tests point some of them elsewhere). `export_data`/`import_data` move everything but
+secrets in one zip (no keys, logins, WhatsApp profile, phone keys or the pickled verifier: only its clips; paths and
+names are checked on import). `tidy` (daily `tidy_loop`) deletes what's older than `keep_days`, and `rotate_log` caps
+`jarvis.log` at startup.
 
 **Background loops.** `background(fn, restart=True)` restarts a loop that dies (voice, reminders, calendar/Classroom
 reminders, the user's `checks`, the phone links), with backoff; `system.mic_frames` restarts `pw-record` itself when PipeWire restarts.
