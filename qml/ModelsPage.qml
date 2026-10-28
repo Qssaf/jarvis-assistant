@@ -39,8 +39,9 @@ ScrollPage {
     }
     function modelsOf(name) { const b = page.avail.backends.find(b => b.name === name); return b ? b.models : [] }
     function modelsFor(name, job) { return modelsOf(name).filter(m => /tts|piper/i.test(m) === (job === "speak")) }  // (text-to-speech: Speaking only)
-    function usableBackends(job) {  // (the local backend only hears and speaks)
-        return page.avail.backends.filter(b => (!b.error || b.models.length) && (b.name !== "local" || job === "hear" || job === "speak")).map(b => b.name)
+    function usableBackends(job) {  // (the local backend only hears and speaks; a provider of the user's own called "local" does it all)
+        const own = page.info.providers.some(p => p.name === "local" && p.custom)
+        return page.avail.backends.filter(b => (!b.error || b.models.length) && (own || b.name !== "local" || job === "hear" || job === "speak")).map(b => b.name)
     }
     readonly property string status: looking ? "Looking up the models you can use…" : avail.backends
         .filter(b => b.models.length || (b.error && !/no API key|unknown backend|not signed in|not installed/.test(b.error)))

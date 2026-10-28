@@ -404,7 +404,7 @@ class Local:
         if model == "piper":
             wav = self._speak("".join(p.get("text", "") for p in parts))
             return [{"inlineData": {"mimeType": "audio/wav", "data": base64.b64encode(wav).decode()}}]
-        raise BadRequest(f"local only writes down recordings (whisper-<size>) and speaks (piper), not {model}")
+        raise ValueError(f"local only writes down recordings (whisper-<size>) and speaks (piper), not {model}")  # (next in line)
 
     def _load(self, name, make):
         """A model, loaded once (the first time it's also downloaded: a few hundred MB for Whisper, 60 MB for a voice)."""
@@ -2334,6 +2334,8 @@ class Brain:
     def __init__(self, notify=print):
         self.backends = {}
         for name, cls in BACKENDS.items():
+            if name in store.custom_providers():  # (a provider of the user's own keeps its name: "local" was free before)
+                continue
             try:
                 self.backends[name] = cls()
             except LookupError:  # not signed in: nothing to say until the user chooses to
@@ -2834,13 +2836,14 @@ class Brain:
         """The backend called `name`, made on first use for providers from Settings; (None, why) if it can't be."""
         if name not in self.backends:
             url = providers().get(name)
-            if name not in BACKENDS and not url:
+            ours = name in BACKENDS and name not in store.custom_providers()  # (as in __init__)
+            if not ours and not url:
                 return None, "unknown backend (the Models page)"
-            key = "" if name in BACKENDS else store.secret(name)
-            if name not in BACKENDS and not key and not is_local(url):
+            key = "" if ours else store.secret(name)
+            if not ours and not key and not is_local(url):
                 return None, "no API key (the Models page)"
             try:
-                self.backends[name] = BACKENDS[name]() if name in BACKENDS else OpenAICompatible(name, url, key)
+                self.backends[name] = BACKENDS[name]() if ours else OpenAICompatible(name, url, key)
             except Exception as e:  # e.g. no Gemini key yet
                 return None, str(e)
         return self.backends[name], ""

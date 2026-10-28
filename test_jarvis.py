@@ -1122,8 +1122,14 @@ assert fetched[-1].endswith("en_US-ryan-medium.onnx")
 try:
     lb.generate([{"role": "user", "parts": [{"text": "hi"}]}], "whisper-small", None)
     raise AssertionError("text taken for a recording")
-except brain.BadRequest:
+except ValueError:  # (not a BadRequest: that would stop the whole model chain)
     pass
+sb.notify, sb.backends["z"].parts = print, [{"text": "fine"}]
+assert sb._generate([{"role": "user", "parts": [{"text": "hi"}]}], [("local", "gemma", None), ("z", "m", None)]) == [{"text": "fine"}]
+# a provider of the user's own called "local" (LM Studio, from before the offline voice) keeps that name
+store.save_custom_provider("local", "http://127.0.0.1:1234/v1")
+assert isinstance(brain.Brain.backend(types.SimpleNamespace(backends={}), "local")[0], brain.OpenAICompatible)
+store.save_custom_provider("local", "")
 brain.requests.get = real_get
 store.update_settings({"hear_models": [], "speak_models": [], "language": "en-US"})
 # its entries come after every service's, and only when the packages are there
@@ -1556,6 +1562,9 @@ class FakeStudio:
         return ["gemini-3.8-live"]
 real_health = brain.AIStudio, system.screenshot
 brain.AIStudio, system.screenshot = FakeStudio, (lambda: b"jpeg")
+real_lists = brain.HEAR_MODELS[:], brain.SPEAK_MODELS[:]  # (a venv with --offline-voice has local entries already)
+brain.HEAR_MODELS[:] = [e for e in real_lists[0] if e[0] != "local"]
+brain.SPEAK_MODELS[:] = [e for e in real_lists[1] if e[0] != "local"]
 hb = types.SimpleNamespace(plugin_status=lambda: [{"name": "composio", "status": "error", "error": "signed out", "enabled": True, "tools": []}],
                            connected=set(), backend=lambda name: (object(), ""), down_until={})
 report = jarvis.health(types.SimpleNamespace(mic_seen=time.time(), raw_level=0.1, backup_now=lambda: False), hb)
@@ -1568,7 +1577,7 @@ assert "on this PC" not in got["Backup voice"]["detail"]
 brain.HEAR_MODELS.append(("local", "whisper-small", None)), brain.SPEAK_MODELS.append(("local", "piper", None))  # (--offline-voice)
 local = {c["name"]: c for c in jarvis.health(None, hb)["checks"]}["Backup voice"]["detail"]
 assert local.endswith("; offline, whisper-small and piper on this PC"), local
-brain.HEAR_MODELS.pop(), brain.SPEAK_MODELS.pop()
+brain.HEAR_MODELS[:], brain.SPEAK_MODELS[:] = real_lists
 assert not any(c["name"].startswith("Models: Hearing") or c["name"].startswith("Models: Speaking") for c in report["checks"])
 assert got["Accounts (Composio)"]["ok"] is False and got["Accounts (Composio)"]["page"] == "plugins" and got["Accounts (Composio)"]["fix"]
 assert "aistudio gemini-x" in report["usage"]
