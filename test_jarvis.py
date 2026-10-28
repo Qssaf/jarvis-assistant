@@ -921,6 +921,14 @@ end = time.time() + 1.5
 while time.time() < end:
     qt.processEvents()
     time.sleep(0.02)
+# the backup voice answering shows in the polled state (Home's chip, the notch, the tray), and its chip loads cleanly
+assert win.backend.property("backup") is False
+jarvis.shown_state[1] = True
+win.backend.poll()
+qt.processEvents()
+assert win.backend.property("backup") is True
+jarvis.shown_state[1] = False
+win.backend.poll()
 assert not warnings, ascii(warnings)[:4000]
 
 # every function a page calls on itself exists (Settings lost its set() once, and every switch on it silently did nothing)
@@ -1151,6 +1159,7 @@ asyncio.run(connect_fails())
 assert len(woke) == 1 and len(woke[0]) == 15 and np.array_equal(woke[0][0], frame(3000)) and not fl.backlog, woke
 assert any("quota is used up" in str(t) and "backup voice is answering" in str(t) for t in logged), logged
 assert jarvis.LIVE_RETRY - 5 < fl.down_until - time.time() <= jarvis.LIVE_RETRY and fl.backup_now()
+assert fl.backup_now({"always_backup_voice": False})  # (the tray's few-seconds-old settings: Live being down still shows)
 # meanwhile typed text, announcements and wake-ups go straight to it
 asked, said, tried = [], [], []
 fl.backup.ask, fl.backup.say = asked.append, (lambda text, listen=False: said.append(text))

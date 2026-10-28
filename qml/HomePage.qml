@@ -130,6 +130,15 @@ Item {
             onClicked: Api.post("/api/new", {}, () => home.reload())
         }
 
+        Chip {  // Gemini Live can't be used (or is switched off): the backup voice answers
+            id: backup
+            anchors { verticalCenter: fresh.verticalCenter; left: parent.left; leftMargin: (parent.width - home.column) / 2 }
+            visible: Backend.backup
+            dot: "working"
+            text: "Backup voice"
+            Tip { text: "The backup voice (Models page) answers instead of Gemini Live"; visible: backup.hovered }
+        }
+
         ListView {
             id: list
             anchors { left: parent.left; right: parent.right; top: fresh.bottom; topMargin: home.wide ? 4 : 14; bottom: composer.top; bottomMargin: 4 }
@@ -215,9 +224,9 @@ Item {
 
     Today {
         id: today
-        x: home.wide ? home.width - width - 12 : (home.width - home.column) / 2
+        x: home.wide ? home.width - width - 12 : (home.width - home.column) / 2 + (backup.visible ? backup.width + 12 : 0)
         y: 52
-        width: home.wide ? 300 : home.column - (fresh.visible ? fresh.width + 12 : 0)
+        width: home.wide ? 300 : home.column - (fresh.visible ? fresh.width + 12 : 0) - (backup.visible ? backup.width + 12 : 0)
         height: home.wide ? home.height - y - 24 : 56
         compact: !home.wide
         latency: home.latency

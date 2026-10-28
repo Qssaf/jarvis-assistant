@@ -138,7 +138,7 @@ class Backend(QObject):
 
     def poll(self):
         values = {"state": self.shown[0], "level": round(getattr(self.live, "level", 0.0), 3), "listening": bool(self.live.mic),
-                  "mic": round(getattr(self.live, "raw_level", 0.0), 3)}
+                  "mic": round(getattr(self.live, "raw_level", 0.0), 3), "backup": self.shown[1]}
         if values != self._values:
             self._values = values
             self.changed.emit()
@@ -147,6 +147,7 @@ class Backend(QObject):
     level = Property(float, lambda self: self._values.get("level", 0.0), notify=changed)
     listening = Property(bool, lambda self: self._values.get("listening", False), notify=changed)
     micLevel = Property(float, lambda self: self._values.get("mic", 0.0), notify=changed)  # the raw mic, even when not listening
+    backup = Property(bool, lambda self: self._values.get("backup", False), notify=changed)  # the backup voice answers, not Gemini Live
 
     @Property(str, constant=True)
     def version(self):
