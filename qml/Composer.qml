@@ -38,8 +38,8 @@ Glass {
                     color: Theme.glass
                     border.width: 1
                     border.color: Theme.stroke
-                    Icon { x: 11; anchors.verticalCenter: parent.verticalCenter; name: "attach"; size: 14; color: Theme.text2 }
-                    Txt { id: name; x: 31; anchors.verticalCenter: parent.verticalCenter; kind: "small"; color: Theme.text
+                    Icon { anchors { left: parent.left; leftMargin: 11; verticalCenter: parent.verticalCenter } name: "attach"; size: 14; color: Theme.text2 }
+                    Txt { id: name; anchors { left: parent.left; leftMargin: 31; verticalCenter: parent.verticalCenter } kind: "small"; color: Theme.text
                           text: modelData.split("/").pop(); wrapMode: Text.NoWrap }
                     IconButton { anchors.right: parent.right; anchors.rightMargin: 3; anchors.verticalCenter: parent.verticalCenter
                                  size: 24; glyph: 12; symbol: "close"; tip: qsTr("Remove"); onClicked: c.removed(modelData) }

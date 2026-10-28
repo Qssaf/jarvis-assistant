@@ -78,7 +78,7 @@ ScrollView {
                     spacing: 2
                     Txt { text: Qt.formatTime(today.now, "HH:mm"); font.pixelSize: Theme.px(48); weight: 600; font.letterSpacing: -2
                           font.features: { "tnum": 1 }; lineHeight: 0.95 }
-                    Txt { text: Qt.formatDate(today.now, "dddd, d MMMM"); kind: "small" }
+                    Txt { text: today.now.toLocaleDateString(Qt.locale(), "dddd, d MMMM"); kind: "small" }
                 }
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Theme.stroke; visible: !!today.weather.temp }
                 RowLayout {

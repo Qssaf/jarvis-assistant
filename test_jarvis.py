@@ -968,15 +968,32 @@ assert QCoreApplication.translate("HealthPage", "%n thing(s) to fix", "", 2) == 
 assert QCoreApplication.translate("ChatsPage", "%n message(s)", "", 1) == "1 message"
 # every shipped translation loads, and every page shows in Arabic (right to left) and Japanese then German without a warning
 import glob
-from PySide6.QtCore import QTranslator
 for ts in glob.glob(os.path.join(real_translations, "*.ts")):
-    assert QTranslator().load(ts[:-3] + ".qm"), f"{ts} has no .qm: run lrelease on it"
+    shutil.copy(ts, tr_dir)
+    subprocess.run([shutil.which("lrelease", path=os.path.dirname(PySide6.__file__)), "-silent", os.path.join(tr_dir, os.path.basename(ts))], check=True)
+    with open(ts[:-3] + ".qm", "rb") as shipped, open(os.path.join(tr_dir, os.path.basename(ts)[:-3] + ".qm"), "rb") as made:
+        assert shipped.read() == made.read(), f"{ts}'s .qm is out of date: run lrelease on it"
+# in Arabic Latin text set left goes right too, and the toast's words stay in it; dates are in the window's language
+from PySide6.QtCore import QDate, QLocale, Qt
+from PySide6.QtQml import QQmlEngine, QQmlExpression
+def all_items(item=None):
+    item = item or root.contentItem()
+    return [item] + [i for child in item.childItems() for i in all_items(child)]
+def effective_align(item):
+    return QQmlExpression(QQmlEngine.contextForObject(item), item, "effectiveHorizontalAlignment").evaluate()[0]
 for codes, word in ((["ar"], "الإعدادات"), (["ja", "de"], "設定")):
     win.languages(codes)
     for page in ("chats", "activity", "accounts", "plugins", "models", "memory", "settings", "health", "home"):
         root.setProperty("page", page)
         qt.processEvents()
+        if codes == ["ar"] and page == "settings":
+            assert {effective_align(i) for i in all_items() if i.property("text") == "WhatsApp"} == {int(Qt.AlignRight)}
     assert said("Settings") == word and win.backend.property("rtl") == (codes == ["ar"]) and not warnings, ascii(warnings)[:4000]
+    assert any(QLocale(codes[0]).dayName(QDate.currentDate().dayOfWeek()) in str(t) for t in shown_texts())
+    win.backend.toast("toast words", False)
+    qt.processEvents()
+    label = next(i for i in all_items() if i.property("text") == "toast words")
+    assert 0 <= label.x() and label.x() + label.width() <= label.parentItem().width()
 win.languages(["en"])
 
 # every function a page calls on itself exists (Settings lost its set() once, and every switch on it silently did nothing)

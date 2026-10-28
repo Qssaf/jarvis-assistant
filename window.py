@@ -3,7 +3,7 @@ Backend.request (off the UI thread) and hears everything that happens through Ba
 import json, os
 from concurrent.futures import ThreadPoolExecutor
 
-from PySide6.QtCore import Property, QByteArray, QCoreApplication, QObject, QRectF, Qt, QTimer, QTranslator, Signal, Slot, QUrl
+from PySide6.QtCore import Property, QByteArray, QCoreApplication, QLocale, QObject, QRectF, Qt, QTimer, QTranslator, Signal, Slot, QUrl
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QGuiApplication, QPainter, QPixmap
 from PySide6.QtQml import QQmlApplicationEngine, qmlRegisterSingletonInstance
 from PySide6.QtQuick import QQuickImageProvider
@@ -13,6 +13,8 @@ import store
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TRANSLATIONS = os.path.join(HERE, "translations")  # jarvis_<code>.qm, made from the .ts files there by lrelease (en: plurals only)
+# New or changed texts: `pyside6-lupdate qml/*.qml jarvis.py window.py -ts translations/*.ts`, translate, then
+# `pyside6-lrelease translations/*.ts` (the tests check each .qm matches its .ts)
 
 # ---------------------------------------------------------------- icons: 24x24 line icons, drawn in any colour
 S = '<g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">{}</g>'
@@ -244,6 +246,7 @@ class Window:
             if t.load(os.path.join(TRANSLATIONS, f"jarvis_{code}.qm")):
                 app.installTranslator(t)
                 self.translators.append(t)
+        QLocale.setDefault(QLocale(codes[0]))  # (dates in the same language)
         rtl = codes[:1] == ["ar"]
         QGuiApplication.setLayoutDirection(Qt.RightToLeft if rtl else Qt.LeftToRight)  # (the tray menu)
         if rtl != self.backend._rtl:

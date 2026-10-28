@@ -45,7 +45,8 @@ Item {
                 border.width: 1
                 border.color: Theme.alpha(Theme.accent, 0.25)
                 Txt { id: words; x: 16; anchors.verticalCenter: parent.verticalCenter; width: parent.width - 32
-                      text: m.text; textFormat: Text.PlainText; font.pixelSize: Theme.px(15); lineHeight: 1.1 }
+                      text: m.text; textFormat: Text.PlainText; font.pixelSize: Theme.px(15); lineHeight: 1.1
+                      horizontalAlignment: undefined }  // (a message goes the way its own words read)
             }
         }
     }
@@ -59,6 +60,7 @@ Item {
                 anchors { left: parent.left; leftMargin: 36; right: parent.right }
                 text: m.linkify(m.text)
                 textFormat: Text.MarkdownText
+                horizontalAlignment: undefined
                 font.pixelSize: Theme.px(15)
                 lineHeight: 1.3
             }
@@ -109,7 +111,8 @@ Item {
         Item {
             implicitHeight: words.implicitHeight
             Txt { id: words; anchors { left: parent.left; leftMargin: 36; right: parent.right }
-                  kind: "small"; color: Theme.text3; font.italic: true; text: m.linkify(m.text); textFormat: Text.MarkdownText }
+                  kind: "small"; color: Theme.text3; font.italic: true; text: m.linkify(m.text); textFormat: Text.MarkdownText
+                  horizontalAlignment: undefined }
         }
     }
     Component {

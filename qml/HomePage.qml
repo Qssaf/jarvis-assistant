@@ -252,7 +252,7 @@ Item {
         contentItem: Item {
             Rectangle {
                 id: well
-                x: 16; anchors.verticalCenter: parent.verticalCenter
+                anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
                 width: 36; height: 36; radius: 18
                 color: s.hovered ? Theme.alpha(Theme.accent, 0.22) : Theme.accentSoft
                 Icon { anchors.centerIn: parent; name: s.symbol; size: 18; color: Theme.accent }

@@ -31,7 +31,7 @@ Item {
     function ago(t) {
         const s = Date.now() / 1000 - t
         return s < 60 ? qsTr("just now") : s < 3600 ? qsTr("%n min ago", "", Math.round(s / 60)) : s < 86400 ? qsTr("%n h ago", "", Math.round(s / 3600))
-             : Qt.formatDate(new Date(t * 1000), "d MMM")
+             : new Date(t * 1000).toLocaleDateString(Qt.locale(), "d MMM")
     }
     function plain(t) {  // a leading emoji in a notice clashes with the line icons
         return String(t || "").replace(/^(?:[\u2300-\u27bf\u2b00-\u2bff]|[\ud83c-\ud83e][\udc00-\udfff])\ufe0f?\s*/, "")
@@ -156,7 +156,7 @@ Item {
                             Layout.fillWidth: true
                             spacing: 4
                             Txt { kind: "heading"; text: page.preview ? page.preview.title : ""; Layout.fillWidth: true; elide: Text.ElideRight; wrapMode: Text.NoWrap }
-                            Txt { kind: "small"; text: page.preview ? Qt.formatDateTime(new Date(page.preview.updated * 1000), "dddd d MMMM · HH:mm") : ""
+                            Txt { kind: "small"; text: page.preview ? new Date(page.preview.updated * 1000).toLocaleString(Qt.locale(), "dddd d MMMM · HH:mm") : ""
                                   Layout.fillWidth: true; elide: Text.ElideRight; wrapMode: Text.NoWrap }
                         }
                         IconButton {
