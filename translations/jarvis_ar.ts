@@ -4,2604 +4,2605 @@
 <context>
     <name>AccountsPage</name>
     <message>
-        <location filename="../qml/AccountsPage.qml" line="+9"/>
+        <location filename="../qml/AccountsPage.qml" line="+9" />
         <source>Accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>الحسابات</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Connect your accounts so Jarvis can read and act on them. You decide what it may do with each.</source>
-        <translation type="unfinished"></translation>
+        <translation>اربط حساباتك ليتمكن Jarvis من قراءتها والتصرّف فيها. أنت تحدد ما يُسمح له به في كل حساب.</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+21" />
         <source>Refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>تحديث</translation>
     </message>
     <message>
-        <location line="+11"/>
-        <source>Couldn&apos;t reach your accounts: %1</source>
-        <translation type="unfinished"></translation>
+        <location line="+11" />
+        <source>Couldn't reach your accounts: %1</source>
+        <translation>تعذّر الوصول إلى حساباتك: %1</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Checking your accounts…</source>
-        <translation type="unfinished"></translation>
+        <translation>جارٍ التحقق من حساباتك…</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <location line="+29"/>
+        <location line="+3" />
+        <location line="+29" />
         <source>Connected</source>
-        <translation type="unfinished"></translation>
+        <translation>متصل</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-28" />
         <source>Choose what Jarvis may do with each account.</source>
-        <translation type="unfinished"></translation>
+        <translation>اختر ما يُسمح لـ Jarvis بفعله في كل حساب.</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+35" />
         <source>Sign in again</source>
-        <translation type="unfinished"></translation>
+        <translation>إعادة تسجيل الدخول</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Sign-in opened in your browser</source>
-        <translation type="unfinished"></translation>
+        <translation>فُتحت صفحة تسجيل الدخول في متصفحك</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+5" />
         <source>Click again to disconnect</source>
-        <translation type="unfinished"></translation>
+        <translation>انقر مجددًا لقطع الاتصال</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Disconnect</source>
-        <translation type="unfinished"></translation>
+        <translation>قطع الاتصال</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>%1 disconnected</source>
-        <translation type="unfinished"></translation>
+        <translation>قُطع الاتصال بـ %1</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+7" />
         <source>Ask before changes</source>
-        <translation type="unfinished"></translation>
+        <translation>السؤال قبل التغييرات</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Full access</source>
-        <translation type="unfinished"></translation>
+        <translation>وصول كامل</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Read only</source>
-        <translation type="unfinished"></translation>
+        <translation>قراءة فقط</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Paused</source>
-        <translation type="unfinished"></translation>
+        <translation>متوقف مؤقتًا</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+11" />
         <source>More accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>حسابات أخرى</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Accounts you can connect</source>
-        <translation type="unfinished"></translation>
+        <translation>حسابات يمكنك ربطها</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Pick one to sign in from your browser, then press Refresh.</source>
-        <translation type="unfinished"></translation>
+        <translation>اختر حسابًا لتسجيل الدخول إليه من متصفحك، ثم اضغط «تحديث».</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+13" />
         <source>Finish signing in in your browser, then press Refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>أكمل تسجيل الدخول في متصفحك، ثم اضغط «تحديث»</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Connect %1</source>
-        <translation type="unfinished"></translation>
+        <translation>ربط %1</translation>
     </message>
 </context>
 <context>
     <name>ActivityPage</name>
     <message>
-        <location filename="../qml/ActivityPage.qml" line="+43"/>
+        <location filename="../qml/ActivityPage.qml" line="+43" />
         <source>Activity</source>
-        <translation type="unfinished"></translation>
+        <translation>النشاط</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Every step Jarvis takes in this conversation, as it happens.</source>
-        <translation type="unfinished"></translation>
+        <translation>كل خطوة يخطوها Jarvis في هذه المحادثة، لحظة بلحظة.</translation>
     </message>
     <message>
-        <location line="+86"/>
+        <location line="+86" />
         <source>New steps appear at the top as Jarvis works</source>
-        <translation type="unfinished"></translation>
+        <translation>تظهر الخطوات الجديدة في الأعلى أثناء عمل Jarvis</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+14" />
         <source>Nothing yet: ask Jarvis something</source>
-        <translation type="unfinished"></translation>
+        <translation>لا شيء بعد: اسأل Jarvis عن أي شيء</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+12" />
         <source>Reply speed</source>
-        <translation type="unfinished"></translation>
+        <translation>سرعة الرد</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+9" />
         <source>s</source>
         <extracomment>seconds, after the average reply time</extracomment>
-        <translation type="unfinished"></translation>
+        <translation>ث</translation>
     </message>
     <message numerus="yes">
-        <location line="+3"/>
-        <source>Averaged over the last %n replies: from the end of what you said to Jarvis&apos;s first word.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <location line="+3" />
+        <source>Averaged over the last %n replies: from the end of what you said to Jarvis's first word.</source>
+        <translation>
+            <numerusform>متوسط آخر %n رد: من نهاية كلامك إلى أول كلمة ينطقها Jarvis.</numerusform>
+            <numerusform>مدة آخر رد: من نهاية كلامك إلى أول كلمة ينطقها Jarvis.</numerusform>
+            <numerusform>متوسط آخر ردّين: من نهاية كلامك إلى أول كلمة ينطقها Jarvis.</numerusform>
+            <numerusform>متوسط آخر %n ردود: من نهاية كلامك إلى أول كلمة ينطقها Jarvis.</numerusform>
+            <numerusform>متوسط آخر %n ردًا: من نهاية كلامك إلى أول كلمة ينطقها Jarvis.</numerusform>
+            <numerusform>متوسط آخر %n رد: من نهاية كلامك إلى أول كلمة ينطقها Jarvis.</numerusform>
         </translation>
     </message>
 </context>
 <context>
     <name>Api</name>
     <message>
-        <location filename="../qml/Api.qml" line="+27"/>
+        <location filename="../qml/Api.qml" line="+27" />
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>حدث خطأ ما</translation>
     </message>
 </context>
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+193"/>
+        <location filename="../window.py" line="+193" />
         <source>Copied</source>
-        <translation type="unfinished"></translation>
+        <translation>تم النسخ</translation>
     </message>
 </context>
 <context>
     <name>ChatsPage</name>
     <message>
-        <location filename="../qml/ChatsPage.qml" line="+33"/>
+        <location filename="../qml/ChatsPage.qml" line="+33" />
         <source>just now</source>
-        <translation type="unfinished"></translation>
+        <translation>الآن</translation>
     </message>
     <message numerus="yes">
-        <location line="+0"/>
+        <location line="+0" />
         <source>%n min ago</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>منذ %n دقيقة</numerusform>
+            <numerusform>منذ دقيقة</numerusform>
+            <numerusform>منذ دقيقتين</numerusform>
+            <numerusform>منذ %n دقائق</numerusform>
+            <numerusform>منذ %n دقيقة</numerusform>
+            <numerusform>منذ %n دقيقة</numerusform>
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+0"/>
+        <location line="+0" />
         <source>%n h ago</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>منذ %n ساعة</numerusform>
+            <numerusform>منذ ساعة</numerusform>
+            <numerusform>منذ ساعتين</numerusform>
+            <numerusform>منذ %n ساعات</numerusform>
+            <numerusform>منذ %n ساعة</numerusform>
+            <numerusform>منذ %n ساعة</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+17" />
         <source>Chats</source>
-        <translation type="unfinished"></translation>
+        <translation>المحادثات</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Every conversation is saved here. Open one to carry on where you left off.</source>
-        <translation type="unfinished"></translation>
+        <translation>تُحفظ كل محادثة هنا. افتح إحداها لتكمل من حيث توقفت.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>New chat</source>
-        <translation type="unfinished"></translation>
+        <translation>محادثة جديدة</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+19" />
         <source>Search conversations</source>
-        <translation type="unfinished"></translation>
+        <translation>ابحث في المحادثات</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+48" />
         <source>Now</source>
-        <translation type="unfinished"></translation>
+        <translation>الآن</translation>
     </message>
     <message numerus="yes">
-        <location line="+5"/>
+        <location line="+5" />
         <source>%n message(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n رسالة</numerusform>
+            <numerusform>رسالة واحدة</numerusform>
+            <numerusform>رسالتان</numerusform>
+            <numerusform>%n رسائل</numerusform>
+            <numerusform>%n رسالة</numerusform>
+            <numerusform>%n رسالة</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+11" />
         <source>Nothing matches that</source>
-        <translation type="unfinished"></translation>
+        <translation>لا توجد نتائج مطابقة</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>No conversations yet</source>
-        <translation type="unfinished"></translation>
+        <translation>لا توجد محادثات بعد</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+29" />
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>حذف</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>Click again to delete</source>
-        <translation type="unfinished"></translation>
+        <translation>انقر مجددًا للحذف</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Conversation deleted</source>
-        <translation type="unfinished"></translation>
+        <translation>حُذفت المحادثة</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Open</source>
-        <translation type="unfinished"></translation>
+        <translation>فتح</translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+55" />
         <source>Pick a conversation to read it</source>
-        <translation type="unfinished"></translation>
+        <translation>اختر محادثة لقراءتها</translation>
     </message>
 </context>
 <context>
     <name>Composer</name>
     <message>
-        <location filename="../qml/Composer.qml" line="+45"/>
+        <location filename="../qml/Composer.qml" line="+45" />
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>إزالة</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>Attach files (or drop them here)</source>
-        <translation type="unfinished"></translation>
+        <translation>إرفاق ملفات (أو أفلتها هنا)</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>Ask Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>اسأل Jarvis</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+22" />
         <source>Pause listening</source>
-        <translation type="unfinished"></translation>
+        <translation>إيقاف الاستماع مؤقتًا</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Talk to Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>تحدّث إلى Jarvis</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+23" />
         <source>Stop (Esc)</source>
-        <translation type="unfinished"></translation>
+        <translation>إيقاف (Esc)</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Send (Enter)</source>
-        <translation type="unfinished"></translation>
+        <translation>إرسال (Enter)</translation>
     </message>
 </context>
 <context>
     <name>HealthPage</name>
     <message>
-        <location filename="../qml/HealthPage.qml" line="+9"/>
-        <location line="+16"/>
+        <location filename="../qml/HealthPage.qml" line="+9" />
+        <location line="+16" />
         <source>Health</source>
-        <translation type="unfinished"></translation>
+        <translation>الحالة</translation>
     </message>
     <message>
-        <location line="-15"/>
+        <location line="-15" />
         <source>Checks the key, mic, screen, accounts and models, and how to fix them.</source>
-        <translation type="unfinished"></translation>
+        <translation>يفحص المفتاح والميكروفون والشاشة والحسابات والنماذج، ويوضح كيفية إصلاحها.</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+14" />
         <source>Home</source>
-        <translation type="unfinished"></translation>
+        <translation>الرئيسية</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Chats</source>
-        <translation type="unfinished"></translation>
+        <translation>المحادثات</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Activity</source>
-        <translation type="unfinished"></translation>
+        <translation>النشاط</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>الحسابات</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Plugins</source>
-        <translation type="unfinished"></translation>
+        <translation>الملحقات</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Models</source>
-        <translation type="unfinished"></translation>
+        <translation>النماذج</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Memory</source>
-        <translation type="unfinished"></translation>
+        <translation>الذاكرة</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>الإعدادات</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+5" />
         <source>Copy a report</source>
-        <translation type="unfinished"></translation>
+        <translation>نسخ تقرير</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Copied. Look it over, then paste it into a bug report</source>
-        <translation type="unfinished"></translation>
+        <translation>تم النسخ. راجعه، ثم الصقه في بلاغ عن خطأ</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Report a problem</source>
-        <translation type="unfinished"></translation>
+        <translation>الإبلاغ عن مشكلة</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+23" />
         <source>Checking…</source>
-        <translation type="unfinished"></translation>
+        <translation>جارٍ الفحص…</translation>
     </message>
     <message numerus="yes">
-        <location line="+0"/>
+        <location line="+0" />
         <source>%n thing(s) to fix</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>لا مشكلات</numerusform>
+            <numerusform>مشكلة واحدة تحتاج إلى إصلاح</numerusform>
+            <numerusform>مشكلتان تحتاجان إلى إصلاح</numerusform>
+            <numerusform>%n مشكلات تحتاج إلى إصلاح</numerusform>
+            <numerusform>%n مشكلة تحتاج إلى إصلاح</numerusform>
+            <numerusform>%n مشكلة تحتاج إلى إصلاح</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Everything works</source>
-        <translation type="unfinished"></translation>
+        <translation>كل شيء يعمل</translation>
     </message>
     <message numerus="yes">
-        <location line="+2"/>
+        <location line="+2" />
         <source>%1 of %n check(s) pass</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>نجح %1 من أصل %n فحص</numerusform>
+            <numerusform>نجح %1 من أصل فحص واحد</numerusform>
+            <numerusform>نجح %1 من أصل فحصين</numerusform>
+            <numerusform>نجح %1 من أصل %n فحوصات</numerusform>
+            <numerusform>نجح %1 من أصل %n فحصًا</numerusform>
+            <numerusform>نجح %1 من أصل %n فحص</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Check again</source>
-        <translation type="unfinished"></translation>
+        <translation>إعادة الفحص</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+23" />
         <source>Fix: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>الحل: %1</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Open %1</source>
-        <translation type="unfinished"></translation>
+        <translation>فتح %1</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+8" />
         <source>Model use today</source>
-        <translation type="unfinished"></translation>
+        <translation>استخدام النماذج اليوم</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Free Google AI Studio keys allow a limited number of requests per model each day. When one runs out, Jarvis uses the next model in that job&apos;s list (the Models page) until the quota resets at midnight Pacific time.</source>
-        <translation type="unfinished"></translation>
+        <location line="+1" />
+        <source>Free Google AI Studio keys allow a limited number of requests per model each day. When one runs out, Jarvis uses the next model in that job's list (the Models page) until the quota resets at midnight Pacific time.</source>
+        <translation>تسمح مفاتيح Google AI Studio المجانية بعدد محدود من الطلبات لكل نموذج يوميًا. عند نفاد حصة أحدها، يستخدم Jarvis النموذج التالي في قائمة تلك المهمة (صفحة النماذج) حتى تتجدد الحصة عند منتصف الليل بتوقيت المحيط الهادئ.</translation>
     </message>
     <message numerus="yes">
-        <location line="+23"/>
+        <location line="+23" />
         <source>request(s)</source>
         <comment>after a number</comment>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>طلب</numerusform>
+            <numerusform>طلب</numerusform>
+            <numerusform>طلبان</numerusform>
+            <numerusform>طلبات</numerusform>
+            <numerusform>طلبًا</numerusform>
+            <numerusform>طلب</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>No requests yet today.</source>
-        <translation type="unfinished"></translation>
+        <translation>لا طلبات اليوم بعد.</translation>
     </message>
 </context>
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="../qml/HomePage.qml" line="+58"/>
+        <location filename="../qml/HomePage.qml" line="+58" />
         <source>Attach files for Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>إرفاق ملفات لـ Jarvis</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+36" />
         <source>Up late?</source>
-        <translation type="unfinished"></translation>
+        <translation>ساهر الليلة؟</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Good morning</source>
-        <translation type="unfinished"></translation>
+        <translation>صباح الخير</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Good afternoon</source>
-        <translation type="unfinished"></translation>
+        <translation>طاب يومك</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Good evening</source>
-        <translation type="unfinished"></translation>
+        <translation>مساء الخير</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+8" />
         <source>Say “%1”, tap the reactor, or type below</source>
-        <translation type="unfinished"></translation>
+        <translation>قل «%1»، أو انقر على المفاعل، أو اكتب في الأسفل</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Go ahead, I&apos;m listening</source>
-        <translation type="unfinished"></translation>
+        <location line="+1" />
+        <source>Go ahead, I'm listening</source>
+        <translation>تفضّل، أنا أستمع</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Paused</source>
-        <translation type="unfinished"></translation>
+        <translation>متوقف مؤقتًا</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Say “%1” to cut in</source>
-        <translation type="unfinished"></translation>
+        <translation>قل «%1» لمقاطعتي</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>On it</source>
-        <translation type="unfinished"></translation>
+        <translation>على الفور</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+9" />
         <source>Brief me</source>
-        <translation type="unfinished"></translation>
+        <translation>أعطني موجز اليوم</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Weather and your schedule</source>
-        <translation type="unfinished"></translation>
+        <translation>الطقس وجدول مواعيدك</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source>What&apos;s due this week?</source>
-        <translation type="unfinished"></translation>
+        <location line="+0" />
+        <source>What's due this week?</source>
+        <translation>ما المطلوب تسليمه هذا الأسبوع؟</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>From Google Classroom</source>
-        <translation type="unfinished"></translation>
+        <translation>من Google Classroom</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Any new emails?</source>
-        <translation type="unfinished"></translation>
+        <translation>هل وصلتني رسائل بريد جديدة؟</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Your Gmail inbox</source>
-        <translation type="unfinished"></translation>
+        <translation>بريدك الوارد في Gmail</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source>What&apos;s on my screen?</source>
-        <translation type="unfinished"></translation>
+        <location line="+0" />
+        <source>What's on my screen?</source>
+        <translation>ماذا يوجد على شاشتي؟</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Jarvis takes a look</source>
-        <translation type="unfinished"></translation>
+        <translation>يلقي Jarvis نظرة</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Set a 10 minute timer</source>
-        <translation type="unfinished"></translation>
+        <translation>اضبط مؤقتًا لمدة 10 دقائق</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>With a notification</source>
-        <translation type="unfinished"></translation>
+        <translation>مع إشعار</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Paint a rainy city</source>
-        <translation type="unfinished"></translation>
+        <translation>ارسم مدينة ممطرة</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Make a picture</source>
-        <translation type="unfinished"></translation>
+        <translation>إنشاء صورة</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+13" />
         <source>New chat</source>
-        <translation type="unfinished"></translation>
+        <translation>محادثة جديدة</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+10" />
         <source>Backup voice</source>
-        <translation type="unfinished"></translation>
+        <translation>الصوت الاحتياطي</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>The backup voice (Models page) answers instead of Gemini Live</source>
-        <translation type="unfinished"></translation>
+        <translation>يجيب الصوت الاحتياطي (صفحة النماذج) بدلًا من Gemini Live</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+49" />
         <source>Working on it…</source>
-        <translation type="unfinished"></translation>
+        <translation>جارٍ العمل على ذلك…</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+5" />
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>إيقاف</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+27" />
         <source>Drop to attach</source>
-        <translation type="unfinished"></translation>
+        <translation>أفلت للإرفاق</translation>
     </message>
 </context>
 <context>
     <name>Main</name>
     <message>
-        <location filename="../qml/Main.qml" line="+115"/>
+        <location filename="../qml/Main.qml" line="+115" />
         <source>Home</source>
-        <translation type="unfinished"></translation>
+        <translation>الرئيسية</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Chats</source>
-        <translation type="unfinished"></translation>
+        <translation>المحادثات</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Activity</source>
-        <translation type="unfinished"></translation>
+        <translation>النشاط</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>الحسابات</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Plugins</source>
-        <translation type="unfinished"></translation>
+        <translation>الملحقات</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Models</source>
-        <translation type="unfinished"></translation>
+        <translation>النماذج</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Memory</source>
-        <translation type="unfinished"></translation>
+        <translation>الذاكرة</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Health</source>
-        <translation type="unfinished"></translation>
+        <translation>الحالة</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>الإعدادات</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+62" />
         <source>Minimise</source>
-        <translation type="unfinished"></translation>
+        <translation>تصغير</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Restore</source>
-        <translation type="unfinished"></translation>
+        <translation>استعادة</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Maximise</source>
-        <translation type="unfinished"></translation>
+        <translation>تكبير</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Close (Jarvis keeps running in the tray)</source>
-        <translation type="unfinished"></translation>
+        <translation>إغلاق (يبقى Jarvis قيد التشغيل في شريط النظام)</translation>
     </message>
 </context>
 <context>
     <name>MemoryPage</name>
     <message>
-        <location filename="../qml/MemoryPage.qml" line="+10"/>
+        <location filename="../qml/MemoryPage.qml" line="+10" />
         <source>Memory</source>
-        <translation type="unfinished"></translation>
+        <translation>الذاكرة</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Jarvis reads this before every conversation. Tell it “remember…” or edit it here.</source>
-        <translation type="unfinished"></translation>
+        <translation>يقرأ Jarvis هذا قبل كل محادثة. قل له «تذكّر…» أو عدّله هنا.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+30" />
         <source>Saved</source>
-        <translation type="unfinished"></translation>
+        <translation>محفوظ</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <location line="+211"/>
+        <location line="+4" />
+        <location line="+211" />
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>حفظ</translation>
     </message>
     <message>
-        <location line="-210"/>
+        <location line="-210" />
         <source>Memory saved</source>
-        <translation type="unfinished"></translation>
+        <translation>حُفظت الذاكرة</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+5" />
         <source>What Jarvis knows about you</source>
-        <translation type="unfinished"></translation>
+        <translation>ما يعرفه Jarvis عنك</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Plain notes, one per line. Jarvis adds to them as you talk.</source>
-        <translation type="unfinished"></translation>
+        <translation>ملاحظات بسيطة، واحدة في كل سطر. يضيف إليها Jarvis أثناء حديثكما.</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+16" />
         <source>- Prefers to be called …
 - Studies …</source>
-        <translation type="unfinished"></translation>
+        <translation>- يفضّل أن يُنادى بـ …
+- يدرس …</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+16" />
         <source>Reminders and scheduled tasks</source>
-        <translation type="unfinished"></translation>
+        <translation>التذكيرات والمهام المجدولة</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>%1 Say “remind me at 5 to call home”, or have Jarvis do something then: “every weekday at 8, check my inbox”.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 قل «ذكّرني الساعة 5 بالاتصال بالمنزل»، أو اطلب من Jarvis أن يفعل شيئًا في وقت محدد: «كل يوم عمل الساعة 8، تحقّق من بريدي».</translation>
     </message>
     <message numerus="yes">
-        <location line="+1"/>
+        <location line="+1" />
         <source>%n coming up.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n موعد قادم.</numerusform>
+            <numerusform>موعد واحد قادم.</numerusform>
+            <numerusform>موعدان قادمان.</numerusform>
+            <numerusform>%n مواعيد قادمة.</numerusform>
+            <numerusform>%n موعدًا قادمًا.</numerusform>
+            <numerusform>%n موعد قادم.</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>None yet.</source>
-        <translation type="unfinished"></translation>
+        <translation>لا شيء بعد.</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+15" />
         <source>%1 · Jarvis does it</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 · ينفّذها Jarvis</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <location line="+149"/>
+        <location line="+5" />
+        <location line="+149" />
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>إلغاء</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-141" />
         <source>Add a reminder or task</source>
-        <translation type="unfinished"></translation>
+        <translation>إضافة تذكير أو مهمة</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>Routines</source>
-        <translation type="unfinished"></translation>
+        <translation>الروتينات</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Say a routine&apos;s name and Jarvis runs its steps.</source>
-        <translation type="unfinished"></translation>
+        <location line="+1" />
+        <source>Say a routine's name and Jarvis runs its steps.</source>
+        <translation>قل اسم الروتين وسينفّذ Jarvis خطواته.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>None yet. Say “when I say study mode, close Discord, open my notes and set a 50-minute timer”.</source>
-        <translation type="unfinished"></translation>
+        <translation>لا شيء بعد. قل «عندما أقول وضع الدراسة، أغلق Discord وافتح ملاحظاتي واضبط مؤقتًا لمدة 50 دقيقة».</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <location line="+33"/>
+        <location line="+16" />
+        <location line="+33" />
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>حذف</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-25" />
         <source>Add a routine</source>
-        <translation type="unfinished"></translation>
+        <translation>إضافة روتين</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>Keep an eye on</source>
-        <translation type="unfinished"></translation>
+        <translation>المراقبة</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Jarvis looks into these with your accounts and the web, and tells you only when something needs you.</source>
-        <translation type="unfinished"></translation>
+        <translation>يتابع Jarvis هذه الأمور عبر حساباتك والويب، ولا يخبرك إلا عندما يستدعي أمرٌ انتباهك.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Nothing yet. Say “tell me if a payment fails”, or add one here.</source>
-        <translation type="unfinished"></translation>
+        <translation>لا شيء بعد. قل «أخبرني إذا فشلت عملية دفع»، أو أضف واحدة هنا.</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+15" />
         <source>Paused</source>
-        <translation type="unfinished"></translation>
+        <translation>متوقفة مؤقتًا</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+14" />
         <source>Add a check</source>
-        <translation type="unfinished"></translation>
+        <translation>إضافة مراقبة</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Look every</source>
-        <translation type="unfinished"></translation>
+        <translation>التحقق كل</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>30 minutes</source>
-        <translation type="unfinished"></translation>
+        <translation>30 دقيقة</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Hour</source>
-        <translation type="unfinished"></translation>
+        <translation>ساعة</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>3 hours</source>
-        <translation type="unfinished"></translation>
+        <translation>3 ساعات</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>12 hours</source>
-        <translation type="unfinished"></translation>
+        <translation>12 ساعة</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+44" />
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>تعديل</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+37" />
         <source>What to remind you of, or what Jarvis should do</source>
-        <translation type="unfinished"></translation>
+        <translation>بماذا يذكّرك Jarvis، أو ماذا يفعل</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+5" />
         <source>When: 18:30 or 2026-11-02 08:00</source>
-        <translation type="unfinished"></translation>
+        <translation>الموعد: 18:30 أو 2026-11-02 08:00</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Once</source>
-        <translation type="unfinished"></translation>
+        <translation>مرة واحدة</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Every day</source>
-        <translation type="unfinished"></translation>
+        <translation>كل يوم</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Weekdays</source>
-        <translation type="unfinished"></translation>
+        <translation>أيام العمل</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Every week</source>
-        <translation type="unfinished"></translation>
+        <translation>كل أسبوع</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Jarvis reminds you</source>
-        <translation type="unfinished"></translation>
+        <translation>يذكّرك Jarvis</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Jarvis does it</source>
-        <translation type="unfinished"></translation>
+        <translation>ينفّذها Jarvis</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+7" />
         <source>What you say to start it, e.g. study mode</source>
-        <translation type="unfinished"></translation>
+        <translation>ما تقوله لبدئه، مثل: وضع الدراسة</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Its steps, e.g. close Discord, open my notes, set a 50-minute timer</source>
-        <translation type="unfinished"></translation>
+        <translation>خطواته، مثل: أغلق Discord، افتح ملاحظاتي، اضبط مؤقتًا لمدة 50 دقيقة</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+7" />
         <source>e.g. Tell me if a payment fails or my professor emails</source>
-        <translation type="unfinished"></translation>
+        <translation>مثل: أخبرني إذا فشلت عملية دفع أو راسلني أستاذي</translation>
     </message>
 </context>
 <context>
     <name>Message</name>
     <message>
-        <location filename="../qml/Message.qml" line="+69"/>
+        <location filename="../qml/Message.qml" line="+69" />
         <source>Copy</source>
-        <translation type="unfinished"></translation>
+        <translation>نسخ</translation>
     </message>
 </context>
 <context>
     <name>ModelsPage</name>
     <message>
-        <location filename="../qml/ModelsPage.qml" line="+9"/>
+        <location filename="../qml/ModelsPage.qml" line="+9" />
         <source>Models</source>
-        <translation type="unfinished"></translation>
+        <translation>النماذج</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Pick the models for each job. Each list is tried top to bottom: when one is busy or down, the next takes over.</source>
-        <translation type="unfinished"></translation>
+        <translation>اختر النماذج لكل مهمة. تُجرَّب كل قائمة من الأعلى إلى الأسفل: إذا كان أحدها مشغولًا أو متوقفًا، يتولّى التالي المهمة.</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+38" />
         <source>Looking up the models you can use…</source>
-        <translation type="unfinished"></translation>
+        <translation>جارٍ البحث عن النماذج المتاحة لك…</translation>
     </message>
     <message numerus="yes">
-        <location line="+2"/>
+        <location line="+2" />
         <source>%1: %n model(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%1: %n نموذج</numerusform>
+            <numerusform>%1: نموذج واحد</numerusform>
+            <numerusform>%1: نموذجان</numerusform>
+            <numerusform>%1: %n نماذج</numerusform>
+            <numerusform>%1: %n نموذجًا</numerusform>
+            <numerusform>%1: %n نموذج</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+7" />
         <source>Refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>تحديث</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>What each job uses</source>
-        <translation type="unfinished"></translation>
+        <translation>ما تستخدمه كل مهمة</translation>
     </message>
     <message>
-        <location line="+45"/>
-        <source>Jarvis&apos;s choice</source>
-        <translation type="unfinished"></translation>
+        <location line="+45" />
+        <source>Jarvis's choice</source>
+        <translation>اختيار Jarvis</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>Use Jarvis&apos;s choice</source>
-        <translation type="unfinished"></translation>
+        <location line="+5" />
+        <source>Use Jarvis's choice</source>
+        <translation>استخدام اختيار Jarvis</translation>
     </message>
     <message numerus="yes">
-        <location line="+9"/>
+        <location line="+9" />
         <source>%1 · +%n fallback(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%1 · +%n بديل</numerusform>
+            <numerusform>%1 · +%n بديل</numerusform>
+            <numerusform>%1 · +%n بديلان</numerusform>
+            <numerusform>%1 · +%n بدائل</numerusform>
+            <numerusform>%1 · +%n بديلًا</numerusform>
+            <numerusform>%1 · +%n بديل</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+14" />
         <source>Providers and keys</source>
-        <translation type="unfinished"></translation>
+        <translation>المزوّدون والمفاتيح</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+7" />
         <source>Keys stay in your system keychain, never in the settings file.</source>
-        <translation type="unfinished"></translation>
+        <translation>تبقى المفاتيح في سلسلة مفاتيح النظام، ولا تُحفظ أبدًا في ملف الإعدادات.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Keys stay in a private file on this PC, never in the settings file.</source>
-        <translation type="unfinished"></translation>
+        <translation>تبقى المفاتيح في ملف خاص على هذا الحاسوب، ولا تُحفظ أبدًا في ملف الإعدادات.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Kept in %1</source>
-        <translation type="unfinished"></translation>
+        <translation>محفوظ في %1</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Kept in your keychain</source>
-        <translation type="unfinished"></translation>
+        <translation>محفوظ في سلسلة مفاتيحك</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+30" />
         <source>Key saved · paste a new one to replace it</source>
-        <translation type="unfinished"></translation>
+        <translation>حُفظ المفتاح · الصق مفتاحًا جديدًا لاستبداله</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Paste an API key</source>
-        <translation type="unfinished"></translation>
+        <translation>الصق مفتاح API</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Key saved</source>
-        <translation type="unfinished"></translation>
+        <translation>حُفظ المفتاح</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Ollama isn&apos;t running</source>
-        <translation type="unfinished"></translation>
+        <location line="+6" />
+        <source>Ollama isn't running</source>
+        <translation>Ollama لا يعمل</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>No models downloaded yet</source>
-        <translation type="unfinished"></translation>
+        <translation>لم تُنزَّل أي نماذج بعد</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Remove this provider</source>
-        <translation type="unfinished"></translation>
+        <translation>إزالة هذا المزوّد</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+7" />
         <source>More providers</source>
-        <translation type="unfinished"></translation>
+        <translation>مزوّدون آخرون</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+9" />
         <source>Another service</source>
-        <translation type="unfinished"></translation>
+        <translation>خدمة أخرى</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>name</source>
-        <translation type="unfinished"></translation>
+        <translation>الاسم</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Add</source>
-        <translation type="unfinished"></translation>
+        <translation>إضافة</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>Your Google account</source>
-        <translation type="unfinished"></translation>
+        <translation>حسابك على Google</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Sign in with Google for Gemini (and Claude) through your account&apos;s Antigravity quota, much more than a free AI Studio key.</source>
-        <translation type="unfinished"></translation>
+        <location line="+1" />
+        <source>Sign in with Google for Gemini (and Claude) through your account's Antigravity quota, much more than a free AI Studio key.</source>
+        <translation>سجّل الدخول باستخدام Google لاستخدام Gemini (وClaude) عبر حصة Antigravity في حسابك، وهي أكبر بكثير من مفتاح AI Studio المجاني.</translation>
     </message>
     <message>
-        <location line="+15"/>
-        <source>It signs in the way Google&apos;s Antigravity app does, which Google doesn&apos;t offer to other apps: Google may limit or suspend accounts used like this. Use an account you can afford to lose.</source>
-        <translation type="unfinished"></translation>
+        <location line="+15" />
+        <source>It signs in the way Google's Antigravity app does, which Google doesn't offer to other apps: Google may limit or suspend accounts used like this. Use an account you can afford to lose.</source>
+        <translation>يسجّل الدخول بالطريقة التي يتبعها تطبيق Antigravity من Google، وهي طريقة لا تتيحها Google للتطبيقات الأخرى: قد تقيّد Google الحسابات المستخدمة بهذه الطريقة أو توقفها. استخدم حسابًا لا يضرّك فقدانه.</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+25" />
         <source>Google account</source>
-        <translation type="unfinished"></translation>
+        <translation>حساب Google</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>from opencode</source>
-        <translation type="unfinished"></translation>
+        <translation>من opencode</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Sign out</source>
-        <translation type="unfinished"></translation>
+        <translation>تسجيل الخروج</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <source>First install the opencode-antigravity-auth plugin (npm i -g opencode-antigravity-auth): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
-        <translation type="unfinished"></translation>
+        <location line="+8" />
+        <source>First install the opencode-antigravity-auth plugin (npm i -g opencode-antigravity-auth): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis's env file.</source>
+        <translation>ثبّت أولًا الإضافة opencode-antigravity-auth (npm i -g opencode-antigravity-auth): يسجّل Jarvis الدخول ببياناتها. أو ضع ANTIGRAVITY_CLIENT_ID و ANTIGRAVITY_CLIENT_SECRET في ملف env الخاص بـ Jarvis.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Waiting for the browser…</source>
-        <translation type="unfinished"></translation>
+        <translation>بانتظار المتصفح…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Add another account</source>
-        <translation type="unfinished"></translation>
+        <translation>إضافة حساب آخر</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Sign in with Google</source>
-        <translation type="unfinished"></translation>
+        <translation>تسجيل الدخول باستخدام Google</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+47" />
         <source>model name</source>
-        <translation type="unfinished"></translation>
+        <translation>اسم النموذج</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>Try this one sooner</source>
-        <translation type="unfinished"></translation>
+        <translation>تقديمه في القائمة</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>إزالة</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>Add a model</source>
-        <translation type="unfinished"></translation>
+        <translation>إضافة نموذج</translation>
     </message>
 </context>
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2428"/>
+        <location filename="../jarvis.py" line="+2428" />
         <source>LISTENING</source>
-        <translation type="unfinished"></translation>
+        <translation>يستمع</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>SPEAKING</source>
-        <translation type="unfinished"></translation>
+        <translation>يتحدث</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>WORKING</source>
-        <translation type="unfinished"></translation>
+        <translation>يعمل</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>PAUSED</source>
-        <translation type="unfinished"></translation>
+        <translation>متوقف</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>BACKUP VOICE</source>
-        <translation type="unfinished"></translation>
+        <translation>صوت احتياطي</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+28" />
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
-        <translation type="unfinished"></translation>
+        <translation>انقر: فتح Jarvis · زر الإيقاف المؤقت: إيقاف الاستماع أو بدؤه · الزر الأحمر (أو النقر بالزر الأيمن): إيقاف</translation>
     </message>
 </context>
 <context>
     <name>PluginsPage</name>
     <message>
-        <location filename="../qml/PluginsPage.qml" line="+9"/>
+        <location filename="../qml/PluginsPage.qml" line="+9" />
         <source>Plugins</source>
-        <translation type="unfinished"></translation>
+        <translation>الملحقات</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Give Jarvis more tools with MCP servers: a web address, or a command that runs on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>امنح Jarvis أدوات إضافية عبر خوادم MCP: عنوان ويب، أو أمر يعمل على هذا الحاسوب.</translation>
     </message>
     <message numerus="yes">
-        <location line="+7"/>
+        <location line="+7" />
         <source>%n min</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n دقيقة</numerusform>
+            <numerusform>دقيقة</numerusform>
+            <numerusform>دقيقتين</numerusform>
+            <numerusform>%n دقائق</numerusform>
+            <numerusform>%n دقيقة</numerusform>
+            <numerusform>%n دقيقة</numerusform>
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+0"/>
+        <location line="+0" />
         <source>%n s</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n ثانية</numerusform>
+            <numerusform>ثانية</numerusform>
+            <numerusform>ثانيتين</numerusform>
+            <numerusform>%n ثوانٍ</numerusform>
+            <numerusform>%n ثانية</numerusform>
+            <numerusform>%n ثانية</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>Refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>تحديث</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Installed</source>
-        <translation type="unfinished"></translation>
+        <translation>المثبّتة</translation>
     </message>
     <message numerus="yes">
-        <location line="+34"/>
+        <location line="+34" />
         <source>%n tool(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n أداة</numerusform>
+            <numerusform>أداة واحدة</numerusform>
+            <numerusform>أداتان</numerusform>
+            <numerusform>%n أدوات</numerusform>
+            <numerusform>%n أداة</numerusform>
+            <numerusform>%n أداة</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+12" />
         <source>%1 · trying again in %2</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 · إعادة المحاولة بعد %2</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Trying again…</source>
-        <translation type="unfinished"></translation>
+        <translation>جارٍ إعادة المحاولة…</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Turned off</source>
-        <translation type="unfinished"></translation>
+        <translation>معطّل</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Connecting… (a sign-in page may open in your browser)</source>
-        <translation type="unfinished"></translation>
+        <translation>جارٍ الاتصال… (قد تُفتح صفحة تسجيل الدخول في متصفحك)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+7" />
         <source>Try now</source>
-        <translation type="unfinished"></translation>
+        <translation>حاول الآن</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+12" />
         <source>Click again to remove</source>
-        <translation type="unfinished"></translation>
+        <translation>انقر مجددًا للإزالة</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>إزالة</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Plugin removed</source>
-        <translation type="unfinished"></translation>
+        <translation>أُزيل الملحق</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+11" />
         <source>Add a plugin</source>
-        <translation type="unfinished"></translation>
+        <translation>إضافة ملحق</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Start from a quick pick, or fill in any MCP server. Jarvis connects to it as soon as it&apos;s added.</source>
-        <translation type="unfinished"></translation>
+        <location line="+1" />
+        <source>Start from a quick pick, or fill in any MCP server. Jarvis connects to it as soon as it's added.</source>
+        <translation>ابدأ باختيار سريع، أو أدخل بيانات أي خادم MCP. يتصل به Jarvis فور إضافته.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+8" />
         <source>Context7 docs</source>
-        <translation type="unfinished"></translation>
+        <translation>مستندات Context7</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Home folder files</source>
-        <translation type="unfinished"></translation>
+        <translation>ملفات المجلد الرئيسي</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Playwright browser</source>
-        <translation type="unfinished"></translation>
+        <translation>متصفح Playwright</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+11" />
         <source>Name</source>
-        <translation type="unfinished"></translation>
+        <translation>الاسم</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Type</source>
-        <translation type="unfinished"></translation>
+        <translation>النوع</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Address</source>
-        <translation type="unfinished"></translation>
+        <translation>العنوان</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+4"/>
+        <location line="+0" />
+        <location line="+4" />
         <source>Command</source>
-        <translation type="unfinished"></translation>
+        <translation>الأمر</translation>
     </message>
     <message>
-        <location line="-3"/>
+        <location line="-3" />
         <source>e.g. notion</source>
-        <translation type="unfinished"></translation>
+        <translation>مثل: notion</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Web address</source>
-        <translation type="unfinished"></translation>
+        <translation>عنوان ويب</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+5" />
         <source>Only these tools (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>هذه الأدوات فقط (اختياري)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Headers (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>الترويسات (اختياري)</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Environment (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>متغيرات البيئة (اختياري)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>comma-separated names</source>
-        <translation type="unfinished"></translation>
+        <translation>أسماء مفصولة بفواصل</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>JSON, e.g. {&quot;Authorization&quot;: &quot;Bearer …&quot;}</source>
-        <translation type="unfinished"></translation>
+        <location line="+2" />
+        <source>JSON, e.g. {"Authorization": "Bearer …"}</source>
+        <translation>JSON، مثل: {"Authorization": "Bearer …"}</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source>JSON, e.g. {&quot;API_KEY&quot;: &quot;…&quot;}</source>
-        <translation type="unfinished"></translation>
+        <location line="+0" />
+        <source>JSON, e.g. {"API_KEY": "…"}</source>
+        <translation>JSON، مثل: {"API_KEY": "…"}</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>Add plugin</source>
-        <translation type="unfinished"></translation>
+        <translation>إضافة الملحق</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>Plugin added: connecting…</source>
-        <translation type="unfinished"></translation>
+        <translation>أُضيف الملحق: جارٍ الاتصال…</translation>
     </message>
 </context>
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="+11"/>
+        <location filename="../qml/SettingsPage.qml" line="+11" />
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>الإعدادات</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
-        <translation type="unfinished"></translation>
+        <translation>تُحفظ التغييرات فورًا. النماذج ومفاتيح API في صفحة النماذج.</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+31" />
         <source>Checking…</source>
-        <translation type="unfinished"></translation>
+        <translation>جارٍ التحقق…</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Updated: Jarvis is restarting</source>
-        <translation type="unfinished"></translation>
+        <translation>تم التحديث: يُعاد تشغيل Jarvis</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Couldn&apos;t update: %1</source>
-        <translation type="unfinished"></translation>
+        <location line="+1" />
+        <source>Couldn't update: %1</source>
+        <translation>تعذّر التحديث: %1</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+35" />
         <source>Passphrase saved</source>
-        <translation type="unfinished"></translation>
+        <translation>حُفظت عبارة المرور</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Passphrase removed</source>
-        <translation type="unfinished"></translation>
+        <translation>أُزيلت عبارة المرور</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>Voice</source>
-        <translation type="unfinished"></translation>
+        <translation>الصوت</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>How Jarvis sounds and talks to you. Changes apply from the next conversation.</source>
-        <translation type="unfinished"></translation>
+        <translation>صوت Jarvis وطريقة حديثه معك. تسري التغييرات من المحادثة التالية.</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Jarvis&apos;s voice</source>
-        <translation type="unfinished"></translation>
+        <location line="+2" />
+        <source>Jarvis's voice</source>
+        <translation>صوت Jarvis</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Voice model</source>
-        <translation type="unfinished"></translation>
+        <translation>نموذج الصوت</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+7" />
         <source>Personality</source>
-        <translation type="unfinished"></translation>
+        <translation>الشخصية</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Jarvis: refined, dry wit</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis: أنيق، بدعابة جافة</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Friendly: warm and casual</source>
-        <translation type="unfinished"></translation>
+        <translation>ودود: دافئ وعفوي</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Brief: just the answer</source>
-        <translation type="unfinished"></translation>
+        <translation>مختصر: الإجابة فقط</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Language Jarvis speaks and listens for</source>
-        <translation type="unfinished"></translation>
+        <translation>اللغة التي يتحدث بها Jarvis ويستمع إليها</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>Also speaks and understands, when you (or someone on WhatsApp) speak them. Anything else is taken as mishearing.</source>
-        <translation type="unfinished"></translation>
+        <translation>لغات يتحدثها ويفهمها أيضًا عندما تتحدث بها أنت (أو أحد على WhatsApp). أي لغة أخرى تُعدّ سوء سماع.</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+15" />
         <source>Fast voice</source>
-        <translation type="unfinished"></translation>
+        <translation>الصوت السريع</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Answer without thinking first: about 0.3 s quicker, a little less sharp</source>
-        <translation type="unfinished"></translation>
+        <translation>يجيب دون تفكير مسبق: أسرع بنحو 0.3 ث، وأقل دقة قليلًا</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Speak replies to typed messages</source>
-        <translation type="unfinished"></translation>
+        <translation>نطق الردود على الرسائل المكتوبة</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Always use the backup voice</source>
-        <translation type="unfinished"></translation>
+        <translation>استخدام الصوت الاحتياطي دائمًا</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Hear and speak with the models on the Models page instead of Gemini Live, for keys without it. Off, the backup voice only answers while Gemini Live can&apos;t be reached</source>
-        <translation type="unfinished"></translation>
+        <location line="+1" />
+        <source>Hear and speak with the models on the Models page instead of Gemini Live, for keys without it. Off, the backup voice only answers while Gemini Live can't be reached</source>
+        <translation>الاستماع والتحدث عبر النماذج في صفحة النماذج بدلًا من Gemini Live، للمفاتيح التي لا تدعمه. عند إيقافه، لا يجيب الصوت الاحتياطي إلا حين يتعذّر الوصول إلى Gemini Live</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>Listening</source>
-        <translation type="unfinished"></translation>
+        <translation>الاستماع</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>When Jarvis wakes up, and how long it keeps listening.</source>
-        <translation type="unfinished"></translation>
+        <translation>متى يستيقظ Jarvis، وإلى متى يظل يستمع.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Wake word</source>
-        <translation type="unfinished"></translation>
+        <translation>كلمة التنبيه</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Your own model…</source>
-        <translation type="unfinished"></translation>
+        <translation>نموذجك الخاص…</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Path of your own openWakeWord .onnx model</source>
-        <translation type="unfinished"></translation>
+        <translation>مسار نموذج openWakeWord الخاص بك (ملف .onnx)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Full path, e.g. /home/you/hey_computer.onnx</source>
-        <translation type="unfinished"></translation>
+        <translation>المسار الكامل، مثل: /home/you/hey_computer.onnx</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+5" />
         <source>Pause before Jarvis answers</source>
-        <translation type="unfinished"></translation>
+        <translation>مهلة الصمت قبل أن يجيب Jarvis</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source> ms</source>
-        <translation type="unfinished"></translation>
+        <translation> مللي ث</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Lower is snappier; higher cuts you off less</source>
-        <translation type="unfinished"></translation>
+        <translation>الأقل أسرع استجابة، والأعلى أقل مقاطعة لك</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Wake word sensitivity</source>
-        <translation type="unfinished"></translation>
+        <translation>حساسية كلمة التنبيه</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Lower wakes more easily</source>
-        <translation type="unfinished"></translation>
+        <translation>القيمة الأقل تجعل التنبيه أسهل</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Keep listening after a reply</source>
-        <translation type="unfinished"></translation>
+        <translation>مواصلة الاستماع بعد الرد</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <location line="+2"/>
+        <location line="+0" />
+        <location line="+2" />
         <source> s</source>
-        <translation type="unfinished"></translation>
+        <translation> ث</translation>
     </message>
     <message>
-        <location line="-1"/>
+        <location line="-1" />
         <source>How long Jarvis waits for a follow-up</source>
-        <translation type="unfinished"></translation>
+        <translation>المدة التي ينتظر فيها Jarvis طلبًا لاحقًا</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Stay connected after a conversation</source>
-        <translation type="unfinished"></translation>
+        <translation>البقاء متصلًا بعد المحادثة</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Makes the next wake-up instant</source>
-        <translation type="unfinished"></translation>
+        <translation>يجعل التنبيه التالي فوريًا</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Learn my voice</source>
-        <translation type="unfinished"></translation>
+        <translation>تعلُّم صوتي</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source>Wake-ups you dismiss teach Jarvis what isn&apos;t you</source>
-        <translation type="unfinished"></translation>
+        <location line="+0" />
+        <source>Wake-ups you dismiss teach Jarvis what isn't you</source>
+        <translation>التنبيهات التي ترفضها تعلّم Jarvis ما ليس صوتك</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Only wake for my voice</source>
-        <translation type="unfinished"></translation>
+        <translation>التنبّه لصوتي فقط</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Nothing learned for this wake word yet (Learn my voice needs a few wake-ups first): until then anyone can wake Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>لم يُتعلَّم شيء لكلمة التنبيه هذه بعد (يحتاج «تعلُّم صوتي» إلى بضع تنبيهات أولًا): حتى ذلك الحين يمكن لأي شخص تنبيه Jarvis</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Needs Learn my voice on: until then anyone can wake Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>يتطلب تفعيل «تعلُّم صوتي»: حتى ذلك الحين يمكن لأي شخص تنبيه Jarvis</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Someone else saying the wake word doesn&apos;t wake Jarvis. Talk and push to talk always work</source>
-        <translation type="unfinished"></translation>
+        <location line="+1" />
+        <source>Someone else saying the wake word doesn't wake Jarvis. Talk and push to talk always work</source>
+        <translation>لن يستيقظ Jarvis إذا قال شخص آخر كلمة التنبيه. يعمل زر التحدث والضغط للتحدث دائمًا</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Echo cancelling</source>
-        <translation type="unfinished"></translation>
+        <translation>إلغاء الصدى</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (experimental on Windows: Health says if it&apos;s working; restart Jarvis to apply)</source>
-        <translation type="unfinished"></translation>
+        <location line="+1" />
+        <source>Keeps the PC's own sound (Jarvis, games, videos, calls) out of the mic, so it isn't heard as you, and you can talk over Jarvis (experimental on Windows: Health says if it's working; restart Jarvis to apply)</source>
+        <translation>يمنع صوت الحاسوب نفسه (Jarvis والألعاب والفيديوهات والمكالمات) من الوصول إلى الميكروفون، فلا يُسمع كأنه صوتك، ويمكنك التحدث أثناء كلام Jarvis (تجريبي على Windows: صفحة الحالة تخبرك إن كان يعمل؛ أعد تشغيل Jarvis لتطبيقه)</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (PipeWire; restart Jarvis to apply)</source>
-        <translation type="unfinished"></translation>
+        <location line="+2" />
+        <source>Keeps the PC's own sound (Jarvis, games, videos, calls) out of the mic, so it isn't heard as you, and you can talk over Jarvis (PipeWire; restart Jarvis to apply)</source>
+        <translation>يمنع صوت الحاسوب نفسه (Jarvis والألعاب والفيديوهات والمكالمات) من الوصول إلى الميكروفون، فلا يُسمع كأنه صوتك، ويمكنك التحدث أثناء كلام Jarvis (PipeWire؛ أعد تشغيل Jarvis لتطبيقه)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>Spoken passphrase: asked for with every yes said out loud (sends, calls, account changes, risky commands). Never shown or said back</source>
-        <translation type="unfinished"></translation>
+        <translation>عبارة مرور منطوقة: تُطلب مع كل موافقة تقولها بصوت عالٍ (الإرسال والمكالمات وتغييرات الحسابات والأوامر الخطرة). لا تُعرض ولا تُردَّد أبدًا</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+5" />
         <source>Passphrase set · type a new one to replace it</source>
-        <translation type="unfinished"></translation>
+        <translation>عبارة المرور مضبوطة · اكتب عبارة جديدة لاستبدالها</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>A few words only you know</source>
-        <translation type="unfinished"></translation>
+        <translation>بضع كلمات لا يعرفها سواك</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <location line="+126"/>
-        <location line="+52"/>
+        <location line="+2" />
+        <location line="+126" />
+        <location line="+52" />
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>حفظ</translation>
     </message>
     <message>
-        <location line="-176"/>
-        <location line="+74"/>
+        <location line="-176" />
+        <location line="+74" />
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>إزالة</translation>
     </message>
     <message>
-        <location line="-64"/>
+        <location line="-64" />
         <source>Push to talk</source>
-        <translation type="unfinished"></translation>
+        <translation>الضغط للتحدث</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Bind these to keyboard shortcuts (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</source>
-        <translation type="unfinished"></translation>
+        <translation>اربط هذه الأوامر باختصارات لوحة المفاتيح (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Start listening</source>
-        <translation type="unfinished"></translation>
+        <translation>بدء الاستماع</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Drag over part of the screen and ask about it</source>
-        <translation type="unfinished"></translation>
+        <translation>اسحب فوق جزء من الشاشة واسأل عنه</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+5" />
         <source>Your day</source>
-        <translation type="unfinished"></translation>
+        <translation>يومك</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>The weather, briefings and heads-ups Jarvis gives you.</source>
-        <translation type="unfinished"></translation>
+        <translation>الطقس والموجزات والتنبيهات التي يقدمها لك Jarvis.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Home city, for the weather (empty: guess from your network)</source>
-        <translation type="unfinished"></translation>
+        <translation>مدينتك، للطقس (فارغ: تخمينها من شبكتك)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>e.g. London</source>
-        <translation type="unfinished"></translation>
+        <translation>مثل: لندن</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Morning briefing</source>
-        <translation type="unfinished"></translation>
+        <translation>الموجز الصباحي</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>The first time Jarvis starts in a morning, it tells you about your day</source>
-        <translation type="unfinished"></translation>
+        <translation>عند أول تشغيل لـ Jarvis في الصباح، يطلعك على يومك</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Do not disturb</source>
-        <translation type="unfinished"></translation>
+        <translation>عدم الإزعاج</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source>Jarvis doesn&apos;t speak up on its own: reminders, results and messages only go to the chat, notifications and your phone. It still answers you (also in the tray menu)</source>
-        <translation type="unfinished"></translation>
+        <location line="+0" />
+        <source>Jarvis doesn't speak up on its own: reminders, results and messages only go to the chat, notifications and your phone. It still answers you (also in the tray menu)</source>
+        <translation>لا يتحدث Jarvis من تلقاء نفسه: تذهب التذكيرات والنتائج والرسائل إلى المحادثة والإشعارات وهاتفك فقط. ويظل يجيبك (متاح أيضًا في قائمة شريط النظام)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Classroom deadlines</source>
-        <translation type="unfinished"></translation>
+        <translation>مواعيد تسليم Classroom</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source>Reminders a day and two hours before work is due (skipped once you&apos;ve turned it in)</source>
-        <translation type="unfinished"></translation>
+        <location line="+0" />
+        <source>Reminders a day and two hours before work is due (skipped once you've turned it in)</source>
+        <translation>تذكيرات قبل موعد التسليم بيوم وبساعتين (تُتخطّى بعد تسليمك العمل)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Calendar heads-up</source>
-        <translation type="unfinished"></translation>
+        <translation>تنبيهات التقويم</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>A reminder ten minutes before each Google Calendar event</source>
-        <translation type="unfinished"></translation>
+        <translation>تذكير قبل عشر دقائق من كل حدث في Google Calendar</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>Quiet hours from (empty: none)</source>
-        <translation type="unfinished"></translation>
+        <translation>ساعات الهدوء من (فارغ: بلا)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>e.g. 22:00</source>
-        <translation type="unfinished"></translation>
+        <translation>مثل: 22:00</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Until (the morning briefing waits for it)</source>
-        <translation type="unfinished"></translation>
+        <translation>حتى (ينتظرها الموجز الصباحي)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>e.g. 07:00</source>
-        <translation type="unfinished"></translation>
+        <translation>مثل: 07:00</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>Window &amp; behavior</source>
-        <translation type="unfinished"></translation>
+        <translation>النافذة والسلوك</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>How the window looks, and what Jarvis may do on its own.</source>
-        <translation type="unfinished"></translation>
+        <translation>مظهر النافذة، وما يُسمح لـ Jarvis بفعله من تلقاء نفسه.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Text size</source>
-        <translation type="unfinished"></translation>
+        <translation>حجم النص</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Bigger text across the window</source>
-        <translation type="unfinished"></translation>
+        <translation>نص أكبر في كامل النافذة</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Window language</source>
-        <translation type="unfinished"></translation>
+        <translation>لغة النافذة</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+16" />
         <source>Use sooner</source>
-        <translation type="unfinished"></translation>
+        <translation>تقديم في الترتيب</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Use later</source>
-        <translation type="unfinished"></translation>
+        <translation>تأخير في الترتيب</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+9" />
         <source>Add a language…</source>
-        <translation type="unfinished"></translation>
+        <translation>إضافة لغة…</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>Each text shows in the first language that has it. English is the window&apos;s own, so languages under it aren&apos;t used.</source>
-        <translation type="unfinished"></translation>
+        <location line="+4" />
+        <source>Each text shows in the first language that has it. English is the window's own, so languages under it aren't used.</source>
+        <translation>يظهر كل نص بأول لغة تتوفر فيها ترجمته. الإنجليزية هي لغة النافذة الأصلية، لذا لا تُستخدم اللغات التي تحتها.</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>Show Jarvis&apos;s thinking in the chat</source>
-        <translation type="unfinished"></translation>
+        <location line="+4" />
+        <source>Show Jarvis's thinking in the chat</source>
+        <translation>إظهار تفكير Jarvis في المحادثة</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Start Jarvis when I log in</source>
-        <translation type="unfinished"></translation>
+        <translation>تشغيل Jarvis عند تسجيل الدخول</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Ask before risky actions</source>
-        <translation type="unfinished"></translation>
+        <translation>السؤال قبل الإجراءات الخطرة</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Commands that delete, install or shut down, and account changes (sending email, new events), wait for your yes unless you asked for exactly that</source>
-        <translation type="unfinished"></translation>
+        <translation>الأوامر التي تحذف أو تثبّت أو توقف التشغيل، وتغييرات الحسابات (إرسال بريد، أحداث جديدة)، تنتظر موافقتك ما لم تطلبها أنت بالتحديد</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>Your instructions</source>
-        <translation type="unfinished"></translation>
+        <translation>تعليماتك</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>How Jarvis should behave, and things it should know about you.</source>
-        <translation type="unfinished"></translation>
+        <translation>كيف ينبغي أن يتصرف Jarvis، وأمور ينبغي أن يعرفها عنك.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+5" />
         <source>Jarvis on Telegram</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis على Telegram</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Send Jarvis tasks from anywhere through Telegram.</source>
-        <translation type="unfinished"></translation>
+        <translation>أرسل المهام إلى Jarvis من أي مكان عبر Telegram.</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>In Telegram, message &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, send /newbot and copy the token it gives you.</source>
-        <translation type="unfinished"></translation>
+        <location line="+5" />
+        <source>In Telegram, message &lt;a href="https://t.me/BotFather"&gt;@BotFather&lt;/a&gt;, send /newbot and copy the token it gives you.</source>
+        <translation>في Telegram، راسل &lt;a href="https://t.me/BotFather"&gt;@BotFather&lt;/a&gt;، وأرسل /newbot ثم انسخ رمز الوصول الذي يعطيك إياه.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Paste it here.</source>
-        <translation type="unfinished"></translation>
+        <translation>الصقه هنا.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Send your new bot the code below. Only that chat is answered.</source>
-        <translation type="unfinished"></translation>
+        <translation>أرسل الرمز أدناه إلى البوت الجديد. لن يُرَدّ إلا على تلك المحادثة.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>Bot token saved · paste a new one to replace it</source>
-        <translation type="unfinished"></translation>
+        <translation>حُفظ رمز وصول البوت · الصق رمزًا جديدًا لاستبداله</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source>Paste your bot&apos;s token</source>
-        <translation type="unfinished"></translation>
+        <location line="+0" />
+        <source>Paste your bot's token</source>
+        <translation>الصق رمز وصول البوت</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+8" />
         <source>Paired with %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>مقترن بـ %1.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Send your bot this code: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>أرسل هذا الرمز إلى البوت: %1</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <location line="+85"/>
+        <location line="+6" />
+        <location line="+85" />
         <source>Unpair</source>
-        <translation type="unfinished"></translation>
+        <translation>إلغاء الاقتران</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-84" />
         <source>Remove the bot</source>
-        <translation type="unfinished"></translation>
+        <translation>إزالة البوت</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+5" />
         <source>The Jarvis app</source>
-        <translation type="unfinished"></translation>
+        <translation>تطبيق Jarvis</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>The Jarvis Android app reaches this PC from anywhere through your own private relay. It&apos;s end-to-end encrypted: the relay only passes on scrambled data, and nothing on this PC is open to the internet.</source>
-        <translation type="unfinished"></translation>
+        <location line="+1" />
+        <source>The Jarvis Android app reaches this PC from anywhere through your own private relay. It's end-to-end encrypted: the relay only passes on scrambled data, and nothing on this PC is open to the internet.</source>
+        <translation>يصل تطبيق Jarvis لنظام Android إلى هذا الحاسوب من أي مكان عبر خادم الترحيل الخاص بك. الاتصال مشفّر من طرف إلى طرف: لا يمرّر خادم الترحيل سوى بيانات مشوّشة، ولا شيء على هذا الحاسوب مكشوف للإنترنت.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+7" />
         <source>Setting up…</source>
-        <translation type="unfinished"></translation>
+        <translation>جارٍ الإعداد…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Set up my relay</source>
-        <translation type="unfinished"></translation>
+        <translation>إعداد خادم الترحيل</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Signs in to your free Cloudflare account in your browser, puts the relay online and saves its address.</source>
-        <translation type="unfinished"></translation>
+        <translation>يسجّل الدخول إلى حسابك المجاني على Cloudflare في متصفحك، وينشر خادم الترحيل ويحفظ عنوانه.</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+10" />
         <source>Or by hand</source>
-        <translation type="unfinished"></translation>
+        <translation>أو يدويًا</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>In the relay folder of Jarvis&apos;s files, sign in to a free Cloudflare account:</source>
-        <translation type="unfinished"></translation>
+        <location line="+1" />
+        <source>In the relay folder of Jarvis's files, sign in to a free Cloudflare account:</source>
+        <translation>في مجلد relay ضمن ملفات Jarvis، سجّل الدخول إلى حساب Cloudflare مجاني:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Put the relay online:</source>
-        <translation type="unfinished"></translation>
+        <translation>انشر خادم الترحيل:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Paste the address it prints here.</source>
-        <translation type="unfinished"></translation>
+        <translation>الصق هنا العنوان الذي يطبعه.</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Your relay&apos;s address, like https://jarvis-relay.you.workers.dev</source>
-        <translation type="unfinished"></translation>
+        <location line="+7" />
+        <source>Your relay's address, like https://jarvis-relay.you.workers.dev</source>
+        <translation>عنوان خادم الترحيل، مثل https://jarvis-relay.you.workers.dev</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>إلغاء</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+19" />
         <source>Connected</source>
-        <translation type="unfinished"></translation>
+        <translation>متصل</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Connecting…</source>
-        <translation type="unfinished"></translation>
+        <translation>جارٍ الاتصال…</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Change</source>
-        <translation type="unfinished"></translation>
+        <translation>تغيير</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+31" />
         <source>Pair another phone</source>
-        <translation type="unfinished"></translation>
+        <translation>إقران هاتف آخر</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Pair a phone</source>
-        <translation type="unfinished"></translation>
+        <translation>إقران هاتف</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+16" />
         <source>Scan to pair</source>
-        <translation type="unfinished"></translation>
+        <translation>امسح للإقران</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>In the Jarvis app, tap Pair and scan this code. It works once, for ten minutes.</source>
-        <translation type="unfinished"></translation>
+        <translation>في تطبيق Jarvis، اضغط Pair وامسح هذا الرمز. يعمل مرة واحدة، لمدة عشر دقائق.</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+18" />
         <source>WhatsApp</source>
-        <translation type="unfinished"></translation>
+        <translation>WhatsApp</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Jarvis links to your own WhatsApp like WhatsApp Web. It answers your contacts&apos; messages that don&apos;t need you, saying it&apos;s your assistant, and picks up calls you miss to take a message. It&apos;s not an official WhatsApp feature: WhatsApp may block numbers that act like bots, so Jarvis answers only saved contacts, never groups.</source>
-        <translation type="unfinished"></translation>
+        <location line="+1" />
+        <source>Jarvis links to your own WhatsApp like WhatsApp Web. It answers your contacts' messages that don't need you, saying it's your assistant, and picks up calls you miss to take a message. It's not an official WhatsApp feature: WhatsApp may block numbers that act like bots, so Jarvis answers only saved contacts, never groups.</source>
+        <translation>يرتبط Jarvis بحساب WhatsApp الخاص بك كما يفعل WhatsApp Web. يرد على رسائل جهات اتصالك التي لا تحتاج إليك، موضحًا أنه مساعدك، ويجيب المكالمات التي تفوتك ليأخذ رسالة. هذه ليست ميزة رسمية من WhatsApp: قد يحظر WhatsApp الأرقام التي تتصرف كالبوتات، لذا لا يرد Jarvis إلا على جهات الاتصال المحفوظة، ولا يرد على المجموعات أبدًا.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Link WhatsApp</source>
-        <translation type="unfinished"></translation>
+        <translation>ربط WhatsApp</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Connecting to WhatsApp…</source>
-        <translation type="unfinished"></translation>
+        <translation>جارٍ الاتصال بـ WhatsApp…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Getting a code from WhatsApp…</source>
-        <translation type="unfinished"></translation>
+        <translation>جارٍ الحصول على رمز من WhatsApp…</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+14" />
         <source>Scan with WhatsApp</source>
-        <translation type="unfinished"></translation>
+        <translation>امسح باستخدام WhatsApp</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>On your phone: WhatsApp → Settings → Linked devices → Link a device, then scan this code. It renews itself.</source>
-        <translation type="unfinished"></translation>
+        <translation>على هاتفك: WhatsApp ← الإعدادات ← الأجهزة المرتبطة ← ربط جهاز، ثم امسح هذا الرمز. يتجدد تلقائيًا.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+7" />
         <source>On a call with %1</source>
-        <translation type="unfinished"></translation>
+        <translation>في مكالمة مع %1</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Linked as %1</source>
-        <translation type="unfinished"></translation>
+        <translation>مرتبط باسم %1</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Linked</source>
-        <translation type="unfinished"></translation>
+        <translation>مرتبط</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Unlink</source>
-        <translation type="unfinished"></translation>
+        <translation>إلغاء الربط</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>Messages</source>
-        <translation type="unfinished"></translation>
+        <translation>الرسائل</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Answer my contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>الرد على جهات اتصالي</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Just show them to me</source>
-        <translation type="unfinished"></translation>
+        <translation>اعرضها عليّ فقط</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Calls</source>
-        <translation type="unfinished"></translation>
+        <translation>المكالمات</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Pick up if I don&apos;t (20 s)</source>
-        <translation type="unfinished"></translation>
+        <location line="+2" />
+        <source>Pick up if I don't (20 s)</source>
+        <translation>الرد إن لم أرد (20 ث)</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Decline them</source>
-        <translation type="unfinished"></translation>
+        <translation>رفضها</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Let them ring</source>
-        <translation type="unfinished"></translation>
+        <translation>تركها ترن</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Always let through (one name per line, as WhatsApp shows it): never answered by Jarvis, always told to you out loud, even in quiet hours</source>
-        <translation type="unfinished"></translation>
+        <translation>السماح دائمًا (اسم واحد في كل سطر، كما يظهر في WhatsApp): لا يرد عليهم Jarvis أبدًا، ويخبرك بهم بصوت عالٍ دائمًا، حتى في ساعات الهدوء</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>e.g. Alex</source>
-        <translation type="unfinished"></translation>
+        <translation>مثل: أحمد</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
-        <translation type="unfinished"></translation>
+        <translation>عدم الرد أبدًا (اسم واحد في كل سطر): لا يرد Jarvis عليهم برسالة أو مكالمة، ويعرض رسائلهم في المحادثة فقط</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>e.g. Sam</source>
-        <translation type="unfinished"></translation>
+        <translation>مثل: سارة</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>What Jarvis tells people</source>
-        <translation type="unfinished"></translation>
+        <translation>ما يقوله Jarvis للناس</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>e.g. I&apos;m in class until 5, I&apos;ll answer after</source>
-        <translation type="unfinished"></translation>
+        <location line="+1" />
+        <source>e.g. I'm in class until 5, I'll answer after</source>
+        <translation>مثل: أنا في المحاضرة حتى الخامسة، سأرد بعدها</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+9" />
         <source>Your data</source>
-        <translation type="unfinished"></translation>
+        <translation>بياناتك</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>On this PC Jarvis keeps what it remembers about you, your conversations, reminders and routines, short clips of your wake word (to learn your voice) and a log. What you say after the wake word, and screenshots when a task needs the screen, go to Google Gemini; account actions go through Composio.</source>
-        <translation type="unfinished"></translation>
+        <translation>يحتفظ Jarvis على هذا الحاسوب بما يتذكره عنك، ومحادثاتك وتذكيراتك وروتيناتك، ومقاطع قصيرة من كلمة التنبيه (ليتعلّم صوتك) وسجلًا. أما ما تقوله بعد كلمة التنبيه، ولقطات الشاشة حين تحتاج مهمة إلى الشاشة، فتذهب إلى Google Gemini؛ وتمر إجراءات الحسابات عبر Composio.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>Keep conversations and logs for</source>
-        <translation type="unfinished"></translation>
+        <translation>الاحتفاظ بالمحادثات والسجلات لمدة</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>A week</source>
-        <translation type="unfinished"></translation>
+        <translation>أسبوع</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>A month</source>
-        <translation type="unfinished"></translation>
+        <translation>شهر</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>3 months</source>
-        <translation type="unfinished"></translation>
+        <translation>3 أشهر</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>A year</source>
-        <translation type="unfinished"></translation>
+        <translation>سنة</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Forever</source>
-        <translation type="unfinished"></translation>
+        <translation>دائمًا</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>Press again to delete it all</source>
-        <translation type="unfinished"></translation>
+        <translation>اضغط مجددًا لحذف كل شيء</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Delete everything Jarvis keeps about me</source>
-        <translation type="unfinished"></translation>
+        <translation>حذف كل ما يحتفظ به Jarvis عني</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>Deleted. Keys, accounts and settings are kept.</source>
-        <translation type="unfinished"></translation>
+        <translation>تم الحذف. بقيت المفاتيح والحسابات والإعدادات.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Keys, account sign-ins and settings stay.</source>
-        <translation type="unfinished"></translation>
+        <translation>تبقى المفاتيح وتسجيلات الدخول إلى الحسابات والإعدادات.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>Move to another computer</source>
-        <translation type="unfinished"></translation>
+        <translation>الانتقال إلى حاسوب آخر</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>One file with your settings, memory, reminders, scheduled tasks, routines, plugins, conversations and the clips Jarvis learned your voice from. Keys, account sign-ins, WhatsApp and your phone aren&apos;t in it: set those up again on the other computer.</source>
-        <translation type="unfinished"></translation>
+        <location line="+1" />
+        <source>One file with your settings, memory, reminders, scheduled tasks, routines, plugins, conversations and the clips Jarvis learned your voice from. Keys, account sign-ins, WhatsApp and your phone aren't in it: set those up again on the other computer.</source>
+        <translation>ملف واحد يضم إعداداتك وذاكرتك وتذكيراتك ومهامك المجدولة وروتيناتك وملحقاتك ومحادثاتك والمقاطع التي تعلّم منها Jarvis صوتك. لا يتضمن المفاتيح وتسجيلات الدخول إلى الحسابات وWhatsApp وهاتفك: أعد إعدادها على الحاسوب الآخر.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>Save a backup</source>
-        <translation type="unfinished"></translation>
+        <translation>حفظ نسخة احتياطية</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Bring one in</source>
-        <translation type="unfinished"></translation>
+        <translation>استيراد نسخة</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Bringing one in replaces what&apos;s on this computer (conversations are added), then Jarvis restarts.</source>
-        <translation type="unfinished"></translation>
+        <location line="+1" />
+        <source>Bringing one in replaces what's on this computer (conversations are added), then Jarvis restarts.</source>
+        <translation>يستبدل الاستيراد ما على هذا الحاسوب (وتُضاف المحادثات)، ثم يُعاد تشغيل Jarvis.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>Save a Jarvis backup</source>
-        <translation type="unfinished"></translation>
+        <translation>حفظ نسخة احتياطية من Jarvis</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <location line="+8"/>
+        <location line="+1" />
+        <location line="+8" />
         <source>Jarvis backups (*.zip)</source>
-        <translation type="unfinished"></translation>
+        <translation>نسخ Jarvis الاحتياطية (*.zip)</translation>
     </message>
     <message>
-        <location line="-6"/>
+        <location line="-6" />
         <source>Saved to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>حُفظت في %1</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+5" />
         <source>Bring in a Jarvis backup</source>
-        <translation type="unfinished"></translation>
+        <translation>استيراد نسخة احتياطية من Jarvis</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Brought in (left at their defaults here: %1): Jarvis is restarting</source>
-        <translation type="unfinished"></translation>
+        <translation>تم الاستيراد (بقيت على قيمها الافتراضية هنا: %1): يُعاد تشغيل Jarvis</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Brought in: Jarvis is restarting</source>
-        <translation type="unfinished"></translation>
+        <translation>تم الاستيراد: يُعاد تشغيل Jarvis</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+14" />
         <source>%1 is out (%2)</source>
-        <translation type="unfinished"></translation>
+        <translation>صدر الإصدار %1 (%2)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>%1 is out</source>
-        <translation type="unfinished"></translation>
+        <translation>صدر الإصدار %1</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Up to date</source>
-        <translation type="unfinished"></translation>
+        <translation>محدَّث</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Updating…</source>
-        <translation type="unfinished"></translation>
+        <translation>جارٍ التحديث…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Update now</source>
-        <translation type="unfinished"></translation>
+        <translation>التحديث الآن</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Check for updates</source>
-        <translation type="unfinished"></translation>
+        <translation>البحث عن تحديثات</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Run the setup again</source>
-        <translation type="unfinished"></translation>
+        <translation>تشغيل الإعداد مجددًا</translation>
     </message>
     <message>
-        <location line="+116"/>
+        <location line="+116" />
         <source>e.g. Keep answers short.</source>
-        <translation type="unfinished"></translation>
+        <translation>مثل: اجعل إجاباتك قصيرة.</translation>
     </message>
 </context>
 <context>
     <name>SetupWizard</name>
     <message>
-        <location filename="../qml/SetupWizard.qml" line="+15"/>
+        <location filename="../qml/SetupWizard.qml" line="+15" />
         <source>Welcome</source>
-        <translation type="unfinished"></translation>
+        <translation>مرحبًا</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Gemini key</source>
-        <translation type="unfinished"></translation>
+        <translation>مفتاح Gemini</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Microphone</source>
-        <translation type="unfinished"></translation>
+        <translation>الميكروفون</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Voice</source>
-        <translation type="unfinished"></translation>
+        <translation>الصوت</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Safety</source>
-        <translation type="unfinished"></translation>
+        <translation>الأمان</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Ready</source>
-        <translation type="unfinished"></translation>
+        <translation>جاهز</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+75" />
         <source>Setting up Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>إعداد Jarvis</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Let’s get you ready</source>
-        <translation type="unfinished"></translation>
+        <translation>لنجهّز كل شيء</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+40" />
         <source>Hi, I’m Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>مرحبًا، أنا Jarvis</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Say “%1” and ask for anything: questions, what’s on your screen, your apps, email, calendar, Classroom, reminders. A couple of minutes of setup and you’re ready.</source>
-        <translation type="unfinished"></translation>
+        <translation>قل «%1» واطلب أي شيء: أسئلة، وما على شاشتك، وتطبيقاتك، وبريدك، وتقويمك، وClassroom، والتذكيرات. دقيقتان من الإعداد وتكون جاهزًا.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>What leaves this PC</source>
-        <translation type="unfinished"></translation>
+        <translation>ما الذي يغادر هذا الحاسوب</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>What you say after “%1”, and screenshots when a task needs the screen, go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Memory, reminders and conversations stay on this computer.</source>
-        <translation type="unfinished"></translation>
+        <translation>ما تقوله بعد «%1»، ولقطات الشاشة حين تحتاج مهمة إلى الشاشة، تذهب إلى Google Gemini. تمر إجراءات الحسابات عبر Composio، وللحسابات التي تربطها فقط. تبقى الذاكرة والتذكيرات والمحادثات على هذا الحاسوب.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+8" />
         <source>Your Gemini key</source>
-        <translation type="unfinished"></translation>
+        <translation>مفتاح Gemini الخاص بك</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Jarvis thinks with Google Gemini. A free key takes a minute: sign in at &lt;a href=&quot;https://aistudio.google.com/apikey&quot;&gt;aistudio.google.com/apikey&lt;/a&gt;, press Create API key, and paste it here. It’s kept in your system keychain.</source>
-        <translation type="unfinished"></translation>
+        <location line="+1" />
+        <source>Jarvis thinks with Google Gemini. A free key takes a minute: sign in at &lt;a href="https://aistudio.google.com/apikey"&gt;aistudio.google.com/apikey&lt;/a&gt;, press Create API key, and paste it here. It’s kept in your system keychain.</source>
+        <translation>يفكر Jarvis باستخدام Google Gemini. الحصول على مفتاح مجاني يستغرق دقيقة: سجّل الدخول في &lt;a href="https://aistudio.google.com/apikey"&gt;aistudio.google.com/apikey&lt;/a&gt;، واضغط Create API key، ثم الصقه هنا. يُحفظ في سلسلة مفاتيح نظامك.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+7" />
         <source>Key saved · paste a new one to replace it</source>
-        <translation type="unfinished"></translation>
+        <translation>حُفظ المفتاح · الصق مفتاحًا جديدًا لاستبداله</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Paste your API key</source>
-        <translation type="unfinished"></translation>
+        <translation>الصق مفتاح API الخاص بك</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>حفظ</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+11" />
         <source>Checking the key…</source>
-        <translation type="unfinished"></translation>
+        <translation>جارٍ التحقق من المفتاح…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>The key works: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>المفتاح يعمل: %1</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>No key yet</source>
-        <translation type="unfinished"></translation>
+        <translation>لا يوجد مفتاح بعد</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>That key didn’t work: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>لم يعمل هذا المفتاح: %1</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>Your microphone</source>
-        <translation type="unfinished"></translation>
+        <translation>الميكروفون</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Say something: the bars should jump while you talk.</source>
-        <translation type="unfinished"></translation>
+        <translation>قل شيئًا: يُفترض أن تتحرك الأشرطة أثناء حديثك.</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+37" />
         <source>I can hear you.</source>
-        <translation type="unfinished"></translation>
+        <translation>أسمعك.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Quiet so far. If the bars never move, pick the right input device in your system’s sound settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>لا صوت حتى الآن. إن لم تتحرك الأشرطة أبدًا، فاختر جهاز الإدخال الصحيح من إعدادات الصوت في نظامك.</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+10" />
         <source>Wake word sensitivity</source>
-        <translation type="unfinished"></translation>
+        <translation>حساسية كلمة التنبيه</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+11" />
         <source>Lower wakes more easily.</source>
-        <translation type="unfinished"></translation>
+        <translation>القيمة الأقل تجعل التنبيه أسهل.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+6" />
         <source>My voice</source>
-        <translation type="unfinished"></translation>
+        <translation>صوتي</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>How I sound, and when I talk.</source>
-        <translation type="unfinished"></translation>
+        <translation>كيف يبدو صوتي، ومتى أتحدث.</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+15" />
         <source>Speak replies to typed messages</source>
-        <translation type="unfinished"></translation>
+        <translation>نطق الردود على الرسائل المكتوبة</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>Start Jarvis when I log in</source>
-        <translation type="unfinished"></translation>
+        <translation>تشغيل Jarvis عند تسجيل الدخول</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+8" />
         <source>How careful should I be?</source>
-        <translation type="unfinished"></translation>
+        <translation>ما مدى الحذر الذي تريده مني؟</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>You can change this any time in Settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>يمكنك تغيير هذا في أي وقت من الإعدادات.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Ask first</source>
-        <translation type="unfinished"></translation>
+        <translation>السؤال أولًا</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Recommended</source>
-        <translation type="unfinished"></translation>
+        <translation>موصى به</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Commands that delete, install or shut down, and changes to your accounts (sending email, creating events), wait for your yes, unless you asked for exactly that.</source>
-        <translation type="unfinished"></translation>
+        <translation>الأوامر التي تحذف أو تثبّت أو توقف التشغيل، والتغييرات على حساباتك (إرسال بريد، إنشاء أحداث)، تنتظر موافقتك، ما لم تطلبها أنت بالتحديد.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>Just do it</source>
-        <translation type="unfinished"></translation>
+        <translation>التنفيذ مباشرة</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Jarvis acts without checking first. Quicker, for when you trust it with your PC and accounts.</source>
-        <translation type="unfinished"></translation>
+        <translation>يتصرف Jarvis دون أن يسألك أولًا. أسرع، حين تثق به في حاسوبك وحساباتك.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+5" />
         <source>You’re set</source>
-        <translation type="unfinished"></translation>
+        <translation>كل شيء جاهز</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Connect Gmail, Calendar, Classroom, Drive and more on the Accounts page so Jarvis can use them. If something doesn’t work, the Health page says what and how to fix it.</source>
-        <translation type="unfinished"></translation>
+        <translation>اربط Gmail وCalendar وClassroom وDrive وغيرها من صفحة الحسابات ليتمكن Jarvis من استخدامها. إن لم يعمل شيء ما، فستخبرك صفحة الحالة بالسبب وكيفية إصلاحه.</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+20" />
         <source>Try it now</source>
-        <translation type="unfinished"></translation>
+        <translation>جرّبه الآن</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>“%1, what’s the weather?”</source>
-        <translation type="unfinished"></translation>
+        <translation>«%1، كيف الطقس؟»</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+11" />
         <source>Skip setup</source>
-        <translation type="unfinished"></translation>
+        <translation>تخطي الإعداد</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Back</source>
-        <translation type="unfinished"></translation>
+        <translation>رجوع</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Done</source>
-        <translation type="unfinished"></translation>
+        <translation>تم</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+3" />
         <source>Connect accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>ربط الحسابات</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Skip for now</source>
-        <translation type="unfinished"></translation>
+        <translation>لاحقًا</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Next</source>
-        <translation type="unfinished"></translation>
+        <translation>التالي</translation>
     </message>
 </context>
 <context>
     <name>Theme</name>
     <message>
-        <location filename="../qml/Theme.qml" line="+70"/>
+        <location filename="../qml/Theme.qml" line="+70" />
         <source>Listening</source>
-        <translation type="unfinished"></translation>
+        <translation>يستمع</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Working</source>
-        <translation type="unfinished"></translation>
+        <translation>يعمل</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Speaking</source>
-        <translation type="unfinished"></translation>
+        <translation>يتحدث</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Ready</source>
-        <translation type="unfinished"></translation>
+        <translation>جاهز</translation>
     </message>
 </context>
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+92"/>
+        <location filename="../qml/Today.qml" line="+92" />
         <source>Feels %1 in %2</source>
-        <translation type="unfinished"></translation>
+        <translation>تُحَسّ كأنها %1 في %2</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+44" />
         <source>Now playing</source>
-        <translation type="unfinished"></translation>
+        <translation>قيد التشغيل الآن</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+11" />
         <source>Previous</source>
-        <translation type="unfinished"></translation>
+        <translation>السابق</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+4" />
         <source>Next</source>
-        <translation type="unfinished"></translation>
+        <translation>التالي</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+13" />
         <source>Up next</source>
-        <translation type="unfinished"></translation>
+        <translation>القادم</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Nothing scheduled. Try “remind me in 20 minutes to stretch”.</source>
-        <translation type="unfinished"></translation>
+        <translation>لا شيء مجدول. جرّب «ذكّرني بعد 20 دقيقة بأن أتمدد».</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+30" />
         <source>Cancel this reminder</source>
-        <translation type="unfinished"></translation>
+        <translation>إلغاء هذا التذكير</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+16" />
         <source>This PC</source>
-        <translation type="unfinished"></translation>
+        <translation>هذا الحاسوب</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Processor</source>
-        <translation type="unfinished"></translation>
+        <translation>المعالج</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Memory</source>
-        <translation type="unfinished"></translation>
+        <translation>الذاكرة</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>%1 of %2 GB</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 من %2 غيغابايت</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Disk</source>
-        <translation type="unfinished"></translation>
+        <translation>القرص</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>%1 GB free</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 غيغابايت متاحة</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+12" />
         <source>Last answer started %1 s after you finished</source>
-        <translation type="unfinished"></translation>
+        <translation>بدأت آخر إجابة بعد %1 ث من انتهاء كلامك</translation>
     </message>
 </context>
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+117"/>
+        <location filename="../jarvis.py" line="+117" />
         <source>Open Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>فتح Jarvis</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Talk</source>
-        <translation type="unfinished"></translation>
+        <translation>تحدّث</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>إيقاف</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>Do not disturb</source>
-        <translation type="unfinished"></translation>
+        <translation>عدم الإزعاج</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>Quit</source>
-        <translation type="unfinished"></translation>
+        <translation>إنهاء</translation>
     </message>
     <message>
-        <location line="+13"/>
-        <source>Running in the tray. Say &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <location line="+13" />
+        <source>Running in the tray. Say "%1".</source>
+        <translation>يعمل في شريط النظام. قل «%1».</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+15" />
         <source>idle</source>
-        <translation type="unfinished"></translation>
+        <translation>خامل</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>listening</source>
-        <translation type="unfinished"></translation>
+        <translation>يستمع</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>speaking</source>
-        <translation type="unfinished"></translation>
+        <translation>يتحدث</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+0" />
         <source>thinking</source>
-        <translation type="unfinished"></translation>
+        <translation>يفكر</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+2" />
         <source>quiet</source>
-        <translation type="unfinished"></translation>
+        <translation>هادئ</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+1" />
         <source>backup voice</source>
-        <translation type="unfinished"></translation>
+        <translation>الصوت الاحتياطي</translation>
     </message>
 </context>
 </TS>

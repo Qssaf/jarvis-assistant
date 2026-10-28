@@ -6,108 +6,108 @@
     <message>
         <location filename="../qml/AccountsPage.qml" line="+9"/>
         <source>Accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Konten</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Connect your accounts so Jarvis can read and act on them. You decide what it may do with each.</source>
-        <translation type="unfinished"></translation>
+        <translation>Verbinde deine Konten, damit Jarvis sie lesen und darin handeln kann. Du entscheidest, was er bei jedem darf.</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>Refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktualisieren</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Couldn&apos;t reach your accounts: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Konten nicht erreichbar: %1</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Checking your accounts…</source>
-        <translation type="unfinished"></translation>
+        <translation>Konten werden geprüft…</translation>
     </message>
     <message>
         <location line="+3"/>
         <location line="+29"/>
         <source>Connected</source>
-        <translation type="unfinished"></translation>
+        <translation>Verbunden</translation>
     </message>
     <message>
         <location line="-28"/>
         <source>Choose what Jarvis may do with each account.</source>
-        <translation type="unfinished"></translation>
+        <translation>Lege fest, was Jarvis mit jedem Konto darf.</translation>
     </message>
     <message>
         <location line="+35"/>
         <source>Sign in again</source>
-        <translation type="unfinished"></translation>
+        <translation>Neu anmelden</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Sign-in opened in your browser</source>
-        <translation type="unfinished"></translation>
+        <translation>Anmeldung im Browser geöffnet</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Click again to disconnect</source>
-        <translation type="unfinished"></translation>
+        <translation>Zum Trennen erneut klicken</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Disconnect</source>
-        <translation type="unfinished"></translation>
+        <translation>Trennen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>%1 disconnected</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 getrennt</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Ask before changes</source>
-        <translation type="unfinished"></translation>
+        <translation>Vor Änderungen fragen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Full access</source>
-        <translation type="unfinished"></translation>
+        <translation>Vollzugriff</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Read only</source>
-        <translation type="unfinished"></translation>
+        <translation>Nur lesen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Paused</source>
-        <translation type="unfinished"></translation>
+        <translation>Pausiert</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>More accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Weitere Konten</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Accounts you can connect</source>
-        <translation type="unfinished"></translation>
+        <translation>Verfügbare Konten</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Pick one to sign in from your browser, then press Refresh.</source>
-        <translation type="unfinished"></translation>
+        <translation>Wähle eins aus, melde dich im Browser an und klicke dann auf „Aktualisieren“.</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Finish signing in in your browser, then press Refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>Schließe die Anmeldung im Browser ab und klicke dann auf „Aktualisieren“</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Connect %1</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 verbinden</translation>
     </message>
 </context>
 <context>
@@ -115,40 +115,40 @@
     <message>
         <location filename="../qml/ActivityPage.qml" line="+43"/>
         <source>Activity</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktivität</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Every step Jarvis takes in this conversation, as it happens.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jeder Schritt, den Jarvis in diesem Gespräch macht, live.</translation>
     </message>
     <message>
         <location line="+86"/>
         <source>New steps appear at the top as Jarvis works</source>
-        <translation type="unfinished"></translation>
+        <translation>Neue Schritte erscheinen oben, während Jarvis arbeitet</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Nothing yet: ask Jarvis something</source>
-        <translation type="unfinished"></translation>
+        <translation>Noch nichts: Frag Jarvis etwas</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Reply speed</source>
-        <translation type="unfinished"></translation>
+        <translation>Antwortzeit</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>s</source>
         <extracomment>seconds, after the average reply time</extracomment>
-        <translation type="unfinished"></translation>
+        <translation>s</translation>
     </message>
     <message numerus="yes">
         <location line="+3"/>
         <source>Averaged over the last %n replies: from the end of what you said to Jarvis&apos;s first word.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Gemessen an der letzten Antwort: von deinem letzten Wort bis zum ersten Wort von Jarvis.</numerusform>
+            <numerusform>Durchschnitt der letzten %n Antworten: von deinem letzten Wort bis zum ersten Wort von Jarvis.</numerusform>
         </translation>
     </message>
 </context>
@@ -157,7 +157,7 @@
     <message>
         <location filename="../qml/Api.qml" line="+27"/>
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>Etwas ist schiefgelaufen</translation>
     </message>
 </context>
 <context>
@@ -165,7 +165,7 @@
     <message>
         <location filename="../window.py" line="+193"/>
         <source>Copied</source>
-        <translation type="unfinished"></translation>
+        <translation>Kopiert</translation>
     </message>
 </context>
 <context>
@@ -173,91 +173,91 @@
     <message>
         <location filename="../qml/ChatsPage.qml" line="+33"/>
         <source>just now</source>
-        <translation type="unfinished"></translation>
+        <translation>gerade eben</translation>
     </message>
     <message numerus="yes">
         <location line="+0"/>
         <source>%n min ago</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>vor %n Min.</numerusform>
+            <numerusform>vor %n Min.</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+0"/>
         <source>%n h ago</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>vor %n Std.</numerusform>
+            <numerusform>vor %n Std.</numerusform>
         </translation>
     </message>
     <message>
         <location line="+17"/>
         <source>Chats</source>
-        <translation type="unfinished"></translation>
+        <translation>Chats</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Every conversation is saved here. Open one to carry on where you left off.</source>
-        <translation type="unfinished"></translation>
+        <translation>Hier wird jedes Gespräch gespeichert. Öffne eins, um dort weiterzumachen, wo du aufgehört hast.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>New chat</source>
-        <translation type="unfinished"></translation>
+        <translation>Neuer Chat</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Search conversations</source>
-        <translation type="unfinished"></translation>
+        <translation>Gespräche durchsuchen</translation>
     </message>
     <message>
         <location line="+48"/>
         <source>Now</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktuell</translation>
     </message>
     <message numerus="yes">
         <location line="+5"/>
         <source>%n message(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n Nachricht</numerusform>
+            <numerusform>%n Nachrichten</numerusform>
         </translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Nothing matches that</source>
-        <translation type="unfinished"></translation>
+        <translation>Keine Treffer</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>No conversations yet</source>
-        <translation type="unfinished"></translation>
+        <translation>Noch keine Gespräche</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>Löschen</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Click again to delete</source>
-        <translation type="unfinished"></translation>
+        <translation>Zum Löschen erneut klicken</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Conversation deleted</source>
-        <translation type="unfinished"></translation>
+        <translation>Gespräch gelöscht</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Open</source>
-        <translation type="unfinished"></translation>
+        <translation>Öffnen</translation>
     </message>
     <message>
         <location line="+55"/>
         <source>Pick a conversation to read it</source>
-        <translation type="unfinished"></translation>
+        <translation>Wähle ein Gespräch zum Lesen aus</translation>
     </message>
 </context>
 <context>
@@ -265,37 +265,37 @@
     <message>
         <location filename="../qml/Composer.qml" line="+45"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>Entfernen</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Attach files (or drop them here)</source>
-        <translation type="unfinished"></translation>
+        <translation>Dateien anhängen (oder hierher ziehen)</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Ask Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>Frag Jarvis</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Pause listening</source>
-        <translation type="unfinished"></translation>
+        <translation>Zuhören pausieren</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Talk to Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>Mit Jarvis sprechen</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Stop (Esc)</source>
-        <translation type="unfinished"></translation>
+        <translation>Stopp (Esc)</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Send (Enter)</source>
-        <translation type="unfinished"></translation>
+        <translation>Senden (Enter)</translation>
     </message>
 </context>
 <context>
@@ -304,132 +304,132 @@
         <location filename="../qml/HealthPage.qml" line="+9"/>
         <location line="+16"/>
         <source>Health</source>
-        <translation type="unfinished"></translation>
+        <translation>Diagnose</translation>
     </message>
     <message>
         <location line="-15"/>
         <source>Checks the key, mic, screen, accounts and models, and how to fix them.</source>
-        <translation type="unfinished"></translation>
+        <translation>Prüft Schlüssel, Mikrofon, Bildschirm, Konten und Modelle und zeigt, wie du Probleme behebst.</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Home</source>
-        <translation type="unfinished"></translation>
+        <translation>Start</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Chats</source>
-        <translation type="unfinished"></translation>
+        <translation>Chats</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Activity</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktivität</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Konten</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Plugins</source>
-        <translation type="unfinished"></translation>
+        <translation>Plugins</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Models</source>
-        <translation type="unfinished"></translation>
+        <translation>Modelle</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Memory</source>
-        <translation type="unfinished"></translation>
+        <translation>Gedächtnis</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Einstellungen</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Copy a report</source>
-        <translation type="unfinished"></translation>
+        <translation>Bericht kopieren</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copied. Look it over, then paste it into a bug report</source>
-        <translation type="unfinished"></translation>
+        <translation>Kopiert. Sieh ihn durch und füge ihn dann in einen Fehlerbericht ein</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Report a problem</source>
-        <translation type="unfinished"></translation>
+        <translation>Problem melden</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Checking…</source>
-        <translation type="unfinished"></translation>
+        <translation>Wird geprüft…</translation>
     </message>
     <message numerus="yes">
         <location line="+0"/>
         <source>%n thing(s) to fix</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n Problem zu beheben</numerusform>
+            <numerusform>%n Probleme zu beheben</numerusform>
         </translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Everything works</source>
-        <translation type="unfinished"></translation>
+        <translation>Alles funktioniert</translation>
     </message>
     <message numerus="yes">
         <location line="+2"/>
         <source>%1 of %n check(s) pass</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%1 von %n Prüfung bestanden</numerusform>
+            <numerusform>%1 von %n Prüfungen bestanden</numerusform>
         </translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Check again</source>
-        <translation type="unfinished"></translation>
+        <translation>Erneut prüfen</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Fix: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Lösung: %1</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Open %1</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 öffnen</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Model use today</source>
-        <translation type="unfinished"></translation>
+        <translation>Modellnutzung heute</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Free Google AI Studio keys allow a limited number of requests per model each day. When one runs out, Jarvis uses the next model in that job&apos;s list (the Models page) until the quota resets at midnight Pacific time.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kostenlose Google-AI-Studio-Schlüssel erlauben pro Modell nur eine begrenzte Zahl von Anfragen am Tag. Ist eines aufgebraucht, nimmt Jarvis das nächste Modell in der Liste dieser Aufgabe (Seite „Modelle“), bis das Kontingent um Mitternacht pazifischer Zeit zurückgesetzt wird.</translation>
     </message>
     <message numerus="yes">
         <location line="+23"/>
         <source>request(s)</source>
         <comment>after a number</comment>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Anfrage</numerusform>
+            <numerusform>Anfragen</numerusform>
         </translation>
     </message>
     <message>
         <location line="+4"/>
         <source>No requests yet today.</source>
-        <translation type="unfinished"></translation>
+        <translation>Heute noch keine Anfragen.</translation>
     </message>
 </context>
 <context>
@@ -437,142 +437,142 @@
     <message>
         <location filename="../qml/HomePage.qml" line="+58"/>
         <source>Attach files for Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>Dateien für Jarvis anhängen</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>Up late?</source>
-        <translation type="unfinished"></translation>
+        <translation>Noch wach?</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Good morning</source>
-        <translation type="unfinished"></translation>
+        <translation>Guten Morgen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Good afternoon</source>
-        <translation type="unfinished"></translation>
+        <translation>Guten Tag</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Good evening</source>
-        <translation type="unfinished"></translation>
+        <translation>Guten Abend</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Say “%1”, tap the reactor, or type below</source>
-        <translation type="unfinished"></translation>
+        <translation>Sag „%1“, tippe auf den Reaktor oder schreib unten</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Go ahead, I&apos;m listening</source>
-        <translation type="unfinished"></translation>
+        <translation>Leg los, ich höre zu</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Paused</source>
-        <translation type="unfinished"></translation>
+        <translation>Pausiert</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Say “%1” to cut in</source>
-        <translation type="unfinished"></translation>
+        <translation>Sag „%1“, um zu unterbrechen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>On it</source>
-        <translation type="unfinished"></translation>
+        <translation>Bin dran</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Brief me</source>
-        <translation type="unfinished"></translation>
+        <translation>Gib mir einen Überblick</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Weather and your schedule</source>
-        <translation type="unfinished"></translation>
+        <translation>Wetter und dein Tagesplan</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>What&apos;s due this week?</source>
-        <translation type="unfinished"></translation>
+        <translation>Was ist diese Woche fällig?</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>From Google Classroom</source>
-        <translation type="unfinished"></translation>
+        <translation>Aus Google Classroom</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Any new emails?</source>
-        <translation type="unfinished"></translation>
+        <translation>Gibt es neue E-Mails?</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Your Gmail inbox</source>
-        <translation type="unfinished"></translation>
+        <translation>Dein Gmail-Posteingang</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>What&apos;s on my screen?</source>
-        <translation type="unfinished"></translation>
+        <translation>Was ist auf meinem Bildschirm?</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Jarvis takes a look</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis sieht nach</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Set a 10 minute timer</source>
-        <translation type="unfinished"></translation>
+        <translation>Stell einen Timer auf 10 Minuten</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>With a notification</source>
-        <translation type="unfinished"></translation>
+        <translation>Mit Benachrichtigung</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Paint a rainy city</source>
-        <translation type="unfinished"></translation>
+        <translation>Mal eine verregnete Stadt</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Make a picture</source>
-        <translation type="unfinished"></translation>
+        <translation>Erstellt ein Bild</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>New chat</source>
-        <translation type="unfinished"></translation>
+        <translation>Neuer Chat</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Backup voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Ersatzstimme</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The backup voice (Models page) answers instead of Gemini Live</source>
-        <translation type="unfinished"></translation>
+        <translation>Die Ersatzstimme (Seite „Modelle“) antwortet statt Gemini Live</translation>
     </message>
     <message>
         <location line="+49"/>
         <source>Working on it…</source>
-        <translation type="unfinished"></translation>
+        <translation>Ich arbeite daran…</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>Stopp</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Drop to attach</source>
-        <translation type="unfinished"></translation>
+        <translation>Zum Anhängen loslassen</translation>
     </message>
 </context>
 <context>
@@ -580,67 +580,67 @@
     <message>
         <location filename="../qml/Main.qml" line="+115"/>
         <source>Home</source>
-        <translation type="unfinished"></translation>
+        <translation>Start</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Chats</source>
-        <translation type="unfinished"></translation>
+        <translation>Chats</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Activity</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktivität</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Konten</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Plugins</source>
-        <translation type="unfinished"></translation>
+        <translation>Plugins</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Models</source>
-        <translation type="unfinished"></translation>
+        <translation>Modelle</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Memory</source>
-        <translation type="unfinished"></translation>
+        <translation>Gedächtnis</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Health</source>
-        <translation type="unfinished"></translation>
+        <translation>Diagnose</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Einstellungen</translation>
     </message>
     <message>
         <location line="+62"/>
         <source>Minimise</source>
-        <translation type="unfinished"></translation>
+        <translation>Minimieren</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Restore</source>
-        <translation type="unfinished"></translation>
+        <translation>Wiederherstellen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Maximise</source>
-        <translation type="unfinished"></translation>
+        <translation>Maximieren</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Close (Jarvis keeps running in the tray)</source>
-        <translation type="unfinished"></translation>
+        <translation>Schließen (Jarvis läuft im Infobereich weiter)</translation>
     </message>
 </context>
 <context>
@@ -648,219 +648,220 @@
     <message>
         <location filename="../qml/MemoryPage.qml" line="+10"/>
         <source>Memory</source>
-        <translation type="unfinished"></translation>
+        <translation>Gedächtnis</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Jarvis reads this before every conversation. Tell it “remember…” or edit it here.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis liest das vor jedem Gespräch. Sag „merk dir …“ oder bearbeite es hier.</translation>
     </message>
     <message>
         <location line="+30"/>
         <source>Saved</source>
-        <translation type="unfinished"></translation>
+        <translation>Gespeichert</translation>
     </message>
     <message>
         <location line="+4"/>
         <location line="+211"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Speichern</translation>
     </message>
     <message>
         <location line="-210"/>
         <source>Memory saved</source>
-        <translation type="unfinished"></translation>
+        <translation>Gedächtnis gespeichert</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>What Jarvis knows about you</source>
-        <translation type="unfinished"></translation>
+        <translation>Was Jarvis über dich weiß</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Plain notes, one per line. Jarvis adds to them as you talk.</source>
-        <translation type="unfinished"></translation>
+        <translation>Einfache Notizen, eine pro Zeile. Jarvis ergänzt sie, während ihr redet.</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>- Prefers to be called …
 - Studies …</source>
-        <translation type="unfinished"></translation>
+        <translation>- Möchte … genannt werden
+- Studiert …</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Reminders and scheduled tasks</source>
-        <translation type="unfinished"></translation>
+        <translation>Erinnerungen und geplante Aufgaben</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%1 Say “remind me at 5 to call home”, or have Jarvis do something then: “every weekday at 8, check my inbox”.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 Sag „erinnere mich um 5, zu Hause anzurufen“ oder lass Jarvis dann etwas erledigen: „prüf jeden Werktag um 8 meinen Posteingang“.</translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
         <source>%n coming up.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n geplant.</numerusform>
+            <numerusform>%n geplant.</numerusform>
         </translation>
     </message>
     <message>
         <location line="+0"/>
         <source>None yet.</source>
-        <translation type="unfinished"></translation>
+        <translation>Noch keine.</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>%1 · Jarvis does it</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 · Jarvis erledigt das</translation>
     </message>
     <message>
         <location line="+5"/>
         <location line="+149"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Abbrechen</translation>
     </message>
     <message>
         <location line="-141"/>
         <source>Add a reminder or task</source>
-        <translation type="unfinished"></translation>
+        <translation>Erinnerung oder Aufgabe hinzufügen</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Routines</source>
-        <translation type="unfinished"></translation>
+        <translation>Routinen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Say a routine&apos;s name and Jarvis runs its steps.</source>
-        <translation type="unfinished"></translation>
+        <translation>Sag den Namen einer Routine, und Jarvis führt ihre Schritte aus.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>None yet. Say “when I say study mode, close Discord, open my notes and set a 50-minute timer”.</source>
-        <translation type="unfinished"></translation>
+        <translation>Noch keine. Sag „wenn ich Lernmodus sage, schließ Discord, öffne meine Notizen und stell einen Timer auf 50 Minuten“.</translation>
     </message>
     <message>
         <location line="+16"/>
         <location line="+33"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>Löschen</translation>
     </message>
     <message>
         <location line="-25"/>
         <source>Add a routine</source>
-        <translation type="unfinished"></translation>
+        <translation>Routine hinzufügen</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Keep an eye on</source>
-        <translation type="unfinished"></translation>
+        <translation>Im Blick behalten</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Jarvis looks into these with your accounts and the web, and tells you only when something needs you.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis prüft das über deine Konten und das Web und meldet sich nur, wenn du gebraucht wirst.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Nothing yet. Say “tell me if a payment fails”, or add one here.</source>
-        <translation type="unfinished"></translation>
+        <translation>Noch nichts. Sag „sag mir, wenn eine Zahlung fehlschlägt“, oder füge hier etwas hinzu.</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>Paused</source>
-        <translation type="unfinished"></translation>
+        <translation>Pausiert</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Add a check</source>
-        <translation type="unfinished"></translation>
+        <translation>Prüfung hinzufügen</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Look every</source>
-        <translation type="unfinished"></translation>
+        <translation>Prüfintervall</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>30 minutes</source>
-        <translation type="unfinished"></translation>
+        <translation>30 Minuten</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Hour</source>
-        <translation type="unfinished"></translation>
+        <translation>1 Stunde</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>3 hours</source>
-        <translation type="unfinished"></translation>
+        <translation>3 Stunden</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>12 hours</source>
-        <translation type="unfinished"></translation>
+        <translation>12 Stunden</translation>
     </message>
     <message>
         <location line="+44"/>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>Bearbeiten</translation>
     </message>
     <message>
         <location line="+37"/>
         <source>What to remind you of, or what Jarvis should do</source>
-        <translation type="unfinished"></translation>
+        <translation>Woran du erinnert werden willst oder was Jarvis tun soll</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>When: 18:30 or 2026-11-02 08:00</source>
-        <translation type="unfinished"></translation>
+        <translation>Wann: 18:30 oder 2026-11-02 08:00</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Once</source>
-        <translation type="unfinished"></translation>
+        <translation>Einmalig</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Every day</source>
-        <translation type="unfinished"></translation>
+        <translation>Täglich</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Weekdays</source>
-        <translation type="unfinished"></translation>
+        <translation>Werktags</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Every week</source>
-        <translation type="unfinished"></translation>
+        <translation>Wöchentlich</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Jarvis reminds you</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis erinnert dich</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Jarvis does it</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis erledigt es</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>What you say to start it, e.g. study mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Was du zum Starten sagst, z. B. Lernmodus</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Its steps, e.g. close Discord, open my notes, set a 50-minute timer</source>
-        <translation type="unfinished"></translation>
+        <translation>Die Schritte, z. B. Discord schließen, meine Notizen öffnen, Timer auf 50 Minuten stellen</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>e.g. Tell me if a payment fails or my professor emails</source>
-        <translation type="unfinished"></translation>
+        <translation>z. B. Sag mir, wenn eine Zahlung fehlschlägt oder mein Professor mailt</translation>
     </message>
 </context>
 <context>
@@ -868,7 +869,7 @@
     <message>
         <location filename="../qml/Message.qml" line="+69"/>
         <source>Copy</source>
-        <translation type="unfinished"></translation>
+        <translation>Kopieren</translation>
     </message>
 </context>
 <context>
@@ -876,198 +877,198 @@
     <message>
         <location filename="../qml/ModelsPage.qml" line="+9"/>
         <source>Models</source>
-        <translation type="unfinished"></translation>
+        <translation>Modelle</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Pick the models for each job. Each list is tried top to bottom: when one is busy or down, the next takes over.</source>
-        <translation type="unfinished"></translation>
+        <translation>Wähle die Modelle für jede Aufgabe. Jede Liste wird von oben nach unten probiert: Ist eins ausgelastet oder ausgefallen, übernimmt das nächste.</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>Looking up the models you can use…</source>
-        <translation type="unfinished"></translation>
+        <translation>Verfügbare Modelle werden gesucht…</translation>
     </message>
     <message numerus="yes">
         <location line="+2"/>
         <source>%1: %n model(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%1: %n Modell</numerusform>
+            <numerusform>%1: %n Modelle</numerusform>
         </translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktualisieren</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>What each job uses</source>
-        <translation type="unfinished"></translation>
+        <translation>Modelle je Aufgabe</translation>
     </message>
     <message>
         <location line="+45"/>
         <source>Jarvis&apos;s choice</source>
-        <translation type="unfinished"></translation>
+        <translation>Auswahl von Jarvis</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Use Jarvis&apos;s choice</source>
-        <translation type="unfinished"></translation>
+        <translation>Auswahl von Jarvis nutzen</translation>
     </message>
     <message numerus="yes">
         <location line="+9"/>
         <source>%1 · +%n fallback(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%1 · +%n Ausweichmodell</numerusform>
+            <numerusform>%1 · +%n Ausweichmodelle</numerusform>
         </translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Providers and keys</source>
-        <translation type="unfinished"></translation>
+        <translation>Anbieter und Schlüssel</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Keys stay in your system keychain, never in the settings file.</source>
-        <translation type="unfinished"></translation>
+        <translation>Schlüssel bleiben im Schlüsselbund deines Systems, nie in der Einstellungsdatei.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Keys stay in a private file on this PC, never in the settings file.</source>
-        <translation type="unfinished"></translation>
+        <translation>Schlüssel bleiben in einer privaten Datei auf diesem PC, nie in der Einstellungsdatei.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Kept in %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Gespeichert in %1</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Kept in your keychain</source>
-        <translation type="unfinished"></translation>
+        <translation>Im Schlüsselbund gespeichert</translation>
     </message>
     <message>
         <location line="+30"/>
         <source>Key saved · paste a new one to replace it</source>
-        <translation type="unfinished"></translation>
+        <translation>Schlüssel gespeichert · zum Ersetzen einen neuen einfügen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Paste an API key</source>
-        <translation type="unfinished"></translation>
+        <translation>API-Schlüssel einfügen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Key saved</source>
-        <translation type="unfinished"></translation>
+        <translation>Schlüssel gespeichert</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Ollama isn&apos;t running</source>
-        <translation type="unfinished"></translation>
+        <translation>Ollama läuft nicht</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>No models downloaded yet</source>
-        <translation type="unfinished"></translation>
+        <translation>Noch keine Modelle heruntergeladen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Remove this provider</source>
-        <translation type="unfinished"></translation>
+        <translation>Diesen Anbieter entfernen</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>More providers</source>
-        <translation type="unfinished"></translation>
+        <translation>Weitere Anbieter</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Another service</source>
-        <translation type="unfinished"></translation>
+        <translation>Anderer Dienst</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>name</source>
-        <translation type="unfinished"></translation>
+        <translation>Name</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Add</source>
-        <translation type="unfinished"></translation>
+        <translation>Hinzufügen</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Your Google account</source>
-        <translation type="unfinished"></translation>
+        <translation>Dein Google-Konto</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Sign in with Google for Gemini (and Claude) through your account&apos;s Antigravity quota, much more than a free AI Studio key.</source>
-        <translation type="unfinished"></translation>
+        <translation>Melde dich mit Google an, um Gemini (und Claude) über das Antigravity-Kontingent deines Kontos zu nutzen, viel mehr als mit einem kostenlosen AI-Studio-Schlüssel.</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>It signs in the way Google&apos;s Antigravity app does, which Google doesn&apos;t offer to other apps: Google may limit or suspend accounts used like this. Use an account you can afford to lose.</source>
-        <translation type="unfinished"></translation>
+        <translation>Die Anmeldung läuft wie bei Googles App Antigravity, was Google anderen Apps nicht anbietet: Google kann so genutzte Konten einschränken oder sperren. Nimm ein Konto, auf das du verzichten kannst.</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>Google account</source>
-        <translation type="unfinished"></translation>
+        <translation>Google-Konto</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>from opencode</source>
-        <translation type="unfinished"></translation>
+        <translation>aus opencode</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Sign out</source>
-        <translation type="unfinished"></translation>
+        <translation>Abmelden</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>First install the opencode-antigravity-auth plugin (npm i -g opencode-antigravity-auth): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
-        <translation type="unfinished"></translation>
+        <translation>Installiere zuerst das Plugin opencode-antigravity-auth (npm i -g opencode-antigravity-auth): Jarvis meldet sich mit dessen Daten an. Oder trag ANTIGRAVITY_CLIENT_ID und ANTIGRAVITY_CLIENT_SECRET in die env-Datei von Jarvis ein.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Waiting for the browser…</source>
-        <translation type="unfinished"></translation>
+        <translation>Warte auf den Browser…</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Add another account</source>
-        <translation type="unfinished"></translation>
+        <translation>Weiteres Konto hinzufügen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Sign in with Google</source>
-        <translation type="unfinished"></translation>
+        <translation>Mit Google anmelden</translation>
     </message>
     <message>
         <location line="+47"/>
         <source>model name</source>
-        <translation type="unfinished"></translation>
+        <translation>Modellname</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Try this one sooner</source>
-        <translation type="unfinished"></translation>
+        <translation>Früher probieren</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>Entfernen</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Add a model</source>
-        <translation type="unfinished"></translation>
+        <translation>Modell hinzufügen</translation>
     </message>
 </context>
 <context>
@@ -1075,32 +1076,32 @@
     <message>
         <location filename="../jarvis.py" line="+2428"/>
         <source>LISTENING</source>
-        <translation type="unfinished"></translation>
+        <translation>HÖRT ZU</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>SPEAKING</source>
-        <translation type="unfinished"></translation>
+        <translation>SPRICHT</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>WORKING</source>
-        <translation type="unfinished"></translation>
+        <translation>ARBEITET</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>PAUSED</source>
-        <translation type="unfinished"></translation>
+        <translation>PAUSIERT</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>BACKUP VOICE</source>
-        <translation type="unfinished"></translation>
+        <translation>ERSATZSTIMME</translation>
     </message>
     <message>
         <location line="+28"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
-        <translation type="unfinished"></translation>
+        <translation>Klick: Jarvis öffnen · Pause-Knopf: Zuhören an/aus · Roter Knopf (oder Rechtsklick): stoppen</translation>
     </message>
 </context>
 <context>
@@ -1108,182 +1109,182 @@
     <message>
         <location filename="../qml/PluginsPage.qml" line="+9"/>
         <source>Plugins</source>
-        <translation type="unfinished"></translation>
+        <translation>Plugins</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Give Jarvis more tools with MCP servers: a web address, or a command that runs on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Gib Jarvis mehr Werkzeuge mit MCP-Servern: eine Webadresse oder ein Befehl, der auf diesem PC läuft.</translation>
     </message>
     <message numerus="yes">
         <location line="+7"/>
         <source>%n min</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n Min.</numerusform>
+            <numerusform>%n Min.</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+0"/>
         <source>%n s</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n s</numerusform>
+            <numerusform>%n s</numerusform>
         </translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktualisieren</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Installed</source>
-        <translation type="unfinished"></translation>
+        <translation>Installiert</translation>
     </message>
     <message numerus="yes">
         <location line="+34"/>
         <source>%n tool(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n Werkzeug</numerusform>
+            <numerusform>%n Werkzeuge</numerusform>
         </translation>
     </message>
     <message>
         <location line="+12"/>
         <source>%1 · trying again in %2</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 · neuer Versuch in %2</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Trying again…</source>
-        <translation type="unfinished"></translation>
+        <translation>Neuer Versuch…</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Turned off</source>
-        <translation type="unfinished"></translation>
+        <translation>Ausgeschaltet</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Connecting… (a sign-in page may open in your browser)</source>
-        <translation type="unfinished"></translation>
+        <translation>Verbinde… (im Browser kann sich eine Anmeldeseite öffnen)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Try now</source>
-        <translation type="unfinished"></translation>
+        <translation>Jetzt versuchen</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Click again to remove</source>
-        <translation type="unfinished"></translation>
+        <translation>Zum Entfernen erneut klicken</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>Entfernen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Plugin removed</source>
-        <translation type="unfinished"></translation>
+        <translation>Plugin entfernt</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Add a plugin</source>
-        <translation type="unfinished"></translation>
+        <translation>Plugin hinzufügen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Start from a quick pick, or fill in any MCP server. Jarvis connects to it as soon as it&apos;s added.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nimm eine Schnellauswahl oder trag einen beliebigen MCP-Server ein. Jarvis verbindet sich, sobald er hinzugefügt ist.</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Context7 docs</source>
-        <translation type="unfinished"></translation>
+        <translation>Context7-Dokumentation</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Home folder files</source>
-        <translation type="unfinished"></translation>
+        <translation>Dateien im persönlichen Ordner</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Playwright browser</source>
-        <translation type="unfinished"></translation>
+        <translation>Playwright-Browser</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Name</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Type</source>
-        <translation type="unfinished"></translation>
+        <translation>Typ</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Address</source>
-        <translation type="unfinished"></translation>
+        <translation>Adresse</translation>
     </message>
     <message>
         <location line="+0"/>
         <location line="+4"/>
         <source>Command</source>
-        <translation type="unfinished"></translation>
+        <translation>Befehl</translation>
     </message>
     <message>
         <location line="-3"/>
         <source>e.g. notion</source>
-        <translation type="unfinished"></translation>
+        <translation>z. B. notion</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Web address</source>
-        <translation type="unfinished"></translation>
+        <translation>Webadresse</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Only these tools (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Nur diese Werkzeuge (optional)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Headers (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Header (optional)</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Environment (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Umgebung (optional)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>comma-separated names</source>
-        <translation type="unfinished"></translation>
+        <translation>Namen, durch Kommas getrennt</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>JSON, e.g. {&quot;Authorization&quot;: &quot;Bearer …&quot;}</source>
-        <translation type="unfinished"></translation>
+        <translation>JSON, z. B. {&quot;Authorization&quot;: &quot;Bearer …&quot;}</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>JSON, e.g. {&quot;API_KEY&quot;: &quot;…&quot;}</source>
-        <translation type="unfinished"></translation>
+        <translation>JSON, z. B. {&quot;API_KEY&quot;: &quot;…&quot;}</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Add plugin</source>
-        <translation type="unfinished"></translation>
+        <translation>Plugin hinzufügen</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Plugin added: connecting…</source>
-        <translation type="unfinished"></translation>
+        <translation>Plugin hinzugefügt: verbinde…</translation>
     </message>
 </context>
 <context>
@@ -1291,863 +1292,863 @@
     <message>
         <location filename="../qml/SettingsPage.qml" line="+11"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Einstellungen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
-        <translation type="unfinished"></translation>
+        <translation>Änderungen werden sofort gespeichert. Modelle und API-Schlüssel findest du auf der Seite „Modelle“.</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Checking…</source>
-        <translation type="unfinished"></translation>
+        <translation>Wird geprüft…</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Updated: Jarvis is restarting</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktualisiert: Jarvis startet neu</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Couldn&apos;t update: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktualisierung fehlgeschlagen: %1</translation>
     </message>
     <message>
         <location line="+35"/>
         <source>Passphrase saved</source>
-        <translation type="unfinished"></translation>
+        <translation>Passphrase gespeichert</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Passphrase removed</source>
-        <translation type="unfinished"></translation>
+        <translation>Passphrase entfernt</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Stimme</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>How Jarvis sounds and talks to you. Changes apply from the next conversation.</source>
-        <translation type="unfinished"></translation>
+        <translation>Wie Jarvis klingt und mit dir spricht. Änderungen gelten ab dem nächsten Gespräch.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Jarvis&apos;s voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Stimme von Jarvis</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Voice model</source>
-        <translation type="unfinished"></translation>
+        <translation>Stimmmodell</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Personality</source>
-        <translation type="unfinished"></translation>
+        <translation>Persönlichkeit</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Jarvis: refined, dry wit</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis: kultiviert, trockener Humor</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Friendly: warm and casual</source>
-        <translation type="unfinished"></translation>
+        <translation>Freundlich: herzlich und locker</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Brief: just the answer</source>
-        <translation type="unfinished"></translation>
+        <translation>Knapp: nur die Antwort</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Language Jarvis speaks and listens for</source>
-        <translation type="unfinished"></translation>
+        <translation>Sprache, die Jarvis spricht und versteht</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Also speaks and understands, when you (or someone on WhatsApp) speak them. Anything else is taken as mishearing.</source>
-        <translation type="unfinished"></translation>
+        <translation>Spricht und versteht diese Sprachen außerdem, wenn du (oder jemand auf WhatsApp) sie sprichst. Alles andere gilt als verhört.</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>Fast voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Schnelle Stimme</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Answer without thinking first: about 0.3 s quicker, a little less sharp</source>
-        <translation type="unfinished"></translation>
+        <translation>Antwortet ohne vorher nachzudenken: etwa 0,3 s schneller, etwas weniger präzise</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Speak replies to typed messages</source>
-        <translation type="unfinished"></translation>
+        <translation>Antworten auf getippte Nachrichten vorlesen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Always use the backup voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Immer die Ersatzstimme nutzen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Hear and speak with the models on the Models page instead of Gemini Live, for keys without it. Off, the backup voice only answers while Gemini Live can&apos;t be reached</source>
-        <translation type="unfinished"></translation>
+        <translation>Hören und Sprechen mit den Modellen auf der Seite „Modelle“ statt mit Gemini Live, für Schlüssel ohne Gemini Live. Aus: Die Ersatzstimme antwortet nur, solange Gemini Live nicht erreichbar ist</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Listening</source>
-        <translation type="unfinished"></translation>
+        <translation>Zuhören</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>When Jarvis wakes up, and how long it keeps listening.</source>
-        <translation type="unfinished"></translation>
+        <translation>Wann Jarvis aufwacht und wie lange er zuhört.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Wake word</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktivierungswort</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Your own model…</source>
-        <translation type="unfinished"></translation>
+        <translation>Eigenes Modell…</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Path of your own openWakeWord .onnx model</source>
-        <translation type="unfinished"></translation>
+        <translation>Pfad zu deinem eigenen openWakeWord-Modell (.onnx)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Full path, e.g. /home/you/hey_computer.onnx</source>
-        <translation type="unfinished"></translation>
+        <translation>Vollständiger Pfad, z. B. /home/you/hey_computer.onnx</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Pause before Jarvis answers</source>
-        <translation type="unfinished"></translation>
+        <translation>Pause, bevor Jarvis antwortet</translation>
     </message>
     <message>
         <location line="+0"/>
         <source> ms</source>
-        <translation type="unfinished"></translation>
+        <translation> ms</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Lower is snappier; higher cuts you off less</source>
-        <translation type="unfinished"></translation>
+        <translation>Niedriger antwortet flotter, höher unterbricht dich seltener</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Wake word sensitivity</source>
-        <translation type="unfinished"></translation>
+        <translation>Empfindlichkeit des Aktivierungsworts</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Lower wakes more easily</source>
-        <translation type="unfinished"></translation>
+        <translation>Niedriger weckt leichter</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Keep listening after a reply</source>
-        <translation type="unfinished"></translation>
+        <translation>Nach einer Antwort weiter zuhören</translation>
     </message>
     <message>
         <location line="+0"/>
         <location line="+2"/>
         <source> s</source>
-        <translation type="unfinished"></translation>
+        <translation> s</translation>
     </message>
     <message>
         <location line="-1"/>
         <source>How long Jarvis waits for a follow-up</source>
-        <translation type="unfinished"></translation>
+        <translation>Wie lange Jarvis auf eine Anschlussfrage wartet</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Stay connected after a conversation</source>
-        <translation type="unfinished"></translation>
+        <translation>Nach einem Gespräch verbunden bleiben</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Makes the next wake-up instant</source>
-        <translation type="unfinished"></translation>
+        <translation>Damit Jarvis beim nächsten Mal sofort bereit ist</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Learn my voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Meine Stimme lernen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Wake-ups you dismiss teach Jarvis what isn&apos;t you</source>
-        <translation type="unfinished"></translation>
+        <translation>Abgewiesene Aktivierungen zeigen Jarvis, was nicht du bist</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Only wake for my voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Nur auf meine Stimme reagieren</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Nothing learned for this wake word yet (Learn my voice needs a few wake-ups first): until then anyone can wake Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>Für dieses Aktivierungswort noch nichts gelernt („Meine Stimme lernen“ braucht erst ein paar Aktivierungen): Bis dahin kann jeder Jarvis wecken</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Needs Learn my voice on: until then anyone can wake Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>Erfordert „Meine Stimme lernen“: Bis dahin kann jeder Jarvis wecken</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Someone else saying the wake word doesn&apos;t wake Jarvis. Talk and push to talk always work</source>
-        <translation type="unfinished"></translation>
+        <translation>Sagt jemand anderes das Aktivierungswort, wacht Jarvis nicht auf. „Sprechen“ und Push-to-Talk funktionieren immer</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Echo cancelling</source>
-        <translation type="unfinished"></translation>
+        <translation>Echounterdrückung</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (experimental on Windows: Health says if it&apos;s working; restart Jarvis to apply)</source>
-        <translation type="unfinished"></translation>
+        <translation>Hält den Ton des PCs (Jarvis, Spiele, Videos, Anrufe) vom Mikrofon fern, damit er nicht als du gehört wird und du Jarvis ins Wort fallen kannst (unter Windows experimentell: „Diagnose“ zeigt, ob es funktioniert; wirkt nach einem Neustart von Jarvis)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (PipeWire; restart Jarvis to apply)</source>
-        <translation type="unfinished"></translation>
+        <translation>Hält den Ton des PCs (Jarvis, Spiele, Videos, Anrufe) vom Mikrofon fern, damit er nicht als du gehört wird und du Jarvis ins Wort fallen kannst (PipeWire; wirkt nach einem Neustart von Jarvis)</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Spoken passphrase: asked for with every yes said out loud (sends, calls, account changes, risky commands). Never shown or said back</source>
-        <translation type="unfinished"></translation>
+        <translation>Gesprochene Passphrase: wird bei jedem laut gesagten Ja abgefragt (Senden, Anrufe, Kontoänderungen, riskante Befehle). Wird nie angezeigt oder wiederholt</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Passphrase set · type a new one to replace it</source>
-        <translation type="unfinished"></translation>
+        <translation>Passphrase festgelegt · zum Ersetzen eine neue eingeben</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>A few words only you know</source>
-        <translation type="unfinished"></translation>
+        <translation>Ein paar Wörter, die nur du kennst</translation>
     </message>
     <message>
         <location line="+2"/>
         <location line="+126"/>
         <location line="+52"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Speichern</translation>
     </message>
     <message>
         <location line="-176"/>
         <location line="+74"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>Entfernen</translation>
     </message>
     <message>
         <location line="-64"/>
         <source>Push to talk</source>
-        <translation type="unfinished"></translation>
+        <translation>Push-to-Talk</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Bind these to keyboard shortcuts (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</source>
-        <translation type="unfinished"></translation>
+        <translation>Lege diese auf Tastenkürzel (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Start listening</source>
-        <translation type="unfinished"></translation>
+        <translation>Zuhören starten</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Drag over part of the screen and ask about it</source>
-        <translation type="unfinished"></translation>
+        <translation>Bildschirmbereich aufziehen und dazu fragen</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Your day</source>
-        <translation type="unfinished"></translation>
+        <translation>Dein Tag</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The weather, briefings and heads-ups Jarvis gives you.</source>
-        <translation type="unfinished"></translation>
+        <translation>Wetter, Überblicke und Hinweise von Jarvis.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Home city, for the weather (empty: guess from your network)</source>
-        <translation type="unfinished"></translation>
+        <translation>Heimatstadt für das Wetter (leer: anhand deines Netzwerks schätzen)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>e.g. London</source>
-        <translation type="unfinished"></translation>
+        <translation>z. B. Berlin</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Morning briefing</source>
-        <translation type="unfinished"></translation>
+        <translation>Morgenüberblick</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>The first time Jarvis starts in a morning, it tells you about your day</source>
-        <translation type="unfinished"></translation>
+        <translation>Beim ersten Start am Morgen erzählt dir Jarvis von deinem Tag</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Do not disturb</source>
-        <translation type="unfinished"></translation>
+        <translation>Nicht stören</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Jarvis doesn&apos;t speak up on its own: reminders, results and messages only go to the chat, notifications and your phone. It still answers you (also in the tray menu)</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis meldet sich nicht von selbst: Erinnerungen, Ergebnisse und Nachrichten landen nur im Chat, in Benachrichtigungen und auf deinem Handy. Antworten bekommst du trotzdem (auch im Menü im Infobereich)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Classroom deadlines</source>
-        <translation type="unfinished"></translation>
+        <translation>Classroom-Abgaben</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Reminders a day and two hours before work is due (skipped once you&apos;ve turned it in)</source>
-        <translation type="unfinished"></translation>
+        <translation>Erinnerungen einen Tag und zwei Stunden vor der Abgabe (entfallen, sobald du sie eingereicht hast)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Calendar heads-up</source>
-        <translation type="unfinished"></translation>
+        <translation>Terminhinweis</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>A reminder ten minutes before each Google Calendar event</source>
-        <translation type="unfinished"></translation>
+        <translation>Eine Erinnerung zehn Minuten vor jedem Termin in Google Kalender</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Quiet hours from (empty: none)</source>
-        <translation type="unfinished"></translation>
+        <translation>Ruhezeit ab (leer: keine)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>e.g. 22:00</source>
-        <translation type="unfinished"></translation>
+        <translation>z. B. 22:00</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Until (the morning briefing waits for it)</source>
-        <translation type="unfinished"></translation>
+        <translation>Bis (der Morgenüberblick wartet darauf)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>e.g. 07:00</source>
-        <translation type="unfinished"></translation>
+        <translation>z. B. 07:00</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Window &amp; behavior</source>
-        <translation type="unfinished"></translation>
+        <translation>Fenster &amp; Verhalten</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>How the window looks, and what Jarvis may do on its own.</source>
-        <translation type="unfinished"></translation>
+        <translation>Wie das Fenster aussieht und was Jarvis von sich aus tun darf.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Text size</source>
-        <translation type="unfinished"></translation>
+        <translation>Textgröße</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Bigger text across the window</source>
-        <translation type="unfinished"></translation>
+        <translation>Größerer Text im ganzen Fenster</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Window language</source>
-        <translation type="unfinished"></translation>
+        <translation>Sprache des Fensters</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Use sooner</source>
-        <translation type="unfinished"></translation>
+        <translation>Vorziehen</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Use later</source>
-        <translation type="unfinished"></translation>
+        <translation>Zurückstellen</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Add a language…</source>
-        <translation type="unfinished"></translation>
+        <translation>Sprache hinzufügen…</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Each text shows in the first language that has it. English is the window&apos;s own, so languages under it aren&apos;t used.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jeder Text erscheint in der ersten Sprache, die ihn hat. Englisch ist die Grundsprache des Fensters, Sprachen darunter werden also nicht genutzt.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Show Jarvis&apos;s thinking in the chat</source>
-        <translation type="unfinished"></translation>
+        <translation>Gedankengang von Jarvis im Chat zeigen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Start Jarvis when I log in</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis bei der Anmeldung starten</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Ask before risky actions</source>
-        <translation type="unfinished"></translation>
+        <translation>Vor riskanten Aktionen fragen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Commands that delete, install or shut down, and account changes (sending email, new events), wait for your yes unless you asked for exactly that</source>
-        <translation type="unfinished"></translation>
+        <translation>Befehle, die löschen, installieren oder herunterfahren, und Kontoänderungen (E-Mails senden, neue Termine) warten auf dein Ja, außer du hast genau darum gebeten</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Your instructions</source>
-        <translation type="unfinished"></translation>
+        <translation>Deine Anweisungen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>How Jarvis should behave, and things it should know about you.</source>
-        <translation type="unfinished"></translation>
+        <translation>Wie Jarvis sich verhalten soll und was er über dich wissen sollte.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Jarvis on Telegram</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis auf Telegram</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Send Jarvis tasks from anywhere through Telegram.</source>
-        <translation type="unfinished"></translation>
+        <translation>Schick Jarvis von überall Aufgaben über Telegram.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>In Telegram, message &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, send /newbot and copy the token it gives you.</source>
-        <translation type="unfinished"></translation>
+        <translation>Schreib in Telegram &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, sende /newbot und kopiere das Token, das du bekommst.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Paste it here.</source>
-        <translation type="unfinished"></translation>
+        <translation>Füge es hier ein.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Send your new bot the code below. Only that chat is answered.</source>
-        <translation type="unfinished"></translation>
+        <translation>Schick deinem neuen Bot den Code unten. Nur dieser Chat bekommt Antworten.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Bot token saved · paste a new one to replace it</source>
-        <translation type="unfinished"></translation>
+        <translation>Bot-Token gespeichert · zum Ersetzen ein neues einfügen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Paste your bot&apos;s token</source>
-        <translation type="unfinished"></translation>
+        <translation>Token deines Bots einfügen</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Paired with %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Gekoppelt mit %1.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Send your bot this code: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Schick deinem Bot diesen Code: %1</translation>
     </message>
     <message>
         <location line="+6"/>
         <location line="+85"/>
         <source>Unpair</source>
-        <translation type="unfinished"></translation>
+        <translation>Entkoppeln</translation>
     </message>
     <message>
         <location line="-84"/>
         <source>Remove the bot</source>
-        <translation type="unfinished"></translation>
+        <translation>Bot entfernen</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>The Jarvis app</source>
-        <translation type="unfinished"></translation>
+        <translation>Die Jarvis-App</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The Jarvis Android app reaches this PC from anywhere through your own private relay. It&apos;s end-to-end encrypted: the relay only passes on scrambled data, and nothing on this PC is open to the internet.</source>
-        <translation type="unfinished"></translation>
+        <translation>Die Jarvis-App für Android erreicht diesen PC von überall über dein eigenes privates Relay. Die Verbindung ist Ende-zu-Ende-verschlüsselt: Das Relay leitet nur verschlüsselte Daten weiter, und auf diesem PC ist nichts aus dem Internet erreichbar.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Setting up…</source>
-        <translation type="unfinished"></translation>
+        <translation>Wird eingerichtet…</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Set up my relay</source>
-        <translation type="unfinished"></translation>
+        <translation>Relay einrichten</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Signs in to your free Cloudflare account in your browser, puts the relay online and saves its address.</source>
-        <translation type="unfinished"></translation>
+        <translation>Meldet dich im Browser bei deinem kostenlosen Cloudflare-Konto an, stellt das Relay online und speichert seine Adresse.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Or by hand</source>
-        <translation type="unfinished"></translation>
+        <translation>Oder von Hand</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>In the relay folder of Jarvis&apos;s files, sign in to a free Cloudflare account:</source>
-        <translation type="unfinished"></translation>
+        <translation>Melde dich im Ordner relay der Jarvis-Dateien bei einem kostenlosen Cloudflare-Konto an:</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Put the relay online:</source>
-        <translation type="unfinished"></translation>
+        <translation>Stell das Relay online:</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Paste the address it prints here.</source>
-        <translation type="unfinished"></translation>
+        <translation>Füge die ausgegebene Adresse hier ein.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Your relay&apos;s address, like https://jarvis-relay.you.workers.dev</source>
-        <translation type="unfinished"></translation>
+        <translation>Adresse deines Relays, z. B. https://jarvis-relay.you.workers.dev</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Abbrechen</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Connected</source>
-        <translation type="unfinished"></translation>
+        <translation>Verbunden</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Connecting…</source>
-        <translation type="unfinished"></translation>
+        <translation>Verbinde…</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Change</source>
-        <translation type="unfinished"></translation>
+        <translation>Ändern</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Pair another phone</source>
-        <translation type="unfinished"></translation>
+        <translation>Weiteres Handy koppeln</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Pair a phone</source>
-        <translation type="unfinished"></translation>
+        <translation>Handy koppeln</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Scan to pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Zum Koppeln scannen</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>In the Jarvis app, tap Pair and scan this code. It works once, for ten minutes.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tippe in der Jarvis-App auf „Pair“ und scanne diesen Code. Er gilt einmal, zehn Minuten lang.</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>WhatsApp</source>
-        <translation type="unfinished"></translation>
+        <translation>WhatsApp</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Jarvis links to your own WhatsApp like WhatsApp Web. It answers your contacts&apos; messages that don&apos;t need you, saying it&apos;s your assistant, and picks up calls you miss to take a message. It&apos;s not an official WhatsApp feature: WhatsApp may block numbers that act like bots, so Jarvis answers only saved contacts, never groups.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis verbindet sich wie WhatsApp Web mit deinem eigenen WhatsApp. Er beantwortet Nachrichten deiner Kontakte, für die du nicht gebraucht wirst, sagt dabei, dass er dein Assistent ist, und nimmt verpasste Anrufe an, um etwas auszurichten. Das ist keine offizielle WhatsApp-Funktion: WhatsApp kann Nummern sperren, die sich wie Bots verhalten, daher antwortet Jarvis nur gespeicherten Kontakten, nie in Gruppen.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Link WhatsApp</source>
-        <translation type="unfinished"></translation>
+        <translation>WhatsApp verknüpfen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Connecting to WhatsApp…</source>
-        <translation type="unfinished"></translation>
+        <translation>Verbinde mit WhatsApp…</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Getting a code from WhatsApp…</source>
-        <translation type="unfinished"></translation>
+        <translation>Code wird von WhatsApp geholt…</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Scan with WhatsApp</source>
-        <translation type="unfinished"></translation>
+        <translation>Mit WhatsApp scannen</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>On your phone: WhatsApp → Settings → Linked devices → Link a device, then scan this code. It renews itself.</source>
-        <translation type="unfinished"></translation>
+        <translation>Auf dem Handy: WhatsApp → Einstellungen → Verknüpfte Geräte → Gerät hinzufügen, dann diesen Code scannen. Er erneuert sich selbst.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>On a call with %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Im Anruf mit %1</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Linked as %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Verknüpft als %1</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Linked</source>
-        <translation type="unfinished"></translation>
+        <translation>Verknüpft</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unlink</source>
-        <translation type="unfinished"></translation>
+        <translation>Trennen</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Messages</source>
-        <translation type="unfinished"></translation>
+        <translation>Nachrichten</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Answer my contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Meinen Kontakten antworten</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Just show them to me</source>
-        <translation type="unfinished"></translation>
+        <translation>Nur mir anzeigen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Calls</source>
-        <translation type="unfinished"></translation>
+        <translation>Anrufe</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Pick up if I don&apos;t (20 s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Annehmen, wenn ich nicht rangehe (20 s)</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Decline them</source>
-        <translation type="unfinished"></translation>
+        <translation>Ablehnen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Let them ring</source>
-        <translation type="unfinished"></translation>
+        <translation>Klingeln lassen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Always let through (one name per line, as WhatsApp shows it): never answered by Jarvis, always told to you out loud, even in quiet hours</source>
-        <translation type="unfinished"></translation>
+        <translation>Immer durchlassen (ein Name pro Zeile, wie WhatsApp ihn anzeigt): nie von Jarvis beantwortet, immer laut angesagt, auch in der Ruhezeit</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>e.g. Alex</source>
-        <translation type="unfinished"></translation>
+        <translation>z. B. Alex</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
-        <translation type="unfinished"></translation>
+        <translation>Nie antworten (ein Name pro Zeile): Jarvis antwortet nie und nimmt nie ab, sondern zeigt ihre Nachrichten nur im Chat</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>e.g. Sam</source>
-        <translation type="unfinished"></translation>
+        <translation>z. B. Sam</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>What Jarvis tells people</source>
-        <translation type="unfinished"></translation>
+        <translation>Was Jarvis anderen sagt</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>e.g. I&apos;m in class until 5, I&apos;ll answer after</source>
-        <translation type="unfinished"></translation>
+        <translation>z. B. Ich bin bis 17 Uhr im Unterricht und antworte danach</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Your data</source>
-        <translation type="unfinished"></translation>
+        <translation>Deine Daten</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>On this PC Jarvis keeps what it remembers about you, your conversations, reminders and routines, short clips of your wake word (to learn your voice) and a log. What you say after the wake word, and screenshots when a task needs the screen, go to Google Gemini; account actions go through Composio.</source>
-        <translation type="unfinished"></translation>
+        <translation>Auf diesem PC speichert Jarvis, was er sich über dich merkt, deine Gespräche, Erinnerungen und Routinen, kurze Aufnahmen deines Aktivierungsworts (um deine Stimme zu lernen) und ein Protokoll. Was du nach dem Aktivierungswort sagst und Screenshots, wenn eine Aufgabe den Bildschirm braucht, gehen an Google Gemini; Kontoaktionen laufen über Composio.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Keep conversations and logs for</source>
-        <translation type="unfinished"></translation>
+        <translation>Gespräche und Protokolle aufbewahren für</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>A week</source>
-        <translation type="unfinished"></translation>
+        <translation>Eine Woche</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>A month</source>
-        <translation type="unfinished"></translation>
+        <translation>Einen Monat</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>3 months</source>
-        <translation type="unfinished"></translation>
+        <translation>3 Monate</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>A year</source>
-        <translation type="unfinished"></translation>
+        <translation>Ein Jahr</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Forever</source>
-        <translation type="unfinished"></translation>
+        <translation>Für immer</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Press again to delete it all</source>
-        <translation type="unfinished"></translation>
+        <translation>Erneut klicken, um alles zu löschen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Delete everything Jarvis keeps about me</source>
-        <translation type="unfinished"></translation>
+        <translation>Alles löschen, was Jarvis über mich speichert</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Deleted. Keys, accounts and settings are kept.</source>
-        <translation type="unfinished"></translation>
+        <translation>Gelöscht. Schlüssel, Konten und Einstellungen bleiben erhalten.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Keys, account sign-ins and settings stay.</source>
-        <translation type="unfinished"></translation>
+        <translation>Schlüssel, Kontoanmeldungen und Einstellungen bleiben erhalten.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Move to another computer</source>
-        <translation type="unfinished"></translation>
+        <translation>Auf einen anderen Computer umziehen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>One file with your settings, memory, reminders, scheduled tasks, routines, plugins, conversations and the clips Jarvis learned your voice from. Keys, account sign-ins, WhatsApp and your phone aren&apos;t in it: set those up again on the other computer.</source>
-        <translation type="unfinished"></translation>
+        <translation>Eine Datei mit deinen Einstellungen, deinem Gedächtnis, Erinnerungen, geplanten Aufgaben, Routinen, Plugins, Gesprächen und den Aufnahmen, aus denen Jarvis deine Stimme gelernt hat. Schlüssel, Kontoanmeldungen, WhatsApp und dein Handy sind nicht enthalten: Richte sie auf dem anderen Computer neu ein.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Save a backup</source>
-        <translation type="unfinished"></translation>
+        <translation>Sicherung speichern</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Bring one in</source>
-        <translation type="unfinished"></translation>
+        <translation>Sicherung einspielen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Bringing one in replaces what&apos;s on this computer (conversations are added), then Jarvis restarts.</source>
-        <translation type="unfinished"></translation>
+        <translation>Das Einspielen ersetzt, was auf diesem Computer ist (Gespräche werden ergänzt), danach startet Jarvis neu.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Save a Jarvis backup</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis-Sicherung speichern</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+8"/>
         <source>Jarvis backups (*.zip)</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis-Sicherungen (*.zip)</translation>
     </message>
     <message>
         <location line="-6"/>
         <source>Saved to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Gespeichert unter %1</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Bring in a Jarvis backup</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis-Sicherung einspielen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Brought in (left at their defaults here: %1): Jarvis is restarting</source>
-        <translation type="unfinished"></translation>
+        <translation>Eingespielt (hier auf Standard belassen: %1): Jarvis startet neu</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Brought in: Jarvis is restarting</source>
-        <translation type="unfinished"></translation>
+        <translation>Eingespielt: Jarvis startet neu</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>%1 is out (%2)</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 ist verfügbar (%2)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%1 is out</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 ist verfügbar</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Up to date</source>
-        <translation type="unfinished"></translation>
+        <translation>Auf dem neuesten Stand</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Updating…</source>
-        <translation type="unfinished"></translation>
+        <translation>Wird aktualisiert…</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Update now</source>
-        <translation type="unfinished"></translation>
+        <translation>Jetzt aktualisieren</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Check for updates</source>
-        <translation type="unfinished"></translation>
+        <translation>Nach Updates suchen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Run the setup again</source>
-        <translation type="unfinished"></translation>
+        <translation>Einrichtung erneut starten</translation>
     </message>
     <message>
         <location line="+116"/>
         <source>e.g. Keep answers short.</source>
-        <translation type="unfinished"></translation>
+        <translation>z. B. Antworte kurz.</translation>
     </message>
 </context>
 <context>
@@ -2155,242 +2156,242 @@
     <message>
         <location filename="../qml/SetupWizard.qml" line="+15"/>
         <source>Welcome</source>
-        <translation type="unfinished"></translation>
+        <translation>Willkommen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Gemini key</source>
-        <translation type="unfinished"></translation>
+        <translation>Gemini-Schlüssel</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Microphone</source>
-        <translation type="unfinished"></translation>
+        <translation>Mikrofon</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Stimme</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Safety</source>
-        <translation type="unfinished"></translation>
+        <translation>Sicherheit</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Ready</source>
-        <translation type="unfinished"></translation>
+        <translation>Fertig</translation>
     </message>
     <message>
         <location line="+75"/>
         <source>Setting up Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis einrichten</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Let’s get you ready</source>
-        <translation type="unfinished"></translation>
+        <translation>Los geht’s</translation>
     </message>
     <message>
         <location line="+40"/>
         <source>Hi, I’m Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>Hallo, ich bin Jarvis</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Say “%1” and ask for anything: questions, what’s on your screen, your apps, email, calendar, Classroom, reminders. A couple of minutes of setup and you’re ready.</source>
-        <translation type="unfinished"></translation>
+        <translation>Sag „%1“ und frag nach allem Möglichen: Fragen, deinem Bildschirm, deinen Apps, E-Mails, Kalender, Classroom, Erinnerungen. Ein paar Minuten Einrichtung, und es kann losgehen.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>What leaves this PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Was diesen PC verlässt</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>What you say after “%1”, and screenshots when a task needs the screen, go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Memory, reminders and conversations stay on this computer.</source>
-        <translation type="unfinished"></translation>
+        <translation>Was du nach „%1“ sagst und Screenshots, wenn eine Aufgabe den Bildschirm braucht, gehen an Google Gemini. Kontoaktionen laufen über Composio, nur für die Konten, die du verbindest. Gedächtnis, Erinnerungen und Gespräche bleiben auf diesem Computer.</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Your Gemini key</source>
-        <translation type="unfinished"></translation>
+        <translation>Dein Gemini-Schlüssel</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Jarvis thinks with Google Gemini. A free key takes a minute: sign in at &lt;a href=&quot;https://aistudio.google.com/apikey&quot;&gt;aistudio.google.com/apikey&lt;/a&gt;, press Create API key, and paste it here. It’s kept in your system keychain.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis denkt mit Google Gemini. Ein kostenloser Schlüssel dauert eine Minute: Melde dich bei &lt;a href=&quot;https://aistudio.google.com/apikey&quot;&gt;aistudio.google.com/apikey&lt;/a&gt; an, klicke auf „Create API key“ und füge ihn hier ein. Er wird im Schlüsselbund deines Systems gespeichert.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Key saved · paste a new one to replace it</source>
-        <translation type="unfinished"></translation>
+        <translation>Schlüssel gespeichert · zum Ersetzen einen neuen einfügen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Paste your API key</source>
-        <translation type="unfinished"></translation>
+        <translation>API-Schlüssel einfügen</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Speichern</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Checking the key…</source>
-        <translation type="unfinished"></translation>
+        <translation>Schlüssel wird geprüft…</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>The key works: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Der Schlüssel funktioniert: %1</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>No key yet</source>
-        <translation type="unfinished"></translation>
+        <translation>Noch kein Schlüssel</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>That key didn’t work: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Dieser Schlüssel funktioniert nicht: %1</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Your microphone</source>
-        <translation type="unfinished"></translation>
+        <translation>Dein Mikrofon</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Say something: the bars should jump while you talk.</source>
-        <translation type="unfinished"></translation>
+        <translation>Sag etwas: Die Balken sollten beim Sprechen ausschlagen.</translation>
     </message>
     <message>
         <location line="+37"/>
         <source>I can hear you.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ich höre dich.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Quiet so far. If the bars never move, pick the right input device in your system’s sound settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Bisher still. Bewegen sich die Balken nie, wähle in den Toneinstellungen deines Systems das richtige Eingabegerät.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Wake word sensitivity</source>
-        <translation type="unfinished"></translation>
+        <translation>Empfindlichkeit des Aktivierungsworts</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Lower wakes more easily.</source>
-        <translation type="unfinished"></translation>
+        <translation>Niedriger weckt leichter.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>My voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Meine Stimme</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>How I sound, and when I talk.</source>
-        <translation type="unfinished"></translation>
+        <translation>Wie ich klinge und wann ich spreche.</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>Speak replies to typed messages</source>
-        <translation type="unfinished"></translation>
+        <translation>Antworten auf getippte Nachrichten vorlesen</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Start Jarvis when I log in</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis bei der Anmeldung starten</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>How careful should I be?</source>
-        <translation type="unfinished"></translation>
+        <translation>Wie vorsichtig soll ich sein?</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>You can change this any time in Settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Du kannst das jederzeit in den Einstellungen ändern.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Ask first</source>
-        <translation type="unfinished"></translation>
+        <translation>Erst fragen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Recommended</source>
-        <translation type="unfinished"></translation>
+        <translation>Empfohlen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Commands that delete, install or shut down, and changes to your accounts (sending email, creating events), wait for your yes, unless you asked for exactly that.</source>
-        <translation type="unfinished"></translation>
+        <translation>Befehle, die löschen, installieren oder herunterfahren, und Änderungen an deinen Konten (E-Mails senden, Termine anlegen) warten auf dein Ja, außer du hast genau darum gebeten.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Just do it</source>
-        <translation type="unfinished"></translation>
+        <translation>Einfach machen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Jarvis acts without checking first. Quicker, for when you trust it with your PC and accounts.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis handelt ohne Rückfrage. Schneller, wenn du ihm deinen PC und deine Konten anvertraust.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>You’re set</source>
-        <translation type="unfinished"></translation>
+        <translation>Alles bereit</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Connect Gmail, Calendar, Classroom, Drive and more on the Accounts page so Jarvis can use them. If something doesn’t work, the Health page says what and how to fix it.</source>
-        <translation type="unfinished"></translation>
+        <translation>Verbinde Gmail, Kalender, Classroom, Drive und mehr auf der Seite „Konten“, damit Jarvis sie nutzen kann. Wenn etwas nicht funktioniert, zeigt die Seite „Diagnose“, was los ist und wie du es behebst.</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>Try it now</source>
-        <translation type="unfinished"></translation>
+        <translation>Probier es aus</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>“%1, what’s the weather?”</source>
-        <translation type="unfinished"></translation>
+        <translation>„%1, wie ist das Wetter?“</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Skip setup</source>
-        <translation type="unfinished"></translation>
+        <translation>Einrichtung überspringen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Back</source>
-        <translation type="unfinished"></translation>
+        <translation>Zurück</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Done</source>
-        <translation type="unfinished"></translation>
+        <translation>Fertig</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Connect accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Konten verbinden</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Skip for now</source>
-        <translation type="unfinished"></translation>
+        <translation>Vorerst überspringen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Next</source>
-        <translation type="unfinished"></translation>
+        <translation>Weiter</translation>
     </message>
 </context>
 <context>
@@ -2398,22 +2399,22 @@
     <message>
         <location filename="../qml/Theme.qml" line="+70"/>
         <source>Listening</source>
-        <translation type="unfinished"></translation>
+        <translation>Hört zu</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Working</source>
-        <translation type="unfinished"></translation>
+        <translation>Arbeitet</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Speaking</source>
-        <translation type="unfinished"></translation>
+        <translation>Spricht</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Ready</source>
-        <translation type="unfinished"></translation>
+        <translation>Bereit</translation>
     </message>
 </context>
 <context>
@@ -2421,72 +2422,72 @@
     <message>
         <location filename="../qml/Today.qml" line="+92"/>
         <source>Feels %1 in %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Gefühlt %1 in %2</translation>
     </message>
     <message>
         <location line="+44"/>
         <source>Now playing</source>
-        <translation type="unfinished"></translation>
+        <translation>Läuft gerade</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Previous</source>
-        <translation type="unfinished"></translation>
+        <translation>Vorheriger Titel</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Next</source>
-        <translation type="unfinished"></translation>
+        <translation>Nächster Titel</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Up next</source>
-        <translation type="unfinished"></translation>
+        <translation>Als Nächstes</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Nothing scheduled. Try “remind me in 20 minutes to stretch”.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nichts geplant. Probier „erinnere mich in 20 Minuten, mich zu dehnen“.</translation>
     </message>
     <message>
         <location line="+30"/>
         <source>Cancel this reminder</source>
-        <translation type="unfinished"></translation>
+        <translation>Erinnerung löschen</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>This PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Dieser PC</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Processor</source>
-        <translation type="unfinished"></translation>
+        <translation>Prozessor</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Memory</source>
-        <translation type="unfinished"></translation>
+        <translation>Arbeitsspeicher</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%1 of %2 GB</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 von %2 GB</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Disk</source>
-        <translation type="unfinished"></translation>
+        <translation>Festplatte</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%1 GB free</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 GB frei</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Last answer started %1 s after you finished</source>
-        <translation type="unfinished"></translation>
+        <translation>Letzte Antwort kam %1 s nach deinem letzten Wort</translation>
     </message>
 </context>
 <context>
@@ -2494,62 +2495,62 @@
     <message>
         <location filename="../jarvis.py" line="+117"/>
         <source>Open Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis öffnen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Talk</source>
-        <translation type="unfinished"></translation>
+        <translation>Sprechen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>Stopp</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Do not disturb</source>
-        <translation type="unfinished"></translation>
+        <translation>Nicht stören</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Quit</source>
-        <translation type="unfinished"></translation>
+        <translation>Beenden</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Running in the tray. Say &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>Läuft im Infobereich. Sag „%1“.</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>idle</source>
-        <translation type="unfinished"></translation>
+        <translation>bereit</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>listening</source>
-        <translation type="unfinished"></translation>
+        <translation>hört zu</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>speaking</source>
-        <translation type="unfinished"></translation>
+        <translation>spricht</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>thinking</source>
-        <translation type="unfinished"></translation>
+        <translation>denkt nach</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>quiet</source>
-        <translation type="unfinished"></translation>
+        <translation>stumm</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>backup voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Ersatzstimme</translation>
     </message>
 </context>
 </TS>

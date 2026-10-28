@@ -6,108 +6,108 @@
     <message>
         <location filename="../qml/AccountsPage.qml" line="+9"/>
         <source>Accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Accounts</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Connect your accounts so Jarvis can read and act on them. You decide what it may do with each.</source>
-        <translation type="unfinished"></translation>
+        <translation>Koppel je accounts zodat Jarvis ze kan lezen en er dingen in kan doen. Jij bepaalt per account wat mag.</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>Refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>Vernieuwen</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Couldn&apos;t reach your accounts: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Je accounts zijn niet bereikbaar: %1</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Checking your accounts…</source>
-        <translation type="unfinished"></translation>
+        <translation>Accounts controleren…</translation>
     </message>
     <message>
         <location line="+3"/>
         <location line="+29"/>
         <source>Connected</source>
-        <translation type="unfinished"></translation>
+        <translation>Gekoppeld</translation>
     </message>
     <message>
         <location line="-28"/>
         <source>Choose what Jarvis may do with each account.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kies wat Jarvis met elk account mag doen.</translation>
     </message>
     <message>
         <location line="+35"/>
         <source>Sign in again</source>
-        <translation type="unfinished"></translation>
+        <translation>Opnieuw inloggen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Sign-in opened in your browser</source>
-        <translation type="unfinished"></translation>
+        <translation>Inloggen geopend in je browser</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Click again to disconnect</source>
-        <translation type="unfinished"></translation>
+        <translation>Klik nogmaals om te ontkoppelen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Disconnect</source>
-        <translation type="unfinished"></translation>
+        <translation>Ontkoppelen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>%1 disconnected</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 ontkoppeld</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Ask before changes</source>
-        <translation type="unfinished"></translation>
+        <translation>Vragen vóór wijzigingen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Full access</source>
-        <translation type="unfinished"></translation>
+        <translation>Volledige toegang</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Read only</source>
-        <translation type="unfinished"></translation>
+        <translation>Alleen lezen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Paused</source>
-        <translation type="unfinished"></translation>
+        <translation>Gepauzeerd</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>More accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Meer accounts</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Accounts you can connect</source>
-        <translation type="unfinished"></translation>
+        <translation>Accounts die je kunt koppelen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Pick one to sign in from your browser, then press Refresh.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kies er een om in te loggen via je browser en klik daarna op ‘Vernieuwen’.</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Finish signing in in your browser, then press Refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>Rond het inloggen af in je browser en klik daarna op ‘Vernieuwen’</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Connect %1</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 koppelen</translation>
     </message>
 </context>
 <context>
@@ -115,40 +115,40 @@
     <message>
         <location filename="../qml/ActivityPage.qml" line="+43"/>
         <source>Activity</source>
-        <translation type="unfinished"></translation>
+        <translation>Activiteit</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Every step Jarvis takes in this conversation, as it happens.</source>
-        <translation type="unfinished"></translation>
+        <translation>Elke stap die Jarvis in dit gesprek zet, live.</translation>
     </message>
     <message>
         <location line="+86"/>
         <source>New steps appear at the top as Jarvis works</source>
-        <translation type="unfinished"></translation>
+        <translation>Nieuwe stappen verschijnen bovenaan terwijl Jarvis bezig is</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Nothing yet: ask Jarvis something</source>
-        <translation type="unfinished"></translation>
+        <translation>Nog niets: vraag Jarvis iets</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Reply speed</source>
-        <translation type="unfinished"></translation>
+        <translation>Reactiesnelheid</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>s</source>
         <extracomment>seconds, after the average reply time</extracomment>
-        <translation type="unfinished"></translation>
+        <translation>s</translation>
     </message>
     <message numerus="yes">
         <location line="+3"/>
         <source>Averaged over the last %n replies: from the end of what you said to Jarvis&apos;s first word.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Gemeten over het laatste antwoord: van je laatste woord tot het eerste woord van Jarvis.</numerusform>
+            <numerusform>Gemiddelde van de laatste %n antwoorden: van je laatste woord tot het eerste woord van Jarvis.</numerusform>
         </translation>
     </message>
 </context>
@@ -157,7 +157,7 @@
     <message>
         <location filename="../qml/Api.qml" line="+27"/>
         <source>Something went wrong</source>
-        <translation type="unfinished"></translation>
+        <translation>Er ging iets mis</translation>
     </message>
 </context>
 <context>
@@ -165,7 +165,7 @@
     <message>
         <location filename="../window.py" line="+193"/>
         <source>Copied</source>
-        <translation type="unfinished"></translation>
+        <translation>Gekopieerd</translation>
     </message>
 </context>
 <context>
@@ -173,91 +173,91 @@
     <message>
         <location filename="../qml/ChatsPage.qml" line="+33"/>
         <source>just now</source>
-        <translation type="unfinished"></translation>
+        <translation>zojuist</translation>
     </message>
     <message numerus="yes">
         <location line="+0"/>
         <source>%n min ago</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n min geleden</numerusform>
+            <numerusform>%n min geleden</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+0"/>
         <source>%n h ago</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n uur geleden</numerusform>
+            <numerusform>%n uur geleden</numerusform>
         </translation>
     </message>
     <message>
         <location line="+17"/>
         <source>Chats</source>
-        <translation type="unfinished"></translation>
+        <translation>Chats</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Every conversation is saved here. Open one to carry on where you left off.</source>
-        <translation type="unfinished"></translation>
+        <translation>Elk gesprek wordt hier bewaard. Open er een om verder te gaan waar je gebleven was.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>New chat</source>
-        <translation type="unfinished"></translation>
+        <translation>Nieuwe chat</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Search conversations</source>
-        <translation type="unfinished"></translation>
+        <translation>Gesprekken zoeken</translation>
     </message>
     <message>
         <location line="+48"/>
         <source>Now</source>
-        <translation type="unfinished"></translation>
+        <translation>Nu</translation>
     </message>
     <message numerus="yes">
         <location line="+5"/>
         <source>%n message(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n bericht</numerusform>
+            <numerusform>%n berichten</numerusform>
         </translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Nothing matches that</source>
-        <translation type="unfinished"></translation>
+        <translation>Niets gevonden</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>No conversations yet</source>
-        <translation type="unfinished"></translation>
+        <translation>Nog geen gesprekken</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>Verwijderen</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Click again to delete</source>
-        <translation type="unfinished"></translation>
+        <translation>Klik nogmaals om te verwijderen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Conversation deleted</source>
-        <translation type="unfinished"></translation>
+        <translation>Gesprek verwijderd</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Open</source>
-        <translation type="unfinished"></translation>
+        <translation>Openen</translation>
     </message>
     <message>
         <location line="+55"/>
         <source>Pick a conversation to read it</source>
-        <translation type="unfinished"></translation>
+        <translation>Kies een gesprek om het te lezen</translation>
     </message>
 </context>
 <context>
@@ -265,37 +265,37 @@
     <message>
         <location filename="../qml/Composer.qml" line="+45"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>Verwijderen</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Attach files (or drop them here)</source>
-        <translation type="unfinished"></translation>
+        <translation>Bestanden toevoegen (of sleep ze hierheen)</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Ask Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>Vraag het Jarvis</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>Pause listening</source>
-        <translation type="unfinished"></translation>
+        <translation>Luisteren pauzeren</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Talk to Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>Praat met Jarvis</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Stop (Esc)</source>
-        <translation type="unfinished"></translation>
+        <translation>Stoppen (Esc)</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Send (Enter)</source>
-        <translation type="unfinished"></translation>
+        <translation>Versturen (Enter)</translation>
     </message>
 </context>
 <context>
@@ -304,132 +304,132 @@
         <location filename="../qml/HealthPage.qml" line="+9"/>
         <location line="+16"/>
         <source>Health</source>
-        <translation type="unfinished"></translation>
+        <translation>Diagnose</translation>
     </message>
     <message>
         <location line="-15"/>
         <source>Checks the key, mic, screen, accounts and models, and how to fix them.</source>
-        <translation type="unfinished"></translation>
+        <translation>Controleert de sleutel, microfoon, het scherm, de accounts en modellen, en hoe je problemen oplost.</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Home</source>
-        <translation type="unfinished"></translation>
+        <translation>Start</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Chats</source>
-        <translation type="unfinished"></translation>
+        <translation>Chats</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Activity</source>
-        <translation type="unfinished"></translation>
+        <translation>Activiteit</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Accounts</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Plugins</source>
-        <translation type="unfinished"></translation>
+        <translation>Plug-ins</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Models</source>
-        <translation type="unfinished"></translation>
+        <translation>Modellen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Memory</source>
-        <translation type="unfinished"></translation>
+        <translation>Geheugen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Instellingen</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Copy a report</source>
-        <translation type="unfinished"></translation>
+        <translation>Rapport kopiëren</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copied. Look it over, then paste it into a bug report</source>
-        <translation type="unfinished"></translation>
+        <translation>Gekopieerd. Kijk het na en plak het daarna in een bugmelding</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Report a problem</source>
-        <translation type="unfinished"></translation>
+        <translation>Probleem melden</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Checking…</source>
-        <translation type="unfinished"></translation>
+        <translation>Controleren…</translation>
     </message>
     <message numerus="yes">
         <location line="+0"/>
         <source>%n thing(s) to fix</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n ding op te lossen</numerusform>
+            <numerusform>%n dingen op te lossen</numerusform>
         </translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Everything works</source>
-        <translation type="unfinished"></translation>
+        <translation>Alles werkt</translation>
     </message>
     <message numerus="yes">
         <location line="+2"/>
         <source>%1 of %n check(s) pass</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%1 van %n controle geslaagd</numerusform>
+            <numerusform>%1 van %n controles geslaagd</numerusform>
         </translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Check again</source>
-        <translation type="unfinished"></translation>
+        <translation>Opnieuw controleren</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Fix: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Oplossing: %1</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Open %1</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 openen</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Model use today</source>
-        <translation type="unfinished"></translation>
+        <translation>Modelgebruik vandaag</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Free Google AI Studio keys allow a limited number of requests per model each day. When one runs out, Jarvis uses the next model in that job&apos;s list (the Models page) until the quota resets at midnight Pacific time.</source>
-        <translation type="unfinished"></translation>
+        <translation>Gratis Google AI Studio-sleutels staan per model een beperkt aantal verzoeken per dag toe. Is er een op, dan gebruikt Jarvis het volgende model in de lijst van die taak (pagina ‘Modellen’) tot het quotum om middernacht Pacific-tijd wordt gereset.</translation>
     </message>
     <message numerus="yes">
         <location line="+23"/>
         <source>request(s)</source>
         <comment>after a number</comment>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>verzoek</numerusform>
+            <numerusform>verzoeken</numerusform>
         </translation>
     </message>
     <message>
         <location line="+4"/>
         <source>No requests yet today.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vandaag nog geen verzoeken.</translation>
     </message>
 </context>
 <context>
@@ -437,142 +437,142 @@
     <message>
         <location filename="../qml/HomePage.qml" line="+58"/>
         <source>Attach files for Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>Bestanden toevoegen voor Jarvis</translation>
     </message>
     <message>
         <location line="+36"/>
         <source>Up late?</source>
-        <translation type="unfinished"></translation>
+        <translation>Laat op?</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Good morning</source>
-        <translation type="unfinished"></translation>
+        <translation>Goedemorgen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Good afternoon</source>
-        <translation type="unfinished"></translation>
+        <translation>Goedemiddag</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Good evening</source>
-        <translation type="unfinished"></translation>
+        <translation>Goedenavond</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Say “%1”, tap the reactor, or type below</source>
-        <translation type="unfinished"></translation>
+        <translation>Zeg “%1”, tik op de reactor of typ hieronder</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Go ahead, I&apos;m listening</source>
-        <translation type="unfinished"></translation>
+        <translation>Zeg het maar, ik luister</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Paused</source>
-        <translation type="unfinished"></translation>
+        <translation>Gepauzeerd</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Say “%1” to cut in</source>
-        <translation type="unfinished"></translation>
+        <translation>Zeg “%1” om te onderbreken</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>On it</source>
-        <translation type="unfinished"></translation>
+        <translation>Ik ben ermee bezig</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Brief me</source>
-        <translation type="unfinished"></translation>
+        <translation>Praat me bij</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Weather and your schedule</source>
-        <translation type="unfinished"></translation>
+        <translation>Het weer en je planning</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>What&apos;s due this week?</source>
-        <translation type="unfinished"></translation>
+        <translation>Wat moet er deze week af?</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>From Google Classroom</source>
-        <translation type="unfinished"></translation>
+        <translation>Uit Google Classroom</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Any new emails?</source>
-        <translation type="unfinished"></translation>
+        <translation>Heb ik nieuwe e-mails?</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Your Gmail inbox</source>
-        <translation type="unfinished"></translation>
+        <translation>Je Gmail-inbox</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>What&apos;s on my screen?</source>
-        <translation type="unfinished"></translation>
+        <translation>Wat staat er op mijn scherm?</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Jarvis takes a look</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis kijkt even</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Set a 10 minute timer</source>
-        <translation type="unfinished"></translation>
+        <translation>Zet een timer van 10 minuten</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>With a notification</source>
-        <translation type="unfinished"></translation>
+        <translation>Met een melding</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Paint a rainy city</source>
-        <translation type="unfinished"></translation>
+        <translation>Schilder een regenachtige stad</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Make a picture</source>
-        <translation type="unfinished"></translation>
+        <translation>Maak een afbeelding</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>New chat</source>
-        <translation type="unfinished"></translation>
+        <translation>Nieuwe chat</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Backup voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Reservestem</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The backup voice (Models page) answers instead of Gemini Live</source>
-        <translation type="unfinished"></translation>
+        <translation>De reservestem (pagina ‘Modellen’) antwoordt in plaats van Gemini Live</translation>
     </message>
     <message>
         <location line="+49"/>
         <source>Working on it…</source>
-        <translation type="unfinished"></translation>
+        <translation>Bezig…</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>Stoppen</translation>
     </message>
     <message>
         <location line="+27"/>
         <source>Drop to attach</source>
-        <translation type="unfinished"></translation>
+        <translation>Loslaten om toe te voegen</translation>
     </message>
 </context>
 <context>
@@ -580,67 +580,67 @@
     <message>
         <location filename="../qml/Main.qml" line="+115"/>
         <source>Home</source>
-        <translation type="unfinished"></translation>
+        <translation>Start</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Chats</source>
-        <translation type="unfinished"></translation>
+        <translation>Chats</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Activity</source>
-        <translation type="unfinished"></translation>
+        <translation>Activiteit</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Accounts</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Plugins</source>
-        <translation type="unfinished"></translation>
+        <translation>Plug-ins</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Models</source>
-        <translation type="unfinished"></translation>
+        <translation>Modellen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Memory</source>
-        <translation type="unfinished"></translation>
+        <translation>Geheugen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Health</source>
-        <translation type="unfinished"></translation>
+        <translation>Diagnose</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Instellingen</translation>
     </message>
     <message>
         <location line="+62"/>
         <source>Minimise</source>
-        <translation type="unfinished"></translation>
+        <translation>Minimaliseren</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Restore</source>
-        <translation type="unfinished"></translation>
+        <translation>Herstellen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Maximise</source>
-        <translation type="unfinished"></translation>
+        <translation>Maximaliseren</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Close (Jarvis keeps running in the tray)</source>
-        <translation type="unfinished"></translation>
+        <translation>Sluiten (Jarvis blijft actief in het systeemvak)</translation>
     </message>
 </context>
 <context>
@@ -648,219 +648,220 @@
     <message>
         <location filename="../qml/MemoryPage.qml" line="+10"/>
         <source>Memory</source>
-        <translation type="unfinished"></translation>
+        <translation>Geheugen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Jarvis reads this before every conversation. Tell it “remember…” or edit it here.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis leest dit vóór elk gesprek. Zeg “onthoud…” of bewerk het hier.</translation>
     </message>
     <message>
         <location line="+30"/>
         <source>Saved</source>
-        <translation type="unfinished"></translation>
+        <translation>Opgeslagen</translation>
     </message>
     <message>
         <location line="+4"/>
         <location line="+211"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Opslaan</translation>
     </message>
     <message>
         <location line="-210"/>
         <source>Memory saved</source>
-        <translation type="unfinished"></translation>
+        <translation>Geheugen opgeslagen</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>What Jarvis knows about you</source>
-        <translation type="unfinished"></translation>
+        <translation>Wat Jarvis over je weet</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Plain notes, one per line. Jarvis adds to them as you talk.</source>
-        <translation type="unfinished"></translation>
+        <translation>Gewone notities, één per regel. Jarvis vult ze aan terwijl jullie praten.</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>- Prefers to be called …
 - Studies …</source>
-        <translation type="unfinished"></translation>
+        <translation>- Wil graag … genoemd worden
+- Studeert …</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Reminders and scheduled tasks</source>
-        <translation type="unfinished"></translation>
+        <translation>Herinneringen en geplande taken</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%1 Say “remind me at 5 to call home”, or have Jarvis do something then: “every weekday at 8, check my inbox”.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 Zeg “herinner me om 5 uur om naar huis te bellen”, of laat Jarvis dan iets doen: “check elke werkdag om 8 uur mijn inbox”.</translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
         <source>%n coming up.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n gepland.</numerusform>
+            <numerusform>%n gepland.</numerusform>
         </translation>
     </message>
     <message>
         <location line="+0"/>
         <source>None yet.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nog geen.</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>%1 · Jarvis does it</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 · Jarvis doet het</translation>
     </message>
     <message>
         <location line="+5"/>
         <location line="+149"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Annuleren</translation>
     </message>
     <message>
         <location line="-141"/>
         <source>Add a reminder or task</source>
-        <translation type="unfinished"></translation>
+        <translation>Herinnering of taak toevoegen</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Routines</source>
-        <translation type="unfinished"></translation>
+        <translation>Routines</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Say a routine&apos;s name and Jarvis runs its steps.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zeg de naam van een routine en Jarvis voert de stappen uit.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>None yet. Say “when I say study mode, close Discord, open my notes and set a 50-minute timer”.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nog geen. Zeg “als ik studiemodus zeg, sluit Discord, open mijn notities en zet een timer van 50 minuten”.</translation>
     </message>
     <message>
         <location line="+16"/>
         <location line="+33"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>Verwijderen</translation>
     </message>
     <message>
         <location line="-25"/>
         <source>Add a routine</source>
-        <translation type="unfinished"></translation>
+        <translation>Routine toevoegen</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Keep an eye on</source>
-        <translation type="unfinished"></translation>
+        <translation>In de gaten houden</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Jarvis looks into these with your accounts and the web, and tells you only when something needs you.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis controleert deze via je accounts en het web, en laat alleen iets weten als jij nodig bent.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Nothing yet. Say “tell me if a payment fails”, or add one here.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nog niets. Zeg “laat het me weten als een betaling mislukt”, of voeg er hier een toe.</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>Paused</source>
-        <translation type="unfinished"></translation>
+        <translation>Gepauzeerd</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Add a check</source>
-        <translation type="unfinished"></translation>
+        <translation>Controle toevoegen</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Look every</source>
-        <translation type="unfinished"></translation>
+        <translation>Controleer elke</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>30 minutes</source>
-        <translation type="unfinished"></translation>
+        <translation>30 minuten</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Hour</source>
-        <translation type="unfinished"></translation>
+        <translation>1 uur</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>3 hours</source>
-        <translation type="unfinished"></translation>
+        <translation>3 uur</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>12 hours</source>
-        <translation type="unfinished"></translation>
+        <translation>12 uur</translation>
     </message>
     <message>
         <location line="+44"/>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>Bewerken</translation>
     </message>
     <message>
         <location line="+37"/>
         <source>What to remind you of, or what Jarvis should do</source>
-        <translation type="unfinished"></translation>
+        <translation>Waaraan je herinnerd wilt worden, of wat Jarvis moet doen</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>When: 18:30 or 2026-11-02 08:00</source>
-        <translation type="unfinished"></translation>
+        <translation>Wanneer: 18:30 of 2026-11-02 08:00</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Once</source>
-        <translation type="unfinished"></translation>
+        <translation>Eenmalig</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Every day</source>
-        <translation type="unfinished"></translation>
+        <translation>Elke dag</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Weekdays</source>
-        <translation type="unfinished"></translation>
+        <translation>Werkdagen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Every week</source>
-        <translation type="unfinished"></translation>
+        <translation>Elke week</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Jarvis reminds you</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis herinnert je</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Jarvis does it</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis doet het</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>What you say to start it, e.g. study mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Wat je zegt om hem te starten, bijv. studiemodus</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Its steps, e.g. close Discord, open my notes, set a 50-minute timer</source>
-        <translation type="unfinished"></translation>
+        <translation>De stappen, bijv. sluit Discord, open mijn notities, zet een timer van 50 minuten</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>e.g. Tell me if a payment fails or my professor emails</source>
-        <translation type="unfinished"></translation>
+        <translation>bijv. Laat het me weten als een betaling mislukt of mijn docent mailt</translation>
     </message>
 </context>
 <context>
@@ -868,7 +869,7 @@
     <message>
         <location filename="../qml/Message.qml" line="+69"/>
         <source>Copy</source>
-        <translation type="unfinished"></translation>
+        <translation>Kopiëren</translation>
     </message>
 </context>
 <context>
@@ -876,198 +877,198 @@
     <message>
         <location filename="../qml/ModelsPage.qml" line="+9"/>
         <source>Models</source>
-        <translation type="unfinished"></translation>
+        <translation>Modellen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Pick the models for each job. Each list is tried top to bottom: when one is busy or down, the next takes over.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kies de modellen voor elke taak. Elke lijst wordt van boven naar beneden geprobeerd: is er een bezet of onbereikbaar, dan neemt de volgende het over.</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>Looking up the models you can use…</source>
-        <translation type="unfinished"></translation>
+        <translation>Beschikbare modellen opzoeken…</translation>
     </message>
     <message numerus="yes">
         <location line="+2"/>
         <source>%1: %n model(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%1: %n model</numerusform>
+            <numerusform>%1: %n modellen</numerusform>
         </translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>Vernieuwen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>What each job uses</source>
-        <translation type="unfinished"></translation>
+        <translation>Wat elke taak gebruikt</translation>
     </message>
     <message>
         <location line="+45"/>
         <source>Jarvis&apos;s choice</source>
-        <translation type="unfinished"></translation>
+        <translation>Keuze van Jarvis</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Use Jarvis&apos;s choice</source>
-        <translation type="unfinished"></translation>
+        <translation>Keuze van Jarvis gebruiken</translation>
     </message>
     <message numerus="yes">
         <location line="+9"/>
         <source>%1 · +%n fallback(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%1 · +%n reserve</numerusform>
+            <numerusform>%1 · +%n reserves</numerusform>
         </translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Providers and keys</source>
-        <translation type="unfinished"></translation>
+        <translation>Aanbieders en sleutels</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Keys stay in your system keychain, never in the settings file.</source>
-        <translation type="unfinished"></translation>
+        <translation>Sleutels blijven in de sleutelhanger van je systeem, nooit in het instellingenbestand.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Keys stay in a private file on this PC, never in the settings file.</source>
-        <translation type="unfinished"></translation>
+        <translation>Sleutels blijven in een privébestand op deze pc, nooit in het instellingenbestand.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Kept in %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Bewaard in %1</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Kept in your keychain</source>
-        <translation type="unfinished"></translation>
+        <translation>Bewaard in je sleutelhanger</translation>
     </message>
     <message>
         <location line="+30"/>
         <source>Key saved · paste a new one to replace it</source>
-        <translation type="unfinished"></translation>
+        <translation>Sleutel opgeslagen · plak een nieuwe om hem te vervangen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Paste an API key</source>
-        <translation type="unfinished"></translation>
+        <translation>Plak een API-sleutel</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Key saved</source>
-        <translation type="unfinished"></translation>
+        <translation>Sleutel opgeslagen</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Ollama isn&apos;t running</source>
-        <translation type="unfinished"></translation>
+        <translation>Ollama draait niet</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>No models downloaded yet</source>
-        <translation type="unfinished"></translation>
+        <translation>Nog geen modellen gedownload</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Remove this provider</source>
-        <translation type="unfinished"></translation>
+        <translation>Deze aanbieder verwijderen</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>More providers</source>
-        <translation type="unfinished"></translation>
+        <translation>Meer aanbieders</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Another service</source>
-        <translation type="unfinished"></translation>
+        <translation>Andere dienst</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>name</source>
-        <translation type="unfinished"></translation>
+        <translation>naam</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Add</source>
-        <translation type="unfinished"></translation>
+        <translation>Toevoegen</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Your Google account</source>
-        <translation type="unfinished"></translation>
+        <translation>Je Google-account</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Sign in with Google for Gemini (and Claude) through your account&apos;s Antigravity quota, much more than a free AI Studio key.</source>
-        <translation type="unfinished"></translation>
+        <translation>Log in met Google voor Gemini (en Claude) via het Antigravity-quotum van je account, veel meer dan een gratis AI Studio-sleutel.</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>It signs in the way Google&apos;s Antigravity app does, which Google doesn&apos;t offer to other apps: Google may limit or suspend accounts used like this. Use an account you can afford to lose.</source>
-        <translation type="unfinished"></translation>
+        <translation>Dit logt in zoals de Antigravity-app van Google, wat Google niet aan andere apps aanbiedt: Google kan accounts die zo worden gebruikt beperken of blokkeren. Gebruik een account dat je kunt missen.</translation>
     </message>
     <message>
         <location line="+25"/>
         <source>Google account</source>
-        <translation type="unfinished"></translation>
+        <translation>Google-account</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>from opencode</source>
-        <translation type="unfinished"></translation>
+        <translation>uit opencode</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Sign out</source>
-        <translation type="unfinished"></translation>
+        <translation>Uitloggen</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>First install the opencode-antigravity-auth plugin (npm i -g opencode-antigravity-auth): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
-        <translation type="unfinished"></translation>
+        <translation>Installeer eerst de plug-in opencode-antigravity-auth (npm i -g opencode-antigravity-auth): Jarvis logt in met de gegevens daarvan. Of zet ANTIGRAVITY_CLIENT_ID en ANTIGRAVITY_CLIENT_SECRET in het env-bestand van Jarvis.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Waiting for the browser…</source>
-        <translation type="unfinished"></translation>
+        <translation>Wachten op de browser…</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Add another account</source>
-        <translation type="unfinished"></translation>
+        <translation>Nog een account toevoegen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Sign in with Google</source>
-        <translation type="unfinished"></translation>
+        <translation>Inloggen met Google</translation>
     </message>
     <message>
         <location line="+47"/>
         <source>model name</source>
-        <translation type="unfinished"></translation>
+        <translation>modelnaam</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Try this one sooner</source>
-        <translation type="unfinished"></translation>
+        <translation>Deze eerder proberen</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>Verwijderen</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Add a model</source>
-        <translation type="unfinished"></translation>
+        <translation>Model toevoegen</translation>
     </message>
 </context>
 <context>
@@ -1075,32 +1076,32 @@
     <message>
         <location filename="../jarvis.py" line="+2428"/>
         <source>LISTENING</source>
-        <translation type="unfinished"></translation>
+        <translation>LUISTERT</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>SPEAKING</source>
-        <translation type="unfinished"></translation>
+        <translation>PRAAT</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>WORKING</source>
-        <translation type="unfinished"></translation>
+        <translation>BEZIG</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>PAUSED</source>
-        <translation type="unfinished"></translation>
+        <translation>GEPAUZEERD</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>BACKUP VOICE</source>
-        <translation type="unfinished"></translation>
+        <translation>RESERVESTEM</translation>
     </message>
     <message>
         <location line="+28"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
-        <translation type="unfinished"></translation>
+        <translation>Klik: Jarvis openen · Pauzeknop: luisteren aan/uit · Rode knop (of rechtsklik): stoppen</translation>
     </message>
 </context>
 <context>
@@ -1108,182 +1109,182 @@
     <message>
         <location filename="../qml/PluginsPage.qml" line="+9"/>
         <source>Plugins</source>
-        <translation type="unfinished"></translation>
+        <translation>Plug-ins</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Give Jarvis more tools with MCP servers: a web address, or a command that runs on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Geef Jarvis meer tools met MCP-servers: een webadres of een opdracht die op deze pc draait.</translation>
     </message>
     <message numerus="yes">
         <location line="+7"/>
         <source>%n min</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n min</numerusform>
+            <numerusform>%n min</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <location line="+0"/>
         <source>%n s</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n s</numerusform>
+            <numerusform>%n s</numerusform>
         </translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Refresh</source>
-        <translation type="unfinished"></translation>
+        <translation>Vernieuwen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Installed</source>
-        <translation type="unfinished"></translation>
+        <translation>Geïnstalleerd</translation>
     </message>
     <message numerus="yes">
         <location line="+34"/>
         <source>%n tool(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n tool</numerusform>
+            <numerusform>%n tools</numerusform>
         </translation>
     </message>
     <message>
         <location line="+12"/>
         <source>%1 · trying again in %2</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 · nieuwe poging over %2</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Trying again…</source>
-        <translation type="unfinished"></translation>
+        <translation>Opnieuw proberen…</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Turned off</source>
-        <translation type="unfinished"></translation>
+        <translation>Uitgeschakeld</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Connecting… (a sign-in page may open in your browser)</source>
-        <translation type="unfinished"></translation>
+        <translation>Verbinden… (er kan een inlogpagina in je browser openen)</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Try now</source>
-        <translation type="unfinished"></translation>
+        <translation>Nu proberen</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Click again to remove</source>
-        <translation type="unfinished"></translation>
+        <translation>Klik nogmaals om te verwijderen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>Verwijderen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Plugin removed</source>
-        <translation type="unfinished"></translation>
+        <translation>Plug-in verwijderd</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Add a plugin</source>
-        <translation type="unfinished"></translation>
+        <translation>Plug-in toevoegen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Start from a quick pick, or fill in any MCP server. Jarvis connects to it as soon as it&apos;s added.</source>
-        <translation type="unfinished"></translation>
+        <translation>Begin met een snelle keuze of vul een willekeurige MCP-server in. Jarvis maakt verbinding zodra hij is toegevoegd.</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Context7 docs</source>
-        <translation type="unfinished"></translation>
+        <translation>Context7-documentatie</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Home folder files</source>
-        <translation type="unfinished"></translation>
+        <translation>Bestanden in je thuismap</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Playwright browser</source>
-        <translation type="unfinished"></translation>
+        <translation>Playwright-browser</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Naam</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Type</source>
-        <translation type="unfinished"></translation>
+        <translation>Type</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Address</source>
-        <translation type="unfinished"></translation>
+        <translation>Adres</translation>
     </message>
     <message>
         <location line="+0"/>
         <location line="+4"/>
         <source>Command</source>
-        <translation type="unfinished"></translation>
+        <translation>Opdracht</translation>
     </message>
     <message>
         <location line="-3"/>
         <source>e.g. notion</source>
-        <translation type="unfinished"></translation>
+        <translation>bijv. notion</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Web address</source>
-        <translation type="unfinished"></translation>
+        <translation>Webadres</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Only these tools (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Alleen deze tools (optioneel)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Headers (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Headers (optioneel)</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Environment (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Omgeving (optioneel)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>comma-separated names</source>
-        <translation type="unfinished"></translation>
+        <translation>namen, gescheiden door komma’s</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>JSON, e.g. {&quot;Authorization&quot;: &quot;Bearer …&quot;}</source>
-        <translation type="unfinished"></translation>
+        <translation>JSON, bijv. {&quot;Authorization&quot;: &quot;Bearer …&quot;}</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>JSON, e.g. {&quot;API_KEY&quot;: &quot;…&quot;}</source>
-        <translation type="unfinished"></translation>
+        <translation>JSON, bijv. {&quot;API_KEY&quot;: &quot;…&quot;}</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Add plugin</source>
-        <translation type="unfinished"></translation>
+        <translation>Plug-in toevoegen</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Plugin added: connecting…</source>
-        <translation type="unfinished"></translation>
+        <translation>Plug-in toegevoegd: verbinden…</translation>
     </message>
 </context>
 <context>
@@ -1291,863 +1292,863 @@
     <message>
         <location filename="../qml/SettingsPage.qml" line="+11"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Instellingen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
-        <translation type="unfinished"></translation>
+        <translation>Wijzigingen worden meteen opgeslagen. Modellen en API-sleutels staan op de pagina ‘Modellen’.</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Checking…</source>
-        <translation type="unfinished"></translation>
+        <translation>Controleren…</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Updated: Jarvis is restarting</source>
-        <translation type="unfinished"></translation>
+        <translation>Bijgewerkt: Jarvis start opnieuw</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Couldn&apos;t update: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Bijwerken mislukt: %1</translation>
     </message>
     <message>
         <location line="+35"/>
         <source>Passphrase saved</source>
-        <translation type="unfinished"></translation>
+        <translation>Wachtzin opgeslagen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Passphrase removed</source>
-        <translation type="unfinished"></translation>
+        <translation>Wachtzin verwijderd</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Stem</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>How Jarvis sounds and talks to you. Changes apply from the next conversation.</source>
-        <translation type="unfinished"></translation>
+        <translation>Hoe Jarvis klinkt en tegen je praat. Wijzigingen gelden vanaf het volgende gesprek.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Jarvis&apos;s voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Stem van Jarvis</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Voice model</source>
-        <translation type="unfinished"></translation>
+        <translation>Stemmodel</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Personality</source>
-        <translation type="unfinished"></translation>
+        <translation>Persoonlijkheid</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Jarvis: refined, dry wit</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis: verfijnd, droge humor</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Friendly: warm and casual</source>
-        <translation type="unfinished"></translation>
+        <translation>Vriendelijk: warm en ontspannen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Brief: just the answer</source>
-        <translation type="unfinished"></translation>
+        <translation>Kort: alleen het antwoord</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Language Jarvis speaks and listens for</source>
-        <translation type="unfinished"></translation>
+        <translation>Taal die Jarvis spreekt en verstaat</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Also speaks and understands, when you (or someone on WhatsApp) speak them. Anything else is taken as mishearing.</source>
-        <translation type="unfinished"></translation>
+        <translation>Spreekt en verstaat Jarvis ook, als jij (of iemand op WhatsApp) ze spreekt. Al het andere geldt als verkeerd verstaan.</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>Fast voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Snelle stem</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Answer without thinking first: about 0.3 s quicker, a little less sharp</source>
-        <translation type="unfinished"></translation>
+        <translation>Antwoorden zonder eerst na te denken: zo’n 0,3 s sneller, iets minder scherp</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Speak replies to typed messages</source>
-        <translation type="unfinished"></translation>
+        <translation>Antwoorden op getypte berichten uitspreken</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Always use the backup voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Altijd de reservestem gebruiken</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Hear and speak with the models on the Models page instead of Gemini Live, for keys without it. Off, the backup voice only answers while Gemini Live can&apos;t be reached</source>
-        <translation type="unfinished"></translation>
+        <translation>Luisteren en spreken met de modellen op de pagina ‘Modellen’ in plaats van Gemini Live, voor sleutels zonder Gemini Live. Uit: de reservestem antwoordt alleen zolang Gemini Live onbereikbaar is</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Listening</source>
-        <translation type="unfinished"></translation>
+        <translation>Luisteren</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>When Jarvis wakes up, and how long it keeps listening.</source>
-        <translation type="unfinished"></translation>
+        <translation>Wanneer Jarvis wakker wordt en hoelang hij blijft luisteren.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Wake word</source>
-        <translation type="unfinished"></translation>
+        <translation>Activeringswoord</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Your own model…</source>
-        <translation type="unfinished"></translation>
+        <translation>Eigen model…</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Path of your own openWakeWord .onnx model</source>
-        <translation type="unfinished"></translation>
+        <translation>Pad naar je eigen openWakeWord-model (.onnx)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Full path, e.g. /home/you/hey_computer.onnx</source>
-        <translation type="unfinished"></translation>
+        <translation>Volledig pad, bijv. /home/you/hey_computer.onnx</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Pause before Jarvis answers</source>
-        <translation type="unfinished"></translation>
+        <translation>Pauze voordat Jarvis antwoordt</translation>
     </message>
     <message>
         <location line="+0"/>
         <source> ms</source>
-        <translation type="unfinished"></translation>
+        <translation> ms</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Lower is snappier; higher cuts you off less</source>
-        <translation type="unfinished"></translation>
+        <translation>Lager reageert sneller; hoger onderbreekt je minder vaak</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Wake word sensitivity</source>
-        <translation type="unfinished"></translation>
+        <translation>Gevoeligheid activeringswoord</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Lower wakes more easily</source>
-        <translation type="unfinished"></translation>
+        <translation>Lager wordt sneller wakker</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Keep listening after a reply</source>
-        <translation type="unfinished"></translation>
+        <translation>Blijven luisteren na een antwoord</translation>
     </message>
     <message>
         <location line="+0"/>
         <location line="+2"/>
         <source> s</source>
-        <translation type="unfinished"></translation>
+        <translation> s</translation>
     </message>
     <message>
         <location line="-1"/>
         <source>How long Jarvis waits for a follow-up</source>
-        <translation type="unfinished"></translation>
+        <translation>Hoelang Jarvis wacht op een vervolgvraag</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Stay connected after a conversation</source>
-        <translation type="unfinished"></translation>
+        <translation>Verbonden blijven na een gesprek</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Makes the next wake-up instant</source>
-        <translation type="unfinished"></translation>
+        <translation>Zo is Jarvis de volgende keer meteen klaar</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Learn my voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Mijn stem leren</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Wake-ups you dismiss teach Jarvis what isn&apos;t you</source>
-        <translation type="unfinished"></translation>
+        <translation>Activeringen die je wegklikt leren Jarvis wat niet jij bent</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Only wake for my voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Alleen reageren op mijn stem</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Nothing learned for this wake word yet (Learn my voice needs a few wake-ups first): until then anyone can wake Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>Nog niets geleerd voor dit activeringswoord (‘Mijn stem leren’ heeft eerst een paar activeringen nodig): tot die tijd kan iedereen Jarvis wekken</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Needs Learn my voice on: until then anyone can wake Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>Vereist ‘Mijn stem leren’: tot die tijd kan iedereen Jarvis wekken</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Someone else saying the wake word doesn&apos;t wake Jarvis. Talk and push to talk always work</source>
-        <translation type="unfinished"></translation>
+        <translation>Zegt iemand anders het activeringswoord, dan wordt Jarvis niet wakker. ‘Praten’ en push-to-talk werken altijd</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Echo cancelling</source>
-        <translation type="unfinished"></translation>
+        <translation>Echo-onderdrukking</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (experimental on Windows: Health says if it&apos;s working; restart Jarvis to apply)</source>
-        <translation type="unfinished"></translation>
+        <translation>Houdt het geluid van de pc zelf (Jarvis, games, video’s, gesprekken) uit de microfoon, zodat het niet als jou wordt gehoord en je door Jarvis heen kunt praten (experimenteel op Windows: ‘Diagnose’ laat zien of het werkt; herstart Jarvis om het toe te passen)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (PipeWire; restart Jarvis to apply)</source>
-        <translation type="unfinished"></translation>
+        <translation>Houdt het geluid van de pc zelf (Jarvis, games, video’s, gesprekken) uit de microfoon, zodat het niet als jou wordt gehoord en je door Jarvis heen kunt praten (PipeWire; herstart Jarvis om het toe te passen)</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Spoken passphrase: asked for with every yes said out loud (sends, calls, account changes, risky commands). Never shown or said back</source>
-        <translation type="unfinished"></translation>
+        <translation>Gesproken wachtzin: gevraagd bij elk hardop gezegd ja (versturen, bellen, accountwijzigingen, riskante opdrachten). Wordt nooit getoond of herhaald</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Passphrase set · type a new one to replace it</source>
-        <translation type="unfinished"></translation>
+        <translation>Wachtzin ingesteld · typ een nieuwe om hem te vervangen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>A few words only you know</source>
-        <translation type="unfinished"></translation>
+        <translation>Een paar woorden die alleen jij kent</translation>
     </message>
     <message>
         <location line="+2"/>
         <location line="+126"/>
         <location line="+52"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Opslaan</translation>
     </message>
     <message>
         <location line="-176"/>
         <location line="+74"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>Verwijderen</translation>
     </message>
     <message>
         <location line="-64"/>
         <source>Push to talk</source>
-        <translation type="unfinished"></translation>
+        <translation>Push-to-talk</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Bind these to keyboard shortcuts (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</source>
-        <translation type="unfinished"></translation>
+        <translation>Koppel deze aan sneltoetsen (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Start listening</source>
-        <translation type="unfinished"></translation>
+        <translation>Beginnen met luisteren</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Drag over part of the screen and ask about it</source>
-        <translation type="unfinished"></translation>
+        <translation>Sleep over een deel van het scherm en stel er een vraag over</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Your day</source>
-        <translation type="unfinished"></translation>
+        <translation>Je dag</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The weather, briefings and heads-ups Jarvis gives you.</source>
-        <translation type="unfinished"></translation>
+        <translation>Het weer, overzichten en seintjes die Jarvis je geeft.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Home city, for the weather (empty: guess from your network)</source>
-        <translation type="unfinished"></translation>
+        <translation>Woonplaats, voor het weer (leeg: raden op basis van je netwerk)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>e.g. London</source>
-        <translation type="unfinished"></translation>
+        <translation>bijv. Amsterdam</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Morning briefing</source>
-        <translation type="unfinished"></translation>
+        <translation>Ochtendoverzicht</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>The first time Jarvis starts in a morning, it tells you about your day</source>
-        <translation type="unfinished"></translation>
+        <translation>De eerste keer dat Jarvis ’s ochtends start, vertelt hij je over je dag</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Do not disturb</source>
-        <translation type="unfinished"></translation>
+        <translation>Niet storen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Jarvis doesn&apos;t speak up on its own: reminders, results and messages only go to the chat, notifications and your phone. It still answers you (also in the tray menu)</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis begint niet uit zichzelf te praten: herinneringen, resultaten en berichten gaan alleen naar de chat, meldingen en je telefoon. Hij antwoordt je nog wel (ook in het systeemvakmenu)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Classroom deadlines</source>
-        <translation type="unfinished"></translation>
+        <translation>Classroom-deadlines</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Reminders a day and two hours before work is due (skipped once you&apos;ve turned it in)</source>
-        <translation type="unfinished"></translation>
+        <translation>Herinneringen een dag en twee uur voor de deadline (vervallen zodra je het hebt ingeleverd)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Calendar heads-up</source>
-        <translation type="unfinished"></translation>
+        <translation>Agendaseintje</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>A reminder ten minutes before each Google Calendar event</source>
-        <translation type="unfinished"></translation>
+        <translation>Een herinnering tien minuten voor elke afspraak in Google Agenda</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Quiet hours from (empty: none)</source>
-        <translation type="unfinished"></translation>
+        <translation>Stille uren vanaf (leeg: geen)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>e.g. 22:00</source>
-        <translation type="unfinished"></translation>
+        <translation>bijv. 22:00</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Until (the morning briefing waits for it)</source>
-        <translation type="unfinished"></translation>
+        <translation>Tot (het ochtendoverzicht wacht hierop)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>e.g. 07:00</source>
-        <translation type="unfinished"></translation>
+        <translation>bijv. 07:00</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Window &amp; behavior</source>
-        <translation type="unfinished"></translation>
+        <translation>Venster en gedrag</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>How the window looks, and what Jarvis may do on its own.</source>
-        <translation type="unfinished"></translation>
+        <translation>Hoe het venster eruitziet en wat Jarvis zelf mag doen.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Text size</source>
-        <translation type="unfinished"></translation>
+        <translation>Tekstgrootte</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Bigger text across the window</source>
-        <translation type="unfinished"></translation>
+        <translation>Grotere tekst in het hele venster</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Window language</source>
-        <translation type="unfinished"></translation>
+        <translation>Taal van het venster</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Use sooner</source>
-        <translation type="unfinished"></translation>
+        <translation>Eerder gebruiken</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Use later</source>
-        <translation type="unfinished"></translation>
+        <translation>Later gebruiken</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Add a language…</source>
-        <translation type="unfinished"></translation>
+        <translation>Taal toevoegen…</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Each text shows in the first language that has it. English is the window&apos;s own, so languages under it aren&apos;t used.</source>
-        <translation type="unfinished"></translation>
+        <translation>Elke tekst verschijnt in de eerste taal die hem heeft. Engels is de eigen taal van het venster, dus talen daaronder worden niet gebruikt.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Show Jarvis&apos;s thinking in the chat</source>
-        <translation type="unfinished"></translation>
+        <translation>Het denkproces van Jarvis in de chat tonen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Start Jarvis when I log in</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis starten bij het inloggen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Ask before risky actions</source>
-        <translation type="unfinished"></translation>
+        <translation>Vragen vóór riskante acties</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Commands that delete, install or shut down, and account changes (sending email, new events), wait for your yes unless you asked for exactly that</source>
-        <translation type="unfinished"></translation>
+        <translation>Opdrachten die iets verwijderen, installeren of afsluiten, en accountwijzigingen (e-mail versturen, nieuwe afspraken), wachten op je ja, tenzij je precies daarom vroeg</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Your instructions</source>
-        <translation type="unfinished"></translation>
+        <translation>Je instructies</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>How Jarvis should behave, and things it should know about you.</source>
-        <translation type="unfinished"></translation>
+        <translation>Hoe Jarvis zich moet gedragen en wat hij over je moet weten.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Jarvis on Telegram</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis op Telegram</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Send Jarvis tasks from anywhere through Telegram.</source>
-        <translation type="unfinished"></translation>
+        <translation>Stuur Jarvis overal vandaan taken via Telegram.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>In Telegram, message &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, send /newbot and copy the token it gives you.</source>
-        <translation type="unfinished"></translation>
+        <translation>Stuur in Telegram een bericht naar &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, stuur /newbot en kopieer het token dat je krijgt.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Paste it here.</source>
-        <translation type="unfinished"></translation>
+        <translation>Plak het hier.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Send your new bot the code below. Only that chat is answered.</source>
-        <translation type="unfinished"></translation>
+        <translation>Stuur je nieuwe bot de code hieronder. Alleen die chat krijgt antwoord.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Bot token saved · paste a new one to replace it</source>
-        <translation type="unfinished"></translation>
+        <translation>Bottoken opgeslagen · plak een nieuw om het te vervangen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Paste your bot&apos;s token</source>
-        <translation type="unfinished"></translation>
+        <translation>Plak het token van je bot</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Paired with %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Gekoppeld aan %1.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Send your bot this code: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Stuur je bot deze code: %1</translation>
     </message>
     <message>
         <location line="+6"/>
         <location line="+85"/>
         <source>Unpair</source>
-        <translation type="unfinished"></translation>
+        <translation>Ontkoppelen</translation>
     </message>
     <message>
         <location line="-84"/>
         <source>Remove the bot</source>
-        <translation type="unfinished"></translation>
+        <translation>Bot verwijderen</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>The Jarvis app</source>
-        <translation type="unfinished"></translation>
+        <translation>De Jarvis-app</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The Jarvis Android app reaches this PC from anywhere through your own private relay. It&apos;s end-to-end encrypted: the relay only passes on scrambled data, and nothing on this PC is open to the internet.</source>
-        <translation type="unfinished"></translation>
+        <translation>De Jarvis-app voor Android bereikt deze pc overal vandaan via je eigen privérelay. Alles is end-to-end versleuteld: de relay geeft alleen versleutelde gegevens door en niets op deze pc staat open voor internet.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Setting up…</source>
-        <translation type="unfinished"></translation>
+        <translation>Instellen…</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Set up my relay</source>
-        <translation type="unfinished"></translation>
+        <translation>Mijn relay instellen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Signs in to your free Cloudflare account in your browser, puts the relay online and saves its address.</source>
-        <translation type="unfinished"></translation>
+        <translation>Logt in je browser in op je gratis Cloudflare-account, zet de relay online en slaat het adres op.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Or by hand</source>
-        <translation type="unfinished"></translation>
+        <translation>Of handmatig</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>In the relay folder of Jarvis&apos;s files, sign in to a free Cloudflare account:</source>
-        <translation type="unfinished"></translation>
+        <translation>Log in de map relay van de Jarvis-bestanden in op een gratis Cloudflare-account:</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Put the relay online:</source>
-        <translation type="unfinished"></translation>
+        <translation>Zet de relay online:</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Paste the address it prints here.</source>
-        <translation type="unfinished"></translation>
+        <translation>Plak het adres dat verschijnt hier.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Your relay&apos;s address, like https://jarvis-relay.you.workers.dev</source>
-        <translation type="unfinished"></translation>
+        <translation>Adres van je relay, zoals https://jarvis-relay.you.workers.dev</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Annuleren</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>Connected</source>
-        <translation type="unfinished"></translation>
+        <translation>Gekoppeld</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Connecting…</source>
-        <translation type="unfinished"></translation>
+        <translation>Verbinden…</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Change</source>
-        <translation type="unfinished"></translation>
+        <translation>Wijzigen</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>Pair another phone</source>
-        <translation type="unfinished"></translation>
+        <translation>Nog een telefoon koppelen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Pair a phone</source>
-        <translation type="unfinished"></translation>
+        <translation>Telefoon koppelen</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Scan to pair</source>
-        <translation type="unfinished"></translation>
+        <translation>Scan om te koppelen</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>In the Jarvis app, tap Pair and scan this code. It works once, for ten minutes.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tik in de Jarvis-app op ‘Pair’ en scan deze code. Hij werkt één keer, tien minuten lang.</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>WhatsApp</source>
-        <translation type="unfinished"></translation>
+        <translation>WhatsApp</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Jarvis links to your own WhatsApp like WhatsApp Web. It answers your contacts&apos; messages that don&apos;t need you, saying it&apos;s your assistant, and picks up calls you miss to take a message. It&apos;s not an official WhatsApp feature: WhatsApp may block numbers that act like bots, so Jarvis answers only saved contacts, never groups.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis koppelt aan je eigen WhatsApp, net als WhatsApp Web. Hij beantwoordt berichten van je contacten waarvoor jij niet nodig bent, en zegt erbij dat hij je assistent is. Gemiste oproepen neemt hij op om een boodschap aan te nemen. Dit is geen officiële WhatsApp-functie: WhatsApp kan nummers blokkeren die zich als bots gedragen, dus Jarvis antwoordt alleen opgeslagen contacten, nooit groepen.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Link WhatsApp</source>
-        <translation type="unfinished"></translation>
+        <translation>WhatsApp koppelen</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Connecting to WhatsApp…</source>
-        <translation type="unfinished"></translation>
+        <translation>Verbinden met WhatsApp…</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Getting a code from WhatsApp…</source>
-        <translation type="unfinished"></translation>
+        <translation>Code ophalen bij WhatsApp…</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Scan with WhatsApp</source>
-        <translation type="unfinished"></translation>
+        <translation>Scan met WhatsApp</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>On your phone: WhatsApp → Settings → Linked devices → Link a device, then scan this code. It renews itself.</source>
-        <translation type="unfinished"></translation>
+        <translation>Op je telefoon: WhatsApp → Instellingen → Gekoppelde apparaten → Een apparaat koppelen, en scan dan deze code. Hij vernieuwt zichzelf.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>On a call with %1</source>
-        <translation type="unfinished"></translation>
+        <translation>In gesprek met %1</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Linked as %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Gekoppeld als %1</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Linked</source>
-        <translation type="unfinished"></translation>
+        <translation>Gekoppeld</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unlink</source>
-        <translation type="unfinished"></translation>
+        <translation>Ontkoppelen</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Messages</source>
-        <translation type="unfinished"></translation>
+        <translation>Berichten</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Answer my contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Mijn contacten antwoorden</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Just show them to me</source>
-        <translation type="unfinished"></translation>
+        <translation>Alleen aan mij tonen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Calls</source>
-        <translation type="unfinished"></translation>
+        <translation>Oproepen</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Pick up if I don&apos;t (20 s)</source>
-        <translation type="unfinished"></translation>
+        <translation>Opnemen als ik dat niet doe (20 s)</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Decline them</source>
-        <translation type="unfinished"></translation>
+        <translation>Weigeren</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Let them ring</source>
-        <translation type="unfinished"></translation>
+        <translation>Laten overgaan</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Always let through (one name per line, as WhatsApp shows it): never answered by Jarvis, always told to you out loud, even in quiet hours</source>
-        <translation type="unfinished"></translation>
+        <translation>Altijd doorlaten (één naam per regel, zoals WhatsApp hem toont): nooit door Jarvis beantwoord, altijd hardop aan je gemeld, ook tijdens stille uren</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>e.g. Alex</source>
-        <translation type="unfinished"></translation>
+        <translation>bijv. Alex</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
-        <translation type="unfinished"></translation>
+        <translation>Nooit antwoorden (één naam per regel): Jarvis antwoordt nooit en neemt nooit op, en toont hun berichten alleen in de chat</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>e.g. Sam</source>
-        <translation type="unfinished"></translation>
+        <translation>bijv. Sam</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>What Jarvis tells people</source>
-        <translation type="unfinished"></translation>
+        <translation>Wat Jarvis tegen mensen zegt</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>e.g. I&apos;m in class until 5, I&apos;ll answer after</source>
-        <translation type="unfinished"></translation>
+        <translation>bijv. Ik zit tot 5 uur in de les, daarna antwoord ik</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Your data</source>
-        <translation type="unfinished"></translation>
+        <translation>Je gegevens</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>On this PC Jarvis keeps what it remembers about you, your conversations, reminders and routines, short clips of your wake word (to learn your voice) and a log. What you say after the wake word, and screenshots when a task needs the screen, go to Google Gemini; account actions go through Composio.</source>
-        <translation type="unfinished"></translation>
+        <translation>Op deze pc bewaart Jarvis wat hij over je onthoudt, je gesprekken, herinneringen en routines, korte opnames van je activeringswoord (om je stem te leren) en een logboek. Wat je na het activeringswoord zegt, en schermafbeeldingen als een taak het scherm nodig heeft, gaan naar Google Gemini; accountacties lopen via Composio.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Keep conversations and logs for</source>
-        <translation type="unfinished"></translation>
+        <translation>Gesprekken en logboeken bewaren</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>A week</source>
-        <translation type="unfinished"></translation>
+        <translation>Een week</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>A month</source>
-        <translation type="unfinished"></translation>
+        <translation>Een maand</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>3 months</source>
-        <translation type="unfinished"></translation>
+        <translation>3 maanden</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>A year</source>
-        <translation type="unfinished"></translation>
+        <translation>Een jaar</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Forever</source>
-        <translation type="unfinished"></translation>
+        <translation>Altijd</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Press again to delete it all</source>
-        <translation type="unfinished"></translation>
+        <translation>Klik nogmaals om alles te verwijderen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Delete everything Jarvis keeps about me</source>
-        <translation type="unfinished"></translation>
+        <translation>Alles verwijderen wat Jarvis over mij bewaart</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Deleted. Keys, accounts and settings are kept.</source>
-        <translation type="unfinished"></translation>
+        <translation>Verwijderd. Sleutels, accounts en instellingen blijven bewaard.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Keys, account sign-ins and settings stay.</source>
-        <translation type="unfinished"></translation>
+        <translation>Sleutels, accountaanmeldingen en instellingen blijven.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Move to another computer</source>
-        <translation type="unfinished"></translation>
+        <translation>Naar een andere computer verhuizen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>One file with your settings, memory, reminders, scheduled tasks, routines, plugins, conversations and the clips Jarvis learned your voice from. Keys, account sign-ins, WhatsApp and your phone aren&apos;t in it: set those up again on the other computer.</source>
-        <translation type="unfinished"></translation>
+        <translation>Eén bestand met je instellingen, geheugen, herinneringen, geplande taken, routines, plug-ins, gesprekken en de opnames waarmee Jarvis je stem heeft geleerd. Sleutels, accountaanmeldingen, WhatsApp en je telefoon zitten er niet in: stel die opnieuw in op de andere computer.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Save a backup</source>
-        <translation type="unfinished"></translation>
+        <translation>Back-up opslaan</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Bring one in</source>
-        <translation type="unfinished"></translation>
+        <translation>Back-up terugzetten</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Bringing one in replaces what&apos;s on this computer (conversations are added), then Jarvis restarts.</source>
-        <translation type="unfinished"></translation>
+        <translation>Terugzetten vervangt wat er op deze computer staat (gesprekken worden toegevoegd), daarna start Jarvis opnieuw.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Save a Jarvis backup</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis-back-up opslaan</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+8"/>
         <source>Jarvis backups (*.zip)</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis-back-ups (*.zip)</translation>
     </message>
     <message>
         <location line="-6"/>
         <source>Saved to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Opgeslagen in %1</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Bring in a Jarvis backup</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis-back-up terugzetten</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Brought in (left at their defaults here: %1): Jarvis is restarting</source>
-        <translation type="unfinished"></translation>
+        <translation>Teruggezet (hier op standaard gelaten: %1): Jarvis start opnieuw</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Brought in: Jarvis is restarting</source>
-        <translation type="unfinished"></translation>
+        <translation>Teruggezet: Jarvis start opnieuw</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>%1 is out (%2)</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 is uit (%2)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%1 is out</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 is uit</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Up to date</source>
-        <translation type="unfinished"></translation>
+        <translation>Up-to-date</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Updating…</source>
-        <translation type="unfinished"></translation>
+        <translation>Bijwerken…</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Update now</source>
-        <translation type="unfinished"></translation>
+        <translation>Nu bijwerken</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Check for updates</source>
-        <translation type="unfinished"></translation>
+        <translation>Zoeken naar updates</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Run the setup again</source>
-        <translation type="unfinished"></translation>
+        <translation>Installatie opnieuw doorlopen</translation>
     </message>
     <message>
         <location line="+116"/>
         <source>e.g. Keep answers short.</source>
-        <translation type="unfinished"></translation>
+        <translation>bijv. Houd antwoorden kort.</translation>
     </message>
 </context>
 <context>
@@ -2155,242 +2156,242 @@
     <message>
         <location filename="../qml/SetupWizard.qml" line="+15"/>
         <source>Welcome</source>
-        <translation type="unfinished"></translation>
+        <translation>Welkom</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Gemini key</source>
-        <translation type="unfinished"></translation>
+        <translation>Gemini-sleutel</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Microphone</source>
-        <translation type="unfinished"></translation>
+        <translation>Microfoon</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Stem</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Safety</source>
-        <translation type="unfinished"></translation>
+        <translation>Veiligheid</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Ready</source>
-        <translation type="unfinished"></translation>
+        <translation>Klaar</translation>
     </message>
     <message>
         <location line="+75"/>
         <source>Setting up Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis instellen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Let’s get you ready</source>
-        <translation type="unfinished"></translation>
+        <translation>Even alles klaarzetten</translation>
     </message>
     <message>
         <location line="+40"/>
         <source>Hi, I’m Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>Hoi, ik ben Jarvis</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Say “%1” and ask for anything: questions, what’s on your screen, your apps, email, calendar, Classroom, reminders. A couple of minutes of setup and you’re ready.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zeg “%1” en vraag wat je wilt: vragen, wat er op je scherm staat, je apps, e-mail, agenda, Classroom, herinneringen. Een paar minuten instellen en je kunt aan de slag.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>What leaves this PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Wat deze pc verlaat</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>What you say after “%1”, and screenshots when a task needs the screen, go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Memory, reminders and conversations stay on this computer.</source>
-        <translation type="unfinished"></translation>
+        <translation>Wat je na “%1” zegt, en schermafbeeldingen als een taak het scherm nodig heeft, gaan naar Google Gemini. Accountacties lopen via Composio, alleen voor de accounts die je koppelt. Geheugen, herinneringen en gesprekken blijven op deze computer.</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Your Gemini key</source>
-        <translation type="unfinished"></translation>
+        <translation>Je Gemini-sleutel</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Jarvis thinks with Google Gemini. A free key takes a minute: sign in at &lt;a href=&quot;https://aistudio.google.com/apikey&quot;&gt;aistudio.google.com/apikey&lt;/a&gt;, press Create API key, and paste it here. It’s kept in your system keychain.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis denkt met Google Gemini. Een gratis sleutel regel je in een minuut: log in op &lt;a href=&quot;https://aistudio.google.com/apikey&quot;&gt;aistudio.google.com/apikey&lt;/a&gt;, klik op ‘Create API key’ en plak hem hier. Hij wordt bewaard in de sleutelhanger van je systeem.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Key saved · paste a new one to replace it</source>
-        <translation type="unfinished"></translation>
+        <translation>Sleutel opgeslagen · plak een nieuwe om hem te vervangen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Paste your API key</source>
-        <translation type="unfinished"></translation>
+        <translation>Plak je API-sleutel</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Opslaan</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Checking the key…</source>
-        <translation type="unfinished"></translation>
+        <translation>Sleutel controleren…</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>The key works: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>De sleutel werkt: %1</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>No key yet</source>
-        <translation type="unfinished"></translation>
+        <translation>Nog geen sleutel</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>That key didn’t work: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Die sleutel werkte niet: %1</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Your microphone</source>
-        <translation type="unfinished"></translation>
+        <translation>Je microfoon</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Say something: the bars should jump while you talk.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zeg iets: de balkjes moeten bewegen terwijl je praat.</translation>
     </message>
     <message>
         <location line="+37"/>
         <source>I can hear you.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ik hoor je.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Quiet so far. If the bars never move, pick the right input device in your system’s sound settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nog stil. Bewegen de balkjes helemaal niet, kies dan het juiste invoerapparaat in de geluidsinstellingen van je systeem.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Wake word sensitivity</source>
-        <translation type="unfinished"></translation>
+        <translation>Gevoeligheid activeringswoord</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Lower wakes more easily.</source>
-        <translation type="unfinished"></translation>
+        <translation>Lager wordt sneller wakker.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>My voice</source>
-        <translation type="unfinished"></translation>
+        <translation>Mijn stem</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>How I sound, and when I talk.</source>
-        <translation type="unfinished"></translation>
+        <translation>Hoe ik klink en wanneer ik praat.</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>Speak replies to typed messages</source>
-        <translation type="unfinished"></translation>
+        <translation>Antwoorden op getypte berichten uitspreken</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Start Jarvis when I log in</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis starten bij het inloggen</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>How careful should I be?</source>
-        <translation type="unfinished"></translation>
+        <translation>Hoe voorzichtig moet ik zijn?</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>You can change this any time in Settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Je kunt dit altijd wijzigen in Instellingen.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Ask first</source>
-        <translation type="unfinished"></translation>
+        <translation>Eerst vragen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Recommended</source>
-        <translation type="unfinished"></translation>
+        <translation>Aanbevolen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Commands that delete, install or shut down, and changes to your accounts (sending email, creating events), wait for your yes, unless you asked for exactly that.</source>
-        <translation type="unfinished"></translation>
+        <translation>Opdrachten die iets verwijderen, installeren of afsluiten, en wijzigingen in je accounts (e-mail versturen, afspraken maken), wachten op je ja, tenzij je precies daarom vroeg.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Just do it</source>
-        <translation type="unfinished"></translation>
+        <translation>Gewoon doen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Jarvis acts without checking first. Quicker, for when you trust it with your PC and accounts.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis handelt zonder het eerst te vragen. Sneller, voor als je hem je pc en accounts toevertrouwt.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>You’re set</source>
-        <translation type="unfinished"></translation>
+        <translation>Je bent er klaar voor</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Connect Gmail, Calendar, Classroom, Drive and more on the Accounts page so Jarvis can use them. If something doesn’t work, the Health page says what and how to fix it.</source>
-        <translation type="unfinished"></translation>
+        <translation>Koppel Gmail, Agenda, Classroom, Drive en meer op de pagina ‘Accounts’ zodat Jarvis ze kan gebruiken. Werkt er iets niet, dan zegt de pagina ‘Diagnose’ wat er mis is en hoe je het oplost.</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>Try it now</source>
-        <translation type="unfinished"></translation>
+        <translation>Probeer het nu</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>“%1, what’s the weather?”</source>
-        <translation type="unfinished"></translation>
+        <translation>“%1, wat voor weer is het?”</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Skip setup</source>
-        <translation type="unfinished"></translation>
+        <translation>Instellen overslaan</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Back</source>
-        <translation type="unfinished"></translation>
+        <translation>Terug</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Done</source>
-        <translation type="unfinished"></translation>
+        <translation>Klaar</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Connect accounts</source>
-        <translation type="unfinished"></translation>
+        <translation>Accounts koppelen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Skip for now</source>
-        <translation type="unfinished"></translation>
+        <translation>Nu overslaan</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Next</source>
-        <translation type="unfinished"></translation>
+        <translation>Volgende</translation>
     </message>
 </context>
 <context>
@@ -2398,22 +2399,22 @@
     <message>
         <location filename="../qml/Theme.qml" line="+70"/>
         <source>Listening</source>
-        <translation type="unfinished"></translation>
+        <translation>Luistert</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Working</source>
-        <translation type="unfinished"></translation>
+        <translation>Bezig</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Speaking</source>
-        <translation type="unfinished"></translation>
+        <translation>Praat</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Ready</source>
-        <translation type="unfinished"></translation>
+        <translation>Klaar</translation>
     </message>
 </context>
 <context>
@@ -2421,72 +2422,72 @@
     <message>
         <location filename="../qml/Today.qml" line="+92"/>
         <source>Feels %1 in %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Voelt als %1 in %2</translation>
     </message>
     <message>
         <location line="+44"/>
         <source>Now playing</source>
-        <translation type="unfinished"></translation>
+        <translation>Speelt nu</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Previous</source>
-        <translation type="unfinished"></translation>
+        <translation>Vorige nummer</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Next</source>
-        <translation type="unfinished"></translation>
+        <translation>Volgende nummer</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Up next</source>
-        <translation type="unfinished"></translation>
+        <translation>Hierna</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Nothing scheduled. Try “remind me in 20 minutes to stretch”.</source>
-        <translation type="unfinished"></translation>
+        <translation>Niets gepland. Probeer “herinner me over 20 minuten om te stretchen”.</translation>
     </message>
     <message>
         <location line="+30"/>
         <source>Cancel this reminder</source>
-        <translation type="unfinished"></translation>
+        <translation>Deze herinnering annuleren</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>This PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Deze pc</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Processor</source>
-        <translation type="unfinished"></translation>
+        <translation>Processor</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Memory</source>
-        <translation type="unfinished"></translation>
+        <translation>Werkgeheugen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%1 of %2 GB</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 van %2 GB</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Disk</source>
-        <translation type="unfinished"></translation>
+        <translation>Schijf</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%1 GB free</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 GB vrij</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Last answer started %1 s after you finished</source>
-        <translation type="unfinished"></translation>
+        <translation>Laatste antwoord begon %1 s nadat je klaar was</translation>
     </message>
 </context>
 <context>
@@ -2494,62 +2495,62 @@
     <message>
         <location filename="../jarvis.py" line="+117"/>
         <source>Open Jarvis</source>
-        <translation type="unfinished"></translation>
+        <translation>Jarvis openen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Talk</source>
-        <translation type="unfinished"></translation>
+        <translation>Praten</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>Stoppen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Do not disturb</source>
-        <translation type="unfinished"></translation>
+        <translation>Niet storen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Quit</source>
-        <translation type="unfinished"></translation>
+        <translation>Afsluiten</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Running in the tray. Say &quot;%1&quot;.</source>
-        <translation type="unfinished"></translation>
+        <translation>Actief in het systeemvak. Zeg “%1”.</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>idle</source>
-        <translation type="unfinished"></translation>
+        <translation>inactief</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>listening</source>
-        <translation type="unfinished"></translation>
+        <translation>luistert</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>speaking</source>
-        <translation type="unfinished"></translation>
+        <translation>praat</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>thinking</source>
-        <translation type="unfinished"></translation>
+        <translation>denkt na</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>quiet</source>
-        <translation type="unfinished"></translation>
+        <translation>stil</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>backup voice</source>
-        <translation type="unfinished"></translation>
+        <translation>reservestem</translation>
     </message>
 </context>
 </TS>
