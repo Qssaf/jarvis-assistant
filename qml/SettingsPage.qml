@@ -441,6 +441,13 @@ ScrollPage {
         description: "On this PC Jarvis keeps what it remembers about you, your conversations, reminders and routines, short clips "
                      + "of your wake word (to learn your voice) and a log. What you say after the wake word, and screenshots when a "
                      + "task needs the screen, go to Google Gemini; account actions go through Composio."
+        Row2 {
+            Setting { label: "Keep conversations and logs for"
+                Select { Layout.fillWidth: true; value: String(page.s.keep_days || 0); onPicked: v => page.set("keep_days", v)
+                         model: [{ value: "7", label: "A week" }, { value: "30", label: "A month" }, { value: "90", label: "3 months" },
+                                 { value: "365", label: "A year" }, { value: "0", label: "Forever" }] } }
+            Item { Layout.fillWidth: true }
+        }
         RowLayout {
             Layout.fillWidth: true
             spacing: 14

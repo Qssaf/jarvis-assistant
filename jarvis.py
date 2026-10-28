@@ -1361,6 +1361,16 @@ def check_loop(live):
         time.sleep(60)
 
 
+def tidy_loop():
+    """Once a day: old conversations, changes and logs go (the keep_days setting), and so do Jarvis's leftover temp files."""
+    last = 0
+    while True:
+        if time.time() - last >= 86400:  # (by the clock: a sleeping PC doesn't count down time.sleep)
+            store.tidy()
+            last = time.time()
+        time.sleep(3600)
+
+
 def reminder_loop(live):
     while True:
         for r in store.pop_due():
@@ -1879,9 +1889,8 @@ def diagnostics(brain):
     tool arguments, email addresses and link parameters taken out."""
     import platform
     checks = health(live_ref[0], brain)["checks"]
-    log = os.path.join(store.DATA, "jarvis.log")
     try:
-        with open(log, errors="replace") as f:
+        with open(store.LOG_FILE, errors="replace") as f:
             lines = f.read().replace("\r", "\n").splitlines()[-300:]
     except OSError:
         lines = ["(no log file: Jarvis was started from a terminal)"]
@@ -2526,15 +2535,21 @@ def background(fn, *args, restart=False, wait=5):
 
 
 class Stamped:
-    """The log, with the time at the start of every line (to see how long things take)."""
+    """The log, with the time at the start of every line (to see how long things take), and a "--- YYYY-MM-DD" line
+    when the day changes (store.tidy drops what's older than keep_days by them)."""
 
     def __init__(self, f):
-        self.f, self.fresh = f, True
+        self.f, self.fresh, self.day = f, True, time.strftime("%Y-%m-%d")
 
     def write(self, text):
         out = []
         for line in text.splitlines(keepends=True):
-            out.append((time.strftime("%H:%M:%S ") if self.fresh and line.strip() else "") + line)
+            if self.fresh and line.strip():
+                if self.day != time.strftime("%Y-%m-%d"):
+                    self.day = time.strftime("%Y-%m-%d")
+                    out.append(f"--- {self.day}\n")
+                out.append(time.strftime("%H:%M:%S "))
+            out.append(line)
             self.fresh = line.endswith("\n")
         self.f.write("".join(out))
         return len(text)
@@ -2580,10 +2595,8 @@ def main():
 
     os.makedirs(store.DATA, mode=0o700, exist_ok=True)  # conversations, logs and tokens: this user only
     if not sys.stdout or not sys.stdout.isatty():  # started from the app menu (pythonw on Windows has no stdout at all): keep a log
-        log = os.path.join(store.DATA, "jarvis.log")
-        if os.path.exists(log) and os.path.getsize(log) > 5_000_000:
-            os.replace(log, log + ".old")
-        sys.stdout = sys.stderr = Stamped(os.fdopen(os.open(log, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600), "a", buffering=1))
+        store.rotate_log()
+        sys.stdout = sys.stderr = Stamped(os.fdopen(os.open(store.LOG_FILE, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600), "a", buffering=1))
         print(f"--- started {time.strftime('%Y-%m-%d %H:%M:%S')}", flush=True)
     fd = os.open(TOKEN_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w") as f:
@@ -2620,6 +2633,7 @@ def main():
     background(reminder_loop, live, restart=True)
     background(deadline_loop, brain, restart=True)
     background(check_loop, live, restart=True)
+    background(tidy_loop, restart=True)
     import remote
     chat = lambda who, text: emit("log", who=who, text=text)  # (tasks from the phone and their answers)
     remote_ref[0] = remote.Telegram(brain, notify=lambda text: emit("log", who="system", text=text), chat=chat)

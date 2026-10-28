@@ -2059,6 +2059,56 @@ store.set_connector_mode("gmail", "ask")
 store.save_custom_provider("local", "")
 store.set_secret("aistudio", "")
 
+# tidying up: the log is rotated by size and Jarvis's day-old temp folders go; conversations, changes and old logs only
+# once keep_days is set (0, the default, keeps them for good)
+real_temp, real_limit = store.TEMP, store.LOG_LIMIT
+store.TEMP, store.LOG_LIMIT = tempfile.mkdtemp(), 10  # (never the real temp dir)
+old, day_ago = time.time() - 40 * 86400, time.time() - 2 * 86400
+for name in ("jarvis-region-ab12_xyz", "jarvis-notes-q1w2e3r4", "jarvis-assistant", "jarvis-k9k9k9k9"):
+    os.makedirs(os.path.join(store.TEMP, name))
+    if name != "jarvis-k9k9k9k9":
+        os.utime(os.path.join(store.TEMP, name), (day_ago, day_ago))
+with open(store.LOG_FILE, "w") as f:
+    f.write("x" * 20)
+with open(store.OLD_LOGS[0], "w") as f:
+    f.write("older")
+os.utime(store.OLD_LOGS[0], (old, old))
+for sid, at in (("old", old), ("new", time.time())):
+    store.write_json(os.path.join(store.SESSIONS_DIR, f"{sid}.json"), {"id": sid, "updated": at})
+    os.utime(os.path.join(store.SESSIONS_DIR, f"{sid}.json"), (at, at))
+store.write_json(store.CHANGES_FILE, [{"at": old, "what": "old change"}, {"at": time.time(), "what": "new change"}])
+store.tidy()
+assert sorted(os.listdir(store.TEMP)) == ["jarvis-assistant", "jarvis-k9k9k9k9"], os.listdir(store.TEMP)
+assert [open(p).read() for p in (store.LOG_FILE, *store.OLD_LOGS[:2])] == ["", "x" * 20, "older"]
+assert sorted(os.listdir(store.SESSIONS_DIR)) == ["new.json", "old.json"] and len(store.changes()) == 2
+# logs go by their date lines, not by when the file was written: a jarvis.log started 40 days ago keeps only what
+# came after its first date line within 30 days (Stamped writes one each new day), and an old log with none goes
+stamp = lambda t: time.strftime("%Y-%m-%d", time.localtime(t))
+with open(store.LOG_FILE, "w") as f:
+    f.write(f"--- started {stamp(old)} 10:00:00\n10:00:01 [you] old words\n--- {stamp(day_ago)}\n09:00:00 [you] new words\n")
+with open(store.OLD_LOGS[0], "w") as f:
+    f.write(f"12:00:00 --- started {stamp(old)} 12:00:00\n[you] old words\n")
+store.LOG_LIMIT = real_limit  # (not rotated by size this time)
+store.update_settings({"keep_days": "30"})
+store.tidy()
+assert os.listdir(store.SESSIONS_DIR) == ["new.json"] and [c["what"] for c in store.changes()] == ["new change"]
+assert open(store.LOG_FILE).read() == f"--- {stamp(day_ago)}\n09:00:00 [you] new words\n"
+assert not any(os.path.exists(p) for p in store.OLD_LOGS)
+log = io.StringIO()
+writer = jarvis.Stamped(log)
+writer.day = "2000-01-01"  # (as if it had run since then)
+print("hello", file=writer)
+assert log.getvalue().startswith(f"--- {stamp(time.time())}\n") and log.getvalue().endswith(" hello\n"), log.getvalue()
+try:
+    store.update_settings({"keep_days": -1})
+    raise AssertionError("a negative keep_days was accepted")
+except ValueError:
+    pass
+store.update_settings({"keep_days": 0})
+store.delete_data()
+assert not any(os.path.exists(p) for p in store.OLD_LOGS) and os.listdir(store.SESSIONS_DIR) == []
+store.TEMP, store.LOG_LIMIT = real_temp, real_limit
+
 # Telegram: only the chat that sends the pairing code is answered; it gets the agent's reply, and the agent can't ask out loud
 import remote
 class FakeTelegram:
