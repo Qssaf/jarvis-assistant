@@ -520,6 +520,13 @@ store.update_settings({"wake_word": "hey_jarvis"})
 cfg = {**store.settings(), "wake_threshold": 0.5, "only_my_voice": True}
 assert jarvis.wake_bar(cfg, False, True) == jarvis.ONLY_ME > 0.5 and jarvis.wake_bar(cfg, False, False) == 0.5
 assert jarvis.wake_bar({**cfg, "only_my_voice": False}, False, True) == 0.5 and jarvis.wake_bar(cfg, True, True) == 0.85
+# "Delete my data" took the clip folders: turning "learn my voice" on again still loads the wake word
+import shutil, openwakeword.model
+real_model, real_file = openwakeword.model.Model, jarvis.wake_model_file
+openwakeword.model.Model, jarvis.wake_model_file = (lambda **kw: kw), (lambda word: word)
+shutil.rmtree(jarvis.WAKE_DIR)
+assert "custom_verifier_models" not in lrn.wake_model({**store.settings(), "wake_word": lrn.word, "learn_my_voice": True})
+openwakeword.model.Model, jarvis.wake_model_file = real_model, real_file
 
 # session search finds words inside conversations, not just titles
 ss = store.Sessions.__new__(store.Sessions)
@@ -1880,6 +1887,119 @@ store.delete_data()
 assert (store.memory(), store.reminders(), store.routines(), os.listdir(store.SESSIONS_DIR)) == ("", [], {}, []), (store.memory(), store.reminders(), store.routines(), os.listdir(store.SESSIONS_DIR))
 assert not os.path.exists(os.path.join(store.DATA, "wake")) and store.settings()["voice"] == "Puck"
 store.update_settings({"voice": "Charon"})
+
+# moving to another computer: a backup round trip brings everything back, never a key, a sign-in or the voice's pickle
+import pathlib, zipfile
+store.remember("The user likes tea")
+store.add_reminder(time.time() + 600, "check the oven", task=True)
+store.save_routine("tea time", "boil the kettle")
+store.update_settings({"voice": "Puck", "checks": ["tell me if a payment fails"]})
+store.save_plugins({"mine": {"url": "https://mcp.example.com", "headers": {"Authorization": "Bearer plugin-s3cret"}}})
+store.set_connector_mode("gmail", "read_only")
+store.save_custom_provider("local", "http://127.0.0.1:8080/v1")
+store.set_secret("aistudio", "key-s3cret")
+store.log_change("moved a file")
+backup_sessions = store.Sessions()
+backup_sessions.add({"who": "you", "text": "what's the weather"})
+for kind in ("yes", "no"):
+    os.makedirs(os.path.join(store.DATA, "wake", "alexa", kind), exist_ok=True)
+    with open(os.path.join(store.DATA, "wake", "alexa", kind, "1700000000.123.wav"), "wb") as f:
+        f.write(b"RIFF clip")
+with open(os.path.join(store.DATA, "wake", "alexa", "verifier.pkl"), "wb") as f:
+    f.write(b"pickle")
+backup = os.path.join(_home, "backup")
+saved = jarvis.api_post("/api/data/export", {"path": pathlib.Path(backup).as_uri()}, None, None)  # (the dialog gives a URL)
+assert saved["path"] == backup + ".zip" and saved["files"] == 11, saved
+with zipfile.ZipFile(backup + ".zip") as z:
+    assert json.loads(z.read("manifest.json"))["jarvis"] == jarvis.VERSION and "wake/alexa/yes/1700000000.123.wav" in z.namelist()
+    assert not any("s3cret" in z.read(n).decode(errors="replace") or "pkl" in n or "keys" in n for n in z.namelist())
+before = (store.memory(), store.reminders(), store.routines(), store.settings(), store.connector_modes(), store.custom_providers(),
+          store.changes(), backup_sessions.get(backup_sessions.current["id"]))
+store.delete_data()
+store.update_settings({"voice": "Kore", "checks": []})
+store.save_plugins({"mine": {"url": "https://mcp.example.com", "headers": {"Authorization": "Bearer here"}}})
+store.set_connector_mode("gmail", "ask")
+restarted, synced = [], []
+jarvis.restart_soon, real_restart = (lambda: restarted.append(1)), jarvis.restart_soon
+store.sync_autostart, real_sync = synced.append, store.sync_autostart
+assert jarvis.api_post("/api/data/import", {"path": backup + ".zip"}, None, None) == {"skipped": []} and restarted and synced == [False]
+assert (store.memory(), store.reminders(), store.routines(), store.settings(), store.connector_modes(), store.custom_providers(),
+        store.changes(), backup_sessions.get(backup_sessions.current["id"])) == before
+assert store.plugins()["mine"]["headers"] == {"Authorization": "Bearer here"}  # (a plugin already here keeps its keys)
+assert sorted(os.listdir(os.path.join(store.DATA, "wake", "alexa"))) == ["no", "yes"]  # (the verifier is learned again here)
+assert os.stat(backup + ".zip").st_mode & 0o077 == 0 or os.name == "nt"  # (it holds memory and every conversation)
+
+
+def make_backup(files, manifest={"format": 1, "jarvis": "1.0"}):
+    path = os.path.join(_home, "made.zip")
+    with zipfile.ZipFile(path, "w") as z:
+        if manifest is not None:
+            z.writestr("manifest.json", json.dumps(manifest))
+        for name, body in files.items():
+            z.writestr(name, body)
+    return path
+
+
+assert store.import_data(make_backup({"settings.json": json.dumps({"voice": "Puck", "wake_word": "/nowhere/mine.onnx", "retired": 1})})) == \
+    ["wake_word", "retired"] and store.settings()["voice"] == "Puck" and store.memory() == ""  # (that PC remembered nothing)
+store.remember("The user likes tea")
+for bad in ({"../evil.json": "{}"}, {"/etc/evil.json": "{}"}, {"keys.json": "{}"}, {"env": "KEY=1"}, {"mcp/composio.json": "{}"},
+            {"whatsapp/Default/Cookies": ""}, {"wake/../yes/1.wav": "RIFF"}, {"wake/alexa/verifier.pkl": "pickle"},
+            {"sessions/../../x.json": "{}"}, {"plugins.json": json.dumps({"mine": {"url": "https://x", "env": {"KEY": "1"}}})},
+            {"reminders.json": json.dumps([{"at": "soon"}])}, {"sessions/abc.json": json.dumps({"id": "other"})},
+            {"wake/yes/1.wav": "not a clip"}, {"settings.json": "{not json"}):
+    try:
+        store.import_data(make_backup(bad))
+        raise AssertionError(f"a bad backup was brought in: {bad}")
+    except ValueError:
+        pass
+for manifest in (None, {"format": 2}, {"jarvis": "1.0"}, []):
+    try:
+        store.import_data(make_backup({}, manifest))
+        raise AssertionError(f"a backup with manifest {manifest} was brought in")
+    except ValueError as e:
+        assert ("newer" in str(e)) == (manifest == {"format": 2}), e
+for taken in ({"openai": "https://evil.example/v1"}, {"Bad Name": "https://x/v1"}):  # (the keychain's openai key would go there)
+    try:
+        jarvis.api_post("/api/data/import", {"path": make_backup({"providers.json": json.dumps(taken)})}, None, None)
+        raise AssertionError(f"a backup's providers {taken} were brought in")
+    except ValueError:
+        pass
+for not_zip in (os.path.join(_home, "nowhere.zip"), store.SETTINGS_FILE):
+    try:
+        store.import_data(not_zip)
+        raise AssertionError("that isn't a zip")
+    except ValueError:
+        pass
+assert store.memory() == "- The user likes tea" and store.settings()["voice"] == "Puck"  # (refused ones changed nothing)
+assert store.import_data(make_backup({"settings.json": '{"follow_up_seconds": 1e999, "voice": "Kore"}'})) == ["follow_up_seconds"] \
+    and store.settings()["voice"] == "Kore"  # (a number too big is skipped like any refused setting)
+# a backup's plugin never gets this PC's keys or sign-in for another address, and a command from it waits to be turned on
+os.makedirs(os.path.join(store.DATA, "mcp"), exist_ok=True)
+for n in ("signed", "gone"):
+    store.write_json(os.path.join(store.DATA, "mcp", f"{n}.json"), {"token": "s3cret"}, private=True)
+store.save_plugins({"gh": {"url": "https://mcp.github.example", "headers": {"Authorization": "Bearer here"}},
+                    "same": {"url": "https://same.example", "headers": {"X-Key": "here"}},
+                    "signed": {"url": "https://signed.example", "enabled": True}})
+store.import_data(make_backup({"plugins.json": json.dumps({
+    "gh": {"url": "https://evil.example"}, "same": {"url": "https://same.example"}, "signed": {"url": "https://evil.example"},
+    "gone": {"url": "https://evil.example"}, "tool": {"command": "uvx some-server", "enabled": True}})}))
+assert store.plugins() == {"gh": {"url": "https://evil.example"}, "same": {"url": "https://same.example", "headers": {"X-Key": "here"}},
+                           "signed": {"url": "https://signed.example", "enabled": True}, "gone": {"url": "https://evil.example"},
+                           "tool": {"command": "uvx some-server", "enabled": False}}, store.plugins()
+assert os.path.exists(os.path.join(store.DATA, "mcp", "signed.json")) and not os.path.exists(os.path.join(store.DATA, "mcp", "gone.json"))
+# a 2.0 settings file's call_language goes out as the languages it's read as
+store.write_json(store.SETTINGS_FILE, {"call_language": "fr-FR"})
+store.export_data(backup + ".zip", jarvis.VERSION)
+with zipfile.ZipFile(backup + ".zip") as z:
+    assert json.loads(z.read("settings.json")) == {"languages": ["fr-FR"]}, z.read("settings.json")
+jarvis.restart_soon, store.sync_autostart = real_restart, real_sync
+store.delete_data()
+store.update_settings({"voice": "Charon", "checks": []})
+store.save_plugins({})
+store.set_connector_mode("gmail", "ask")
+store.save_custom_provider("local", "")
+store.set_secret("aistudio", "")
 
 # Telegram: only the chat that sends the pairing code is answered; it gets the agent's reply, and the agent can't ask out loud
 import remote

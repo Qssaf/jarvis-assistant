@@ -1,5 +1,7 @@
+import QtCore
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Dialogs
 import QtQuick.Layouts
 import Jarvis
 
@@ -462,6 +464,41 @@ ScrollPage {
             Txt { kind: "small"; text: "Keys, account sign-ins and settings stay."; color: Theme.text3; Layout.fillWidth: true }
         }
         Timer { id: disarm; interval: 4000; onTriggered: page.confirmDelete = false }
+    }
+
+    Section {
+        title: "Move to another computer"
+        description: "One file with your settings, memory, reminders, scheduled tasks, routines, plugins, conversations and the "
+                     + "clips Jarvis learned your voice from. Keys, account sign-ins, WhatsApp and your phone aren't in it: set "
+                     + "those up again on the other computer."
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 14
+            Pill { text: "Save a backup"
+                   onClicked: { saver.selectedFile = StandardPaths.writableLocation(StandardPaths.DocumentsLocation) + "/jarvis-backup-"
+                                    + new Date().toISOString().slice(0, 10) + ".zip"; saver.open() } }
+            Pill { kind: "ghost"; text: "Bring one in"; onClicked: opener.open() }
+            Txt { kind: "small"; text: "Bringing one in replaces what's on this computer (conversations are added), then Jarvis restarts."
+                  color: Theme.text3; Layout.fillWidth: true }
+        }
+        FileDialog {
+            id: saver
+            fileMode: FileDialog.SaveFile
+            title: "Save a Jarvis backup"
+            nameFilters: ["Jarvis backups (*.zip)"]
+            defaultSuffix: "zip"
+            onAccepted: Api.post("/api/data/export", { path: String(selectedFile) }, d => Backend.toast(`Saved to ${d.path}`, false),
+                                 e => Backend.toast(e.error, true))
+        }
+        FileDialog {
+            id: opener
+            title: "Bring in a Jarvis backup"
+            nameFilters: ["Jarvis backups (*.zip)"]
+            onAccepted: Api.post("/api/data/import", { path: String(selectedFile) },
+                                 d => Backend.toast("Brought in" + (d.skipped.length ? ` (left at their defaults here: ${d.skipped.join(", ")})` : "")
+                                                    + ": Jarvis is restarting", false),
+                                 e => Backend.toast(e.error, true))
+        }
     }
 
     RowLayout {  // about: no card, it's a footer
