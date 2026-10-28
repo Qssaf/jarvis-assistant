@@ -112,7 +112,7 @@ def _echo_cancelled_mic():
         if IS_WINDOWS:
             ctypes.windll.ole32.CoInitializeEx(None, 0)
         try:
-            with loopback.recorder(16000, channels=1) as r:  # (silence comes in as zeros: soundcard fills the gaps)
+            with loopback.recorder(16000, channels=1, blocksize=8000) as r:  # (silence comes in as zeros: soundcard fills the gaps)
                 while not done.is_set():
                     played.append(pcm(r.record(160)))
         except Exception as e:
@@ -120,7 +120,9 @@ def _echo_cancelled_mic():
         done.set()
     threading.Thread(target=listen_to_speakers, daemon=True).start()
     try:
-        with soundcard.default_microphone().recorder(16000, channels=1) as mic:
+        # half a second of room in WASAPI's buffers (soundcard's default is one 10 ms period): a slower moment in
+        # voice_loop would otherwise drop mic sound, and the canceller would lose its place against the speakers
+        with soundcard.default_microphone().recorder(16000, channels=1, blocksize=8000) as mic:
             out = []
             for i in itertools.count():
                 if done.is_set():

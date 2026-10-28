@@ -1313,7 +1313,8 @@ class Device:
     def __init__(self, value):
         self.id, self.value = "spk", value
 
-    def recorder(self, rate, channels):
+    def recorder(self, rate, channels, blocksize):
+        assert blocksize >= 1600  # (room for a slow moment: WASAPI's default is 10 ms)
         return Rec(self.value)
 class Apm:
     def __init__(self, **options):
@@ -1325,18 +1326,24 @@ class Apm:
     def process_stream(self, frame):  # (a stand-in: takes the speakers' sound out once it has heard some)
         if self.played:
             frame.data[:] = bytes(len(frame.data))
+try:
+    from livekit import rtc as real_rtc  # (installed on Windows: then it's the real canceller, only the sound cards are made up)
+except ImportError:
+    real_rtc = None
 apms = []
 fake_rtc = types.SimpleNamespace(AudioProcessingModule=lambda **o: apms.append(Apm(**o)) or apms[-1],
                                  AudioFrame=lambda data, rate, channels, n: types.SimpleNamespace(data=data))
 real_modules = {m: sys.modules.get(m) for m in ("soundcard", "livekit", "sounddevice")}
 sys.modules["soundcard"] = types.SimpleNamespace(default_speaker=lambda: Device(0.5), default_microphone=lambda: Device(0.25),
                                                  get_microphone=lambda id, include_loopback: Device(0.5))
-sys.modules["livekit"] = types.SimpleNamespace(rtc=fake_rtc)
+if not real_rtc:
+    sys.modules["livekit"] = types.SimpleNamespace(rtc=fake_rtc)
 ec = system._echo_cancelled_mic()
 frames = [next(ec) for _ in range(5)]
 ec.close()
-assert all(f.shape == (1280,) and f.dtype == np.int16 for f in frames) and not frames[-1].any() and apms[0].played
-assert apms[0].options["echo_cancellation"]
+assert all(f.shape == (1280,) and f.dtype == np.int16 for f in frames)
+assert np.abs(frames[-1]).max() < 819, frames[-1]  # (the mic's 8191 mostly gone: what Jarvis hears is the canceller's output)
+assert real_rtc or (apms[0].played and apms[0].options["echo_cancellation"])
 # ...and when it can't start (no packages, no loopback), it's the plain mic, closed while Jarvis talks
 sys.modules["soundcard"] = sys.modules["livekit"] = None
 class Stream:
