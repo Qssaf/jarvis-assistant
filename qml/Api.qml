@@ -24,7 +24,7 @@ QtObject {
             if (!cb) return
             const value = JSON.parse(body)
             if (ok && cb[0]) cb[0](value)
-            else if (!ok) (cb[1] || function (e) { Backend.toast(e.error || "Something went wrong", true) })(value)
+            else if (!ok) (cb[1] || function (e) { Backend.toast(e.error || qsTr("Something went wrong"), true) })(value)
         }
     }
 }

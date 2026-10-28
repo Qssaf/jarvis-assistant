@@ -12,7 +12,7 @@ Rectangle {
     property int step: 0
     readonly property int steps: 6
     readonly property bool last: step === steps - 1
-    readonly property var names: ["Welcome", "Gemini key", "Microphone", "Voice", "Safety", "Ready"]
+    readonly property var names: [qsTr("Welcome"), qsTr("Gemini key"), qsTr("Microphone"), qsTr("Voice"), qsTr("Safety"), qsTr("Ready")]
     property var s: ({})
     property var voices: []
     property string wake: "Hey Jarvis"
@@ -71,7 +71,8 @@ Rectangle {
         id: intro
         width: wiz.introWidth
         height: col.implicitHeight
-        x: (wiz.width - width - wiz.gutter - card.width) / 2
+        readonly property real start: (wiz.width - width - wiz.gutter - card.width) / 2
+        x: LayoutMirroring.enabled ? wiz.width - width - start : start  // (right to left: the card comes first)
         anchors.verticalCenter: parent.verticalCenter
         ColumnLayout {
             id: col
@@ -86,8 +87,8 @@ Rectangle {
                 mode: wiz.step === 2 && wiz.hearing ? "listening" : "idle"
                 level: wiz.step === 2 ? wiz.mic : 0
             }
-            Txt { kind: "label"; text: "Setting up Jarvis"; color: Theme.text3; Layout.bottomMargin: 6 }
-            Txt { kind: "heading"; text: "Let’s get you ready"; Layout.fillWidth: true; Layout.bottomMargin: 24 }
+            Txt { kind: "label"; text: qsTr("Setting up Jarvis"); color: Theme.text3; Layout.bottomMargin: 6 }
+            Txt { kind: "heading"; text: qsTr("Let’s get you ready"); Layout.fillWidth: true; Layout.bottomMargin: 24 }
             Repeater {
                 model: wiz.steps
                 StepRow { required property int index; n: index }
@@ -102,7 +103,7 @@ Rectangle {
         radius: 28
         width: Math.min(560, wiz.width - 2 * Theme.margin - wiz.introWidth - wiz.gutter)
         height: body.implicitHeight + 2 * body.anchors.margins
-        x: intro.x + intro.width + wiz.gutter
+        x: LayoutMirroring.enabled ? intro.x - wiz.gutter - width : intro.x + intro.width + wiz.gutter
         anchors.verticalCenter: parent.verticalCenter
         Behavior on height { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
@@ -127,31 +128,31 @@ Rectangle {
 
                 Step {
                     symbol: "sparkle"
-                    title: "Hi, I’m Jarvis"
-                    lead: `Say “${wiz.wake}” and ask for anything: questions, what’s on your screen, your apps, email, calendar, `
-                          + "Classroom, reminders. A couple of minutes of setup and you’re ready."
+                    title: qsTr("Hi, I’m Jarvis")
+                    lead: qsTr("Say “%1” and ask for anything: questions, what’s on your screen, your apps, email, calendar, "
+                               + "Classroom, reminders. A couple of minutes of setup and you’re ready.").arg(wiz.wake)
                     Inset {
                         symbol: "shield"
-                        title: "What leaves this PC"
-                        detail: `What you say after “${wiz.wake}”, and screenshots when a task needs the screen, go to Google `
-                                + "Gemini. Account actions go through Composio, only for the accounts you connect. Memory, "
-                                + "reminders and conversations stay on this computer."
+                        title: qsTr("What leaves this PC")
+                        detail: qsTr("What you say after “%1”, and screenshots when a task needs the screen, go to Google "
+                                     + "Gemini. Account actions go through Composio, only for the accounts you connect. Memory, "
+                                     + "reminders and conversations stay on this computer.").arg(wiz.wake)
                     }
                 }
 
                 Step {
                     symbol: "key"
-                    title: "Your Gemini key"
-                    lead: "Jarvis thinks with Google Gemini. A free key takes a minute: sign in at "
+                    title: qsTr("Your Gemini key")
+                    lead: qsTr("Jarvis thinks with Google Gemini. A free key takes a minute: sign in at "
                           + "<a href=\"https://aistudio.google.com/apikey\">aistudio.google.com/apikey</a>, press Create API key, "
-                          + "and paste it here. It’s kept in your system keychain."
+                          + "and paste it here. It’s kept in your system keychain.")
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 10
                         Field { id: keyField; Layout.fillWidth: true; echoMode: TextInput.Password
-                                placeholderText: wiz.keyOk ? "Key saved · paste a new one to replace it" : "Paste your API key"
+                                placeholderText: wiz.keyOk ? qsTr("Key saved · paste a new one to replace it") : qsTr("Paste your API key")
                                 onAccepted: { wiz.saveKey(text); text = "" } }
-                        Pill { text: "Save"; implicitHeight: 44; enabled: keyField.text.trim() !== "" && !wiz.checking
+                        Pill { text: qsTr("Save"); implicitHeight: 44; enabled: keyField.text.trim() !== "" && !wiz.checking
                                kind: enabled ? "primary" : ""  // (a dimmed solid cyan reads as broken)
                                onClicked: { wiz.saveKey(keyField.text); keyField.text = "" } }
                     }
@@ -162,15 +163,15 @@ Rectangle {
                                Layout.preferredWidth: 16; Layout.preferredHeight: 16; color: keyNote.color }
                         Txt { id: keyNote; kind: "small"; Layout.fillWidth: true
                               color: wiz.checking ? Theme.text2 : wiz.keyOk ? Theme.green : wiz.keyMissing ? Theme.text3 : Theme.red
-                              text: wiz.checking ? "Checking the key…" : wiz.keyOk ? "The key works: " + wiz.keyDetail
-                                    : wiz.keyMissing ? "No key yet" : "That key didn’t work: " + wiz.keyDetail }
+                              text: wiz.checking ? qsTr("Checking the key…") : wiz.keyOk ? qsTr("The key works: %1").arg(wiz.keyDetail)
+                                    : wiz.keyMissing ? qsTr("No key yet") : qsTr("That key didn’t work: %1").arg(wiz.keyDetail) }
                     }
                 }
 
                 Step {
                     symbol: "mic"
-                    title: "Your microphone"
-                    lead: "Say something: the bars should jump while you talk."
+                    title: qsTr("Your microphone")
+                    lead: qsTr("Say something: the bars should jump while you talk.")
                     Rectangle {
                         Layout.fillWidth: true
                         implicitHeight: meter.implicitHeight + 32
@@ -207,8 +208,8 @@ Rectangle {
                                 spacing: 10
                                 StatusDot { status: wiz.hearing ? "ok" : ""; Layout.alignment: Qt.AlignTop; Layout.topMargin: 6 }  // (on the first line)
                                 Txt { kind: "small"; Layout.fillWidth: true; color: wiz.hearing ? Theme.text : Theme.text2
-                                      text: wiz.hearing ? "I can hear you."
-                                            : "Quiet so far. If the bars never move, pick the right input device in your system’s sound settings." }
+                                      text: wiz.hearing ? qsTr("I can hear you.")
+                                            : qsTr("Quiet so far. If the bars never move, pick the right input device in your system’s sound settings.") }
                             }
                         }
                     }
@@ -218,7 +219,7 @@ Rectangle {
                         spacing: 6
                         RowLayout {
                             Layout.fillWidth: true
-                            Txt { text: "Wake word sensitivity"; weight: 500; Layout.fillWidth: true }
+                            Txt { text: qsTr("Wake word sensitivity"); weight: 500; Layout.fillWidth: true }
                             Txt { kind: "small"; text: Number(wakeSlider.value).toFixed(2); font.features: { "tnum": 1 } }
                         }
                         Range {
@@ -229,14 +230,14 @@ Rectangle {
                             value: wiz.s.wake_threshold !== undefined ? wiz.s.wake_threshold : 0.5
                             onPressedChanged: if (!pressed) wiz.set("wake_threshold", Number(value.toFixed(2)))
                         }
-                        Txt { kind: "small"; color: Theme.text3; text: "Lower wakes more easily." }
+                        Txt { kind: "small"; color: Theme.text3; text: qsTr("Lower wakes more easily.") }
                     }
                 }
 
                 Step {
                     symbol: "volume"
-                    title: "My voice"
-                    lead: "How I sound, and when I talk."
+                    title: qsTr("My voice")
+                    lead: qsTr("How I sound, and when I talk.")
                     Select { Layout.fillWidth: true; model: wiz.voices.map(v => ({ value: v, label: v })); value: wiz.s.voice || ""
                              onPicked: v => wiz.set("voice", v) }
                     Rectangle {
@@ -251,11 +252,11 @@ Rectangle {
                             width: parent.width
                             spacing: 0
                             Toggle { Layout.fillWidth: true; Layout.preferredHeight: 54; Layout.leftMargin: 16; Layout.rightMargin: 16
-                                     text: "Speak replies to typed messages"; checked: !!wiz.s.speak_typed_replies
+                                     text: qsTr("Speak replies to typed messages"); checked: !!wiz.s.speak_typed_replies
                                      onToggled: wiz.set("speak_typed_replies", checked) }
                             Rectangle { Layout.fillWidth: true; Layout.leftMargin: 16; implicitHeight: 1; color: Theme.stroke }
                             Toggle { Layout.fillWidth: true; Layout.preferredHeight: 54; Layout.leftMargin: 16; Layout.rightMargin: 16
-                                     text: "Start Jarvis when I log in"; checked: !!wiz.s.start_at_login
+                                     text: qsTr("Start Jarvis when I log in"); checked: !!wiz.s.start_at_login
                                      onToggled: wiz.set("start_at_login", checked) }
                         }
                     }
@@ -263,20 +264,20 @@ Rectangle {
 
                 Step {
                     symbol: "shield"
-                    title: "How careful should I be?"
-                    lead: "You can change this any time in Settings."
-                    Choice { title: "Ask first"; tag: "Recommended"; picked: wiz.s.safety !== "full"; onChosen: wiz.set("safety", "ask")
-                             detail: "Commands that delete, install or shut down, and changes to your accounts (sending email, "
-                                     + "creating events), wait for your yes, unless you asked for exactly that." }
-                    Choice { title: "Just do it"; picked: wiz.s.safety === "full"; onChosen: wiz.set("safety", "full")
-                             detail: "Jarvis acts without checking first. Quicker, for when you trust it with your PC and accounts." }
+                    title: qsTr("How careful should I be?")
+                    lead: qsTr("You can change this any time in Settings.")
+                    Choice { title: qsTr("Ask first"); tag: qsTr("Recommended"); picked: wiz.s.safety !== "full"; onChosen: wiz.set("safety", "ask")
+                             detail: qsTr("Commands that delete, install or shut down, and changes to your accounts (sending email, "
+                                     + "creating events), wait for your yes, unless you asked for exactly that.") }
+                    Choice { title: qsTr("Just do it"); picked: wiz.s.safety === "full"; onChosen: wiz.set("safety", "full")
+                             detail: qsTr("Jarvis acts without checking first. Quicker, for when you trust it with your PC and accounts.") }
                 }
 
                 Step {
                     symbol: "check"
-                    title: "You’re set"
-                    lead: "Connect Gmail, Calendar, Classroom, Drive and more on the Accounts page so Jarvis can use them. If "
-                          + "something doesn’t work, the Health page says what and how to fix it."
+                    title: qsTr("You’re set")
+                    lead: qsTr("Connect Gmail, Calendar, Classroom, Drive and more on the Accounts page so Jarvis can use them. If "
+                          + "something doesn’t work, the Health page says what and how to fix it.")
                     Rectangle {
                         Layout.fillWidth: true
                         implicitHeight: 76
@@ -295,8 +296,8 @@ Rectangle {
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 spacing: 2
-                                Txt { kind: "label"; text: "Try it now"; color: Theme.accent }
-                                Txt { kind: "heading"; text: `“${wiz.wake}, what’s the weather?”`; Layout.fillWidth: true }
+                                Txt { kind: "label"; text: qsTr("Try it now"); color: Theme.accent }
+                                Txt { kind: "heading"; text: qsTr("“%1, what’s the weather?”").arg(wiz.wake); Layout.fillWidth: true }
                             }
                         }
                     }
@@ -307,14 +308,14 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.topMargin: wiz.compact ? 24 : 32
                 spacing: 10
-                Pill { visible: !wiz.last; kind: "ghost"; text: "Skip setup"; Layout.leftMargin: -12  // (the label on the content edge)
+                Pill { visible: !wiz.last; kind: "ghost"; text: qsTr("Skip setup"); Layout.leftMargin: -12  // (the label on the content edge)
                        onClicked: wiz.finish("") }
                 Item { Layout.fillWidth: true }
-                Pill { visible: wiz.step > 0 && !wiz.last; text: "Back"; onClicked: wiz.step-- }
-                Pill { visible: wiz.last; kind: "ghost"; text: "Done"; onClicked: wiz.finish("") }
+                Pill { visible: wiz.step > 0 && !wiz.last; text: qsTr("Back"); onClicked: wiz.step-- }
+                Pill { visible: wiz.last; kind: "ghost"; text: qsTr("Done"); onClicked: wiz.finish("") }
                 Pill { readonly property bool skipKey: wiz.step === 1 && !wiz.keyOk
                        kind: skipKey ? "" : "primary"; Layout.minimumWidth: 96
-                       text: wiz.last ? "Connect accounts" : skipKey ? "Skip for now" : "Next"
+                       text: wiz.last ? qsTr("Connect accounts") : skipKey ? qsTr("Skip for now") : qsTr("Next")
                        onClicked: wiz.last ? wiz.finish("accounts") : wiz.step++ }
             }
         }
@@ -345,14 +346,15 @@ Rectangle {
         implicitHeight: 40
         Rectangle {  // the line down to the next step
             visible: sr.n < wiz.steps - 1
-            x: 13; y: 32; width: 2; height: 16; radius: 1
+            anchors { left: parent.left; leftMargin: 13 }
+            y: 32; width: 2; height: 16; radius: 1
             color: sr.done ? Theme.alpha(Theme.accent, 0.45) : Theme.stroke
             Behavior on color { ColorAnimation { duration: 220 } }
         }
         Rectangle {
             id: dot
             width: 28; height: 28; radius: 14
-            anchors.verticalCenter: parent.verticalCenter
+            anchors { left: parent.left; verticalCenter: parent.verticalCenter }
             color: sr.done ? Theme.accentSoft : "transparent"  // (soft: solid discs would outshine the reactor)
             border.width: sr.done ? 0 : 1.5
             border.color: sr.current ? Theme.accent : Theme.strokeStrong
@@ -441,7 +443,8 @@ Rectangle {
         contentItem: Item {
             Rectangle {  // the radio
                 id: radio
-                x: 16; y: 16
+                anchors { left: parent.left; leftMargin: 16 }
+                y: 16
                 width: 20; height: 20; radius: 10
                 color: "transparent"
                 border.width: ch.picked ? 2 : 1.5

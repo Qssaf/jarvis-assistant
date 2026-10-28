@@ -40,7 +40,7 @@ build() {
 package() {
   cd "$pkgname-$pkgver"
   install -d "$pkgdir/opt/$pkgname"
-  cp -r --no-preserve=ownership *.py prompt.md requirements.txt icon.svg qml assets relay "$pkgdir/opt/$pkgname/"
+  cp -r --no-preserve=ownership *.py prompt.md requirements.txt icon.svg qml assets relay translations "$pkgdir/opt/$pkgname/"
   rm "$pkgdir/opt/$pkgname/test_jarvis.py"
   install -Dm755 jarvis-shot "$pkgdir/usr/lib/$pkgname/jarvis-shot"
   install -Dm755 "$srcdir/jarvis.sh" "$pkgdir/usr/bin/jarvis"

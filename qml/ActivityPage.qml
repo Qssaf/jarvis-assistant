@@ -40,8 +40,8 @@ Item {
 
         PageHeader {
             Layout.fillWidth: true
-            title: "Activity"
-            hint: "Every step Jarvis takes in this conversation, as it happens."
+            title: qsTr("Activity")
+            hint: qsTr("Every step Jarvis takes in this conversation, as it happens.")
         }
 
         RowLayout {
@@ -80,12 +80,14 @@ Item {
                         HoverHandler { id: hover }
                         Tip { text: step.text; visible: step.who === "tool" && hover.hovered }
                         Rectangle {  // the timeline
-                            x: 27; y: step.index === 0 ? 28 : 0
+                            anchors { left: parent.left; leftMargin: 27 }
+                            y: step.index === 0 ? 28 : 0
                             width: 1; height: (step.index === steps.count - 1 ? 28 : step.height) - y
                             color: Theme.stroke
                         }
                         Rectangle {
-                            x: 12; y: 12
+                            anchors { left: parent.left; leftMargin: 12 }
+                            y: 12
                             width: 32; height: 32; radius: 16
                             color: Qt.tint(Theme.bg, Theme.alpha(step.tint, 0.16))  // opaque, so the timeline stops at its edge
                             border.width: 1
@@ -95,9 +97,7 @@ Item {
                         }
                         Txt {
                             id: title
-                            x: 56
-                            width: parent.width - x - when.width - 28
-                            anchors.verticalCenter: parent.verticalCenter
+                            anchors { left: parent.left; leftMargin: 56; right: when.left; rightMargin: 12; verticalCenter: parent.verticalCenter }
                             text: step.who === "tool" ? Backend.toolLabel(step.text) : page.plain(step.text)
                             weight: step.who === "thinking" ? 400 : 500
                             color: step.who === "thinking" ? Theme.text2 : Theme.text
@@ -127,7 +127,7 @@ Item {
                             width: parent.width
                             horizontalAlignment: Text.AlignHCenter
                             kind: "small"; color: Theme.text3
-                            text: "New steps appear at the top as Jarvis works"
+                            text: qsTr("New steps appear at the top as Jarvis works")
                         }
                     }
                     ColumnLayout {
@@ -141,7 +141,7 @@ Item {
                             color: Theme.accentSoft
                             Icon { anchors.centerIn: parent; name: "activity"; size: 20; color: Theme.accent }
                         }
-                        Txt { Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter; kind: "small"; text: "Nothing yet: ask Jarvis something" }
+                        Txt { Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter; kind: "small"; text: qsTr("Nothing yet: ask Jarvis something") }
                     }
                 }
             }
@@ -153,7 +153,7 @@ Item {
                 ColumnLayout {
                     anchors.fill: parent
                     spacing: 6
-                    Txt { kind: "label"; text: "Reply speed" }
+                    Txt { kind: "label"; text: qsTr("Reply speed") }
                     Row {
                         spacing: 4
                         Txt {
@@ -161,10 +161,11 @@ Item {
                             text: page.speeds.length ? (page.speeds.reduce((a, b) => a + b, 0) / page.speeds.length).toFixed(2) : ""
                             kind: "display"; font.features: { "tnum": 1 }; wrapMode: Text.NoWrap
                         }
-                        Txt { text: "s"; kind: "heading"; weight: 500; color: Theme.text2; anchors.baseline: average.baseline }
+                        //: seconds, after the average reply time
+                        Txt { text: qsTr("s"); kind: "heading"; weight: 500; color: Theme.text2; anchors.baseline: average.baseline }
                     }
                     Txt { kind: "small"; Layout.fillWidth: true; lineHeight: 1.15
-                          text: `Averaged over the last ${page.speeds.length} replies: from the end of what you said to Jarvis's first word.` }
+                          text: qsTr("Averaged over the last %n replies: from the end of what you said to Jarvis's first word.", "", page.speeds.length) }
                     Item { Layout.fillHeight: true }
                     Item {
                         id: chart

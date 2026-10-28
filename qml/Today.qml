@@ -89,7 +89,7 @@ ScrollView {
                         Layout.fillWidth: true
                         spacing: 1
                         Txt { text: today.weather.condition || ""; weight: 600; Layout.fillWidth: true; elide: Text.ElideRight; wrapMode: Text.NoWrap }
-                        Txt { kind: "small"; text: "Feels " + (today.weather.feels || "") + " in " + (today.weather.place || "")
+                        Txt { kind: "small"; text: qsTr("Feels %1 in %2").arg(today.weather.feels || "").arg(today.weather.place || "")
                               Layout.fillWidth: true; elide: Text.ElideRight; wrapMode: Text.NoWrap }
                     }
                     Txt { text: today.weather.temp || ""; kind: "heading"; font.pixelSize: Theme.px(22); weight: 500; wrapMode: Text.NoWrap }
@@ -133,7 +133,7 @@ ScrollView {
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 4
-                        Txt { kind: "label"; text: "Now playing"; wrapMode: Text.NoWrap }
+                        Txt { kind: "label"; text: qsTr("Now playing"); wrapMode: Text.NoWrap }
                         Txt { kind: "label"; color: Theme.text3; text: "· " + (today.media.app || ""); visible: !!today.media.app
                               Layout.fillWidth: true; elide: Text.ElideRight; wrapMode: Text.NoWrap }
                     }
@@ -143,11 +143,12 @@ ScrollView {
                 }
                 Row {
                     Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                    IconButton { anchors.verticalCenter: parent.verticalCenter; size: 28; glyph: 14; symbol: "prev"; tip: "Previous"
+                    LayoutMirroring.enabled: false  // (media buttons keep their order in any language)
+                    IconButton { anchors.verticalCenter: parent.verticalCenter; size: 28; glyph: 14; symbol: "prev"; tip: qsTr("Previous")
                                  onClicked: Api.post("/api/media/Previous", {}, today.live) }
                     IconButton { symbol: today.media.status === "Playing" ? "pause" : "play"; tint: Theme.accentSoft; iconColor: Theme.accent; size: 36; glyph: 16
                                  onClicked: Api.post("/api/media/PlayPause", {}, today.live) }
-                    IconButton { anchors.verticalCenter: parent.verticalCenter; size: 28; glyph: 14; symbol: "next"; tip: "Next"
+                    IconButton { anchors.verticalCenter: parent.verticalCenter; size: 28; glyph: 14; symbol: "next"; tip: qsTr("Next")
                                  onClicked: Api.post("/api/media/Next", {}, today.live) }
                 }
             }
@@ -160,8 +161,8 @@ ScrollView {
             ColumnLayout {
                 width: parent.width
                 spacing: 0
-                Txt { kind: "label"; text: "Up next"; Layout.leftMargin: Theme.pad; Layout.topMargin: 16; Layout.bottomMargin: 4 }
-                Txt { kind: "small"; color: Theme.text3; text: "Nothing scheduled. Try “remind me in 20 minutes to stretch”."
+                Txt { kind: "label"; text: qsTr("Up next"); Layout.leftMargin: Theme.pad; Layout.topMargin: 16; Layout.bottomMargin: 4 }
+                Txt { kind: "small"; color: Theme.text3; text: qsTr("Nothing scheduled. Try “remind me in 20 minutes to stretch”.")
                       visible: !(today.info.reminders || []).length; Layout.fillWidth: true; Layout.margins: Theme.pad; Layout.topMargin: 4 }
                 Repeater {
                     model: today.info.reminders || []
@@ -175,7 +176,7 @@ ScrollView {
                         Rectangle { visible: row.index > 0; x: Theme.pad; width: parent.width - 2 * Theme.pad; height: 1; color: Theme.stroke }
                         Rectangle {
                             id: well
-                            x: Theme.pad; anchors.verticalCenter: parent.verticalCenter
+                            anchors { left: parent.left; leftMargin: Theme.pad; verticalCenter: parent.verticalCenter }
                             width: 36; height: 36; radius: 18
                             color: Theme.accentSoft
                             Icon { anchors.centerIn: parent; name: "bell"; size: 18; color: Theme.accent }
@@ -191,7 +192,7 @@ ScrollView {
                             anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
                             opacity: over.hovered ? 1 : 0
                             Behavior on opacity { NumberAnimation { duration: Theme.fast } }
-                            size: 28; glyph: 14; symbol: "close"; tip: "Cancel this reminder"
+                            size: 28; glyph: 14; symbol: "close"; tip: qsTr("Cancel this reminder")
                             onClicked: Api.post(`/api/reminders/${row.modelData.id}/cancel`, {}, today.load)
                         }
                     }
@@ -207,12 +208,12 @@ ScrollView {
             ColumnLayout {
                 width: parent.width
                 spacing: 14
-                Txt { kind: "label"; text: "This PC" }
-                Meter { label: "Processor"; value: (today.stats.cpu || 0) / 100; detail: Math.round(today.stats.cpu || 0) + "%" }
-                Meter { label: "Memory"; value: (today.stats.mem_used || 0) / Math.max(1, today.stats.mem_total || 1)
-                        detail: today.gb(today.stats.mem_used || 0) + " of " + today.gb(today.stats.mem_total || 0) + " GB" }
-                Meter { label: "Disk"; value: (today.stats.disk_used || 0) / Math.max(1, today.stats.disk_total || 1)
-                        detail: Math.round((today.stats.disk_total - today.stats.disk_used) / 1073741824) + " GB free" }
+                Txt { kind: "label"; text: qsTr("This PC") }
+                Meter { label: qsTr("Processor"); value: (today.stats.cpu || 0) / 100; detail: Math.round(today.stats.cpu || 0) + "%" }
+                Meter { label: qsTr("Memory"); value: (today.stats.mem_used || 0) / Math.max(1, today.stats.mem_total || 1)
+                        detail: qsTr("%1 of %2 GB").arg(today.gb(today.stats.mem_used || 0)).arg(today.gb(today.stats.mem_total || 0)) }
+                Meter { label: qsTr("Disk"); value: (today.stats.disk_used || 0) / Math.max(1, today.stats.disk_total || 1)
+                        detail: qsTr("%1 GB free").arg(Math.round((today.stats.disk_total - today.stats.disk_used) / 1073741824)) }
             }
         }
 
@@ -224,7 +225,7 @@ ScrollView {
             visible: today.latency >= 0
             Icon { name: "bolt"; size: 14; Layout.preferredWidth: 14; Layout.preferredHeight: 14; color: Theme.text3 }
             Txt { kind: "small"; color: Theme.text3; Layout.fillWidth: true; font.features: { "tnum": 1 }
-                  text: "Last answer started " + today.latency.toFixed(1) + " s after you finished" }
+                  text: qsTr("Last answer started %1 s after you finished").arg(today.latency.toFixed(1)) }
         }
         Item { Layout.preferredHeight: 12 }
     }
@@ -245,6 +246,7 @@ ScrollView {
             height: 4; radius: 2
             color: Theme.track
             Rectangle {
+                anchors.left: parent.left
                 width: parent.width * Math.min(1, Math.max(0.02, value)); height: parent.height; radius: 2
                 color: value > 0.8 ? Theme.warm : Theme.accent
                 Behavior on width { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }

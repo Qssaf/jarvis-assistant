@@ -67,7 +67,7 @@ QtObject {
         return s === "listening" ? listen : s === "thinking" ? warm : s === "speaking" ? speak : accent
     }
     function stateName(s) {
-        return s === "listening" ? "Listening" : s === "thinking" ? "Working" : s === "speaking" ? "Speaking" : "Ready"
+        return s === "listening" ? qsTr("Listening") : s === "thinking" ? qsTr("Working") : s === "speaking" ? qsTr("Speaking") : qsTr("Ready")
     }
     function alpha(c, a) { return Qt.rgba(c.r, c.g, c.b, c.a * a) }  // (scales: alpha(glass, 0.5) is half as strong)
 }

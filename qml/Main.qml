@@ -19,6 +19,8 @@ Window {
     title: "Jarvis"
     color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint
+    LayoutMirroring.enabled: Backend.rtl  // (Arabic first: the whole window reads right to left)
+    LayoutMirroring.childrenInherit: true
 
     function present() { show(); raise(); requestActivate() }
     function go(key) { page = key }
@@ -87,8 +89,8 @@ Window {
         Glass {
             id: rail
             floating: true
-            x: 12; y: 12
-            width: 76; height: parent.height - 24
+            anchors { left: parent.left; top: parent.top; bottom: parent.bottom; margins: 12 }
+            width: 76
             radius: 26
 
             DragHandler { target: null; onActiveChanged: if (active) win.startSystemMove() }
@@ -110,13 +112,13 @@ Window {
                             Layout.topMargin: 10; Layout.bottomMargin: 10; color: Theme.stroke }
 
                 Repeater {
-                    model: [["home", "Home", "home"], ["chats", "Chats", "chats"], ["activity", "Activity", "activity"],
-                            ["accounts", "Accounts", "accounts"], ["plugins", "Plugins", "plugins"], ["models", "Models", "cpu"],
-                            ["memory", "Memory", "memory"], ["health", "Health", "pulse"]]
+                    model: [["home", qsTr("Home"), "home"], ["chats", qsTr("Chats"), "chats"], ["activity", qsTr("Activity"), "activity"],
+                            ["accounts", qsTr("Accounts"), "accounts"], ["plugins", qsTr("Plugins"), "plugins"], ["models", qsTr("Models"), "cpu"],
+                            ["memory", qsTr("Memory"), "memory"], ["health", qsTr("Health"), "pulse"]]
                     RailButton { required property var modelData; key: modelData[0]; label: modelData[1]; symbol: modelData[2] }
                 }
                 Item { Layout.fillHeight: true }
-                RailButton { key: "settings"; label: "Settings"; symbol: "settings" }
+                RailButton { key: "settings"; label: qsTr("Settings"); symbol: "settings" }
             }
         }
 
@@ -178,10 +180,10 @@ Window {
             Row {
                 anchors { right: parent.right; rightMargin: 12; top: parent.top; topMargin: 12 }
                 spacing: 4
-                WinButton { symbol: "min"; tip: "Minimise"; onClicked: win.showMinimized() }
-                WinButton { symbol: win.maximized ? "restore" : "max"; tip: win.maximized ? "Restore" : "Maximise"
+                WinButton { symbol: "min"; tip: qsTr("Minimise"); onClicked: win.showMinimized() }
+                WinButton { symbol: win.maximized ? "restore" : "max"; tip: win.maximized ? qsTr("Restore") : qsTr("Maximise")
                             onClicked: win.maximized ? win.showNormal() : win.showMaximized() }
-                WinButton { symbol: "close"; danger: true; tip: "Close (Jarvis keeps running in the tray)"; onClicked: win.hide() }
+                WinButton { symbol: "close"; danger: true; tip: qsTr("Close (Jarvis keeps running in the tray)"); onClicked: win.hide() }
             }
         }
 

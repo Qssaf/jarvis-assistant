@@ -30,7 +30,7 @@ Item {
     }
     function ago(t) {
         const s = Date.now() / 1000 - t
-        return s < 60 ? "just now" : s < 3600 ? Math.round(s / 60) + " min ago" : s < 86400 ? Math.round(s / 3600) + " h ago"
+        return s < 60 ? qsTr("just now") : s < 3600 ? qsTr("%n min ago", "", Math.round(s / 60)) : s < 86400 ? qsTr("%n h ago", "", Math.round(s / 3600))
              : Qt.formatDate(new Date(t * 1000), "d MMM")
     }
     function plain(t) {  // a leading emoji in a notice clashes with the line icons
@@ -47,9 +47,9 @@ Item {
 
         PageHeader {
             Layout.fillWidth: true
-            title: "Chats"
-            hint: "Every conversation is saved here. Open one to carry on where you left off."
-            Pill { text: "New chat"; symbol: "plus"; kind: "primary"; onClicked: Api.post("/api/new", {}, () => page.opened()) }
+            title: qsTr("Chats")
+            hint: qsTr("Every conversation is saved here. Open one to carry on where you left off.")
+            Pill { text: qsTr("New chat"); symbol: "plus"; kind: "primary"; onClicked: Api.post("/api/new", {}, () => page.opened()) }
         }
 
         RowLayout {
@@ -68,7 +68,7 @@ Item {
                         id: search
                         Layout.fillWidth: true
                         Layout.topMargin: 12  // its bottom lines up with the divider under the preview's header
-                        placeholderText: "Search conversations"
+                        placeholderText: qsTr("Search conversations")
                         leftPadding: 40
                         onTextChanged: debounce.restart()
                         Icon { name: "search"; size: 16; color: search.activeFocus ? Theme.accent : Theme.text3; x: 14; anchors.verticalCenter: parent.verticalCenter }
@@ -116,12 +116,12 @@ Item {
                                           elide: Text.ElideRight; wrapMode: Text.NoWrap; Layout.fillWidth: true }
                                     Rectangle { visible: row.modelData.id === page.current; Layout.leftMargin: 4; width: 6; height: 6; radius: 3; color: Theme.accent }
                                     Txt { Layout.leftMargin: 4; kind: "small"; font.pixelSize: Theme.px(12); color: row.chosen ? Theme.text2 : Theme.text3
-                                          text: row.modelData.id === page.current ? "Now" : page.ago(row.modelData.updated); wrapMode: Text.NoWrap }
+                                          text: row.modelData.id === page.current ? qsTr("Now") : page.ago(row.modelData.updated); wrapMode: Text.NoWrap }
                                 }
                                 Txt {
                                     Layout.leftMargin: 12; Layout.rightMargin: 12; Layout.fillWidth: true
                                     kind: "small"; elide: Text.ElideRight; wrapMode: Text.NoWrap
-                                    text: row.modelData.match ? row.modelData.match : row.modelData.count + (row.modelData.count === 1 ? " message" : " messages")
+                                    text: row.modelData.match ? row.modelData.match : qsTr("%n message(s)", "", row.modelData.count)
                                 }
                             } }
                         }
@@ -132,7 +132,7 @@ Item {
                             spacing: 10
                             Icon { Layout.alignment: Qt.AlignHCenter; name: search.text ? "search" : "chats"; size: 22; color: Theme.text3 }
                             Txt { Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter; kind: "small"
-                                  text: search.text ? "Nothing matches that" : "No conversations yet" }
+                                  text: search.text ? qsTr("Nothing matches that") : qsTr("No conversations yet") }
                         }
                     }
                 }
@@ -161,19 +161,19 @@ Item {
                         }
                         IconButton {
                             visible: !page.confirming
-                            symbol: "trash"; tip: "Delete"
+                            symbol: "trash"; tip: qsTr("Delete")
                             iconColor: hovered ? Theme.red : color
                             onClicked: { page.confirming = true; undo.restart() }
                         }
                         Pill {
                             visible: page.confirming
-                            text: "Click again to delete"
+                            text: qsTr("Click again to delete")
                             kind: "danger"
                             symbol: "trash"
-                            onClicked: Api.post(`/api/sessions/${page.selected}/delete`, {}, () => { Backend.toast("Conversation deleted", false); page.load() })
+                            onClicked: Api.post(`/api/sessions/${page.selected}/delete`, {}, () => { Backend.toast(qsTr("Conversation deleted"), false); page.load() })
                             Timer { id: undo; interval: 4000; onTriggered: page.confirming = false }
                         }
-                        Pill { text: "Open"; kind: "primary"; symbol: "arrow-right"; visible: page.selected !== page.current
+                        Pill { text: qsTr("Open"); kind: "primary"; symbol: "arrow-right"; visible: page.selected !== page.current
                                onClicked: Api.post(`/api/sessions/${page.selected}/open`, {}, () => page.opened()) }
                     }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.stroke }
@@ -228,7 +228,7 @@ Item {
                         color: Theme.accentSoft
                         Icon { anchors.centerIn: parent; name: "chats"; size: 20; color: Theme.accent }
                     }
-                    Txt { Layout.alignment: Qt.AlignHCenter; kind: "small"; text: "Pick a conversation to read it" }
+                    Txt { Layout.alignment: Qt.AlignHCenter; kind: "small"; text: qsTr("Pick a conversation to read it") }
                 }
             }
         }

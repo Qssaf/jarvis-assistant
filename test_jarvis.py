@@ -931,6 +931,42 @@ jarvis.shown_state[1] = False
 win.backend.poll()
 assert not warnings, ascii(warnings)[:4000]
 
+# the window's languages: each text in the first that has it, none after "en" (the English it's written in); with Arabic
+# first it reads right to left; languages without a .qm leave it in English, and switching takes no restart
+import shutil, subprocess, PySide6
+from PySide6.QtCore import QCoreApplication
+tr_dir, real_translations = tempfile.mkdtemp(), window.TRANSLATIONS
+for code, words in (("fr", {"Settings": "Réglages", "Memory": "Mémoire"}), ("de", {"Settings": "Einstellungen", "Health": "Zustand"})):
+    with open(os.path.join(tr_dir, f"jarvis_{code}.ts"), "w", encoding="utf-8") as f:
+        f.write('<?xml version="1.0" encoding="utf-8"?><!DOCTYPE TS><TS version="2.1"><context><name>Main</name>'
+                + "".join(f"<message><source>{a}</source><translation>{b}</translation></message>" for a, b in words.items())
+                + "</context></TS>")
+    subprocess.run([shutil.which("lrelease", path=os.path.dirname(PySide6.__file__)), "-silent", os.path.join(tr_dir, f"jarvis_{code}.ts")], check=True)
+window.TRANSLATIONS = tr_dir
+said = lambda text: QCoreApplication.translate("Main", text)
+def shown_texts(item=None):  # what the window's items say
+    item = item or root.contentItem()
+    return {item.property("text")}.union(*(shown_texts(child) for child in item.childItems()))
+win.languages(["fr", "de"])
+qt.processEvents()
+assert (said("Settings"), said("Health"), said("Memory")) == ("Réglages", "Zustand", "Mémoire")
+assert {"Réglages", "Zustand", "Mémoire"} <= shown_texts(), "the rail wasn't retranslated"
+win.languages(["de", "en", "fr"])
+assert (said("Settings"), said("Health"), said("Memory")) == ("Einstellungen", "Zustand", "Memory")
+assert not win.backend.property("rtl")
+win.languages(["ar", "zz"])
+for page in ("settings", "home"):
+    root.setProperty("page", page)
+    qt.processEvents()
+assert said("Settings") == "Settings" and "Settings" in shown_texts() and win.backend.property("rtl")
+win.backend.setLanguages(["en"])  # (as Settings does)
+qt.processEvents()
+assert not win.backend.property("rtl") and not win.translators and not warnings, ascii(warnings)[:4000]
+window.TRANSLATIONS = real_translations
+win.languages(["en"])  # (English's own file only says how it counts)
+assert QCoreApplication.translate("HealthPage", "%n thing(s) to fix", "", 2) == "2 things to fix"
+assert QCoreApplication.translate("ChatsPage", "%n message(s)", "", 1) == "1 message"
+
 # every function a page calls on itself exists (Settings lost its set() once, and every switch on it silently did nothing)
 import glob, re
 for qml in glob.glob(os.path.join(os.path.dirname(os.path.abspath(jarvis.__file__)), "qml", "*.qml")):
@@ -2067,6 +2103,12 @@ assert store.settings()["languages"] == ["fr-FR"]
 store.update_settings({"voice": store.settings()["voice"]})
 assert "call_language" not in store.read_json(store.SETTINGS_FILE, {}) and store.settings()["languages"] == ["fr-FR"]
 store.update_settings({"languages": []})
+# the window's languages: known ones, in order, once each, and never none (English, as written)
+assert store.settings()["window_languages"] == ["en"]
+store.update_settings({"window_languages": ["ar", "xx", "fr", "ar", "en"]})
+assert store.settings()["window_languages"] == ["ar", "fr", "en"]
+store.update_settings({"window_languages": []})
+assert store.settings()["window_languages"] == ["en"] and "window_languages" not in store.read_json(store.SETTINGS_FILE, {})
 # quiet hours: a schedule (across midnight too) or Do not disturb; times are checked and tidied
 assert not store.quiet_now()
 store.update_settings({"quiet_from": "22:00", "quiet_until": "7:00"})

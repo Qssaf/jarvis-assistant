@@ -53,21 +53,20 @@ Item {
         id: jarvis
         Item {
             implicitHeight: Math.max(24, said.implicitHeight)
-            Orb { width: 24; height: 24; y: 1; rings: false; mode: "idle" }
+            Orb { anchors.left: parent.left; width: 24; height: 24; y: 1; rings: false; mode: "idle" }
             Txt {
                 id: said
-                x: 36
-                width: parent.width - 36
+                anchors { left: parent.left; leftMargin: 36; right: parent.right }
                 text: m.linkify(m.text)
                 textFormat: Text.MarkdownText
                 font.pixelSize: Theme.px(15)
                 lineHeight: 1.3
             }
             IconButton {
-                x: parent.width + 8
+                anchors { left: parent.right; leftMargin: 8 }
                 opacity: hover.hovered ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: Theme.fast } }
-                size: 28; glyph: 14; symbol: "copy"; tip: "Copy"
+                size: 28; glyph: 14; symbol: "copy"; tip: qsTr("Copy")
                 onClicked: Backend.copy(m.text)
             }
         }
@@ -76,7 +75,7 @@ Item {
         id: tool
         Item {
             implicitHeight: 28
-            Chip { x: 36; implicitHeight: 28; enabled: false; dot: "working"; text: Backend.toolLabel(m.text) }
+            Chip { anchors { left: parent.left; leftMargin: 36 } implicitHeight: 28; enabled: false; dot: "working"; text: Backend.toolLabel(m.text) }
         }
     }
     Component {
@@ -107,32 +106,40 @@ Item {
     }
     Component {
         id: thinking
-        Txt { leftPadding: 36; kind: "small"; color: Theme.text3; font.italic: true; text: m.linkify(m.text); textFormat: Text.MarkdownText }
+        Item {
+            implicitHeight: words.implicitHeight
+            Txt { id: words; anchors { left: parent.left; leftMargin: 36; right: parent.right }
+                  kind: "small"; color: Theme.text3; font.italic: true; text: m.linkify(m.text); textFormat: Text.MarkdownText }
+        }
     }
     Component {
         id: picture
-        Column {
-            leftPadding: 36
-            topPadding: 4
-            spacing: 8
-            Item {
-                width: Math.min(img.implicitWidth, 420); height: width * (img.implicitHeight / Math.max(1, img.implicitWidth))
-                Image {
-                    id: img
-                    anchors.fill: parent
-                    source: "file://" + m.text
-                    fillMode: Image.PreserveAspectFit
-                    asynchronous: true
-                    sourceSize.width: 840
-                    layer.enabled: true
-                    layer.effect: MultiEffect { maskEnabled: true; maskSource: mask; maskThresholdMin: 0.5; maskSpreadAtMin: 1 }
+        Item {
+            implicitHeight: shown.implicitHeight
+            Column {
+                id: shown
+                anchors { left: parent.left; leftMargin: 36 }
+                topPadding: 4
+                spacing: 8
+                Item {
+                    width: Math.min(img.implicitWidth, 420); height: width * (img.implicitHeight / Math.max(1, img.implicitWidth))
+                    Image {
+                        id: img
+                        anchors.fill: parent
+                        source: "file://" + m.text
+                        fillMode: Image.PreserveAspectFit
+                        asynchronous: true
+                        sourceSize.width: 840
+                        layer.enabled: true
+                        layer.effect: MultiEffect { maskEnabled: true; maskSource: mask; maskThresholdMin: 0.5; maskSpreadAtMin: 1 }
+                    }
+                    Rectangle { id: mask; anchors.fill: parent; radius: 16; visible: false; layer.enabled: true }
+                    Rectangle { anchors.fill: parent; radius: 16; color: "transparent"; border.width: 1; border.color: Theme.stroke }
+                    TapHandler { onTapped: Backend.open(m.text) }
+                    HoverHandler { cursorShape: Qt.PointingHandCursor }
                 }
-                Rectangle { id: mask; anchors.fill: parent; radius: 16; visible: false; layer.enabled: true }
-                Rectangle { anchors.fill: parent; radius: 16; color: "transparent"; border.width: 1; border.color: Theme.stroke }
-                TapHandler { onTapped: Backend.open(m.text) }
-                HoverHandler { cursorShape: Qt.PointingHandCursor }
+                Txt { kind: "small"; text: m.caption; visible: m.caption !== ""; width: 420 }
             }
-            Txt { kind: "small"; text: m.caption; visible: m.caption !== ""; width: 420 }
         }
     }
 }

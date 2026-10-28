@@ -7,8 +7,8 @@ import Jarvis
 // and the checks it keeps on things. Each row's pencil opens its editor in place, one at a time.
 ScrollPage {
     id: page
-    title: "Memory"
-    hint: "Jarvis reads this before every conversation. Tell it “remember…” or edit it here."
+    title: qsTr("Memory")
+    hint: qsTr("Jarvis reads this before every conversation. Tell it “remember…” or edit it here.")
     property var reminders: []
     property var routines: []
     property var checks: []
@@ -38,18 +38,18 @@ ScrollPage {
             height: 40
             spacing: 6
             Icon { name: "check"; size: 14; color: Theme.text3; Layout.preferredWidth: 14; Layout.preferredHeight: 14 }
-            Txt { kind: "small"; text: "Saved"; color: Theme.text3; wrapMode: Text.NoWrap }
+            Txt { kind: "small"; text: qsTr("Saved"); color: Theme.text3; wrapMode: Text.NoWrap }
         },
         Pill {
             visible: notes.text !== page.saved
-            text: "Save"; kind: "primary"; symbol: "check"
-            onClicked: Api.post("/api/memory", { memory: notes.text }, () => { page.saved = notes.text; Backend.toast("Memory saved", false) })
+            text: qsTr("Save"); kind: "primary"; symbol: "check"
+            onClicked: Api.post("/api/memory", { memory: notes.text }, () => { page.saved = notes.text; Backend.toast(qsTr("Memory saved"), false) })
         }
     ]
 
     Section {
-        title: "What Jarvis knows about you"
-        description: "Plain notes, one per line. Jarvis adds to them as you talk."
+        title: qsTr("What Jarvis knows about you")
+        description: qsTr("Plain notes, one per line. Jarvis adds to them as you talk.")
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: Math.min(Math.max(notes.implicitHeight + 2, 140), 420)  // (grows with the notes, then scrolls)
@@ -65,7 +65,7 @@ ScrollPage {
                 clip: true
                 TextArea {
                     id: notes
-                    placeholderText: "- Prefers to be called …\n- Studies …"
+                    placeholderText: qsTr("- Prefers to be called …\n- Studies …")
                     placeholderTextColor: Theme.text3
                     color: Theme.text
                     font.family: Theme.font
@@ -81,9 +81,9 @@ ScrollPage {
     }
 
     Section {
-        title: "Reminders and scheduled tasks"
-        description: (page.reminders.length ? `${page.reminders.length} coming up. ` : "None yet. ")
-                     + "Say “remind me at 5 to call home”, or have Jarvis do something then: “every weekday at 8, check my inbox”."
+        title: qsTr("Reminders and scheduled tasks")
+        description: qsTr("%1 Say “remind me at 5 to call home”, or have Jarvis do something then: “every weekday at 8, check my inbox”.")
+                     .arg(page.reminders.length ? qsTr("%n coming up.", "", page.reminders.length) : qsTr("None yet."))
         List {
             visible: page.reminders.length > 0
             Repeater {
@@ -98,12 +98,12 @@ ScrollPage {
                         off: !!modelData.off
                         symbol: modelData.task ? "sparkle" : "bell"
                         title: modelData.text
-                        detail: modelData.when + (modelData.task ? " · Jarvis does it" : "")
+                        detail: modelData.task ? qsTr("%1 · Jarvis does it").arg(modelData.when) : modelData.when
                         Toggle { visible: !!modelData.repeat; checked: !modelData.off; Layout.preferredWidth: 44
                                  onToggled: page.change("/api/reminders", { id: modelData.id, text: modelData.text, at: modelData.edit_at,
                                                       repeat: modelData.repeat, task: !!modelData.task, on: checked }) }
                         Edit { onClicked: page.editing = "reminder " + modelData.id }
-                        Remove { tip: "Cancel"
+                        Remove { tip: qsTr("Cancel")
                                  onClicked: page.change(`/api/reminders/${modelData.id}/cancel`, {}) }
                     }
                     ReminderForm { r: modelData; key: "reminder " + modelData.id }
@@ -111,13 +111,13 @@ ScrollPage {
             }
         }
         ReminderForm { r: ({}); key: "reminder new" }
-        Add { key: "reminder new"; text: "Add a reminder or task" }
+        Add { key: "reminder new"; text: qsTr("Add a reminder or task") }
     }
 
     Section {
-        title: "Routines"
-        description: page.routines.length ? "Say a routine's name and Jarvis runs its steps."
-                     : "None yet. Say “when I say study mode, close Discord, open my notes and set a 50-minute timer”."
+        title: qsTr("Routines")
+        description: page.routines.length ? qsTr("Say a routine's name and Jarvis runs its steps.")
+                     : qsTr("None yet. Say “when I say study mode, close Discord, open my notes and set a 50-minute timer”.")
         List {
             visible: page.routines.length > 0
             Repeater {
@@ -133,7 +133,7 @@ ScrollPage {
                         title: modelData.name.charAt(0).toUpperCase() + modelData.name.slice(1)
                         detail: modelData.steps
                         Edit { onClicked: page.editing = "routine " + modelData.name }
-                        Remove { tip: "Delete"
+                        Remove { tip: qsTr("Delete")
                                  onClicked: page.change("/api/routines/delete", { name: modelData.name }) }
                     }
                     RoutineForm { r: modelData; key: "routine " + modelData.name }
@@ -141,13 +141,13 @@ ScrollPage {
             }
         }
         RoutineForm { r: ({}); key: "routine new" }
-        Add { key: "routine new"; text: "Add a routine" }
+        Add { key: "routine new"; text: qsTr("Add a routine") }
     }
 
     Section {
-        title: "Keep an eye on"
-        description: page.checks.length ? "Jarvis looks into these with your accounts and the web, and tells you only when something needs you."
-                     : "Nothing yet. Say “tell me if a payment fails”, or add one here."
+        title: qsTr("Keep an eye on")
+        description: page.checks.length ? qsTr("Jarvis looks into these with your accounts and the web, and tells you only when something needs you.")
+                     : qsTr("Nothing yet. Say “tell me if a payment fails”, or add one here.")
         List {
             visible: page.checks.length > 0
             Repeater {
@@ -162,11 +162,11 @@ ScrollPage {
                         off: !modelData.on
                         symbol: "search"
                         title: modelData.text
-                        detail: modelData.on ? "" : "Paused"
+                        detail: modelData.on ? "" : qsTr("Paused")
                         Toggle { checked: modelData.on; Layout.preferredWidth: 44
                                  onToggled: page.change("/api/checks", { text: modelData.text, old: modelData.text, on: checked }) }
                         Edit { onClicked: page.editing = "check " + modelData.text }
-                        Remove { tip: "Delete"; onClicked: page.change("/api/checks", { text: "", old: modelData.text }) }
+                        Remove { tip: qsTr("Delete"); onClicked: page.change("/api/checks", { text: "", old: modelData.text }) }
                     }
                     CheckForm { r: modelData; key: "check " + modelData.text }
                 }
@@ -176,12 +176,12 @@ ScrollPage {
         RowLayout {
             Layout.fillWidth: true
             spacing: 10
-            Add { key: "check new"; text: "Add a check" }
+            Add { key: "check new"; text: qsTr("Add a check") }
             Item { Layout.fillWidth: true }
-            Txt { kind: "small"; text: "Look every"; wrapMode: Text.NoWrap }
+            Txt { kind: "small"; text: qsTr("Look every"); wrapMode: Text.NoWrap }
             Select { Layout.preferredWidth: 160; value: String(page.checksEvery)
-                     model: [{ value: "30", label: "30 minutes" }, { value: "60", label: "Hour" }, { value: "180", label: "3 hours" },
-                             { value: "720", label: "12 hours" }]
+                     model: [{ value: "30", label: qsTr("30 minutes") }, { value: "60", label: qsTr("Hour") }, { value: "180", label: qsTr("3 hours") },
+                             { value: "720", label: qsTr("12 hours") }]
                      onPicked: v => page.change("/api/settings", { checks_every: v }) }
         }
     }
@@ -225,7 +225,7 @@ ScrollPage {
         spacing: 0
     }
     component Remove: IconButton { symbol: "trash"; size: 32; glyph: 18; color: Theme.text3; iconColor: hovered ? Theme.red : color }
-    component Edit: IconButton { symbol: "edit"; tip: "Edit"; size: 32; glyph: 18; color: Theme.text3 }
+    component Edit: IconButton { symbol: "edit"; tip: qsTr("Edit"); size: 32; glyph: 18; color: Theme.text3 }
     component Add: Pill {  // opens the editor for a new one, which takes the button's place
         property string key
         kind: "ghost"; symbol: "plus"; Layout.leftMargin: -12
@@ -252,8 +252,8 @@ ScrollPage {
             Layout.fillWidth: true
             spacing: 10
             Item { Layout.fillWidth: true }
-            Pill { text: "Cancel"; kind: "ghost"; onClicked: { page.editing = ""; page.lists() } }  // (its row may be gone)
-            Pill { text: "Save"; kind: "primary"; symbol: "check"; onClicked: form.save() }
+            Pill { text: qsTr("Cancel"); kind: "ghost"; onClicked: { page.editing = ""; page.lists() } }  // (its row may be gone)
+            Pill { text: qsTr("Save"); kind: "primary"; symbol: "check"; onClicked: form.save() }
         }
     }
     component ReminderForm: Form {
@@ -262,31 +262,31 @@ ScrollPage {
                    rKind.value = r.task ? "task" : "say"; rText.forceActiveFocus() }
         onSave: page.save("/api/reminders", { id: r.id || "", text: rText.text, at: rWhen.text, repeat: rRepeat.value,
                                               task: rKind.value === "task", on: !r.off })
-        Field { id: rText; Layout.fillWidth: true; placeholderText: "What to remind you of, or what Jarvis should do"; onAccepted: rf.save() }
+        Field { id: rText; Layout.fillWidth: true; placeholderText: qsTr("What to remind you of, or what Jarvis should do"); onAccepted: rf.save() }
         RowLayout {
             Layout.fillWidth: true
             spacing: 10
             uniformCellSizes: true
-            Field { id: rWhen; Layout.fillWidth: true; placeholderText: "When: 18:30 or 2026-11-02 08:00"; onAccepted: rf.save() }
+            Field { id: rWhen; Layout.fillWidth: true; placeholderText: qsTr("When: 18:30 or 2026-11-02 08:00"); onAccepted: rf.save() }
             Select { id: rRepeat; Layout.fillWidth: true
-                     model: [{ value: "", label: "Once" }, { value: "daily", label: "Every day" }, { value: "weekdays", label: "Weekdays" },
-                             { value: "weekly", label: "Every week" }] }
+                     model: [{ value: "", label: qsTr("Once") }, { value: "daily", label: qsTr("Every day") }, { value: "weekdays", label: qsTr("Weekdays") },
+                             { value: "weekly", label: qsTr("Every week") }] }
             Select { id: rKind; Layout.fillWidth: true
-                     model: [{ value: "say", label: "Jarvis reminds you" }, { value: "task", label: "Jarvis does it" }] }
+                     model: [{ value: "say", label: qsTr("Jarvis reminds you") }, { value: "task", label: qsTr("Jarvis does it") }] }
         }
     }
     component RoutineForm: Form {
         id: tf
         onReset: { tName.text = r.name || ""; tSteps.text = r.steps || ""; tName.forceActiveFocus() }
         onSave: page.save("/api/routines", { name: tName.text, steps: tSteps.text, old: r.name || "", new: !r.name })
-        Field { id: tName; Layout.fillWidth: true; placeholderText: "What you say to start it, e.g. study mode"; onAccepted: tf.save() }
-        Field { id: tSteps; Layout.fillWidth: true; placeholderText: "Its steps, e.g. close Discord, open my notes, set a 50-minute timer"
+        Field { id: tName; Layout.fillWidth: true; placeholderText: qsTr("What you say to start it, e.g. study mode"); onAccepted: tf.save() }
+        Field { id: tSteps; Layout.fillWidth: true; placeholderText: qsTr("Its steps, e.g. close Discord, open my notes, set a 50-minute timer")
                 onAccepted: tf.save() }
     }
     component CheckForm: Form {
         id: cf
         onReset: { cText.text = r.text || ""; cText.forceActiveFocus() }
         onSave: page.save("/api/checks", { text: cText.text, old: r.text || "", on: r.on })
-        Field { id: cText; Layout.fillWidth: true; placeholderText: "e.g. Tell me if a payment fails or my professor emails"; onAccepted: cf.save() }
+        Field { id: cText; Layout.fillWidth: true; placeholderText: qsTr("e.g. Tell me if a payment fails or my professor emails"); onAccepted: cf.save() }
     }
 }

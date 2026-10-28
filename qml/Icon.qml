@@ -10,4 +10,5 @@ Image {
     sourceSize: Qt.size(size * 2, size * 2)
     source: name ? "image://icon/" + name + "/" + String(color).replace("#", "") : ""
     smooth: true
+    mirror: LayoutMirroring.enabled && /^(arrow|chevron)-right$/.test(name)  // (forward points left in a right-to-left window)
 }

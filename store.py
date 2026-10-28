@@ -15,6 +15,11 @@ LANGUAGES = {"en-US": "English", "en-GB": "English (UK)", "ar-XA": "Arabic", "fr
              "ja-JP": "Japanese", "ko-KR": "Korean", "cmn-CN": "Chinese (Mandarin)", "ru-RU": "Russian", "nl-NL": "Dutch",
              "pl-PL": "Polish", "id-ID": "Indonesian", "vi-VN": "Vietnamese", "th-TH": "Thai"}
 
+# languages the window can be shown in (code -> its own name); "en" is the English it's written in
+WINDOW_LANGUAGES = {"en": "English", "ar": "العربية", "fr": "Français", "de": "Deutsch", "es": "Español", "it": "Italiano",
+                    "pt": "Português", "tr": "Türkçe", "hi": "हिन्दी", "ja": "日本語", "ko": "한국어", "zh": "中文", "ru": "Русский",
+                    "nl": "Nederlands", "pl": "Polski", "id": "Bahasa Indonesia", "vi": "Tiếng Việt", "th": "ไทย"}
+
 # openWakeWord's own pretrained wake phrases (it also ships "timer" and "weather", which aren't wake words)
 WAKE_WORDS = {"hey_jarvis": "Hey Jarvis", "alexa": "Alexa", "hey_mycroft": "Hey Mycroft", "hey_rhasspy": "Hey Rhasspy"}
 
@@ -23,6 +28,7 @@ DEFAULT_SETTINGS = {
     "language": "en-US",           # what Jarvis speaks and expects to hear (store.LANGUAGES)
     "languages": [],               # others it may speak and understand, when the user (or a WhatsApp contact) speaks them
     "text_size": 1.0,              # the window's text, 0.9-1.5 times the normal size
+    "window_languages": ["en"],    # the window's languages in order: each text in the first that has it ("en": as written)
     "personality": "jarvis",       # how it talks: jarvis (British, dry wit), friendly or brief
     "live_model": "gemini-3.8-live",
     "follow_up_seconds": 8,
@@ -185,6 +191,8 @@ def _update_settings(changes):
             if any(v not in LANGUAGES for v in value):
                 raise ValueError(f"languages are from {', '.join(LANGUAGES)}")
             value = list(dict.fromkeys(value))
+        if key == "window_languages":
+            value = list(dict.fromkeys(v for v in value if v in WINDOW_LANGUAGES)) or ["en"]
         if key in ("quiet_from", "quiet_until") and value:
             hm = re.fullmatch(r"(\d{1,2})[:.](\d{2})", value.strip())
             if not hm or int(hm[1]) > 23 or int(hm[2]) > 59:
