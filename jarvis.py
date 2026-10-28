@@ -1850,11 +1850,15 @@ def health(live, brain):
     hear, speak = (next((e for e in brain_mod.models_for(job) if brain.backend(e[0])[0] and now >= brain.down_until.get(e, 0)), None)
                    for job in ("hear", "speak"))
     own = system.own_voice()
+    offline = [e[1] for job in ("hear", "speak") for e in brain_mod.models_for(job)
+               if e[0] == "local" and e not in (hear, speak) and brain.backend("local")[0]]  # (the last resort, on this PC)
     check("Backup voice", bool(hear and (speak or own)),
           (f"hears with {hear[1]} via {hear[0]}" if hear else "no model can hear you") + ", "
           + (f"speaks with {speak[1]} via {speak[0]}" if speak else f"speaks with the computer's own voice ({own})" if own else "no model can speak")
+          + (f"; offline, {' and '.join(offline)} on this PC" if offline else "")
           + ("; answering now instead of Gemini Live" if live is not None and live.backup_now() else ""),
-          "add a key for a hearing or speaking model on the Models page", "models")
+          "add a key for a hearing or speaking model on the Models page, or run the installer with --offline-voice to hear and "
+          "speak on this PC", "models")
     return {"checks": out, "usage": brain_mod.usage_today()}
 
 

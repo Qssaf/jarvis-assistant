@@ -729,11 +729,11 @@ class Fake(BaseHTTPRequestHandler):
         pass
 srv = HTTPServer(("127.0.0.1", 0), Fake)
 threading.Thread(target=srv.serve_forever, daemon=True).start()
-store.save_custom_provider("local", f"http://127.0.0.1:{srv.server_port}/v1")
+store.save_custom_provider("lmstudio", f"http://127.0.0.1:{srv.server_port}/v1")
 b = brain.Brain.__new__(brain.Brain)
 b.backends, b.down_until, b.contents, b.cancel, b.plugins, b.app_tools, b.notify = {}, {}, [], threading.Event(), {}, {}, print
 b.ask_lock, b.remote = threading.Lock(), False
-brain.chain = lambda: [("local", "tiny-model", "low")]
+brain.chain = lambda: [("lmstudio", "tiny-model", "low")]
 assert b.ask("any reminders?") == "You have no reminders."
 assert seen[0][0] is None and any(t["function"]["name"] == "list_reminders" for t in seen[0][1]["tools"])
 last = seen[1][1]["messages"][-1]
@@ -1065,6 +1065,74 @@ sb.backends["z"].parts = [{"text": "What's the weather?"}]
 assert sb.hear(b"RIFF-rec") == "What's the weather?"
 store.update_settings({"speak_models": [], "hear_models": [], "languages": [], "voice": "Charon"})
 assert brain.models_for("hear") == brain.HEAR_MODELS and brain.models_for("speak") == brain.SPEAK_MODELS
+# the offline voice (the installer's --offline-voice): without faster-whisper or Piper it's skipped, saying why...
+real_installed, brain.installed = brain.installed, lambda module: False
+lb, why = brain.Brain.backend(sb, "local")
+assert lb is None and "--offline-voice" in why, why
+brain.installed = real_installed
+# ...with them, each model loads (and downloads into the data folder) once, the first time it's needed
+loads, heard, fetched = [], [], []
+class FakeWhisper:
+    def __init__(self, size, **kw):
+        loads.append((size, kw))
+        if kw.get("local_files_only"):
+            raise FileNotFoundError("not downloaded yet")
+
+    def transcribe(self, audio, language=None, vad_filter=False):
+        heard.append((audio.tolist(), language, vad_filter))
+        return iter([types.SimpleNamespace(text=" Turn it "), types.SimpleNamespace(text="up. ")]), None
+class FakePiper:
+    @staticmethod
+    def load(path):
+        loads.append(path)
+        return FakePiper()
+
+    def synthesize_wav(self, text, w):
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(22050)
+        w.writeframes(b"\1\0" * 4)
+sys.modules["faster_whisper"], sys.modules["piper"] = types.ModuleType("faster_whisper"), types.ModuleType("piper")
+sys.modules["faster_whisper"].WhisperModel, sys.modules["piper"].PiperVoice = FakeWhisper, FakePiper
+real_get, brain.requests.get = brain.requests.get, lambda url, timeout: fetched.append(url) or types.SimpleNamespace(
+    content=b"model", raise_for_status=lambda: None)
+lb = brain.Brain.backend(sb, "local")[0]
+assert "whisper-small" in lb.models() and "piper" in lb.models()
+store.update_settings({"hear_models": ["local whisper-small none"], "speak_models": ["local piper none"], "language": "ar-XA"})
+sb.down_until = {}
+import io, wave
+rec = io.BytesIO()
+with wave.open(rec, "wb") as w:
+    w.setnchannels(1), w.setsampwidth(2), w.setframerate(16000), w.writeframes(np.array([16384, -32768], np.int16).tobytes())
+assert sb.hear(rec.getvalue()) == "Turn it up." and heard == [([0.5, -1.0], "ar", True)]  # (one language: Whisper is told it)
+assert [s for s, _ in loads] == ["small", "small"] and loads[1][1]["download_root"] == os.path.join(store.DATA, "models", "whisper")
+store.update_settings({"languages": ["en-US"]})
+sb.hear(rec.getvalue())
+assert heard[-1][1] is None and len(loads) == 2  # (two: it tells which; loaded once)
+audio, kind = sb.speak("Hello.")
+assert kind == "audio/wav" and len(jarvis.pcm24(audio)) == 2 * 5  # (Piper's 22 kHz, as the Speaker plays it)
+voice = os.path.join(store.DATA, "models", "piper", "ar_JO-kareem-medium.onnx")
+assert loads[-1] == voice and open(voice, "rb").read() == b"model" and not os.path.exists(voice + ".part")
+assert fetched == [f"https://huggingface.co/rhasspy/piper-voices/resolve/main/ar/ar_JO/kareem/medium/ar_JO-kareem-medium{e}" for e in (".onnx.json", ".onnx")]
+sb.speak("Again.")
+assert len(fetched) == 2 and len(loads) == 3
+store.update_settings({"language": "ja-JP", "languages": []})  # (no voice for it without more packages: English)
+sb.speak("Konnichiwa.")
+assert fetched[-1].endswith("en_US-ryan-medium.onnx")
+try:
+    lb.generate([{"role": "user", "parts": [{"text": "hi"}]}], "whisper-small", None)
+    raise AssertionError("text taken for a recording")
+except brain.BadRequest:
+    pass
+brain.requests.get = real_get
+store.update_settings({"hear_models": [], "speak_models": [], "language": "en-US"})
+# its entries come after every service's, and only when the packages are there
+import subprocess
+lists = subprocess.run([sys.executable, "-c", "import sys, types; sys.modules['faster_whisper'] = sys.modules['piper'] = types.ModuleType('x'); "
+                        "import brain; print(brain.HEAR_MODELS[-1], brain.SPEAK_MODELS[-1])"],
+                       capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__))).stdout
+assert lists.strip() == "('local', 'whisper-small', None) ('local', 'piper', None)", lists
+del sys.modules["faster_whisper"], sys.modules["piper"]
 # Gemini speaks in Jarvis's voice; OpenAI-style services write down a recording and speak in the voice their model line names
 assert brain.build_request([{"role": "user", "parts": [{"text": "Hello."}]}], None, None, None, voice="Charon")["generationConfig"] == \
     {"responseModalities": ["AUDIO"], "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": "Charon"}}}}
@@ -1496,6 +1564,11 @@ assert got["Google AI Studio key"]["ok"] and got["Microphone"]["ok"] and got["Se
 # ...and whether the backup voice could take over from Gemini Live, with which models (shown there, not as two more jobs)
 assert got["Backup voice"]["ok"] and "hears with gemini-3.1-flash-lite via antigravity" in got["Backup voice"]["detail"] \
     and "speaks with gemini-3.8-flash-tts via aistudio" in got["Backup voice"]["detail"], got["Backup voice"]
+assert "on this PC" not in got["Backup voice"]["detail"]
+brain.HEAR_MODELS.append(("local", "whisper-small", None)), brain.SPEAK_MODELS.append(("local", "piper", None))  # (--offline-voice)
+local = {c["name"]: c for c in jarvis.health(None, hb)["checks"]}["Backup voice"]["detail"]
+assert local.endswith("; offline, whisper-small and piper on this PC"), local
+brain.HEAR_MODELS.pop(), brain.SPEAK_MODELS.pop()
 assert not any(c["name"].startswith("Models: Hearing") or c["name"].startswith("Models: Speaking") for c in report["checks"])
 assert got["Accounts (Composio)"]["ok"] is False and got["Accounts (Composio)"]["page"] == "plugins" and got["Accounts (Composio)"]["fix"]
 assert "aistudio gemini-x" in report["usage"]

@@ -1,7 +1,15 @@
 #!/bin/sh
 # Sets up Jarvis on Linux (any distro; X11 or Wayland): the Python environment, the `jarvis` command and the app-menu
 # entry. Safe to run again. See the README for the system packages each desktop needs.
+# --offline-voice also installs faster-whisper and Piper: the backup voice can then hear and speak with no service at all.
 set -e
+OFFLINE_VOICE=""
+for arg; do
+    case "$arg" in
+        --offline-voice) OFFLINE_VOICE=1 ;;
+        *) echo "usage: ./install.sh [--offline-voice]"; exit 1 ;;
+    esac
+done
 cd "$(dirname "$0")"
 DIR="$(pwd)"
 CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/jarvis"
@@ -16,6 +24,7 @@ fi
 [ -d .venv ] || uv venv --python 3.13 .venv
 uv pip install -q --python .venv/bin/python -r requirements.txt
 uv pip install -q --python .venv/bin/python --no-deps openwakeword  # (its tflite dependency has no current wheels)
+[ -z "$OFFLINE_VOICE" ] || uv pip install -q --python .venv/bin/python faster-whisper piper-tts  # (their models download on first use)
 
 mkdir -p "$HOME/.local/bin" "$APPS" "$CONFIG"
 if command -v systemd-run >/dev/null && systemctl --user is-system-running >/dev/null 2>&1 ||

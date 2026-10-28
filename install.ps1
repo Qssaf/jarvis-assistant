@@ -1,5 +1,7 @@
 # Sets up Jarvis on Windows 10/11: the Python environment and a Start Menu shortcut. Safe to run again.
 # Run it from PowerShell in this folder:  powershell -ExecutionPolicy Bypass -File .\install.ps1
+# -OfflineVoice also installs faster-whisper and Piper: the backup voice can then hear and speak with no service at all.
+param([switch]$OfflineVoice)
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
@@ -11,6 +13,7 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
 if (-not (Test-Path .venv)) { uv venv --python 3.13 .venv }
 uv pip install -q --python .venv\Scripts\python.exe -r requirements.txt
 uv pip install -q --python .venv\Scripts\python.exe --no-deps openwakeword  # (its tflite dependency has no current wheels)
+if ($OfflineVoice) { uv pip install -q --python .venv\Scripts\python.exe faster-whisper piper-tts }  # (their models download on first use)
 
 $config = Join-Path $env:APPDATA "Jarvis"
 New-Item -ItemType Directory -Force $config | Out-Null
