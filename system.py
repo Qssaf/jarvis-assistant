@@ -504,6 +504,35 @@ def launch(command, env=None):
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
+def swap_in_after_exit(new, install, args):
+    """Windows (Jarvis.exe updating itself): a small script waits for this process to end, puts the new build's files
+    over the install (its _internal folder is replaced whole, nothing else there is touched), starts Jarvis.exe again
+    with args and cleans up after itself. If the copy fails, the old _internal comes back and the download stays."""
+    pid, staging, old = os.getpid(), os.path.dirname(new), os.path.join(install, "_internal")
+    script = os.path.join(tempfile.gettempdir(), "jarvis-update.cmd")
+    with open(script, "w", encoding="utf-8") as f:
+        f.write(f'''@echo off
+chcp 65001 >NUL
+:wait
+tasklist /FI "PID eq {pid}" /NH 2>NUL | find " {pid} " >NUL && (ping -n 2 127.0.0.1 >NUL & goto wait)
+move "{old}" "{old}.old" >NUL
+robocopy "{new}" "{install}" /E /R:10 /W:1 /NFL /NDL /NJH /NJS >NUL
+if errorlevel 8 goto undo
+rmdir /s /q "{old}.old"
+rmdir /s /q "{staging}"
+goto start
+:undo
+rmdir /s /q "{old}"
+move "{old}.old" "{old}" >NUL
+:start
+start "" "{install}\\Jarvis.exe" {subprocess.list2cmdline(args)}
+(goto) 2>NUL & del "%~f0"
+''')
+    subprocess.Popen(["cmd", "/c", script], creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0) |
+                     getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0), stdin=subprocess.DEVNULL,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 def open_target(target):
     """Open a web address or file with the default app."""
     if IS_WINDOWS:

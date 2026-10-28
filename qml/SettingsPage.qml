@@ -27,10 +27,17 @@ ScrollPage {
     signal setupAgain()
     property var update: ({})
     property bool updating: false
-    function checkUpdate() { Api.get("/api/update", d => update = d, e => Backend.toast(e.error, true)) }
+    property string step: ""   // how the update is going, or why it failed
+    function checkUpdate() { Api.get("/api/update", d => { update = d; step = "" }, e => Backend.toast(e.error, true)) }
     function installUpdate() {
         updating = true
-        Api.post("/api/update", {}, () => Backend.toast("Updated: Jarvis is restarting", false), e => { updating = false; Backend.toast(e.error, true) })
+        step = "Checking…"
+        Api.post("/api/update", {}, () => Backend.toast("Updated: Jarvis is restarting", false),
+                 e => { updating = false; step = "Couldn't update: " + e.error; Backend.toast(e.error, true) })
+    }
+    Connections {
+        target: Backend
+        function onEvent(json) { const e = JSON.parse(json); if (e.kind === "update") page.step = e.step }
     }
 
     function load() {
@@ -394,10 +401,11 @@ ScrollPage {
         Orb { Layout.preferredWidth: 24; Layout.preferredHeight: 24; rings: false }
         Txt { kind: "small"; text: "Jarvis " + Backend.version; wrapMode: Text.NoWrap }
         Txt { kind: "small"; Layout.fillWidth: true
-              color: page.update.available ? Theme.accent : Theme.text3
-              text: page.update.available ? `${page.update.latest} is out` + (page.update.how ? ` (${page.update.how})` : "")
+              color: page.step && !page.updating ? Theme.red : page.update.available ? Theme.accent : Theme.text3
+              text: page.step ? page.step
+                    : page.update.available ? `${page.update.latest} is out` + (page.update.how ? ` (${page.update.how})` : "")
                     : page.update.latest ? "Up to date" : "" }
-        Pill { text: page.updating ? "Updating…" : page.update.can_update ? "Update and restart" : "Check for updates"
+        Pill { text: page.updating ? "Updating…" : page.update.can_update ? "Update now" : "Check for updates"
                kind: page.update.can_update ? "primary" : "ghost"; enabled: !page.updating
                onClicked: page.update.can_update ? page.installUpdate() : page.checkUpdate() }
         Pill { kind: "ghost"; text: "Run the setup again"; onClicked: page.setupAgain() }

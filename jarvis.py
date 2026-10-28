@@ -1513,37 +1513,103 @@ def diagnostics(brain):
 
 
 REPO = "Qssaf/jarvis-assistant"
+ASSET = "Jarvis-windows.zip"  # (release.yml: the dist\Jarvis folder, zipped)
+
+
+def latest_release():
+    r = requests.get(f"https://api.github.com/repos/{REPO}/releases/latest", timeout=8)
+    r.raise_for_status()
+    return r.json()
+
+
+def checkout_problem():
+    """Why this copy can't pull an update by itself ('' when it can: a git checkout on its default branch, no local changes)."""
+    if not (os.path.exists(os.path.join(HERE, ".git")) and system.have("git")):
+        return "this copy isn't a git checkout: update it by hand"
+    def git(*args):
+        return subprocess.run(["git", "-C", HERE, *args], capture_output=True, text=True).stdout.strip()
+    if git("status", "--porcelain", "--untracked-files=no"):
+        return "this copy has local changes: commit or undo them first"
+    default = git("symbolic-ref", "--short", "refs/remotes/origin/HEAD").removeprefix("origin/") or "main"
+    branch = git("rev-parse", "--abbrev-ref", "HEAD")
+    return "" if branch == default else f"this copy is on the '{branch}' branch, not '{default}': switch to it first"
 
 
 def update_check():
-    """Whether a newer Jarvis is on GitHub, and whether this copy can update itself (a clean git checkout)."""
+    """Whether a newer Jarvis is out, and whether this copy can update itself (Jarvis.exe from the latest release, a
+    source copy from a clean git checkout of the default branch)."""
+    frozen = getattr(sys, "frozen", False)
     try:
-        r = requests.get(f"https://raw.githubusercontent.com/{REPO}/main/jarvis.py", timeout=8)
-        latest = re.search(r'^VERSION = "([\d.]+)"', r.text, re.M)[1] if r.ok else None
-    except (requests.RequestException, TypeError):
+        if frozen:
+            latest = latest_release()["tag_name"].lstrip("v")
+        else:
+            r = requests.get(f"https://raw.githubusercontent.com/{REPO}/main/jarvis.py", timeout=8)
+            latest = re.search(r'^VERSION = "([\d.]+)"', r.text, re.M)[1] if r.ok else None
+    except (requests.RequestException, TypeError, KeyError, ValueError):
         latest = None
-    newer = bool(latest) and tuple(map(int, latest.split("."))) > tuple(map(int, VERSION.split(".")))
-    git = os.path.isdir(os.path.join(HERE, ".git")) and system.have("git")
-    clean = git and not subprocess.run(["git", "-C", HERE, "status", "--porcelain", "--untracked-files=no"],
-                                       capture_output=True, text=True).stdout.strip()
-    return {"current": VERSION, "latest": latest, "available": newer, "can_update": bool(newer and clean),
-            "how": "" if not newer or clean else "download it from github.com/Qssaf/jarvis-assistant/releases" if getattr(sys, "frozen", False)
-            else "this copy has local changes or isn't a git checkout: update it by hand"}
+    newer = bool(latest and re.fullmatch(r"\d+(\.\d+)*", latest)) and \
+        tuple(map(int, latest.split("."))) > tuple(map(int, VERSION.split(".")))
+    why = "" if not newer or frozen else checkout_problem()
+    return {"current": VERSION, "latest": latest, "available": newer, "can_update": newer and not why, "how": why}
 
 
-def update_now():
-    """Pull the newest Jarvis and its packages; the app restarts itself afterwards."""
-    if not update_check()["can_update"]:
-        raise ValueError("there's no update this copy can install by itself")
+def update_now(step=lambda text: None):
+    """Install the newest Jarvis (only ever when the user pressed Update); the app restarts itself afterwards.
+    step(text) tells the window how it's going."""
+    check = update_check()
+    if not check["can_update"]:
+        raise ValueError(check["how"] or "there's no newer version to install")
+    if getattr(sys, "frozen", False):
+        return update_exe(step)
+    step("Downloading the update…")
     pull = subprocess.run(["git", "-C", HERE, "pull", "--ff-only"], capture_output=True, text=True, timeout=120)
     if pull.returncode:
         raise RuntimeError(f"git pull failed: {(pull.stderr or pull.stdout)[-300:]}")
+    step("Installing packages…")
     pip = ([shutil_which("uv"), "pip", "install", "-q", "--python", sys.executable] if shutil_which("uv") else
            [sys.executable, "-m", "pip", "install", "-q"])
-    deps = subprocess.run(pip + ["-r", os.path.join(HERE, "requirements.txt")], capture_output=True, text=True, timeout=600)
-    if deps.returncode:
-        raise RuntimeError(f"installing packages failed: {(deps.stderr or deps.stdout)[-300:]}")
-    return {"result": "updated; restarting"}
+    for args in (["-r", os.path.join(HERE, "requirements.txt")], ["--no-deps", "openwakeword"]):  # (as install.sh does)
+        deps = subprocess.run(pip + args, capture_output=True, text=True, timeout=600)
+        if deps.returncode:
+            raise RuntimeError(f"installing packages failed: {(deps.stderr or deps.stdout)[-300:]}")
+    return {"result": f"updated to {check['latest']}; restarting"}
+
+
+def update_exe(step):
+    """Jarvis.exe: download the latest release's zip, check it against the sha256 GitHub lists for it, unpack it beside
+    this install and have it swapped in once Jarvis has quit (a running exe can't be overwritten)."""
+    import hashlib, shutil, zipfile
+    release = latest_release()
+    asset = next((a for a in release.get("assets", []) if a.get("name") == ASSET), None)
+    if not asset or not str(asset.get("browser_download_url", "")).startswith("https://"):
+        raise ValueError(f"the latest release has no {ASSET} to install")
+    digest = str(asset.get("digest") or "")
+    if not digest.startswith("sha256:"):
+        raise ValueError("GitHub lists no checksum for this download, so it can't be checked: not installing it")
+    install = os.path.dirname(sys.executable)
+    staging = install.rstrip("\\/") + "-update"
+    shutil.rmtree(staging, ignore_errors=True)
+    os.makedirs(staging)
+    zipped, sha = os.path.join(staging, ASSET), hashlib.sha256()
+    step(f"Downloading {release.get('tag_name', 'the update')}…")
+    with requests.get(asset["browser_download_url"], stream=True, timeout=30) as r, open(zipped, "wb") as f:
+        r.raise_for_status()
+        for chunk in r.iter_content(1 << 20):
+            sha.update(chunk)
+            f.write(chunk)
+    if sha.hexdigest() != digest.removeprefix("sha256:").lower():
+        shutil.rmtree(staging, ignore_errors=True)
+        raise ValueError("the download doesn't match the checksum GitHub lists for it: not installing it")
+    step("Unpacking…")
+    with zipfile.ZipFile(zipped) as z:
+        z.extractall(staging)
+    os.remove(zipped)
+    new = os.path.join(staging, "Jarvis")
+    if not os.path.isfile(os.path.join(new, "Jarvis.exe")):
+        shutil.rmtree(staging, ignore_errors=True)
+        raise ValueError("the download doesn't hold Jarvis.exe: not installing it")
+    system.swap_in_after_exit(new, install, sys.argv[1:])
+    return {"result": f"updated to {release.get('tag_name')}; restarting"}
 
 
 def shutil_which(program):
@@ -1551,12 +1617,15 @@ def shutil_which(program):
     return shutil.which(program)
 
 
-def restart_soon():
-    """Start this Jarvis again in place (same process, so it stays in the launcher's scope), a moment from now."""
+def restart_soon(again=True):
+    """Start this Jarvis again in place (same process, so it stays in the launcher's scope), a moment from now.
+    again=False only quits (Jarvis.exe's updater starts the new one once this one is gone)."""
     def go():
         time.sleep(0.5)
         import atexit
         atexit._run_exitfuncs()  # (execv skips them: the echo canceller would stay loaded twice)
+        if not again:
+            os._exit(0)
         os.execv(sys.executable, [sys.executable, os.path.abspath(__file__), *sys.argv[1:]])
     threading.Thread(target=go, daemon=True).start()
 
@@ -1746,8 +1815,9 @@ def api_post(path, data, live, brain):
         store.delete_data()
         sessions.new()
     elif path == "/api/update":
-        out = update_now()
-        restart_soon()
+        out = update_now(lambda text: emit("update", step=text))
+        emit("update", step="Restarting…")
+        restart_soon(again=not getattr(sys, "frozen", False))
         return out
     elif path == "/api/routines/delete":
         store.delete_routine(str(data.get("name", "")))
