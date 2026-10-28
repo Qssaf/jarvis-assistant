@@ -174,7 +174,7 @@ def preferred_name(memory):
 # ---------------------------------------------------------------- app events
 clients: list[queue.Queue] = []
 sessions = store.Sessions()  # the current conversation is saved as it happens
-shown_state = ["idle"]
+shown_state = ["idle", False]  # what Jarvis is doing, and whether the backup voice answers (run_tray keeps that one)
 notch_line = ["", 0.0]  # latest thing to show in the notch, and when it happened
 
 TOOL_LABELS = {"run_command": "Running a command", "web_search": "Searching the web", "read_webpage": "Reading a page",
@@ -358,9 +358,9 @@ class Live:
     def _go(self, coro):
         return asyncio.run_coroutine_threadsafe(coro, self.loop)
 
-    def backup_now(self):
+    def backup_now(self, cfg=None):
         """The backup voice answers instead of Gemini Live: switched on in Settings, or Live couldn't be opened lately."""
-        return store.settings()["always_backup_voice"] or time.time() < self.down_until
+        return (cfg or store.settings())["always_backup_voice"] or time.time() < self.down_until
 
     # ---- called from other threads
     def wake(self):
@@ -2304,7 +2304,7 @@ def make_notch(live):
             self.setToolTip("Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop")
             self.font, self.small = QFont("Sans Serif", 10), QFont("Sans Serif", 7, QFont.DemiBold)
             self.small.setLetterSpacing(QFont.AbsoluteSpacing, 1.5)
-            self.text, self.state, self.width_now = "", "idle", 220.0
+            self.text, self.state, self.backup, self.width_now = "", "idle", False, 220.0
             self.timer = QTimer(self)
             self.timer.timeout.connect(self.tick)
             self.timer.start(33)  # ~30 fps for the glow and the size easing
@@ -2314,7 +2314,7 @@ def make_notch(live):
                 if self.isVisible():
                     self.hide()
                 return
-            state, (line, at) = shown_state[0], notch_line
+            (state, self.backup), (line, at) = shown_state, notch_line
             recent = time.time() - at < (8 if state == "idle" else 1e9)
             if state == "idle" and not recent:
                 if self.isVisible():
@@ -2322,7 +2322,8 @@ def make_notch(live):
                 return
             self.state, self.text = state, line
             fm = QFontMetrics(self.font)
-            target = min(max(260, fm.horizontalAdvance(line) + (220 if state != "idle" else 150)), 720)
+            target = min(max(260, fm.horizontalAdvance(line) + (220 if state != "idle" else 150)
+                             + (QFontMetrics(self.small).horizontalAdvance(" · BACKUP VOICE") if self.backup else 0)), 720)
             self.width_now += (target - self.width_now) * 0.25  # ease towards the new size
             w, h = int(self.width_now), 40
             from PySide6.QtGui import QCursor  # the monitor you're working on
@@ -2377,6 +2378,8 @@ def make_notch(live):
                     tri.closeSubpath()
                     p.fillPath(tri, QColor("white"))
             label = labels.get(self.state, "") if live.mic or self.state != "listening" else "PAUSED"
+            if self.backup:  # Gemini Live can't be used (or is switched off): the backup voice answers
+                label = " · ".join(filter(None, [label, "BACKUP VOICE"]))
             p.setFont(self.small)
             p.setPen(color)
             lw = QFontMetrics(self.small).horizontalAdvance(label)
@@ -2443,15 +2446,17 @@ def run_tray(live, show=False):
     clients.append(win.events)
     signal.signal(signal.SIGINT, lambda *a: app.quit())
     signal.signal(signal.SIGTERM, lambda *a: app.quit())
-    shown, ticks = ["idle", False], [0]
+    shown, ticks, cfg = ["idle", False, False], [0], [store.settings()]
 
     def on_tick():  # also lets Python run its signal handlers while Qt's loop is busy
         ticks[0] += 1
-        quiet = store.quiet_now() if ticks[0] % 10 == 1 else shown[1]  # (every 3 s: it reads the settings file)
-        if shown != [shown_state[0], quiet]:
-            shown[:] = [shown_state[0], quiet]
+        if ticks[0] % 10 == 0:  # (every 3 s: it reads the settings file)
+            cfg[0] = store.settings()
+        quiet, shown_state[1] = store.quiet_now(cfg[0]), live.backup_now(cfg[0])  # (the window and the notch show the backup voice too)
+        if shown != [shown_state[0], quiet, shown_state[1]]:
+            shown[:] = [shown_state[0], quiet, shown_state[1]]
             tray.setIcon(icons.get(shown[0], icons["idle"]))
-            tray.setToolTip(f"J.A.R.V.I.S. · {shown[0]}" + (" · quiet" if quiet else ""))
+            tray.setToolTip(f"J.A.R.V.I.S. · {shown[0]}" + (" · quiet" if shown[1] else "") + (" · backup voice" if shown[2] else ""))
     tick = QTimer()
     tick.timeout.connect(on_tick)
     tick.start(300)
