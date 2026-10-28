@@ -1778,10 +1778,24 @@ store.tidy()
 assert sorted(os.listdir(store.TEMP)) == ["jarvis-assistant", "jarvis-k9k9k9k9"], os.listdir(store.TEMP)
 assert [open(p).read() for p in (store.LOG_FILE, *store.OLD_LOGS[:2])] == ["", "x" * 20, "older"]
 assert sorted(os.listdir(store.SESSIONS_DIR)) == ["new.json", "old.json"] and len(store.changes()) == 2
+# logs go by their date lines, not by when the file was written: a jarvis.log started 40 days ago keeps only what
+# came after its first date line within 30 days (Stamped writes one each new day), and an old log with none goes
+stamp = lambda t: time.strftime("%Y-%m-%d", time.localtime(t))
+with open(store.LOG_FILE, "w") as f:
+    f.write(f"--- started {stamp(old)} 10:00:00\n10:00:01 [you] old words\n--- {stamp(day_ago)}\n09:00:00 [you] new words\n")
+with open(store.OLD_LOGS[0], "w") as f:
+    f.write(f"12:00:00 --- started {stamp(old)} 12:00:00\n[you] old words\n")
+store.LOG_LIMIT = real_limit  # (not rotated by size this time)
 store.update_settings({"keep_days": "30"})
 store.tidy()
 assert os.listdir(store.SESSIONS_DIR) == ["new.json"] and [c["what"] for c in store.changes()] == ["new change"]
-assert os.path.exists(store.OLD_LOGS[0]) and not os.path.exists(store.OLD_LOGS[1])
+assert open(store.LOG_FILE).read() == f"--- {stamp(day_ago)}\n09:00:00 [you] new words\n"
+assert not any(os.path.exists(p) for p in store.OLD_LOGS)
+log = io.StringIO()
+writer = jarvis.Stamped(log)
+writer.day = "2000-01-01"  # (as if it had run since then)
+print("hello", file=writer)
+assert log.getvalue().startswith(f"--- {stamp(time.time())}\n") and log.getvalue().endswith(" hello\n"), log.getvalue()
 try:
     store.update_settings({"keep_days": -1})
     raise AssertionError("a negative keep_days was accepted")

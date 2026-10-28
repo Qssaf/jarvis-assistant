@@ -54,7 +54,7 @@ DEFAULT_SETTINGS = {
     "only_my_voice": False,        # on (once learned): the wake word wakes Jarvis only when the learned verifier is sure it's you
     "safety": "ask",               # ask: risky commands and account changes wait for your yes; full: Jarvis just does them
     "setup_done": False,           # the first-run setup has been gone through (or skipped)
-    "keep_days": 0,                # conversations, the change log and old logs go after this many days (tidy); 0 = kept for good
+    "keep_days": 0,                # conversations, the change log and log lines go after this many days (tidy); 0 = kept for good
     # "backend model thinking-level", tried top to bottom; busy or rate-limited ones are skipped
     # the same for the other jobs (see brain.MODEL_JOBS); empty = Jarvis's built-in choice
     "look_models": [], "point_models": [], "point_strong_models": [], "search_models": [], "image_models": [],
@@ -373,9 +373,28 @@ def rotate_log():
         pass
 
 
+def trim_log(path, before):
+    """Drops what a log holds from before `before`'s day: everything up to its first "--- started" or day line (Stamped
+    writes one each new day) from that day on. An old log left with nothing goes; jarvis.log is emptied (it's open)."""
+    day = time.strftime("%Y-%m-%d", time.localtime(before)).encode()
+    try:
+        with open(path, "rb+") as f:
+            text = f.read()
+            stamps = re.finditer(rb"^(?:\d\d:\d\d:\d\d )?--- (?:started )?(\d{4}-\d\d-\d\d)", text, re.M)
+            cut = next((m.start() for m in stamps if m[1] >= day), len(text))
+            if cut:
+                f.seek(0)
+                f.write(text[cut:])
+                f.truncate()
+        if cut == len(text) and path != LOG_FILE:
+            os.remove(path)
+    except OSError:
+        pass
+
+
 def tidy():
-    """Conversations, change-log entries and old logs older than keep_days go (0: kept for good); folders Jarvis left in
-    the temp dir (a picked part of the screen, a crashed recording's parts) go after a day; the log is rotated."""
+    """Conversations, change-log entries and log lines older than keep_days go (0: kept for good); folders Jarvis left
+    in the temp dir (a picked part of the screen, a crashed recording's parts) go after a day; the log is rotated."""
     rotate_log()
     now = time.time()
     for name in os.listdir(TEMP):
@@ -390,8 +409,10 @@ def tidy():
         return
     before = now - days * 86400
     chats = [os.path.join(SESSIONS_DIR, n) for n in os.listdir(SESSIONS_DIR) if n.endswith(".json")] if os.path.isdir(SESSIONS_DIR) else []
+    for path in [LOG_FILE] + OLD_LOGS:
+        trim_log(path, before)
     with _lock:
-        for path in OLD_LOGS + chats:
+        for path in chats:
             try:
                 if os.path.getmtime(path) < before:
                     os.remove(path)

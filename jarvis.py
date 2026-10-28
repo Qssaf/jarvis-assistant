@@ -2491,15 +2491,21 @@ def background(fn, *args, restart=False, wait=5):
 
 
 class Stamped:
-    """The log, with the time at the start of every line (to see how long things take)."""
+    """The log, with the time at the start of every line (to see how long things take), and a "--- YYYY-MM-DD" line
+    when the day changes (store.tidy drops what's older than keep_days by them)."""
 
     def __init__(self, f):
-        self.f, self.fresh = f, True
+        self.f, self.fresh, self.day = f, True, time.strftime("%Y-%m-%d")
 
     def write(self, text):
         out = []
         for line in text.splitlines(keepends=True):
-            out.append((time.strftime("%H:%M:%S ") if self.fresh and line.strip() else "") + line)
+            if self.fresh and line.strip():
+                if self.day != time.strftime("%Y-%m-%d"):
+                    self.day = time.strftime("%Y-%m-%d")
+                    out.append(f"--- {self.day}\n")
+                out.append(time.strftime("%H:%M:%S "))
+            out.append(line)
             self.fresh = line.endswith("\n")
         self.f.write("".join(out))
         return len(text)
