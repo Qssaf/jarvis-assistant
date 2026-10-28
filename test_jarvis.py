@@ -1617,6 +1617,9 @@ assert link.state["relay"] == "wss://relay.example.workers.dev" and "ws:" in lin
 # "Set up my relay": wrangler signs in only when it isn't yet, deploys a copy of relay/, and its address becomes the relay
 said = []
 assert system.run_lines([sys.executable, "-c", "print('one'); print('two')"], said.append) == 0 and said == ["one", "two"]
+started = time.time()  # stopped on time with what it started, though that child still holds the output open
+child = "import subprocess, sys, time; subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(8)']); time.sleep(8)"
+assert system.run_lines([sys.executable, "-c", child], said.append, timeout=1) != 0 and time.time() - started < 5
 real_run_lines, real_have, wrangler = system.run_lines, system.have, []
 WRANGLER_SAYS = {"whoami": (0, ["You are not authenticated. Please run `wrangler login`."]),
                  "login": (0, ["Attempting to login via OAuth...", "Successfully logged in."]),
@@ -1653,6 +1656,10 @@ link.set_relay("https://relay.example.workers.dev/")
 setup = set_up_relay()
 assert wrangler == ["whoami", "deploy"] and "Could not automatically register" in setup["error"]
 assert link.state["relay"] == "wss://relay.example.workers.dev"
+wrangler.clear()  # whoami failed (no network, a slow first download): it signs in rather than deploy signed out
+WRANGLER_SAYS["whoami"] = (1, [])
+setup = set_up_relay()
+assert wrangler == ["whoami", "login", "deploy"]
 system.have = lambda program: False  # no Node: how to get it
 link.set_up_relay()
 assert "nodejs.org" in link.status()["setup"]["error"] and not link.setup["running"]

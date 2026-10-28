@@ -164,8 +164,8 @@ class PhoneLink:
             with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as folder:
                 shutil.copytree(RELAY_FOLDER, folder, dirs_exist_ok=True)
                 said = []  # (not shown: it names the account)
-                system.run_lines(npx + ["whoami"], said.append, cwd=folder, timeout=120)
-                if "not authenticated" in "\n".join(said):
+                # (the first run also downloads wrangler; anything but a clear "logged in" means signing in)
+                if system.run_lines(npx + ["whoami"], said.append, cwd=folder) or "not authenticated" in "\n".join(said):
                     show("Sign in to Cloudflare in your browser…")
                     if system.run_lines(npx + ["login"], show, cwd=folder):
                         raise RuntimeError("the Cloudflare sign-in didn't finish")
