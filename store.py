@@ -32,6 +32,7 @@ DEFAULT_SETTINGS = {
     "extra_instructions": "",
     "home_city": "",               # for the weather on the Chat page; empty = guess from your network
     "speak_typed_replies": True,   # off: typed messages get text-only answers
+    "always_backup_voice": False,  # on: the backup voice (the hear and speak models) answers instead of Gemini Live
     "fast_voice": False,           # on: the voice model answers without thinking first (~0.3 s quicker, but less sharp)
     "end_of_speech_ms": 600,       # pause that counts as "finished talking"; lower = snappier, higher = fewer cut-offs
     "start_at_login": False,
@@ -56,6 +57,7 @@ DEFAULT_SETTINGS = {
     # "backend model thinking-level", tried top to bottom; busy or rate-limited ones are skipped
     # the same for the other jobs (see brain.MODEL_JOBS); empty = Jarvis's built-in choice
     "look_models": [], "point_models": [], "point_strong_models": [], "search_models": [], "image_models": [],
+    "hear_models": [], "speak_models": [],
     "agent_models": [
         "antigravity gemini-3.8-flash low",  # (only when signed in with Google, on the Models page)
         "aistudio gemini-3.8-flash medium",

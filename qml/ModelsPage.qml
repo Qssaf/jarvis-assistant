@@ -38,6 +38,7 @@ ScrollPage {
                 .map(w => /^(gpt|glm|ai)$/i.test(w) ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1)).join(" ")
     }
     function modelsOf(name) { const b = page.avail.backends.find(b => b.name === name); return b ? b.models : [] }
+    function modelsFor(name, job) { return modelsOf(name).filter(m => /tts/i.test(m) === (job === "speak")) }  // (text-to-speech: Speaking only)
     function usableBackends() { return page.avail.backends.filter(b => !b.error || b.models.length).map(b => b.name) }
     readonly property string status: looking ? "Looking up the models you can use…" : avail.backends
         .filter(b => b.models.length || (b.error && !/no API key|unknown backend|not signed in/.test(b.error)))
@@ -268,13 +269,14 @@ ScrollPage {
         id: list
         property string job
         property var entries: []
-        readonly property var thinking: job === "image" ? ["none"] : ["minimal", "low", "medium", "high"]
+        // (Whisper-style hearing models think none; a speaking model's third word is its voice, none for Jarvis's own)
+        readonly property var thinking: job === "image" || job === "speak" ? ["none"] : (job === "hear" ? ["none"] : []).concat(["minimal", "low", "medium", "high"])
         function update(i, parts) { const all = entries.slice(); all[i] = parts.join(" "); page.save(job, all) }
         function move(i) { const all = entries.slice(); all.splice(i - 1, 0, all.splice(i, 1)[0]); page.save(job, all) }
         function remove(i) { const all = entries.slice(); all.splice(i, 1); page.save(job, all) }
         function add() {
             const name = page.usableBackends()[0] || "aistudio"
-            page.save(job, entries.concat([[name, page.modelsOf(name)[0] || "gemini-3.8-flash", list.thinking[Math.min(1, list.thinking.length - 1)]].join(" ")]))
+            page.save(job, entries.concat([[name, page.modelsFor(name, job)[0] || "gemini-3.8-flash", list.thinking[Math.min(1, list.thinking.length - 1)]].join(" ")]))
         }
         Layout.fillWidth: true
         spacing: 8
@@ -295,11 +297,11 @@ ScrollPage {
                           font.features: { "tnum": 1 } }
                 }
                 Select { Layout.preferredWidth: 150; model: page.options(page.usableBackends(), row.parts[0]); value: row.parts[0]
-                         onPicked: v => list.update(row.index, [v, page.modelsOf(v)[0] || row.parts[1], row.parts[2]]) }
-                Select { Layout.fillWidth: true; visible: page.modelsOf(row.parts[0]).length > 0
-                         model: page.options(page.modelsOf(row.parts[0]), row.parts[1]); value: row.parts[1]
+                         onPicked: v => list.update(row.index, [v, page.modelsFor(v, list.job)[0] || row.parts[1], row.parts[2]]) }
+                Select { Layout.fillWidth: true; visible: page.modelsFor(row.parts[0], list.job).length > 0
+                         model: page.options(page.modelsFor(row.parts[0], list.job), row.parts[1]); value: row.parts[1]
                          onPicked: v => list.update(row.index, [row.parts[0], v, row.parts[2]]) }
-                Field { Layout.fillWidth: true; visible: !page.modelsOf(row.parts[0]).length; text: row.parts[1]; placeholderText: "model name"
+                Field { Layout.fillWidth: true; visible: !page.modelsFor(row.parts[0], list.job).length; text: row.parts[1]; placeholderText: "model name"
                         onEditingFinished: if (text && text !== row.parts[1]) list.update(row.index, [row.parts[0], text.trim(), row.parts[2]]) }
                 Select { Layout.preferredWidth: 120; model: page.options(list.thinking, row.parts[2]); value: row.parts[2]
                          onPicked: v => list.update(row.index, [row.parts[0], row.parts[1], v]) }

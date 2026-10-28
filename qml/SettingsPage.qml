@@ -107,6 +107,10 @@ ScrollPage {
             Line {}
             Toggle { Layout.fillWidth: true; text: "Speak replies to typed messages"; checked: !!page.s.speak_typed_replies
                      onToggled: page.set("speak_typed_replies", checked) }
+            Line {}
+            Toggle { Layout.fillWidth: true; text: "Always use the backup voice"
+                     hint: "Hear and speak with the models on the Models page instead of Gemini Live, for keys without it. Off, the backup voice only answers while Gemini Live can't be reached"
+                     checked: !!page.s.always_backup_voice; onToggled: page.set("always_backup_voice", checked) }
         }
     }
 

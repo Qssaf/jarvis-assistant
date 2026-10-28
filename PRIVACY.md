@@ -23,6 +23,10 @@ everything Jarvis keeps about me* removes memory, conversations, reminders, rout
 - **Google Gemini** (with your Google AI Studio key, under Google's terms): what you say after the wake word (or type),
   your memory and recent conversation as context, screenshots when a task needs the screen, files you ask Jarvis to
   read, and web search questions. Audio before the wake word never leaves your computer.
+- **The backup voice** (only while Gemini Live can't be used, or when you switch it on): what you say after the wake
+  word goes to the *Hearing you* model and Jarvis's answers to the *Speaking* model on the Models page. By default
+  those are Gemini; a Groq or OpenAI key you added may be used too. The computer's own voice (espeak, Windows' SAPI)
+  speaks locally.
 - **Composio** (only for accounts you connect): the account actions Jarvis runs for you, like reading or sending email.
 - **Telegram** (only if you set up *Jarvis on Telegram*): the tasks you send your bot and Jarvis's replies. Only the
   chat you paired is answered.

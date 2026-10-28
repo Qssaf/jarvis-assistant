@@ -74,10 +74,12 @@ def api_key():
     return key
 
 
-def build_request(contents, tools, system, thinking, thoughts=False, images=False):
+def build_request(contents, tools, system, thinking, thoughts=False, images=False, voice=None):
     config = {"thinkingConfig": {"thinkingLevel": thinking, **({"includeThoughts": True} if thoughts else {})}} if thinking else {}
     if images:
         config["responseModalities"] = ["TEXT", "IMAGE"]
+    if voice:  # text to speech (the backup voice), in one of Gemini's voices
+        config |= {"responseModalities": ["AUDIO"], "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}}}
     request = {"contents": contents, "generationConfig": config}
     if tools:
         request["tools"] = tools
@@ -121,8 +123,9 @@ class AIStudio:
         return [(m["name"].removeprefix("models/"), m.get("supportedGenerationMethods", [])) for m in r.json().get("models", [])]
 
     def models(self):
-        """The chat models this key can use (not embeddings, speech or picture-only ones), for picking in Settings."""
-        return [n for n, ways in self._listing() if "generateContent" in ways and not re.search(r"embed|tts|aqa|imagen|veo|robotics", n)]
+        """The models this key can use for Jarvis's jobs (not embeddings or picture-only ones), for picking on the Models page
+        (it shows the text-to-speech ones only for the backup voice's Speaking job)."""
+        return [n for n, ways in self._listing() if "generateContent" in ways and not re.search(r"embed|aqa|imagen|veo|robotics", n)]
 
     def live_models(self):
         """The real-time (voice) models this key can use. (Extended-thinking ones are left out: their tool calls never reach
@@ -449,24 +452,37 @@ class OpenAICompatible:
             raise RuntimeError(f"{name}: refusing to send an API key over plain http to {urlparse(url).hostname}")
         self.name, self.url, self.key, self.http = name, url.rstrip("/"), key, requests.Session()
 
-    def generate(self, contents, model, thinking, tools=None, system=None, images=False, **options):
+    def generate(self, contents, model, thinking, tools=None, system=None, images=False, voice=None, **options):
         if images:
             raise BadRequest(f"{self.name} can't make pictures")
+        parts = contents[-1]["parts"]
+        if voice:  # text to speech, as a WAV (it says its own rate); the voice is the model line's third word (Jarvis's are Gemini's)
+            r = self._post("audio/speech", thinking, json={"model": model, "input": "".join(p.get("text", "") for p in parts),
+                                                           "voice": thinking or "alloy", "response_format": "wav"})
+            return [{"inlineData": {"mimeType": "audio/wav", "data": base64.b64encode(r.content).decode()}}]
+        audio = next((p["inlineData"] for p in parts if p.get("inlineData", {}).get("mimeType", "").startswith("audio/")), None)
+        if audio:  # speech to text
+            r = self._post("audio/transcriptions", thinking, data={"model": model},
+                           files={"file": ("speech.wav", base64.b64decode(audio["data"]), audio["mimeType"])})
+            return [{"text": r.json().get("text", "")}]
         body = {"model": model, "messages": to_openai(contents, system, signatures=urlparse(self.url).hostname.endswith("googleapis.com"))}
         fns = [d for t in tools or [] for d in t.get("functionDeclarations", [])]  # (Google Search grounding is Gemini-only)
         if fns:
             body["tools"] = [{"type": "function", "function": {"name": d["name"], "description": d.get("description", ""),
                                                                "parameters": d.get("parametersJsonSchema") or obj()}} for d in fns]
+        return from_openai(self._post("chat/completions", thinking, json=body).json())
+
+    def _post(self, path, thinking, **kw):
         try:
-            r = self.http.post(f"{self.url}/chat/completions", json=body, headers={"Authorization": f"Bearer {self.key}"} if self.key else {},
-                               timeout=(5, 300 if is_local(self.url) else READ_TIMEOUT.get(thinking, 60)))  # (local models load slowly)
+            r = self.http.post(f"{self.url}/{path}", headers={"Authorization": f"Bearer {self.key}"} if self.key else {},
+                               timeout=(5, 300 if is_local(self.url) else READ_TIMEOUT.get(thinking, 60)), **kw)  # (local models load slowly)
         except requests.Timeout:
             raise Overloaded("timed out")
         except requests.ConnectionError:
             raise Overloaded(f"can't reach {self.url}" + (" (is Ollama running?)" if self.name == "ollama" else ""))
         if not r.ok:
             raise http_error(r)
-        return from_openai(r.json())
+        return r
 
     def models(self):
         """The models this provider offers (its /models list), for picking in Settings."""
@@ -2187,14 +2203,23 @@ MODEL_JOBS = {
     "point_strong": ("Second try at finding a target", "Used when the quick model can't find what to click."),
     "search": ("Web search answers", "Summing up Google results for web_search."),
     "image": ("Making pictures", "Pictures you ask Jarvis to make or edit."),
+    "hear": ("Hearing you (backup voice)", "When Gemini Live can't be used: writes down what you say."),
+    "speak": ("Speaking (backup voice)", "When Gemini Live can't be used: says the answers out loud."),
 }
+# the backup voice's ears: any Gemini model takes a recording; Whisper-style services where there's a key (Groq's is fast)
+HEAR_MODELS = [("antigravity", "gemini-3.1-flash-lite", "minimal"), ("aistudio", "gemini-3.5-flash-lite", "minimal"),
+               ("groq", "whisper-large-v3-turbo", None), ("openai", "gpt-4o-mini-transcribe", None), ("aistudio", "gemini-3.8-flash", "low")]
+# its mouth: Gemini's text-to-speech models speak in Jarvis's voice (Settings); other services in the voice their line names
+SPEAK_MODELS = [("aistudio", "gemini-3.8-flash-tts", None), ("aistudio", "gemini-3.8-flash-lite-tts", None),
+                ("aistudio", "gemini-2.5-flash-preview-tts", None), ("openai", "gpt-4o-mini-tts", "fable")]
 
 
 def models_for(job):
     if job == "agent":
         return chain()
     return [entry(line) for line in store.settings()[f"{job}_models"]] or \
-        {"look": LOOK_MODELS, "point": POINT_MODELS, "point_strong": POINT_MODELS_STRONG, "search": SEARCH_MODELS, "image": IMAGE_MODELS}[job]
+        {"look": LOOK_MODELS, "point": POINT_MODELS, "point_strong": POINT_MODELS_STRONG, "search": SEARCH_MODELS, "image": IMAGE_MODELS,
+         "hear": HEAR_MODELS, "speak": SPEAK_MODELS}[job]
 
 
 def turned_in_at(submission):
@@ -2796,6 +2821,50 @@ class Brain:
                     delay = min(max(delay, 30) * 2, 600)
         threading.Thread(target=probe, args=(5 if timed_out else 60, told), daemon=True).start()
 
+    # ---- the backup voice's ears and mouth (jarvis.Backup), when Gemini Live can't be used
+    def _speech(self, job, contents, **kw):
+        """A hear or speak request down that job's models. Unlike the agent's chain, any failure moves on (a voice or a
+        recording one service refuses, another takes) and that model is skipped for a minute, or as long as its rate limit
+        says: there's no probe, as a text "hi" would never bring a speech model back."""
+        why = []
+        for entry in models_for(job):
+            backend, model, thinking = entry
+            be, problem = self.backend(backend)
+            if not be or time.time() < self.down_until.get(entry, 0):
+                why.append(f"{backend}: {problem}" if problem else f"{backend}/{model}: busy")
+                continue
+            t = time.time()
+            try:
+                parts = be.generate(contents, model, thinking, **kw)
+                if job == "speak" and not any("inlineData" in p for p in parts):
+                    raise RuntimeError("no sound came back")
+            except Exception as e:
+                print(f"[voice] {backend}/{model} {time.time() - t:.1f}s skipped: {e}", flush=True)
+                why.append(f"{backend}/{model}: {str(e)[:80]}")
+                self.down_until[entry] = time.time() + (getattr(e, "retry_after", None) or 60)
+                continue
+            print(f"[voice] {backend}/{model} {time.time() - t:.1f}s", flush=True)
+            count_use(backend, model)
+            return parts
+        raise RuntimeError(f"no model could {'hear it' if job == 'hear' else 'say it'} (" + "; ".join(list(dict.fromkeys(why))[:4])
+                           + "); try again in a minute or check the Models page")
+
+    def hear(self, wav):
+        """What's said in a recording (a 16 kHz WAV), word for word; '' when nobody speaks."""
+        languages = " or ".join(store.spoken(store.settings()))
+        parts = self._speech("hear", [{"role": "user", "parts": [
+            {"inlineData": {"mimeType": "audio/wav", "data": base64.b64encode(wav).decode()}},
+            {"text": f"Write down what's said in this recording ({languages}), word for word. Reply with only those words; if "
+                     "nobody speaks, reply only: (silence)"}]}])
+        text = "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
+        return "" if text.strip("(). ").lower() == "silence" else text
+
+    def speak(self, text):
+        """text said in Jarvis's voice: (audio, its type), from the first speaking model that answers."""
+        parts = self._speech("speak", [{"role": "user", "parts": [{"text": text}]}], voice=store.settings()["voice"])
+        audio = next(p["inlineData"] for p in parts if "inlineData" in p)
+        return base64.b64decode(audio["data"]), audio.get("mimeType", "")
+
     def ask(self, text, on_tool=lambda name: None, on_thought=None, remote=False, unattended=False):
         """unattended: a scheduled task or a background check, on its own history (the conversation isn't touched), where
         changes that wait for the user's yes are refused even if the model says it has one."""
@@ -2818,7 +2887,8 @@ class Brain:
         reset_interrupt_act()
         msgs = self.contents  # reset() swaps in a new list; this turn keeps writing to its own
         start = len(msgs)
-        msgs.append({"role": "user", "parts": [{"text": f"[{time.strftime('%A %d %B %Y, %H:%M')}] {text}"}]})
+        # (the passphrase never goes in: the history is saved with the chat, and a yes needs it through ask_user anyway)
+        msgs.append({"role": "user", "parts": [{"text": f"[{time.strftime('%A %d %B %Y, %H:%M')}] {store.hide_passphrase(text)}"}]})
         try:
             nudges, later = 0, False
             for _ in range(MAX_STEPS):

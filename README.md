@@ -27,6 +27,9 @@ app with a notch at the top of the screen and a native dashboard window.
   down at the top of the screen showing what it's doing.
 - **Real-time voice** with Gemini Live: it hears you directly, with no separate speech-to-text step, and speaks back.
   Follow-ups within a few seconds don't need the wake word, and long requests are fine.
+- **A backup voice**: when Gemini Live can't be used (no key with it, its quota used up, Google down), Jarvis still
+  answers out loud: a model writes down what you said, the agent answers, and a speaking model (or the computer's own
+  voice) says it. Pick those models on the **Models** page, or switch it on for good in Settings for keys without Live.
 - **Pause** (⏸ in the notch or chat) turns listening off or on without stopping a reply or a task. **Stop** (the red
   button, or say *"that's all"*) ends everything. Saying **"Hey Jarvis"** while it talks cuts it short.
 - **Learns your voice**: real wake-ups and dismissed ones train a small verifier, so the TV stops waking it. With
@@ -195,8 +198,8 @@ Mistral or xAI, or add any other OpenAI-compatible service (LM Studio, vLLM, a p
 provider which models your key can use, so you pick the agent's models (and how hard each thinks) from drop-downs, and
 the voice model from Gemini's real-time ones. Keys are kept in your system
 keychain (Windows Credential Manager, GNOME Keyring / KWallet), or in a private file if there's none. They're never
-saved in settings, never shown again, and never sent over plain http to another machine. The voice itself always uses
-Gemini Live.
+saved in settings, never shown again, and never sent over plain http to another machine. The voice uses Gemini Live;
+the backup voice (when Live can't be used) uses the *Hearing you* and *Speaking* models.
 
 **Sign in with Google** (Models page, optional): Gemini and Claude through your Google account's Antigravity quota,
 which is much larger than a free AI Studio key's. Add several accounts and they take turns when one hits its limit.
@@ -227,7 +230,8 @@ Then write `mine some-model low` in **Settings → Agent models**.
 
 ## Privacy and security
 The full picture is in [PRIVACY.md](PRIVACY.md); contributing: [CONTRIBUTING.md](CONTRIBUTING.md).
-- Audio only leaves your PC after the wake word (or Talk / push-to-talk), and goes to Google's Gemini API.
+- Audio only leaves your PC after the wake word (or Talk / push-to-talk), and goes to Google's Gemini API (or, for the
+  backup voice, to the hearing model you picked on the Models page).
 - The local server only opens the window or starts listening, and only for Jarvis itself: a secret token per run plus a
   Host check.
 - Jarvis's data folder, logs, tokens and conversations are private to your user.

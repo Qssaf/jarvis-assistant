@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **A backup voice:** when Gemini Live can't be used (no key with Live, its quota used up, Google down), Jarvis still
+  answers out loud instead of going silent. A model writes down what you said, the agent answers with every tool, and
+  a speaking model says it (Gemini's text-to-speech in Jarvis's voice, OpenAI's, or the computer's own voice as a last
+  resort). The chat says why it switched, and Gemini Live is tried again five minutes later. Pick the models on the
+  Models page (*Hearing you*, *Speaking*); Settings → *Always use the backup voice* is for keys without Live. Health
+  says what it would hear and speak with.
+
+### Fixed
+- A spoken passphrase said in the same breath as a request is no longer kept in the saved conversation.
+
 ## 2.1.0 — 2026-10-27
 
 ### Added

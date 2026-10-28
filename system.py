@@ -174,6 +174,31 @@ def chime():
     threading.Thread(target=play, daemon=True).start()
 
 
+def own_voice():
+    """The computer's own text-to-speech ('' if none): SAPI on Windows, espeak-ng or espeak on Linux."""
+    return "SAPI" if IS_WINDOWS else next((p for p in ("espeak-ng", "espeak") if have(p)), "")
+
+
+def speech_wav(text):
+    """text said in the computer's own voice, as a WAV: the backup voice's last resort (nothing to download). None
+    without one."""
+    voice = own_voice()
+    if voice == "SAPI":
+        fd, path = tempfile.mkstemp(suffix=".wav")
+        os.close(fd)
+        try:  # (the text goes in through the environment, never into the command)
+            run(["powershell", "-NoProfile", "-Command", "Add-Type -AssemblyName System.Speech; $s = New-Object "
+                 "System.Speech.Synthesis.SpeechSynthesizer; $s.SetOutputToWaveFile($env:JARVIS_WAV); $s.Speak($env:JARVIS_SAY); "
+                 "$s.Dispose()"], 60, env=dict(os.environ, JARVIS_WAV=path, JARVIS_SAY=text))
+            with open(path, "rb") as f:
+                return f.read() or None
+        finally:
+            os.remove(path)
+    if voice:
+        return subprocess.run([voice, "--stdout", "--stdin"], input=text.encode(), capture_output=True, timeout=60).stdout or None
+    return None
+
+
 # ---------------------------------------------------------------- screenshots
 SHOT_HELPER = os.path.join(DATA, "bin", "jarvis-shot")  # KDE: built by install.sh from jarvis-shot.c
 

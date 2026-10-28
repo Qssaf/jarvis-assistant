@@ -230,7 +230,10 @@ matching Host header. `/api/task` (`jarvis --task`, `jarvis --mcp`) runs unatten
 after a key changes. `to_openai`/`from_openai` translate between the Gemini-format history the agent keeps and the
 OpenAI chat format; Gemini thought signatures ride along as `thoughtSignature` parts and are only sent to Google hosts.
 Keys live in the OS keychain via `store.secret`/`set_secret`, falling back to a 0600 `keys.json`; tests force the file
-fallback with `PYTHON_KEYRING_BACKEND`. The voice always uses Gemini Live.
+fallback with `PYTHON_KEYRING_BACKEND`. The voice uses Gemini Live; when Live can't be opened (`Live._fall_back`, retried
+after `LIVE_RETRY`) or `always_backup_voice` is on, `Backup` (jarvis.py) takes Live's mic, typed text and announcements:
+it cuts requests at a pause, `Brain.hear` writes them down, `Brain.ask` answers, `Brain.speak` (or `system.speech_wav`)
+says it. `hear`/`speak` are `MODEL_JOBS` whose failures all move on to the next model (`_speech`, no probes).
 
 **Account modes.** `store.connector_modes()` (connectors.json) holds ask/full/read_only/paused per Composio toolkit.
 `account_block` enforces paused and read-only in `run_app_tool` and on `COMPOSIO_MULTI_EXECUTE_TOOL` calls;

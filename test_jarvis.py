@@ -176,6 +176,9 @@ store.set_secret(store.PASSPHRASE, "blue bird")
 SelfConfirms.seen, ran = [], []
 assert a.ask("reboot now") == "It needs your yes first." and ran == [] and "passphrase" in SelfConfirms.seen[0]["error"]
 assert a.ask("reboot now", remote=True) == "It needs your yes first." and ran == ["sudo reboot"]
+# said with the request (the backup voice and typed text reach the agent directly), it isn't kept in the saved history
+a.ask("reboot now, blue bird")
+assert "bird" not in str(a.contents) and "•••" in str(a.contents)
 store.set_secret(store.PASSPHRASE, "")
 brain.system.shell = real_shell
 a.add_turn("[check] failed payments", "Two failed: offer a free month?")
@@ -190,6 +193,7 @@ import jarvis
 live = jarvis.Live.__new__(jarvis.Live)
 live.mic, live.session, live.floor, live.voice_at, live.level = True, None, 100.0, 0.0, 0.0
 live.speaker, live.backlog = jarvis.Speaker(), collections.deque(maxlen=125)  # the real one: a fake hid a renamed attribute
+live.backup = jarvis.Backup(live)
 frame = lambda rms: (np.random.default_rng(1).normal(0, rms, 1280)).astype(np.int16)
 for _ in range(50):
     live.feed(frame(60))  # quiet room
@@ -1009,6 +1013,235 @@ async def barge_in():
 asyncio.run(barge_in())
 assert brain.tool_act([{"wait": 0}], screenshot_after=False) == {"result": ["waited 0s"]}
 
+# the backup voice, when Gemini Live can't be used. What services send back becomes the Speaker's 24 kHz mono: raw samples
+# at their stated rate, or a WAV (stereo, another rate, a chunk before the sound, a size left unwritten as it streamed)
+import struct
+def riff(rate, channels, samples, size=None):
+    data = np.array(samples, np.int16).tobytes()
+    body = (b"fmt " + struct.pack("<IHHIIHH", 16, 1, channels, rate, rate * 2 * channels, 2 * channels, 16) + b"LIST"
+            + struct.pack("<I", 3) + b"abc\0" + b"data" + struct.pack("<I", len(data) if size is None else size) + data)
+    return b"RIFF" + struct.pack("<I", 4 + len(body)) + b"WAVE" + body
+assert jarvis.pcm24(b"\x10\x00\x20\x00", "audio/L16;codec=pcm;rate=24000") == b"\x10\x00\x20\x00"
+assert len(jarvis.pcm24(b"\0\0" * 1600, "audio/pcm;rate=16000")) == 2 * 2400
+stereo = jarvis.pcm24(riff(48000, 2, [1000, 3000] * 480))
+assert len(stereo) == 2 * 240 and set(np.frombuffer(stereo, np.int16)) == {2000}
+assert jarvis.pcm24(riff(24000, 1, [5, 6, 7], size=0xFFFFFFFF)) == np.array([5, 6, 7], np.int16).tobytes()
+# its hearing and speaking models: any failure moves on to the next (a refused voice too, unlike the agent's chain) and
+# that model rests for a minute, or as long as its rate limit says; a model that sends back no sound doesn't count
+sb, sent = brain.Brain.__new__(brain.Brain), []
+sb.down_until = {}
+class Speech:
+    def __init__(self, fail=None, parts=None):
+        self.fail, self.parts = fail, parts
+
+    def generate(self, contents, model, thinking, **kw):
+        sent.append((model, kw, contents))
+        if self.fail:
+            raise self.fail
+        return self.parts
+sound = [{"inlineData": {"mimeType": "audio/L16;codec=pcm;rate=24000", "data": base64.b64encode(b"\1\0" * 10).decode()}}]
+sb.backends = {"x": Speech(brain.BadRequest("HTTP 400: no such voice")), "y": Speech(brain.Overloaded("rate limited", retry_after=30)),
+               "z": Speech(parts=sound)}
+store.update_settings({"speak_models": ["x tts-a none", "y tts-b none", "z tts-c none"], "voice": "Kore"})
+assert sb.speak("Hello there.") == (b"\1\0" * 10, "audio/L16;codec=pcm;rate=24000")
+assert [m for m, _, _ in sent] == ["tts-a", "tts-b", "tts-c"] and sent[-1][1] == {"voice": "Kore"}, sent
+assert 55 < sb.down_until[("x", "tts-a", None)] - time.time() <= 60 and 25 < sb.down_until[("y", "tts-b", None)] - time.time() <= 30
+sent.clear()
+sb.speak("Again.")
+assert [m for m, _, _ in sent] == ["tts-c"]  # (the others rest)
+sb.backends["z"].parts = [{"text": "I can't sing"}]
+try:
+    sb.speak("Once more.")
+    raise AssertionError("text taken for speech")
+except RuntimeError as e:
+    assert "no model could say it" in str(e)
+store.update_settings({"hear_models": ["z gemini-x minimal"], "languages": ["ar-XA"]})
+sb.down_until, sb.backends["z"].parts = {}, [{"text": " (silence) "}]
+assert sb.hear(b"RIFF-rec") == ""  # (nobody spoke)
+asked_parts = sent[-1][2][0]["parts"]
+assert asked_parts[0]["inlineData"] == {"mimeType": "audio/wav", "data": base64.b64encode(b"RIFF-rec").decode()}
+assert "English or Arabic" in asked_parts[1]["text"]
+sb.backends["z"].parts = [{"text": "What's the weather?"}]
+assert sb.hear(b"RIFF-rec") == "What's the weather?"
+store.update_settings({"speak_models": [], "hear_models": [], "languages": [], "voice": "Charon"})
+assert brain.models_for("hear") == brain.HEAR_MODELS and brain.models_for("speak") == brain.SPEAK_MODELS
+# Gemini speaks in Jarvis's voice; OpenAI-style services write down a recording and speak in the voice their model line names
+assert brain.build_request([{"role": "user", "parts": [{"text": "Hello."}]}], None, None, None, voice="Charon")["generationConfig"] == \
+    {"responseModalities": ["AUDIO"], "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": "Charon"}}}}
+oc, posts = brain.OpenAICompatible("groq", "https://api.groq.com/openai/v1", "gsk-test"), []
+oc.http = types.SimpleNamespace(post=lambda url, **kw: posts.append((url, kw)) or types.SimpleNamespace(
+    ok=True, content=b"RIFF-said", json=lambda: {"text": "turn it up"}))
+assert oc.generate([{"role": "user", "parts": [{"inlineData": {"mimeType": "audio/wav", "data": base64.b64encode(b"RIFF-rec").decode()}},
+                                               {"text": "Write it down"}]}], "whisper-large-v3-turbo", None) == [{"text": "turn it up"}]
+assert posts[-1][0] == "https://api.groq.com/openai/v1/audio/transcriptions" and posts[-1][1]["data"] == {"model": "whisper-large-v3-turbo"}
+assert posts[-1][1]["files"]["file"][1] == b"RIFF-rec" and posts[-1][1]["headers"] == {"Authorization": "Bearer gsk-test"}
+said = oc.generate([{"role": "user", "parts": [{"text": "Hello."}]}], "gpt-4o-mini-tts", "fable", voice="Charon")
+assert posts[-1][0].endswith("/audio/speech") and base64.b64decode(said[0]["inlineData"]["data"]) == b"RIFF-said"
+assert posts[-1][1]["json"] == {"model": "gpt-4o-mini-tts", "input": "Hello.", "voice": "fable", "response_format": "wav"}
+oc.generate([{"role": "user", "parts": [{"text": "Hi."}]}], "tts-1", None, voice="Charon")
+assert posts[-1][1]["json"]["voice"] == "alloy"  # (Jarvis's own voices are Gemini's)
+# the last resort is the computer's own voice: espeak-ng (found on the PATH) or Windows' SAPI, the text never in the command
+if not system.IS_WINDOWS:
+    d = tempfile.mkdtemp()
+    with open(f"{d}/espeak-ng", "w") as f:
+        f.write('#!/bin/sh\n[ "$1 $2" = "--stdout --stdin" ] && cat > /dev/null && printf RIFFvoice\n')
+    os.chmod(f"{d}/espeak-ng", 0o755)
+    real_path, os.environ["PATH"] = os.environ["PATH"], d + os.pathsep + os.environ["PATH"]
+    assert system.own_voice() == "espeak-ng" and system.speech_wav("-rf hello") == b"RIFFvoice"
+    os.environ["PATH"] = real_path
+real_os = system.IS_WINDOWS, system.run
+def sapi(args, timeout=15, env=None):
+    assert args[0] == "powershell" and env["JARVIS_SAY"] == "it's done; rm -rf ~" and "rm -rf" not in " ".join(args)
+    with open(env["JARVIS_WAV"], "wb") as f:
+        f.write(b"RIFFsapi")
+    return ""
+system.IS_WINDOWS, system.run = True, sapi
+assert system.own_voice() == "SAPI" and system.speech_wav("it's done; rm -rf ~") == b"RIFFsapi"
+system.IS_WINDOWS, system.run = real_os
+
+# a request is cut off after end_of_speech_ms of quiet, with a moment from before it (its first sound isn't lost), and
+# listening goes on for what's said next; a click isn't a request
+bl = jarvis.Live.__new__(jarvis.Live)
+bl.mic, bl.session, bl.floor, bl.voice_at, bl.level, bl.quiet = True, None, 100.0, 0.0, 0.0, False
+bl.backlog, played = collections.deque(maxlen=125), []
+bl.speaker = jarvis.Speaker()
+bl.speaker.out = types.SimpleNamespace(write=played.append, stop=lambda: None)  # (the real Speaker, never the real speakers)
+bk = bl.backup = jarvis.Backup(bl)
+store.update_settings({"end_of_speech_ms": 400})
+started = []
+bk._start = lambda job, *args: started.append(args)
+bk.listen()
+for rms, n in ((60, 20), (3000, 10), (60, 4)):
+    for _ in range(n):
+        bl.feed(frame(rms))
+assert started == [] and len(bk.frames) == 8 + 10 + 4  # (320 ms of quiet: not the end yet)
+bl.feed(frame(60))
+assert len(started) == 1 and len(started[0][2]) == 8 + 10 + 5 and bk.frames == [] and bl.mic, started
+bl.feed(frame(3000))
+for _ in range(5):
+    bl.feed(frame(60))
+assert len(started) == 1 and bk.frames == []
+del bk._start
+# Gemini Live's quota used up as it connects: what was said meanwhile goes to the backup voice, the chat says why, and
+# Live isn't tried again for a few minutes (a dead key isn't retried at every wake-up)
+class QuotaGone:
+    async def __aenter__(self):
+        raise Exception("1011 None. You exceeded your current quota, please check your plan and billing details.")
+fl = jarvis.Live.__new__(jarvis.Live)
+fl.client = types.SimpleNamespace(aio=types.SimpleNamespace(live=types.SimpleNamespace(connect=lambda model, config: QuotaGone())))
+fl._config, fl.brain = (lambda: None), types.SimpleNamespace(app_tools={})
+fl.skip_app_tools, fl.resume_handle, fl.resume_next, fl.inflight, fl.stopped = False, None, False, None, False
+fl.session, fl.waiting, fl.heard, fl.said, fl.announcing, fl.utterance = None, False, "", "", False, collections.deque()
+fl.mic, fl.backlog = True, collections.deque([frame(3000).tobytes()] * 5 + [frame(60).tobytes()] * 10, maxlen=125)
+fl.backup, woke, logged = jarvis.Backup(fl), [], []
+fl.backup.wake = lambda heard=(): woke.append(heard)
+jarvis.emit, real_emit = (lambda kind, **kw: logged.append(kw.get("text"))), jarvis.emit
+async def connect_fails():
+    fl.ready = asyncio.Event()
+    await fl._run()
+    await asyncio.sleep(0)  # (the backup voice takes over once _run's finally has turned the mic off)
+asyncio.run(connect_fails())
+assert len(woke) == 1 and len(woke[0]) == 15 and np.array_equal(woke[0][0], frame(3000)) and not fl.backlog, woke
+assert any("quota is used up" in str(t) and "backup voice is answering" in str(t) for t in logged), logged
+assert jarvis.LIVE_RETRY - 5 < fl.down_until - time.time() <= jarvis.LIVE_RETRY and fl.backup_now()
+# meanwhile typed text, announcements and wake-ups go straight to it
+asked, said, tried = [], [], []
+fl.backup.ask, fl.backup.say = asked.append, (lambda text, listen=False: said.append(text))
+fl._go = lambda coro: tried.append(coro) or coro.close()
+asyncio.run(fl._send("what's on today?"))
+asyncio.run(fl._send('(Tell the user this now: "Take the bins out")', announce="Take the bins out"))
+fl.wake()
+assert asked == ["what's on today?"] and said == ["Take the bins out"] and len(woke) == 2 and tried == []
+fl.down_until = 0.0  # (a few minutes later: Live is tried again)
+fl.wake()
+assert len(tried) == 1 and len(woke) == 2
+# no AI Studio key at all: the same, and nothing to hear with the mic off
+def no_key():
+    raise RuntimeError("add your Google AI Studio key in the Models page")
+real_key, brain.api_key, fl.client, fl.mic, n = brain.api_key, no_key, None, False, len(logged)
+asyncio.run(connect_fails())
+brain.api_key = real_key
+assert any("there's no Google AI Studio key" in str(t) for t in logged[n:]) and fl.backup_now() and len(woke) == 2, logged
+# "Always use the backup voice" (for keys without Live): Live isn't even tried
+fl.down_until = 0.0
+store.update_settings({"always_backup_voice": True})
+fl.wake()
+store.update_settings({"always_backup_voice": False})
+assert len(tried) == 1 and len(woke) == 3
+
+# it hears with a model, the agent answers (the same conversation, every tool), another model speaks; links are shown,
+# never read out; typed replies stay quiet when Settings says so; NOTHING (noise) gets nothing; Stop drops what's coming
+heard, replies, spoken, asks = ["What's the weather?"], [], [], []
+bl.brain = types.SimpleNamespace(hear=lambda wav: wav[:4] == b"RIFF" and heard[0],
+                                 ask=lambda text, on_tool, on_thought=None: asks.append(text) or replies[0],
+                                 speak=lambda text: spoken.append(text) or (b"\1\0" * 2400, "audio/L16;codec=pcm;rate=24000"))
+bl.question, bl.last_heard, bl.last_said = None, "", ""
+jarvis.emit = lambda kind, **kw: logged.append((kw.get("who"), kw.get("text")))
+def settle(done=lambda: not bk.jobs):  # (its jobs run on their own threads)
+    for _ in range(300):
+        if done():
+            return
+        time.sleep(0.01)
+    raise AssertionError("the backup voice didn't get there")
+def say_out_loud():
+    bl.speaker.stop()  # (half-duplex: the mic is off while Jarvis talks)
+    bk.listen()
+    for rms, n in ((3000, 10), (60, 6)):
+        for _ in range(n):
+            bl.feed(frame(rms))
+    settle()
+replies[:] = ["Sunny and 21, sir.\nhttps://example.com/forecast"]
+say_out_loud()
+assert ("you", "What's the weather?") in logged and ("jarvis", replies[0]) in logged and asks[-1].startswith(jarvis.HEARD_NOTE)
+assert spoken == ["Sunny and 21, sir."] and bl.mic and bk.frames is not None, spoken  # (still listening for a follow-up)
+settle(lambda: played)
+assert b"".join(played) == b"\1\0" * 2400
+bl.quiet, replies[:] = True, ["Done."]
+bk.ask("turn the volume down")
+settle()
+assert ("jarvis", "Done.") in logged and asks[-1] == "turn the volume down" and len(spoken) == 1
+bl.quiet, replies[:], n = False, ["NOTHING"], len(logged)
+bk.ask("so")
+settle()
+assert not [m for m in logged[n:] if m[0] == "jarvis"] and len(spoken) == 1
+gate = threading.Event()
+bl.brain.ask = lambda text, on_tool, on_thought=None: gate.wait(2) and "Here you go."
+bk.ask("open my notes")
+bk.stop()  # (Stop pressed while the agent works)
+gate.set()
+settle()
+assert ("jarvis", "Here you go.") not in logged and not bl.mic and bk.frames is None
+bl.brain.ask = lambda text, on_tool, on_thought=None: asks.append(text) or replies[0]
+# the agent's question: what's said next is its answer, not a new request
+q = bl.question = {"text": "Sam Lee or Sam Leeds?", "answered": threading.Event(), "answer": None}
+heard[0], n, bl.mic = "Sam Lee", len(asks), True
+say_out_loud()
+assert q["answered"].is_set() and q["answer"] == "Sam Lee" and len(asks) == n
+bl.question = None
+# "that's all": the goodbye is said, and it's back to the wake word
+heard[0], replies[:] = "that's all, thanks", ["Very good, sir."]
+say_out_loud()
+settle(lambda: bk.frames is None)
+assert spoken[-1] == "Very good, sir." and not bl.mic
+# nobody says anything for follow_up_seconds after the last thing said: listening ends, and the notch goes idle
+bl.mic = True
+bk.listen()
+bk.since, bl.voice_at = time.time() - 60, 0.0
+bl.speaker.stop()
+settle(lambda: bk.frames is None and jarvis.shown_state[0] == "idle")
+assert not bl.mic
+# no speaking model can: the computer's own voice says it, at the Speaker's rate
+def no_speaking_model(text):
+    raise RuntimeError("no model could say it")
+bl.brain.speak, real_wav, played[:] = no_speaking_model, system.speech_wav, []
+system.speech_wav = lambda text: riff(48000, 1, [7] * 4)
+bk.say("Take the bins out")
+settle(lambda: played)
+system.speech_wav = real_wav
+assert b"".join(played) == np.array([7, 7], np.int16).tobytes(), played
+jarvis.emit = real_emit
+bl.speaker.stop()
+
 # KDE: kdotool says nothing when no window matches, which must not count as focused or closed
 real_window = system.KDE, system.WAYLAND, system.have, system._kdo
 system.KDE = system.WAYLAND = True
@@ -1257,9 +1490,13 @@ real_health = brain.AIStudio, system.screenshot
 brain.AIStudio, system.screenshot = FakeStudio, (lambda: b"jpeg")
 hb = types.SimpleNamespace(plugin_status=lambda: [{"name": "composio", "status": "error", "error": "signed out", "enabled": True, "tools": []}],
                            connected=set(), backend=lambda name: (object(), ""), down_until={})
-report = jarvis.health(types.SimpleNamespace(mic_seen=time.time(), raw_level=0.1), hb)
+report = jarvis.health(types.SimpleNamespace(mic_seen=time.time(), raw_level=0.1, backup_now=lambda: False), hb)
 got = {c["name"]: c for c in report["checks"]}
 assert got["Google AI Studio key"]["ok"] and got["Microphone"]["ok"] and got["Seeing the screen"]["ok"]
+# ...and whether the backup voice could take over from Gemini Live, with which models (shown there, not as two more jobs)
+assert got["Backup voice"]["ok"] and "hears with gemini-3.1-flash-lite via antigravity" in got["Backup voice"]["detail"] \
+    and "speaks with gemini-3.8-flash-tts via aistudio" in got["Backup voice"]["detail"], got["Backup voice"]
+assert not any(c["name"].startswith("Models: Hearing") or c["name"].startswith("Models: Speaking") for c in report["checks"])
 assert got["Accounts (Composio)"]["ok"] is False and got["Accounts (Composio)"]["page"] == "plugins" and got["Accounts (Composio)"]["fix"]
 assert "aistudio gemini-x" in report["usage"]
 brain.AIStudio, system.screenshot = real_health
