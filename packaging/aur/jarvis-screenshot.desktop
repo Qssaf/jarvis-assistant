@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Jarvis screenshot helper
+Comment=Lets Jarvis's own screenshot helper (and nothing else) capture the screen through KWin
+Exec=/usr/lib/jarvis-assistant/jarvis-shot
+NoDisplay=true
+X-KDE-DBUS-Restricted-Interfaces=org.kde.KWin.ScreenShot2

@@ -16,6 +16,17 @@ android {
         versionName = "1.14.0"
     }
 
+    // release.yml's release build: signed with the keystore it names (made from the repository's secrets)
+    System.getenv("ANDROID_KEYSTORE")?.let { keystore ->
+        signingConfigs.create("release") {
+            storeFile = file(keystore)
+            storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+            keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+        }
+        buildTypes.getByName("release").signingConfig = signingConfigs.getByName("release")
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true

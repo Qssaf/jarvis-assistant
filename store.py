@@ -357,8 +357,9 @@ def sync_autostart(enabled):
         command = f'"{sys.executable}"'
     elif system.IS_WINDOWS:  # pythonw: no console window
         command = f'"{os.path.join(os.path.dirname(sys.executable), "pythonw.exe")}" "{os.path.join(here, "jarvis.py")}"'
-    else:
-        command = os.path.expanduser("~/.local/bin/jarvis")  # made by install.sh
+    else:  # made by install.sh, or a package's (the AUR one's is /usr/bin/jarvis)
+        command = os.path.expanduser("~/.local/bin/jarvis")
+        command = command if os.path.exists(command) else "jarvis"
     system.set_autostart(enabled, command)
 
 

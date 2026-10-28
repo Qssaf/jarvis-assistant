@@ -1,6 +1,7 @@
 name: release
 
-# A Windows build (Jarvis.exe in a zip), checked by starting it headless. On a v* tag it's attached to a GitHub release.
+# A Windows build (Jarvis.exe in a zip, and an installer), checked by starting it headless, and the Android app's APK.
+# On a v* tag they're attached to a GitHub release.
 on:
   workflow_dispatch:
   push:
@@ -13,6 +14,8 @@ jobs:
   windows:
     runs-on: windows-latest
     timeout-minutes: 40
+    env:
+      SIGNING: ${{ secrets.WINDOWS_CERT_PFX != '' && 'yes' || '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -43,20 +46,98 @@ jobs:
           if (-not (Test-Path $log) -or -not (Select-String -Path $log -Pattern "--- started" -Quiet)) { throw "no start in the log" }
           if (Select-String -Path $log -Pattern "Traceback" -Quiet) { throw "an error in the log" }
           Stop-Process $p.Id -Force
+      # Optional code signing (SmartScreen warns less about signed apps). It needs your own code-signing certificate, as
+      # the repository secrets WINDOWS_CERT_PFX (the .pfx file, base64) and WINDOWS_CERT_PASSWORD; without them it's skipped.
+      - name: Sign Jarvis.exe (optional)
+        if: env.SIGNING
+        shell: pwsh
+        env:
+          WINDOWS_CERT_PFX: ${{ secrets.WINDOWS_CERT_PFX }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          [IO.File]::WriteAllBytes("$env:RUNNER_TEMP\cert.pfx", [Convert]::FromBase64String($env:WINDOWS_CERT_PFX))
+          $signtool = (Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" | Sort-Object FullName | Select-Object -Last 1).FullName
+          "SIGNTOOL=$signtool" >> $env:GITHUB_ENV
+          & $signtool sign /f "$env:RUNNER_TEMP\cert.pfx" /p $env:WINDOWS_CERT_PASSWORD /fd sha256 /tr http://timestamp.digicert.com /td sha256 dist\Jarvis\Jarvis.exe
+          if ($LASTEXITCODE) { throw "signing failed" }
       - name: Zip
         run: Compress-Archive -Path dist\Jarvis -DestinationPath Jarvis-windows.zip
+      - name: Installer (Inno Setup)
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          $version = (Select-String -Path jarvis.py -Pattern '^VERSION = "(.+)"').Matches[0].Groups[1].Value
+          & $iscc /Q "/DAppVersion=$version" packaging\windows\jarvis.iss
+          if ($LASTEXITCODE) { throw "ISCC failed" }
+      - name: Sign the installer (optional)
+        if: env.SIGNING
+        shell: pwsh
+        env:
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          & $env:SIGNTOOL sign /f "$env:RUNNER_TEMP\cert.pfx" /p $env:WINDOWS_CERT_PASSWORD /fd sha256 /tr http://timestamp.digicert.com /td sha256 (Get-Item Jarvis-Setup-*.exe).FullName
+          if ($LASTEXITCODE) { throw "signing failed" }
       - uses: actions/upload-artifact@v4
         with:
           name: Jarvis-windows
-          path: Jarvis-windows.zip
+          path: |
+            Jarvis-windows.zip
+            Jarvis-Setup-*.exe
+
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      # A release build signed with your own key when the repository secrets ANDROID_KEYSTORE_BASE64 (the .jks file,
+      # base64), ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD are set; otherwise the debug build,
+      # named "-debug" (each run signs it with a new debug key, so updating one needs uninstalling the old app first).
+      - name: Build the APK
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          version=$(sed -n 's/^VERSION = "\(.*\)"/\1/p' ../jarvis.py)
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+              echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+              ANDROID_KEYSTORE="$RUNNER_TEMP/release.jks" ./gradlew --no-daemon assembleRelease
+              cp app/build/outputs/apk/release/app-release.apk "../Jarvis-android-$version.apk"
+          else
+              ./gradlew --no-daemon assembleDebug
+              cp app/build/outputs/apk/debug/app-debug.apk "../Jarvis-android-$version-debug.apk"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Jarvis-android
+          path: Jarvis-android-*.apk
+
+  release:
+    needs: [windows, android]
+    # (an Android build that failed doesn't hold back the Windows one)
+    if: ${{ !cancelled() && needs.windows.result == 'success' && startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
       - name: Release
-        if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
-        shell: bash
         run: |
           # the notes: this version's section of CHANGELOG.md (without its heading), then how to install
           awk -v v="${GITHUB_REF_NAME#v}" '/^## /{p = index($0, "## " v " ") == 1; next} p' CHANGELOG.md > notes.md
           [ -s notes.md ] || echo "See CHANGELOG.md." > notes.md
-          printf '\n**Install:** Windows: unzip, then run `Jarvis\\Jarvis.exe`. Linux: `./install.sh`.\n' >> notes.md
-          gh release create "$GITHUB_REF_NAME" Jarvis-windows.zip --title "Jarvis $GITHUB_REF_NAME" --notes-file notes.md
+          printf '\n**Install:** Windows: run `Jarvis-Setup-%s.exe` (or unzip `Jarvis-windows.zip` and run `Jarvis\\Jarvis.exe`). Android: open the `.apk` on the phone and allow installing it. Linux: `./install.sh`.\n' "${GITHUB_REF_NAME#v}" >> notes.md
+          gh release create "$GITHUB_REF_NAME" out/* --title "Jarvis $GITHUB_REF_NAME" --notes-file notes.md

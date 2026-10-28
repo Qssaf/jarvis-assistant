@@ -2411,4 +2411,18 @@ if not system.IS_WINDOWS:  # the DevTools pipe: commands on fd 3, replies on fd 
     assert dt.recv() == {"id": 7, "result": {"ok": 1}}
     dt.close()
 
+# start at login runs install.sh's launcher, or else a package's `jarvis` (the AUR one is /usr/bin/jarvis)
+real_set, real_windows, real_env = system.set_autostart, system.IS_WINDOWS, dict(os.environ)
+started = []
+system.set_autostart, system.IS_WINDOWS = (lambda enabled, command: started.append(command)), False
+os.environ["HOME"] = os.environ["USERPROFILE"] = tempfile.mkdtemp()
+brain.store.sync_autostart(True)
+os.makedirs(os.path.join(os.environ["HOME"], ".local", "bin"))
+open(os.path.join(os.environ["HOME"], ".local", "bin", "jarvis"), "w").close()
+brain.store.sync_autostart(True)
+assert started == ["jarvis", os.path.expanduser("~/.local/bin/jarvis")]
+system.set_autostart, system.IS_WINDOWS = real_set, real_windows
+os.environ.clear()
+os.environ.update(real_env)
+
 print("ok")
