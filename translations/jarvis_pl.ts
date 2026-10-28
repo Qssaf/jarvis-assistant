@@ -47,7 +47,7 @@
     <message>
         <location line="+1"/>
         <source>Sign-in opened in your browser</source>
-        <translation>Logowanie otwarte w przeglądarce</translation>
+        <translation>Otwarto logowanie w przeglądarce</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -147,9 +147,9 @@
         <location line="+3"/>
         <source>Averaged over the last %n replies: from the end of what you said to Jarvis&apos;s first word.</source>
         <translation>
-            <numerusform>Średnia z ostatnich odpowiedzi (%n): od końca twojej wypowiedzi do pierwszego słowa Jarvisa.</numerusform>
-            <numerusform>Średnia z ostatnich odpowiedzi (%n): od końca twojej wypowiedzi do pierwszego słowa Jarvisa.</numerusform>
-            <numerusform>Średnia z ostatnich odpowiedzi (%n): od końca twojej wypowiedzi do pierwszego słowa Jarvisa.</numerusform>
+            <numerusform>Na podstawie ostatniej odpowiedzi: od końca twojej wypowiedzi do pierwszego słowa Jarvisa.</numerusform>
+            <numerusform>Średnia z ostatnich %n odpowiedzi: od końca twojej wypowiedzi do pierwszego słowa Jarvisa.</numerusform>
+            <numerusform>Średnia z ostatnich %n odpowiedzi: od końca twojej wypowiedzi do pierwszego słowa Jarvisa.</numerusform>
         </translation>
     </message>
 </context>
@@ -469,7 +469,7 @@
     <message>
         <location line="+8"/>
         <source>Say “%1”, tap the reactor, or type below</source>
-        <translation>Powiedz „%1”, kliknij reaktor albo pisz poniżej</translation>
+        <translation>Powiedz „%1”, kliknij reaktor albo napisz poniżej</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -686,13 +686,13 @@
     <message>
         <location line="+1"/>
         <source>Plain notes, one per line. Jarvis adds to them as you talk.</source>
-        <translation>Zwykłe notatki, po jednej w wierszu. Jarvis dopisuje je podczas rozmów.</translation>
+        <translation>Zwykłe notatki, po jednej w wierszu. Jarvis uzupełnia je podczas rozmów.</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>- Prefers to be called …
 - Studies …</source>
-        <translation>- Woli, by mówić do niego …
+        <translation>- Preferowane imię: …
 - Studiuje …</translation>
     </message>
     <message>
@@ -890,7 +890,7 @@
     <message>
         <location line="+1"/>
         <source>Pick the models for each job. Each list is tried top to bottom: when one is busy or down, the next takes over.</source>
-        <translation>Wybierz modele do każdego zadania. Każda lista jest sprawdzana od góry: gdy jeden model jest zajęty lub niedostępny, przejmuje następny.</translation>
+        <translation>Wybierz modele do każdego zadania. Modele z każdej listy są próbowane od góry do dołu: gdy jeden jest zajęty lub niedostępny, zastępuje go następny.</translation>
     </message>
     <message>
         <location line="+38"/>
@@ -1106,12 +1106,12 @@
     <message>
         <location line="+1"/>
         <source>BACKUP VOICE</source>
-        <translation>ZAPASOWY</translation>
+        <translation>GŁOS ZAPASOWY</translation>
     </message>
     <message>
         <location line="+28"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
-        <translation>Kliknij: otwórz Jarvisa · Przycisk pauzy: wstrzymaj lub wznów słuchanie · Czerwony przycisk (lub prawy klik): zatrzymaj</translation>
+        <translation>Kliknij: otwórz Jarvisa · Przycisk pauzy: wstrzymaj lub wznów słuchanie · Czerwony przycisk (lub prawy przycisk myszy): zatrzymaj</translation>
     </message>
 </context>
 <context>
@@ -1410,7 +1410,7 @@
     <message>
         <location line="+1"/>
         <source>Hear and speak with the models on the Models page instead of Gemini Live, for keys without it. Off, the backup voice only answers while Gemini Live can&apos;t be reached</source>
-        <translation>Słuchaj i mów modelami ze strony Modele zamiast Gemini Live – dla kluczy bez jego obsługi. Gdy wyłączone, głos zapasowy odpowiada tylko wtedy, gdy Gemini Live jest niedostępne</translation>
+        <translation>Słucha i mówi modelami ze strony Modele zamiast Gemini Live – dla kluczy bez dostępu do niego. Gdy wyłączone, głos zapasowy odpowiada tylko wtedy, gdy Gemini Live jest niedostępne</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -1486,7 +1486,7 @@
     <message>
         <location line="+1"/>
         <source>Stay connected after a conversation</source>
-        <translation>Pozostań połączony po rozmowie</translation>
+        <translation>Utrzymuj połączenie po rozmowie</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1501,7 +1501,7 @@
     <message>
         <location line="+0"/>
         <source>Wake-ups you dismiss teach Jarvis what isn&apos;t you</source>
-        <translation>Odrzucone wybudzenia pokazują Jarvisowi, kto nie jest tobą</translation>
+        <translation>Odrzucone wybudzenia uczą Jarvisa, co nie jest twoim głosem</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1531,7 +1531,7 @@
     <message>
         <location line="+1"/>
         <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (experimental on Windows: Health says if it&apos;s working; restart Jarvis to apply)</source>
-        <translation>Nie wpuszcza do mikrofonu dźwięku z komputera (Jarvis, gry, filmy, rozmowy), więc nie jest brany za ciebie i możesz mówić, gdy Jarvis mówi (eksperymentalne w Windows: Diagnostyka pokaże, czy działa; uruchom Jarvisa ponownie, aby zastosować)</translation>
+        <translation>Nie wpuszcza do mikrofonu dźwięku z komputera (Jarvis, gry, filmy, rozmowy), więc nie jest brany za ciebie i możesz mówić, gdy Jarvis mówi (eksperymentalne w systemie Windows: Diagnostyka pokaże, czy działa; uruchom Jarvisa ponownie, aby zastosować)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1659,7 +1659,7 @@
     <message>
         <location line="+2"/>
         <source>Until (the morning briefing waits for it)</source>
-        <translation>Do (poranne podsumowanie na nie czeka)</translation>
+        <translation>Do (poranne podsumowanie czeka do tej godziny)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1709,7 +1709,7 @@
     <message>
         <location line="+4"/>
         <source>Each text shows in the first language that has it. English is the window&apos;s own, so languages under it aren&apos;t used.</source>
-        <translation>Każdy tekst wyświetla się w pierwszym języku, który go ma. Angielski jest wbudowany, więc języki poniżej niego nie są używane.</translation>
+        <translation>Każdy tekst wyświetla się w pierwszym języku, w którym jest dostępny. Angielski jest wbudowany, więc języki poniżej niego nie są używane.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1729,7 +1729,7 @@
     <message>
         <location line="+1"/>
         <source>Commands that delete, install or shut down, and account changes (sending email, new events), wait for your yes unless you asked for exactly that</source>
-        <translation>Polecenia, które usuwają, instalują lub wyłączają, oraz zmiany na kontach (wysłanie maila, nowe wydarzenia) czekają na twoje „tak”, chyba że prosisz dokładnie o to</translation>
+        <translation>Polecenia, które usuwają, instalują lub wyłączają, oraz zmiany na kontach (wysłanie maila, nowe wydarzenia) czekają na twoje „tak”, chyba że poprosisz dokładnie o to</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -1744,7 +1744,7 @@
     <message>
         <location line="+5"/>
         <source>Jarvis on Telegram</source>
-        <translation>Jarvis przez Telegram</translation>
+        <translation>Jarvis w Telegramie</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1975,7 +1975,7 @@
     <message>
         <location line="+1"/>
         <source>Let them ring</source>
-        <translation>Pozwól dzwonić</translation>
+        <translation>Niech dzwonią</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2045,7 +2045,7 @@
     <message>
         <location line="+0"/>
         <source>Forever</source>
-        <translation>Bez limitu</translation>
+        <translation>Bezterminowo</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2116,7 +2116,7 @@
     <message>
         <location line="+3"/>
         <source>Brought in (left at their defaults here: %1): Jarvis is restarting</source>
-        <translation>Wczytano (tu pozostawiono domyślne: %1): Jarvis uruchamia się ponownie</translation>
+        <translation>Wczytano (tu pozostają wartości domyślne: %1): Jarvis uruchamia się ponownie</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2194,7 +2194,7 @@
     <message>
         <location line="+0"/>
         <source>Ready</source>
-        <translation>Gotowy</translation>
+        <translation>Gotowe</translation>
     </message>
     <message>
         <location line="+75"/>
@@ -2344,7 +2344,7 @@
     <message>
         <location line="+1"/>
         <source>Commands that delete, install or shut down, and changes to your accounts (sending email, creating events), wait for your yes, unless you asked for exactly that.</source>
-        <translation>Polecenia, które usuwają, instalują lub wyłączają, oraz zmiany na twoich kontach (wysłanie maila, tworzenie wydarzeń) czekają na twoje „tak”, chyba że prosisz dokładnie o to.</translation>
+        <translation>Polecenia, które usuwają, instalują lub wyłączają, oraz zmiany na twoich kontach (wysłanie maila, tworzenie wydarzeń) czekają na twoje „tak”, chyba że poprosisz dokładnie o to.</translation>
     </message>
     <message>
         <location line="+2"/>

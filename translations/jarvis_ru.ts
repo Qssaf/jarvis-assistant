@@ -21,7 +21,7 @@
     <message>
         <location line="+11"/>
         <source>Couldn&apos;t reach your accounts: %1</source>
-        <translation>Не удалось связаться с аккаунтами: %1</translation>
+        <translation>Не удалось подключиться к аккаунтам: %1</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -47,7 +47,7 @@
     <message>
         <location line="+1"/>
         <source>Sign-in opened in your browser</source>
-        <translation>Вход открыт в браузере</translation>
+        <translation>Страница входа открыта в браузере</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -494,7 +494,7 @@
     <message>
         <location line="+9"/>
         <source>Brief me</source>
-        <translation>Расскажи, что у меня сегодня</translation>
+        <translation>Что у меня сегодня?</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -692,7 +692,7 @@
         <location line="+16"/>
         <source>- Prefers to be called …
 - Studies …</source>
-        <translation>- Просит обращаться к нему …
+        <translation>- Просит называть себя …
 - Учится …</translation>
     </message>
     <message>
@@ -890,7 +890,7 @@
     <message>
         <location line="+1"/>
         <source>Pick the models for each job. Each list is tried top to bottom: when one is busy or down, the next takes over.</source>
-        <translation>Выберите модели для каждой задачи. Список проверяется сверху вниз: если модель занята или недоступна, её заменяет следующая.</translation>
+        <translation>Выберите модели для каждой задачи. Модели пробуются по порядку сверху вниз: если одна занята или недоступна, её заменяет следующая.</translation>
     </message>
     <message>
         <location line="+38"/>
@@ -943,7 +943,7 @@
     <message>
         <location line="+7"/>
         <source>Keys stay in your system keychain, never in the settings file.</source>
-        <translation>Ключи хранятся в системной связке ключей, а не в файле настроек.</translation>
+        <translation>Ключи хранятся в системном хранилище ключей, а не в файле настроек.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -958,7 +958,7 @@
     <message>
         <location line="+0"/>
         <source>Kept in your keychain</source>
-        <translation>Хранится в связке ключей</translation>
+        <translation>Хранится в системном хранилище ключей</translation>
     </message>
     <message>
         <location line="+30"/>
@@ -1385,7 +1385,7 @@
     <message>
         <location line="+4"/>
         <source>Also speaks and understands, when you (or someone on WhatsApp) speak them. Anything else is taken as mishearing.</source>
-        <translation>Также говорит и понимает, когда на них говорите вы (или собеседник в WhatsApp). Речь на других языках считается ослышкой.</translation>
+        <translation>Также говорит и понимает, когда на них говорите вы (или собеседник в WhatsApp). Речь на других языках считается ошибкой распознавания.</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -1511,7 +1511,7 @@
     <message>
         <location line="+1"/>
         <source>Nothing learned for this wake word yet (Learn my voice needs a few wake-ups first): until then anyone can wake Jarvis</source>
-        <translation>Для этой фразы активации ещё ничего не изучено («Запоминать мой голос» нужно несколько активаций): до тех пор Jarvis может разбудить любой</translation>
+        <translation>Для этой фразы активации ещё ничего не изучено (функции «Запоминать мой голос» сначала нужно несколько активаций): до тех пор Jarvis может разбудить любой</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1599,7 +1599,7 @@
     <message>
         <location line="+1"/>
         <source>Home city, for the weather (empty: guess from your network)</source>
-        <translation>Родной город для погоды (пусто — определить по сети)</translation>
+        <translation>Ваш город для прогноза погоды (пусто — определить по сети)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1870,17 +1870,17 @@
     <message>
         <location line="+31"/>
         <source>Pair another phone</source>
-        <translation>Подключить ещё телефон</translation>
+        <translation>Привязать ещё телефон</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Pair a phone</source>
-        <translation>Подключить телефон</translation>
+        <translation>Привязать телефон</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Scan to pair</source>
-        <translation>Отсканируйте для подключения</translation>
+        <translation>Отсканируйте для привязки</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1965,7 +1965,7 @@
     <message>
         <location line="+2"/>
         <source>Pick up if I don&apos;t (20 s)</source>
-        <translation>Отвечать, если не отвечаю я (20 с)</translation>
+        <translation>Брать трубку, если не беру я (20 с)</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1975,7 +1975,7 @@
     <message>
         <location line="+1"/>
         <source>Let them ring</source>
-        <translation>Не трогать</translation>
+        <translation>Пусть звонят</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2005,7 +2005,7 @@
     <message>
         <location line="+1"/>
         <source>e.g. I&apos;m in class until 5, I&apos;ll answer after</source>
-        <translation>например, Я на занятиях до 5, отвечу позже</translation>
+        <translation>например: я на занятиях до 5, отвечу позже</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -2161,7 +2161,7 @@
     <message>
         <location line="+116"/>
         <source>e.g. Keep answers short.</source>
-        <translation>например, Отвечай кратко.</translation>
+        <translation>например: отвечай кратко.</translation>
     </message>
 </context>
 <context>
@@ -2234,7 +2234,7 @@
     <message>
         <location line="+1"/>
         <source>Jarvis thinks with Google Gemini. A free key takes a minute: sign in at &lt;a href=&quot;https://aistudio.google.com/apikey&quot;&gt;aistudio.google.com/apikey&lt;/a&gt;, press Create API key, and paste it here. It’s kept in your system keychain.</source>
-        <translation>Jarvis думает с помощью Google Gemini. Бесплатный ключ получается за минуту: войдите на &lt;a href=&quot;https://aistudio.google.com/apikey&quot;&gt;aistudio.google.com/apikey&lt;/a&gt;, нажмите Create API key и вставьте ключ сюда. Он хранится в системной связке ключей.</translation>
+        <translation>Jarvis думает с помощью Google Gemini. Бесплатный ключ получается за минуту: войдите на &lt;a href=&quot;https://aistudio.google.com/apikey&quot;&gt;aistudio.google.com/apikey&lt;/a&gt;, нажмите Create API key и вставьте ключ сюда. Он хранится в системном хранилище ключей.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2349,7 +2349,7 @@
     <message>
         <location line="+2"/>
         <source>Just do it</source>
-        <translation>Просто делать</translation>
+        <translation>Делать сразу</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2455,7 +2455,7 @@
     <message>
         <location line="+13"/>
         <source>Up next</source>
-        <translation>Далее</translation>
+        <translation>Ближайшее</translation>
     </message>
     <message>
         <location line="+1"/>

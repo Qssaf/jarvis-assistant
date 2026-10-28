@@ -235,6 +235,7 @@ Window {
                 Icon { anchors.horizontalCenter: parent.horizontalCenter; name: rb.symbol; size: 20
                        color: rb.current ? Theme.accent : rb.hovered ? Theme.text : Theme.text2 }
                 Text { anchors.horizontalCenter: parent.horizontalCenter; text: rb.label; font.family: Theme.font; font.pixelSize: Theme.px(11)
+                       width: 70; horizontalAlignment: Text.AlignHCenter; fontSizeMode: Text.HorizontalFit; minimumPixelSize: Theme.px(8)  // (long words shrink)
                        font.variableAxes: { "wght": rb.current ? 600 : 500 }; color: rb.current ? Theme.text : rb.hovered ? Theme.text : Theme.text2 }
             }
         }

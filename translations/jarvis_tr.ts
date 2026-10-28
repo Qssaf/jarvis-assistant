@@ -371,7 +371,7 @@
         <location line="+0"/>
         <source>%n thing(s) to fix</source>
         <translation>
-            <numerusform>Düzeltilecek %n şey var</numerusform>
+            <numerusform>Düzeltilecek %n sorun var</numerusform>
         </translation>
     </message>
     <message>
@@ -383,7 +383,7 @@
         <location line="+2"/>
         <source>%1 of %n check(s) pass</source>
         <translation>
-            <numerusform>%n kontrolden %1 tanesi geçti</numerusform>
+            <numerusform>%n kontrolden %1 tanesi başarılı</numerusform>
         </translation>
     </message>
     <message>
@@ -399,7 +399,7 @@
     <message>
         <location line="+3"/>
         <source>Open %1</source>
-        <translation>Aç: %1</translation>
+        <translation>%1 sayfasını aç</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -555,7 +555,7 @@
     <message>
         <location line="+49"/>
         <source>Working on it…</source>
-        <translation>Üzerinde çalışıyorum…</translation>
+        <translation>Çalışıyorum…</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -623,7 +623,7 @@
     <message>
         <location line="+1"/>
         <source>Restore</source>
-        <translation>Geri yükle</translation>
+        <translation>Önceki boyut</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -712,7 +712,7 @@
         <location line="+5"/>
         <location line="+149"/>
         <source>Cancel</source>
-        <translation>İptal et</translation>
+        <translation>İptal</translation>
     </message>
     <message>
         <location line="-141"/>
@@ -803,7 +803,7 @@
     <message>
         <location line="+37"/>
         <source>What to remind you of, or what Jarvis should do</source>
-        <translation>Size neyi hatırlatmalı ya da Jarvis ne yapmalı</translation>
+        <translation>Size ne hatırlatılsın ya da Jarvis ne yapsın</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -896,7 +896,7 @@
     <message>
         <location line="+3"/>
         <source>What each job uses</source>
-        <translation>Her işin kullandıkları</translation>
+        <translation>Her işin kullandığı modeller</translation>
     </message>
     <message>
         <location line="+45"/>
@@ -1003,7 +1003,7 @@
     <message>
         <location line="+15"/>
         <source>It signs in the way Google&apos;s Antigravity app does, which Google doesn&apos;t offer to other apps: Google may limit or suspend accounts used like this. Use an account you can afford to lose.</source>
-        <translation>Google&apos;ın Antigravity uygulamasının yaptığı gibi oturum açar; Google bunu diğer uygulamalara sunmaz: Google bu şekilde kullanılan hesapları kısıtlayabilir veya askıya alabilir. Kaybetmeyi göze alabileceğiniz bir hesap kullanın.</translation>
+        <translation>Google&apos;ın Antigravity uygulamasıyla aynı yöntemle oturum açar ve Google bu yöntemi başka uygulamalara sunmaz: Google bu şekilde kullanılan hesapları kısıtlayabilir veya askıya alabilir. Kaybetmeyi göze alabileceğiniz bir hesap kullanın.</translation>
     </message>
     <message>
         <location line="+25"/>
@@ -1048,7 +1048,7 @@
     <message>
         <location line="+4"/>
         <source>Try this one sooner</source>
-        <translation>Bunu daha önce dene</translation>
+        <translation>Bunu daha erken dene</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1091,7 +1091,7 @@
     <message>
         <location line="+28"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
-        <translation>Tıkla: Jarvis&apos;i aç · Duraklat düğmesi: dinlemeyi durdur veya başlat · Kırmızı düğme (veya sağ tık): durdur</translation>
+        <translation>Tıklama: Jarvis&apos;i açar · Duraklat düğmesi: dinlemeyi durdurur veya başlatır · Kırmızı düğme (veya sağ tık): durdurur</translation>
     </message>
 </context>
 <context>
@@ -1339,7 +1339,7 @@
     <message>
         <location line="+2"/>
         <source>Jarvis: refined, dry wit</source>
-        <translation>Jarvis: zarif, esprili</translation>
+        <translation>Jarvis: zarif, ince esprili</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1359,7 +1359,7 @@
     <message>
         <location line="+4"/>
         <source>Also speaks and understands, when you (or someone on WhatsApp) speak them. Anything else is taken as mishearing.</source>
-        <translation>Siz (ya da WhatsApp&apos;ta biri) bu dilleri konuştuğunuzda da konuşur ve anlar. Diğer her şey yanlış duyma sayılır.</translation>
+        <translation>Siz (ya da WhatsApp&apos;ta biri) bu dilleri konuştuğunuzda da konuşur ve anlar. Bunların dışındaki her şey yanlış duyulmuş sayılır.</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -1429,7 +1429,7 @@
     <message>
         <location line="+1"/>
         <source>Lower is snappier; higher cuts you off less</source>
-        <translation>Düşük değer daha çevik; yüksek değer sözünüzü daha az keser</translation>
+        <translation>Düşük değer daha hızlı tepki verir; yüksek değer sözünüzü daha az keser</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1465,7 +1465,7 @@
     <message>
         <location line="+1"/>
         <source>Makes the next wake-up instant</source>
-        <translation>Bir sonraki uyanmayı anında yapar</translation>
+        <translation>Bir sonraki uyanma anında olur</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1495,7 +1495,7 @@
     <message>
         <location line="+1"/>
         <source>Someone else saying the wake word doesn&apos;t wake Jarvis. Talk and push to talk always work</source>
-        <translation>Uyandırma sözcüğünü başkası söylediğinde Jarvis uyanmaz. Konuşma ve bas-konuş her zaman çalışır</translation>
+        <translation>Uyandırma sözcüğünü başkası söylediğinde Jarvis uyanmaz. Konuş düğmesi ve bas-konuş her zaman çalışır</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1548,7 +1548,7 @@
     <message>
         <location line="+2"/>
         <source>Bind these to keyboard shortcuts (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</source>
-        <translation>Bunları klavye kısayollarına atayın (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</translation>
+        <translation>Bunları klavye kısayollarına atayın (KDE: Sistem Ayarları → Klavye → Kısayollar → Yeni Ekle → Komut).</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1558,7 +1558,7 @@
     <message>
         <location line="+1"/>
         <source>Drag over part of the screen and ask about it</source>
-        <translation>Ekranın bir bölümünü seçip onun hakkında sorun</translation>
+        <translation>Ekranın bir bölümünü sürükleyerek seçin ve onun hakkında sorun</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1668,12 +1668,12 @@
     <message>
         <location line="+16"/>
         <source>Use sooner</source>
-        <translation>Daha önce kullan</translation>
+        <translation>Öne al</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Use later</source>
-        <translation>Daha sonra kullan</translation>
+        <translation>Arkaya al</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -1779,7 +1779,7 @@
     <message>
         <location line="+1"/>
         <source>The Jarvis Android app reaches this PC from anywhere through your own private relay. It&apos;s end-to-end encrypted: the relay only passes on scrambled data, and nothing on this PC is open to the internet.</source>
-        <translation>Jarvis Android uygulaması bu bilgisayara her yerden, size ait özel bir aktarıcı üzerinden ulaşır. Uçtan uca şifrelidir: aktarıcı yalnızca karıştırılmış verileri iletir ve bu bilgisayarda internete açık hiçbir şey yoktur.</translation>
+        <translation>Jarvis Android uygulaması bu bilgisayara her yerden, size ait özel bir aktarıcı üzerinden ulaşır. Uçtan uca şifrelidir: aktarıcı yalnızca şifreli verileri iletir ve bu bilgisayarda internete açık hiçbir şey yoktur.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1814,7 +1814,7 @@
     <message>
         <location line="+1"/>
         <source>Paste the address it prints here.</source>
-        <translation>Yazdırdığı adresi buraya yapıştırın.</translation>
+        <translation>Komutun gösterdiği adresi buraya yapıştırın.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1994,7 +1994,7 @@
     <message>
         <location line="+4"/>
         <source>Keep conversations and logs for</source>
-        <translation>Konuşmaları ve günlükleri sakla</translation>
+        <translation>Konuşmaların ve günlüklerin saklanma süresi</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2064,7 +2064,7 @@
     <message>
         <location line="+1"/>
         <source>Bringing one in replaces what&apos;s on this computer (conversations are added), then Jarvis restarts.</source>
-        <translation>İçe aktarmak bu bilgisayardakilerin yerini alır (konuşmalar eklenir), ardından Jarvis yeniden başlar.</translation>
+        <translation>İçe aktarılan yedek bu bilgisayardakilerin yerini alır (konuşmalar eklenir), ardından Jarvis yeniden başlar.</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2125,7 +2125,7 @@
     <message>
         <location line="+0"/>
         <source>Check for updates</source>
-        <translation>Güncellemeleri denetle</translation>
+        <translation>Güncellemeleri kontrol et</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2173,12 +2173,12 @@
     <message>
         <location line="+75"/>
         <source>Setting up Jarvis</source>
-        <translation>Jarvis kuruluyor</translation>
+        <translation>Jarvis kurulumu</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Let’s get you ready</source>
-        <translation>Hadi sizi hazırlayalım</translation>
+        <translation>Hadi başlayalım</translation>
     </message>
     <message>
         <location line="+40"/>
@@ -2188,7 +2188,7 @@
     <message>
         <location line="+1"/>
         <source>Say “%1” and ask for anything: questions, what’s on your screen, your apps, email, calendar, Classroom, reminders. A couple of minutes of setup and you’re ready.</source>
-        <translation>“%1” deyin ve her şeyi isteyin: sorular, ekranınızdaki şeyler, uygulamalarınız, e-posta, takvim, Classroom, hatırlatıcılar. Birkaç dakikalık kurulumun ardından hazırsınız.</translation>
+        <translation>“%1” deyin ve ne isterseniz isteyin: sorular, ekranınızdaki şeyler, uygulamalarınız, e-posta, takvim, Classroom, hatırlatıcılar. Birkaç dakikalık kurulumun ardından hazırsınız.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -2283,7 +2283,7 @@
     <message>
         <location line="+1"/>
         <source>How I sound, and when I talk.</source>
-        <translation>Nasıl konuştuğum ve ne zaman konuştuğum.</translation>
+        <translation>Sesim ve ne zaman konuştuğum.</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -2338,7 +2338,7 @@
     <message>
         <location line="+1"/>
         <source>Connect Gmail, Calendar, Classroom, Drive and more on the Accounts page so Jarvis can use them. If something doesn’t work, the Health page says what and how to fix it.</source>
-        <translation>Jarvis&apos;in kullanabilmesi için Gmail, Takvim, Classroom, Drive ve daha fazlasını Hesaplar sayfasından bağlayın. Bir şey çalışmazsa Sağlık sayfası neyin ve nasıl düzeltileceğini söyler.</translation>
+        <translation>Jarvis&apos;in kullanabilmesi için Gmail, Takvim, Classroom, Drive ve daha fazlasını Hesaplar sayfasından bağlayın. Bir şey çalışmazsa Sağlık sayfası sorunu ve nasıl düzeltileceğini söyler.</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -2363,7 +2363,7 @@
     <message>
         <location line="+1"/>
         <source>Done</source>
-        <translation>Bitti</translation>
+        <translation>Bitir</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2414,7 +2414,7 @@
     <message>
         <location line="+44"/>
         <source>Now playing</source>
-        <translation>Şimdi çalıyor</translation>
+        <translation>Şu an çalıyor</translation>
     </message>
     <message>
         <location line="+11"/>

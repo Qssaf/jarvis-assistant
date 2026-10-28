@@ -3,8 +3,10 @@ dirs, canned API answers). For design work and the README's pictures:
 
     .venv/bin/python docs/screens.py OUT_DIR [home home-empty chats activity accounts plugins models memory settings
                                                health setup] [--size 1280x820] [--state idle|listening|thinking|speaking]
+
+WINDOW_LANGUAGES="ar" (or "ja de"...) renders it in those languages.
 """
-import os, sys, tempfile, time, types
+import json, os, sys, tempfile, time, types
 
 tmp = tempfile.mkdtemp()
 os.environ.update(XDG_CONFIG_HOME=tmp, XDG_DATA_HOME=tmp, APPDATA=tmp, PYTHON_KEYRING_BACKEND="keyring.backends.fail.Keyring")
@@ -13,6 +15,9 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")  # (software drawing: no b
 os.makedirs(f"{tmp}/jarvis", exist_ok=True)
 with open(f"{tmp}/jarvis/plugins.json", "w") as f:
     f.write('{"composio": {"url": "https://connect.composio.dev/mcp", "enabled": true}}')
+if os.environ.get("WINDOW_LANGUAGES"):
+    with open(f"{tmp}/jarvis/settings.json", "w") as f:
+        json.dump({"window_languages": os.environ["WINDOW_LANGUAGES"].split()}, f)
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import jarvis, brain  # noqa: E402

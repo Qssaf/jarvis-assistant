@@ -455,7 +455,7 @@
     <message>
         <location line="+8"/>
         <source>Say “%1”, tap the reactor, or type below</source>
-        <translation>Nói “%1”, chạm vào lò phản ứng hoặc nhập bên dưới</translation>
+        <translation>Nói “%1”, nhấn vào lò phản ứng hoặc nhập bên dưới</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -689,7 +689,7 @@
     <message>
         <location line="+1"/>
         <source>%1 Say “remind me at 5 to call home”, or have Jarvis do something then: “every weekday at 8, check my inbox”.</source>
-        <translation>%1 Hãy nói “nhắc tôi gọi về nhà lúc 5 giờ”, hoặc nhờ Jarvis làm việc gì đó vào lúc ấy: “8 giờ mỗi ngày trong tuần, kiểm tra hộp thư của tôi”.</translation>
+        <translation>%1 Hãy nói “nhắc tôi gọi về nhà lúc 5 giờ”, hoặc nhờ Jarvis làm việc gì đó vào lúc ấy: “8 giờ mỗi ngày thường, kiểm tra hộp thư của tôi”.</translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
@@ -823,7 +823,7 @@
     <message>
         <location line="+0"/>
         <source>Weekdays</source>
-        <translation>Ngày trong tuần</translation>
+        <translation>Ngày thường</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1003,7 +1003,7 @@
     <message>
         <location line="+15"/>
         <source>It signs in the way Google's Antigravity app does, which Google doesn't offer to other apps: Google may limit or suspend accounts used like this. Use an account you can afford to lose.</source>
-        <translation>Cách đăng nhập này giống ứng dụng Antigravity của Google, vốn không dành cho ứng dụng khác: Google có thể hạn chế hoặc khóa tài khoản dùng theo cách này. Hãy dùng tài khoản mà bạn chấp nhận mất.</translation>
+        <translation>Cách đăng nhập này giống ứng dụng Antigravity của Google, vốn không dành cho ứng dụng khác: Google có thể hạn chế hoặc khóa tài khoản dùng theo cách này. Hãy dùng tài khoản mà bạn không ngại bị mất.</translation>
     </message>
     <message>
         <location line="+25"/>
@@ -1076,7 +1076,7 @@
     <message>
         <location line="+1"/>
         <source>WORKING</source>
-        <translation>ĐANG LÀM</translation>
+        <translation>ĐANG XỬ LÝ</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1389,7 +1389,7 @@
     <message>
         <location line="+6"/>
         <source>Listening</source>
-        <translation>Nghe</translation>
+        <translation>Lắng nghe</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1495,7 +1495,7 @@
     <message>
         <location line="+1"/>
         <source>Someone else saying the wake word doesn't wake Jarvis. Talk and push to talk always work</source>
-        <translation>Người khác nói từ đánh thức sẽ không đánh thức Jarvis. Nút Nói và nhấn để nói vẫn luôn hoạt động</translation>
+        <translation>Người khác nói từ đánh thức sẽ không đánh thức Jarvis. Nút Nói và Nhấn để nói vẫn luôn hoạt động</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1663,17 +1663,17 @@
     <message>
         <location line="+1"/>
         <source>Window language</source>
-        <translation>Ngôn ngữ cửa sổ</translation>
+        <translation>Ngôn ngữ giao diện</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Use sooner</source>
-        <translation>Ưu tiên hơn</translation>
+        <translation>Ưu tiên cao hơn</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Use later</source>
-        <translation>Ưu tiên sau</translation>
+        <translation>Ưu tiên thấp hơn</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -1683,7 +1683,7 @@
     <message>
         <location line="+4"/>
         <source>Each text shows in the first language that has it. English is the window's own, so languages under it aren't used.</source>
-        <translation>Mỗi đoạn chữ hiển thị bằng ngôn ngữ đầu tiên có bản dịch. Tiếng Anh là ngôn ngữ gốc của cửa sổ, nên các ngôn ngữ xếp dưới nó sẽ không được dùng.</translation>
+        <translation>Mỗi đoạn chữ hiển thị bằng ngôn ngữ đầu tiên có bản dịch. Tiếng Anh là ngôn ngữ gốc của giao diện, nên các ngôn ngữ xếp dưới nó sẽ không được dùng.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1899,12 +1899,12 @@
     <message>
         <location line="+7"/>
         <source>On a call with %1</source>
-        <translation>Đang gọi với %1</translation>
+        <translation>Đang trong cuộc gọi với %1</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Linked as %1</source>
-        <translation>Đã liên kết với tên %1</translation>
+        <translation>Đã liên kết dưới tên %1</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1989,7 +1989,7 @@
     <message>
         <location line="+1"/>
         <source>On this PC Jarvis keeps what it remembers about you, your conversations, reminders and routines, short clips of your wake word (to learn your voice) and a log. What you say after the wake word, and screenshots when a task needs the screen, go to Google Gemini; account actions go through Composio.</source>
-        <translation>Trên máy tính này, Jarvis lưu những gì nó ghi nhớ về bạn, các cuộc trò chuyện, lời nhắc và quy trình, các đoạn ghi âm ngắn từ đánh thức của bạn (để học giọng bạn) và một tệp nhật ký. Những gì bạn nói sau từ đánh thức, và ảnh chụp màn hình khi tác vụ cần đến màn hình, được gửi tới Google Gemini; thao tác với tài khoản đi qua Composio.</translation>
+        <translation>Trên máy tính này, Jarvis lưu những gì đã ghi nhớ về bạn, các cuộc trò chuyện, lời nhắc và quy trình, các đoạn ghi âm ngắn từ đánh thức của bạn (để học giọng bạn) và một tệp nhật ký. Những gì bạn nói sau từ đánh thức, và ảnh chụp màn hình khi tác vụ cần đến màn hình, được gửi tới Google Gemini; thao tác với tài khoản đi qua Composio.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -2100,12 +2100,12 @@
     <message>
         <location line="+14"/>
         <source>%1 is out (%2)</source>
-        <translation>Đã có %1 (%2)</translation>
+        <translation>Đã có bản %1 (%2)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%1 is out</source>
-        <translation>Đã có %1</translation>
+        <translation>Đã có bản %1</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2333,7 +2333,7 @@
     <message>
         <location line="+5"/>
         <source>You’re set</source>
-        <translation>Đã xong</translation>
+        <translation>Bạn đã sẵn sàng</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2532,7 +2532,7 @@
     <message>
         <location line="+2"/>
         <source>quiet</source>
-        <translation>im lặng</translation>
+        <translation>yên lặng</translation>
     </message>
     <message>
         <location line="+1"/>

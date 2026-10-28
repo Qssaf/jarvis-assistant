@@ -966,6 +966,18 @@ window.TRANSLATIONS = real_translations
 win.languages(["en"])  # (English's own file only says how it counts)
 assert QCoreApplication.translate("HealthPage", "%n thing(s) to fix", "", 2) == "2 things to fix"
 assert QCoreApplication.translate("ChatsPage", "%n message(s)", "", 1) == "1 message"
+# every shipped translation loads, and every page shows in Arabic (right to left) and Japanese then German without a warning
+import glob
+from PySide6.QtCore import QTranslator
+for ts in glob.glob(os.path.join(real_translations, "*.ts")):
+    assert QTranslator().load(ts[:-3] + ".qm"), f"{ts} has no .qm: run lrelease on it"
+for codes, word in ((["ar"], "الإعدادات"), (["ja", "de"], "設定")):
+    win.languages(codes)
+    for page in ("chats", "activity", "accounts", "plugins", "models", "memory", "settings", "health", "home"):
+        root.setProperty("page", page)
+        qt.processEvents()
+    assert said("Settings") == word and win.backend.property("rtl") == (codes == ["ar"]) and not warnings, ascii(warnings)[:4000]
+win.languages(["en"])
 
 # every function a page calls on itself exists (Settings lost its set() once, and every switch on it silently did nothing)
 import glob, re

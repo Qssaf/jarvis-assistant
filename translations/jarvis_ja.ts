@@ -689,7 +689,7 @@
     <message>
         <location line="+1"/>
         <source>%1 Say “remind me at 5 to call home”, or have Jarvis do something then: “every weekday at 8, check my inbox”.</source>
-        <translation>%1「5時に家に電話するようリマインドして」と言うか、決まった時刻にJarvisに何かをさせることもできます。例:「平日の8時に受信トレイを確認して」。</translation>
+        <translation>%1「5時に家に電話するようリマインドして」のように言ってください。決まった時刻にJarvisに作業をさせることもできます（例:「平日の8時に受信トレイを確認して」）。</translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
@@ -748,7 +748,7 @@
     <message>
         <location line="+4"/>
         <source>Keep an eye on</source>
-        <translation>見守り</translation>
+        <translation>定期チェック</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -768,7 +768,7 @@
     <message>
         <location line="+14"/>
         <source>Add a check</source>
-        <translation>見守りを追加</translation>
+        <translation>チェックを追加</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1048,7 +1048,7 @@
     <message>
         <location line="+4"/>
         <source>Try this one sooner</source>
-        <translation>優先順位を上げる</translation>
+        <translation>優先度を上げる</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1081,17 +1081,17 @@
     <message>
         <location line="+0"/>
         <source>PAUSED</source>
-        <translation>一時停止</translation>
+        <translation>一時停止中</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>BACKUP VOICE</source>
-        <translation>予備音声</translation>
+        <translation>予備の音声</translation>
     </message>
     <message>
         <location line="+28"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
-        <translation>クリック: Jarvisを開く · 一時停止ボタン: 聞き取りの停止／再開 · 赤いボタン（または右クリック）: 中止</translation>
+        <translation>クリック: Jarvisを開く · 一時停止ボタン: 聞き取りの停止／再開 · 赤いボタン（または右クリック）: 停止</translation>
     </message>
 </context>
 <context>
@@ -1160,7 +1160,7 @@
     <message>
         <location line="+7"/>
         <source>Try now</source>
-        <translation>今すぐ試す</translation>
+        <translation>今すぐ再試行</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -1200,7 +1200,7 @@
     <message>
         <location line="+1"/>
         <source>Playwright browser</source>
-        <translation>Playwrightブラウザー</translation>
+        <translation>Playwrightブラウザ</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -1450,7 +1450,7 @@
         <location line="+0"/>
         <location line="+2"/>
         <source> s</source>
-        <translation> 秒</translation>
+        <translation>秒</translation>
     </message>
     <message>
         <location line="-1"/>
@@ -1573,7 +1573,7 @@
     <message>
         <location line="+1"/>
         <source>Home city, for the weather (empty: guess from your network)</source>
-        <translation>天気用の住んでいる都市（空欄: ネットワークから推定）</translation>
+        <translation>住んでいる都市（天気に使用。空欄: ネットワークから推定）</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2100,12 +2100,12 @@
     <message>
         <location line="+14"/>
         <source>%1 is out (%2)</source>
-        <translation>%1が公開されました（%2）</translation>
+        <translation>%1がリリースされました（%2）</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%1 is out</source>
-        <translation>%1が公開されました</translation>
+        <translation>%1がリリースされました</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2125,7 +2125,7 @@
     <message>
         <location line="+0"/>
         <source>Check for updates</source>
-        <translation>アップデートを確認</translation>
+        <translation>更新を確認</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2328,7 +2328,7 @@
     <message>
         <location line="+1"/>
         <source>Jarvis acts without checking first. Quicker, for when you trust it with your PC and accounts.</source>
-        <translation>Jarvisは確認せずに実行します。より素早く動くので、PCとアカウントを任せられる場合に。</translation>
+        <translation>Jarvisは確認せずに実行するので、より素早く動きます。PCとアカウントを安心して任せられる場合に。</translation>
     </message>
     <message>
         <location line="+5"/>

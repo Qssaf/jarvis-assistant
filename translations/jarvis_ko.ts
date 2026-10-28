@@ -87,7 +87,7 @@
     <message>
         <location line="+11"/>
         <source>More accounts</source>
-        <translation>더 많은 계정</translation>
+        <translation>다른 계정</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -211,7 +211,7 @@
     <message>
         <location line="+48"/>
         <source>Now</source>
-        <translation>현재</translation>
+        <translation>지금</translation>
     </message>
     <message numerus="yes">
         <location line="+5"/>
@@ -565,7 +565,7 @@
     <message>
         <location line="+27"/>
         <source>Drop to attach</source>
-        <translation>놓아서 첨부</translation>
+        <translation>놓으면 첨부돼요</translation>
     </message>
 </context>
 <context>
@@ -833,7 +833,7 @@
     <message>
         <location line="+2"/>
         <source>Jarvis reminds you</source>
-        <translation>Jarvis가 알림</translation>
+        <translation>Jarvis가 알려 줌</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1048,7 +1048,7 @@
     <message>
         <location line="+4"/>
         <source>Try this one sooner</source>
-        <translation>이 모델을 먼저 시도</translation>
+        <translation>이 모델을 더 먼저 시도</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1344,7 +1344,7 @@
     <message>
         <location line="+0"/>
         <source>Friendly: warm and casual</source>
-        <translation>친근함: 따뜻하고 편안하게</translation>
+        <translation>친근함: 따뜻하고 편안한 말투</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1633,7 +1633,7 @@
     <message>
         <location line="+2"/>
         <source>Until (the morning briefing waits for it)</source>
-        <translation>종료 (아침 브리핑은 이때까지 기다려요)</translation>
+        <translation>끝나는 시각 (아침 브리핑은 이때까지 기다려요)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1663,7 +1663,7 @@
     <message>
         <location line="+1"/>
         <source>Window language</source>
-        <translation>창 언어</translation>
+        <translation>표시 언어</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -1683,7 +1683,7 @@
     <message>
         <location line="+4"/>
         <source>Each text shows in the first language that has it. English is the window&apos;s own, so languages under it aren&apos;t used.</source>
-        <translation>각 문구는 번역이 있는 첫 번째 언어로 표시돼요. 영어는 창의 기본 언어라서 그 아래 언어는 쓰이지 않아요.</translation>
+        <translation>각 문구는 번역이 있는 첫 번째 언어로 표시돼요. 영어는 기본 표시 언어라서 그 아래 언어는 쓰이지 않아요.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1753,7 +1753,7 @@
     <message>
         <location line="+8"/>
         <source>Paired with %1.</source>
-        <translation>연결된 계정: %1.</translation>
+        <translation>페어링됨: %1.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1764,7 +1764,7 @@
         <location line="+6"/>
         <location line="+85"/>
         <source>Unpair</source>
-        <translation>연결 해제</translation>
+        <translation>페어링 해제</translation>
     </message>
     <message>
         <location line="-84"/>
@@ -1844,17 +1844,17 @@
     <message>
         <location line="+31"/>
         <source>Pair another phone</source>
-        <translation>다른 휴대폰 연결</translation>
+        <translation>다른 휴대폰 페어링</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Pair a phone</source>
-        <translation>휴대폰 연결</translation>
+        <translation>휴대폰 페어링</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Scan to pair</source>
-        <translation>스캔해서 연결</translation>
+        <translation>스캔해서 페어링</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1939,7 +1939,7 @@
     <message>
         <location line="+2"/>
         <source>Pick up if I don&apos;t (20 s)</source>
-        <translation>내가 안 받으면 받기 (20초)</translation>
+        <translation>내가 안 받으면 대신 받기 (20초)</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -2064,7 +2064,7 @@
     <message>
         <location line="+1"/>
         <source>Bringing one in replaces what&apos;s on this computer (conversations are added), then Jarvis restarts.</source>
-        <translation>가져오면 이 컴퓨터의 내용이 바뀌고(대화는 추가돼요) Jarvis가 다시 시작돼요.</translation>
+        <translation>가져오면 이 컴퓨터의 내용이 대체되고(대화는 추가돼요) Jarvis가 다시 시작돼요.</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2143,7 +2143,7 @@
     <message>
         <location filename="../qml/SetupWizard.qml" line="+15"/>
         <source>Welcome</source>
-        <translation>환영</translation>
+        <translation>환영합니다</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -2333,7 +2333,7 @@
     <message>
         <location line="+5"/>
         <source>You’re set</source>
-        <translation>준비 완료</translation>
+        <translation>모두 준비됐어요</translation>
     </message>
     <message>
         <location line="+1"/>

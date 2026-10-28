@@ -32,7 +32,7 @@
         <location line="+3"/>
         <location line="+29"/>
         <source>Connected</source>
-        <translation>Conectadas</translation>
+        <translation>Conectado</translation>
     </message>
     <message>
         <location line="-28"/>
@@ -67,7 +67,7 @@
     <message>
         <location line="+7"/>
         <source>Ask before changes</source>
-        <translation>Perguntar antes de mudar</translation>
+        <translation>Perguntar antes de alterar</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -442,7 +442,7 @@
     <message>
         <location line="+36"/>
         <source>Up late?</source>
-        <translation>Acordado até tarde?</translation>
+        <translation>Ainda por aqui?</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -462,7 +462,7 @@
     <message>
         <location line="+8"/>
         <source>Say “%1”, tap the reactor, or type below</source>
-        <translation>Diga “%1”, toque no reator ou digite abaixo</translation>
+        <translation>Diga “%1”, clique no reator ou digite abaixo</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -487,7 +487,7 @@
     <message>
         <location line="+9"/>
         <source>Brief me</source>
-        <translation>Me dê um resumo do dia</translation>
+        <translation>Faça um resumo do meu dia</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -542,7 +542,7 @@
     <message>
         <location line="+0"/>
         <source>Make a picture</source>
-        <translation>Cria uma imagem</translation>
+        <translation>Criar uma imagem</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -640,7 +640,7 @@
     <message>
         <location line="+2"/>
         <source>Close (Jarvis keeps running in the tray)</source>
-        <translation>Fechar (o Jarvis continua rodando na bandeja)</translation>
+        <translation>Fechar (o Jarvis continua em execução na bandeja)</translation>
     </message>
 </context>
 <context>
@@ -714,7 +714,7 @@
     <message>
         <location line="+15"/>
         <source>%1 · Jarvis does it</source>
-        <translation>%1 · o Jarvis faz</translation>
+        <translation>%1 · o Jarvis executa</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -811,7 +811,7 @@
     <message>
         <location line="+37"/>
         <source>What to remind you of, or what Jarvis should do</source>
-        <translation>Do que lembrar você, ou o que o Jarvis deve fazer</translation>
+        <translation>Do que o Jarvis deve lembrar você, ou o que ele deve fazer</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -846,7 +846,7 @@
     <message>
         <location line="+0"/>
         <source>Jarvis does it</source>
-        <translation>O Jarvis faz</translation>
+        <translation>O Jarvis executa</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -882,7 +882,7 @@
     <message>
         <location line="+1"/>
         <source>Pick the models for each job. Each list is tried top to bottom: when one is busy or down, the next takes over.</source>
-        <translation>Escolha os modelos de cada tarefa. Cada lista é testada de cima para baixo: quando um está ocupado ou fora do ar, o próximo assume.</translation>
+        <translation>Escolha os modelos de cada tarefa. Cada lista é usada de cima para baixo: quando um está ocupado ou fora do ar, o próximo assume.</translation>
     </message>
     <message>
         <location line="+38"/>
@@ -968,7 +968,7 @@
     <message>
         <location line="+6"/>
         <source>Ollama isn&apos;t running</source>
-        <translation>O Ollama não está rodando</translation>
+        <translation>O Ollama não está em execução</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1013,7 +1013,7 @@
     <message>
         <location line="+15"/>
         <source>It signs in the way Google&apos;s Antigravity app does, which Google doesn&apos;t offer to other apps: Google may limit or suspend accounts used like this. Use an account you can afford to lose.</source>
-        <translation>O login é feito como no app Antigravity do Google, algo que o Google não oferece a outros apps: o Google pode limitar ou suspender contas usadas assim. Use uma conta que você possa perder.</translation>
+        <translation>O login é feito como no app Antigravity do Google, algo que o Google não oferece a outros apps: o Google pode limitar ou suspender contas usadas assim. Use uma conta que você não se importe de perder.</translation>
     </message>
     <message>
         <location line="+25"/>
@@ -1028,7 +1028,7 @@
     <message>
         <location line="+1"/>
         <source>Sign out</source>
-        <translation>Sair</translation>
+        <translation>Sair da conta</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -1091,7 +1091,7 @@
     <message>
         <location line="+0"/>
         <source>PAUSED</source>
-        <translation>PAUSADO</translation>
+        <translation>EM PAUSA</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1101,7 +1101,7 @@
     <message>
         <location line="+28"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
-        <translation>Clique: abrir o Jarvis · Botão de pausa: parar ou começar a ouvir · Botão vermelho (ou clique direito): parar</translation>
+        <translation>Clique: abrir o Jarvis · Botão de pausa: parar ou começar a ouvir · Botão vermelho (ou clique com o botão direito): parar</translation>
     </message>
 </context>
 <context>
@@ -1114,7 +1114,7 @@
     <message>
         <location line="+1"/>
         <source>Give Jarvis more tools with MCP servers: a web address, or a command that runs on this PC.</source>
-        <translation>Dê mais ferramentas ao Jarvis com servidores MCP: um endereço web ou um comando que roda neste PC.</translation>
+        <translation>Dê mais ferramentas ao Jarvis com servidores MCP: um endereço web ou um comando executado neste PC.</translation>
     </message>
     <message numerus="yes">
         <location line="+7"/>
@@ -1259,7 +1259,7 @@
     <message>
         <location line="+0"/>
         <source>Environment (optional)</source>
-        <translation>Ambiente (opcional)</translation>
+        <translation>Variáveis de ambiente (opcional)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1332,7 +1332,7 @@
     <message>
         <location line="+1"/>
         <source>How Jarvis sounds and talks to you. Changes apply from the next conversation.</source>
-        <translation>Como o Jarvis soa e fala com você. As mudanças valem a partir da próxima conversa.</translation>
+        <translation>Como o Jarvis soa e fala com você. As alterações valem a partir da próxima conversa.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1372,7 +1372,7 @@
     <message>
         <location line="+4"/>
         <source>Also speaks and understands, when you (or someone on WhatsApp) speak them. Anything else is taken as mishearing.</source>
-        <translation>Também fala e entende estes, quando você (ou alguém no WhatsApp) os usa. Qualquer outro é tratado como algo mal ouvido.</translation>
+        <translation>Também fala e entende estes, quando você (ou alguém no WhatsApp) os usa. Qualquer outro idioma é tratado como erro de escuta.</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -1407,7 +1407,7 @@
     <message>
         <location line="+1"/>
         <source>When Jarvis wakes up, and how long it keeps listening.</source>
-        <translation>Quando o Jarvis desperta e por quanto tempo continua ouvindo.</translation>
+        <translation>Quando o Jarvis é ativado e por quanto tempo continua ouvindo.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1442,7 +1442,7 @@
     <message>
         <location line="+1"/>
         <source>Lower is snappier; higher cuts you off less</source>
-        <translation>Menor é mais ágil; maior interrompe você menos</translation>
+        <translation>Menor é mais ágil; maior interrompe menos</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1508,7 +1508,7 @@
     <message>
         <location line="+1"/>
         <source>Someone else saying the wake word doesn&apos;t wake Jarvis. Talk and push to talk always work</source>
-        <translation>Outra pessoa dizendo a palavra de ativação não ativa o Jarvis. Falar e apertar para falar sempre funcionam</translation>
+        <translation>Se outra pessoa disser a palavra de ativação, o Jarvis não é ativado. Falar e Apertar para falar sempre funcionam</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1518,17 +1518,17 @@
     <message>
         <location line="+1"/>
         <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (experimental on Windows: Health says if it&apos;s working; restart Jarvis to apply)</source>
-        <translation>Mantém o som do próprio PC (Jarvis, jogos, vídeos, chamadas) fora do microfone, para que não seja ouvido como se fosse você, e você pode falar por cima do Jarvis (experimental no Windows: a página Saúde diz se está funcionando; reinicie o Jarvis para aplicar)</translation>
+        <translation>Mantém o som do próprio PC (Jarvis, jogos, vídeos, chamadas) fora do microfone, para que não seja ouvido como se fosse você, e para que você possa falar por cima do Jarvis (experimental no Windows: a página Saúde diz se está funcionando; reinicie o Jarvis para aplicar)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (PipeWire; restart Jarvis to apply)</source>
-        <translation>Mantém o som do próprio PC (Jarvis, jogos, vídeos, chamadas) fora do microfone, para que não seja ouvido como se fosse você, e você pode falar por cima do Jarvis (PipeWire; reinicie o Jarvis para aplicar)</translation>
+        <translation>Mantém o som do próprio PC (Jarvis, jogos, vídeos, chamadas) fora do microfone, para que não seja ouvido como se fosse você, e para que você possa falar por cima do Jarvis (PipeWire; reinicie o Jarvis para aplicar)</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Spoken passphrase: asked for with every yes said out loud (sends, calls, account changes, risky commands). Never shown or said back</source>
-        <translation>Frase secreta falada: pedida a cada sim dito em voz alta (envios, chamadas, mudanças em contas, comandos arriscados). Nunca é mostrada nem repetida</translation>
+        <translation>Frase secreta falada: pedida a cada sim dito em voz alta (envios, chamadas, alterações em contas, comandos arriscados). Nunca é mostrada nem repetida</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1561,7 +1561,7 @@
     <message>
         <location line="+2"/>
         <source>Bind these to keyboard shortcuts (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</source>
-        <translation>Associe estes a atalhos de teclado (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</translation>
+        <translation>Associe estes a atalhos de teclado (KDE: Configurações do Sistema → Teclado → Atalhos → Adicionar novo → Comando).</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1716,7 +1716,7 @@
     <message>
         <location line="+1"/>
         <source>Commands that delete, install or shut down, and account changes (sending email, new events), wait for your yes unless you asked for exactly that</source>
-        <translation>Comandos que excluem, instalam ou desligam, e mudanças em contas (enviar e-mail, criar eventos), esperam o seu sim, a menos que você tenha pedido exatamente isso</translation>
+        <translation>Comandos que excluem, instalam ou desligam e alterações em contas (enviar e-mail, criar eventos) esperam o seu sim, a menos que você tenha pedido exatamente isso</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -1741,7 +1741,7 @@
     <message>
         <location line="+5"/>
         <source>In Telegram, message &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, send /newbot and copy the token it gives you.</source>
-        <translation>No Telegram, mande uma mensagem para &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, envie /newbot e copie o token que ele der.</translation>
+        <translation>No Telegram, mande uma mensagem para &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, envie /newbot e copie o token que ele enviar.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1882,7 +1882,7 @@
     <message>
         <location line="+1"/>
         <source>Jarvis links to your own WhatsApp like WhatsApp Web. It answers your contacts&apos; messages that don&apos;t need you, saying it&apos;s your assistant, and picks up calls you miss to take a message. It&apos;s not an official WhatsApp feature: WhatsApp may block numbers that act like bots, so Jarvis answers only saved contacts, never groups.</source>
-        <translation>O Jarvis se conecta ao seu próprio WhatsApp como o WhatsApp Web. Ele responde às mensagens dos seus contatos que não precisam de você, dizendo que é seu assistente, e atende as chamadas que você perde para anotar um recado. Não é um recurso oficial do WhatsApp: o WhatsApp pode bloquear números que agem como bots, então o Jarvis só responde a contatos salvos, nunca a grupos.</translation>
+        <translation>O Jarvis se conecta ao seu próprio WhatsApp como o WhatsApp Web. Ele responde às mensagens dos seus contatos que não precisam de você, dizendo que é seu assistente, e atende as chamadas que você perder para anotar um recado. Não é um recurso oficial do WhatsApp: o WhatsApp pode bloquear números que agem como bots, então o Jarvis só responde a contatos salvos, nunca a grupos.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1937,7 +1937,7 @@
     <message>
         <location line="+2"/>
         <source>Answer my contacts</source>
-        <translation>Responder meus contatos</translation>
+        <translation>Responder aos meus contatos</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -2037,17 +2037,17 @@
     <message>
         <location line="+6"/>
         <source>Press again to delete it all</source>
-        <translation>Clique de novo para apagar tudo</translation>
+        <translation>Clique de novo para excluir tudo</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Delete everything Jarvis keeps about me</source>
-        <translation>Apagar tudo o que o Jarvis guarda sobre mim</translation>
+        <translation>Excluir tudo o que o Jarvis guarda sobre mim</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Deleted. Keys, accounts and settings are kept.</source>
-        <translation>Apagado. Chaves, contas e configurações foram mantidas.</translation>
+        <translation>Excluído. Chaves, contas e configurações foram mantidas.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2057,7 +2057,7 @@
     <message>
         <location line="+6"/>
         <source>Move to another computer</source>
-        <translation>Levar para outro computador</translation>
+        <translation>Transferir para outro computador</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2103,7 +2103,7 @@
     <message>
         <location line="+3"/>
         <source>Brought in (left at their defaults here: %1): Jarvis is restarting</source>
-        <translation>Importado (mantidos no padrão aqui: %1): o Jarvis está reiniciando</translation>
+        <translation>Importado (ficaram com o valor padrão aqui: %1): o Jarvis está reiniciando</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2113,12 +2113,12 @@
     <message>
         <location line="+14"/>
         <source>%1 is out (%2)</source>
-        <translation>%1 disponível (%2)</translation>
+        <translation>Versão %1 disponível (%2)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%1 is out</source>
-        <translation>%1 disponível</translation>
+        <translation>Versão %1 disponível</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2148,7 +2148,7 @@
     <message>
         <location line="+116"/>
         <source>e.g. Keep answers short.</source>
-        <translation>ex.: Responda de forma curta.</translation>
+        <translation>ex.: Dê respostas curtas.</translation>
     </message>
 </context>
 <context>
@@ -2296,7 +2296,7 @@
     <message>
         <location line="+1"/>
         <source>How I sound, and when I talk.</source>
-        <translation>Como eu soo e quando eu falo.</translation>
+        <translation>Como é minha voz e quando eu falo.</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -2331,17 +2331,17 @@
     <message>
         <location line="+1"/>
         <source>Commands that delete, install or shut down, and changes to your accounts (sending email, creating events), wait for your yes, unless you asked for exactly that.</source>
-        <translation>Comandos que excluem, instalam ou desligam, e mudanças nas suas contas (enviar e-mail, criar eventos), esperam o seu sim, a menos que você tenha pedido exatamente isso.</translation>
+        <translation>Comandos que excluem, instalam ou desligam e alterações nas suas contas (enviar e-mail, criar eventos) esperam o seu sim, a menos que você tenha pedido exatamente isso.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Just do it</source>
-        <translation>Só fazer</translation>
+        <translation>Fazer sem perguntar</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Jarvis acts without checking first. Quicker, for when you trust it with your PC and accounts.</source>
-        <translation>O Jarvis age sem confirmar antes. Mais rápido, para quando você confia nele com seu PC e suas contas.</translation>
+        <translation>O Jarvis age sem confirmar antes. Mais rápido, para quando você confia a ele seu PC e suas contas.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2422,7 +2422,7 @@
     <message>
         <location filename="../qml/Today.qml" line="+92"/>
         <source>Feels %1 in %2</source>
-        <translation>Sensação de %1 em %2</translation>
+        <translation>Sensação térmica de %1 em %2</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2520,7 +2520,7 @@
     <message>
         <location line="+13"/>
         <source>Running in the tray. Say &quot;%1&quot;.</source>
-        <translation>Rodando na bandeja. Diga &quot;%1&quot;.</translation>
+        <translation>Em execução na bandeja. Diga &quot;%1&quot;.</translation>
     </message>
     <message>
         <location line="+15"/>

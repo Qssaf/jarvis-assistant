@@ -21,7 +21,7 @@
     <message>
         <location line="+11"/>
         <source>Couldn&apos;t reach your accounts: %1</source>
-        <translation>Tidak dapat menjangkau akun Anda: %1</translation>
+        <translation>Gagal terhubung ke akun Anda: %1</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -52,12 +52,12 @@
     <message>
         <location line="+5"/>
         <source>Click again to disconnect</source>
-        <translation>Klik lagi untuk memutuskan</translation>
+        <translation>Klik lagi untuk memutus sambungan</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Disconnect</source>
-        <translation>Putuskan</translation>
+        <translation>Putuskan sambungan</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -120,7 +120,7 @@
     <message>
         <location line="+1"/>
         <source>Every step Jarvis takes in this conversation, as it happens.</source>
-        <translation>Setiap langkah Jarvis dalam percakapan ini, saat itu juga.</translation>
+        <translation>Setiap langkah yang diambil Jarvis dalam percakapan ini, secara langsung.</translation>
     </message>
     <message>
         <location line="+86"/>
@@ -266,7 +266,7 @@
     <message>
         <location line="+6"/>
         <source>Attach files (or drop them here)</source>
-        <translation>Lampirkan file (atau letakkan di sini)</translation>
+        <translation>Lampirkan file (atau seret ke sini)</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -394,7 +394,7 @@
     <message>
         <location line="+23"/>
         <source>Fix: %1</source>
-        <translation>Perbaikan: %1</translation>
+        <translation>Cara memperbaiki: %1</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -490,7 +490,7 @@
     <message>
         <location line="+0"/>
         <source>What&apos;s due this week?</source>
-        <translation>Apa tenggat minggu ini?</translation>
+        <translation>Apa saja tenggat minggu ini?</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -515,7 +515,7 @@
     <message>
         <location line="+0"/>
         <source>Jarvis takes a look</source>
-        <translation>Jarvis melihatnya</translation>
+        <translation>Jarvis akan melihatnya</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -695,7 +695,7 @@
         <location line="+1"/>
         <source>%n coming up.</source>
         <translation>
-            <numerusform>%n akan datang.</numerusform>
+            <numerusform>%n terjadwal.</numerusform>
         </translation>
     </message>
     <message>
@@ -874,7 +874,7 @@
     <message>
         <location line="+1"/>
         <source>Pick the models for each job. Each list is tried top to bottom: when one is busy or down, the next takes over.</source>
-        <translation>Pilih model untuk setiap tugas. Tiap daftar dicoba dari atas ke bawah: jika satu sibuk atau tidak aktif, yang berikutnya mengambil alih.</translation>
+        <translation>Pilih model untuk setiap tugas. Tiap daftar dicoba dari atas ke bawah: jika satu sibuk atau bermasalah, yang berikutnya mengambil alih.</translation>
     </message>
     <message>
         <location line="+38"/>
@@ -1066,12 +1066,12 @@
     <message>
         <location filename="../jarvis.py" line="+2428"/>
         <source>LISTENING</source>
-        <translation>MENDENGAR</translation>
+        <translation>MENDENGARKAN</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>SPEAKING</source>
-        <translation>BICARA</translation>
+        <translation>BERBICARA</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1246,7 +1246,7 @@
     <message>
         <location line="+0"/>
         <source>Environment (optional)</source>
-        <translation>Lingkungan (opsional)</translation>
+        <translation>Variabel lingkungan (opsional)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1294,7 +1294,7 @@
     <message>
         <location line="+1"/>
         <source>Updated: Jarvis is restarting</source>
-        <translation>Diperbarui: Jarvis dimulai ulang</translation>
+        <translation>Diperbarui: Jarvis sedang dimulai ulang</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1339,7 +1339,7 @@
     <message>
         <location line="+2"/>
         <source>Jarvis: refined, dry wit</source>
-        <translation>Jarvis: santun, jenaka kering</translation>
+        <translation>Jarvis: santun, humor kering</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1354,12 +1354,12 @@
     <message>
         <location line="+1"/>
         <source>Language Jarvis speaks and listens for</source>
-        <translation>Bahasa yang Jarvis ucapkan dan dengarkan</translation>
+        <translation>Bahasa yang dipakai Jarvis untuk berbicara dan mendengarkan</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Also speaks and understands, when you (or someone on WhatsApp) speak them. Anything else is taken as mishearing.</source>
-        <translation>Juga diucapkan dan dipahami saat Anda (atau seseorang di WhatsApp) memakainya. Bahasa lain dianggap salah dengar.</translation>
+        <translation>Bahasa lain yang juga dipakai dan dipahami Jarvis saat Anda (atau seseorang di WhatsApp) menggunakannya. Bahasa selain itu dianggap salah dengar.</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -1399,7 +1399,7 @@
     <message>
         <location line="+2"/>
         <source>Wake word</source>
-        <translation>Kata bangun</translation>
+        <translation>Kata pemicu</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1434,7 +1434,7 @@
     <message>
         <location line="+1"/>
         <source>Wake word sensitivity</source>
-        <translation>Kepekaan kata bangun</translation>
+        <translation>Kepekaan kata pemicu</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1475,7 +1475,7 @@
     <message>
         <location line="+0"/>
         <source>Wake-ups you dismiss teach Jarvis what isn&apos;t you</source>
-        <translation>Bangun yang Anda abaikan mengajari Jarvis mana yang bukan Anda</translation>
+        <translation>Aktivasi yang Anda abaikan mengajari Jarvis mana yang bukan suara Anda</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1485,7 +1485,7 @@
     <message>
         <location line="+1"/>
         <source>Nothing learned for this wake word yet (Learn my voice needs a few wake-ups first): until then anyone can wake Jarvis</source>
-        <translation>Belum ada yang dipelajari untuk kata bangun ini (Pelajari suara saya perlu beberapa kali bangun dulu): sampai saat itu siapa pun bisa membangunkan Jarvis</translation>
+        <translation>Belum ada yang dipelajari untuk kata pemicu ini (Pelajari suara saya perlu beberapa kali aktivasi dulu): sampai saat itu siapa pun bisa membangunkan Jarvis</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1495,7 +1495,7 @@
     <message>
         <location line="+1"/>
         <source>Someone else saying the wake word doesn&apos;t wake Jarvis. Talk and push to talk always work</source>
-        <translation>Orang lain yang mengucapkan kata bangun tidak membangunkan Jarvis. Bicara langsung dan tekan untuk bicara selalu berfungsi</translation>
+        <translation>Orang lain yang mengucapkan kata pemicu tidak membangunkan Jarvis. Tombol Bicara dan tekan untuk bicara selalu berfungsi</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1558,7 +1558,7 @@
     <message>
         <location line="+1"/>
         <source>Drag over part of the screen and ask about it</source>
-        <translation>Seret di atas bagian layar dan tanyakan tentangnya</translation>
+        <translation>Seret untuk memilih bagian layar, lalu tanyakan tentangnya</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1573,7 +1573,7 @@
     <message>
         <location line="+1"/>
         <source>Home city, for the weather (empty: guess from your network)</source>
-        <translation>Kota asal, untuk cuaca (kosong: tebak dari jaringan Anda)</translation>
+        <translation>Kota Anda, untuk cuaca (kosong: ditebak dari jaringan Anda)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1588,7 +1588,7 @@
     <message>
         <location line="+0"/>
         <source>The first time Jarvis starts in a morning, it tells you about your day</source>
-        <translation>Saat Jarvis pertama kali dimulai di pagi hari, ia menceritakan hari Anda</translation>
+        <translation>Saat Jarvis pertama kali dimulai di pagi hari, ia memberi ringkasan hari Anda</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1668,12 +1668,12 @@
     <message>
         <location line="+16"/>
         <source>Use sooner</source>
-        <translation>Dahulukan</translation>
+        <translation>Naikkan prioritas</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Use later</source>
-        <translation>Belakangkan</translation>
+        <translation>Turunkan prioritas</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -1688,7 +1688,7 @@
     <message>
         <location line="+4"/>
         <source>Show Jarvis&apos;s thinking in the chat</source>
-        <translation>Tampilkan pemikiran Jarvis di obrolan</translation>
+        <translation>Tampilkan proses berpikir Jarvis di obrolan</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1899,7 +1899,7 @@
     <message>
         <location line="+7"/>
         <source>On a call with %1</source>
-        <translation>Sedang menelepon %1</translation>
+        <translation>Sedang dalam panggilan dengan %1</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1939,7 +1939,7 @@
     <message>
         <location line="+2"/>
         <source>Pick up if I don&apos;t (20 s)</source>
-        <translation>Angkat jika saya tidak (20 dtk)</translation>
+        <translation>Angkat jika tidak saya angkat (20 dtk)</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1989,7 +1989,7 @@
     <message>
         <location line="+1"/>
         <source>On this PC Jarvis keeps what it remembers about you, your conversations, reminders and routines, short clips of your wake word (to learn your voice) and a log. What you say after the wake word, and screenshots when a task needs the screen, go to Google Gemini; account actions go through Composio.</source>
-        <translation>Di PC ini Jarvis menyimpan apa yang diingatnya tentang Anda, percakapan, pengingat dan rutinitas Anda, klip pendek kata bangun Anda (untuk mempelajari suara Anda), dan log. Ucapan Anda setelah kata bangun, serta tangkapan layar saat tugas memerlukan layar, dikirim ke Google Gemini; tindakan akun melalui Composio.</translation>
+        <translation>Di PC ini Jarvis menyimpan apa yang diingatnya tentang Anda, percakapan, pengingat dan rutinitas Anda, klip pendek kata pemicu Anda (untuk mempelajari suara Anda), dan log. Ucapan Anda setelah kata pemicu, serta tangkapan layar saat tugas memerlukan layar, dikirim ke Google Gemini; tindakan akun melalui Composio.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -2090,22 +2090,22 @@
     <message>
         <location line="+3"/>
         <source>Brought in (left at their defaults here: %1): Jarvis is restarting</source>
-        <translation>Dipulihkan (dibiarkan ke bawaan di sini: %1): Jarvis dimulai ulang</translation>
+        <translation>Dipulihkan (tetap memakai bawaan di sini: %1): Jarvis sedang dimulai ulang</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Brought in: Jarvis is restarting</source>
-        <translation>Dipulihkan: Jarvis dimulai ulang</translation>
+        <translation>Dipulihkan: Jarvis sedang dimulai ulang</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>%1 is out (%2)</source>
-        <translation>%1 sudah rilis (%2)</translation>
+        <translation>%1 sudah tersedia (%2)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%1 is out</source>
-        <translation>%1 sudah rilis</translation>
+        <translation>%1 sudah tersedia</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2268,7 +2268,7 @@
     <message>
         <location line="+10"/>
         <source>Wake word sensitivity</source>
-        <translation>Kepekaan kata bangun</translation>
+        <translation>Kepekaan kata pemicu</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -2429,7 +2429,7 @@
     <message>
         <location line="+13"/>
         <source>Up next</source>
-        <translation>Berikutnya</translation>
+        <translation>Mendatang</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2512,7 +2512,7 @@
     <message>
         <location line="+15"/>
         <source>idle</source>
-        <translation>diam</translation>
+        <translation>siaga</translation>
     </message>
     <message>
         <location line="+0"/>

@@ -415,7 +415,7 @@
     <message>
         <location line="+1"/>
         <source>Free Google AI Studio keys allow a limited number of requests per model each day. When one runs out, Jarvis uses the next model in that job&apos;s list (the Models page) until the quota resets at midnight Pacific time.</source>
-        <translation>मुफ़्त Google AI Studio कुंजियों से हर मॉडल पर रोज़ सीमित अनुरोध ही हो सकते हैं। किसी की सीमा खत्म होने पर Jarvis उस काम की सूची (मॉडल पेज) का अगला मॉडल इस्तेमाल करता है, जब तक प्रशांत समय (Pacific) की आधी रात को कोटा फिर से शुरू न हो जाए।</translation>
+        <translation>मुफ़्त Google AI Studio कुंजियों से हर मॉडल पर रोज़ सीमित अनुरोध ही हो सकते हैं। किसी की सीमा खत्म होने पर Jarvis उस काम की सूची (मॉडल पेज) का अगला मॉडल इस्तेमाल करता है, जब तक पैसिफ़िक समय के अनुसार आधी रात को कोटा रीसेट न हो जाए।</translation>
     </message>
     <message numerus="yes">
         <location line="+23"/>
@@ -482,12 +482,12 @@
     <message>
         <location line="+0"/>
         <source>On it</source>
-        <translation>काम पर हूँ</translation>
+        <translation>कर रहा हूँ</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Brief me</source>
-        <translation>मुझे आज की जानकारी दो</translation>
+        <translation>आज का हाल बताओ</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1008,7 +1008,7 @@
     <message>
         <location line="+1"/>
         <source>Sign in with Google for Gemini (and Claude) through your account&apos;s Antigravity quota, much more than a free AI Studio key.</source>
-        <translation>अपने खाते के Antigravity कोटे से Gemini (और Claude) के लिए Google से साइन इन करें, जो मुफ़्त AI Studio कुंजी से कहीं ज़्यादा है।</translation>
+        <translation>Google से साइन इन करें और अपने खाते के Antigravity कोटे से Gemini (और Claude) इस्तेमाल करें, जो मुफ़्त AI Studio कुंजी के कोटे से कहीं ज़्यादा है।</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -1198,7 +1198,7 @@
     <message>
         <location line="+1"/>
         <source>Start from a quick pick, or fill in any MCP server. Jarvis connects to it as soon as it&apos;s added.</source>
-        <translation>किसी तैयार विकल्प से शुरू करें, या कोई भी MCP सर्वर भरें। जुड़ते ही Jarvis उससे कनेक्ट हो जाता है।</translation>
+        <translation>किसी तैयार विकल्प से शुरू करें, या कोई भी MCP सर्वर भरें। जोड़ते ही Jarvis उससे जुड़ जाता है।</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -1284,7 +1284,7 @@
     <message>
         <location line="+6"/>
         <source>Plugin added: connecting…</source>
-        <translation>प्लगइन जोड़ा गया: कनेक्ट हो रहा है…</translation>
+        <translation>प्लगइन जोड़ा गया: जुड़ रहा है…</translation>
     </message>
 </context>
 <context>
@@ -1377,7 +1377,7 @@
     <message>
         <location line="+15"/>
         <source>Fast voice</source>
-        <translation>तेज़ आवाज़</translation>
+        <translation>तेज़ जवाब</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1488,7 +1488,7 @@
     <message>
         <location line="+0"/>
         <source>Wake-ups you dismiss teach Jarvis what isn&apos;t you</source>
-        <translation>आप जिन वेक-अप को खारिज करते हैं, उनसे Jarvis सीखता है कि कौन आप नहीं हैं</translation>
+        <translation>आप जिन वेक-अप को खारिज करते हैं, उनसे Jarvis सीखता है कि कौन-सी आवाज़ आपकी नहीं है</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1508,7 +1508,7 @@
     <message>
         <location line="+1"/>
         <source>Someone else saying the wake word doesn&apos;t wake Jarvis. Talk and push to talk always work</source>
-        <translation>कोई और वेक वर्ड बोले तो Jarvis नहीं जागता। बोलना और पुश टू टॉक हमेशा काम करते हैं</translation>
+        <translation>कोई और वेक वर्ड बोले तो Jarvis नहीं जागता। बात करें बटन और पुश टू टॉक हमेशा काम करते हैं</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1518,12 +1518,12 @@
     <message>
         <location line="+1"/>
         <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (experimental on Windows: Health says if it&apos;s working; restart Jarvis to apply)</source>
-        <translation>PC की अपनी आवाज़ (Jarvis, गेम, वीडियो, कॉल) को माइक से बाहर रखता है, ताकि उसे आपकी आवाज़ न समझा जाए और आप Jarvis के बीच में बोल सकें (Windows पर प्रायोगिक: स्थिति पेज बताता है कि यह चल रहा है या नहीं; लागू करने के लिए Jarvis फिर से शुरू करें)</translation>
+        <translation>PC की अपनी आवाज़ (Jarvis, गेम, वीडियो, कॉल) को माइक से बाहर रखता है, ताकि उसे आपकी आवाज़ न समझा जाए और Jarvis के बोलते समय भी आप बोल सकें (Windows पर प्रायोगिक: स्थिति पेज बताता है कि यह चल रहा है या नहीं; लागू करने के लिए Jarvis फिर से शुरू करें)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (PipeWire; restart Jarvis to apply)</source>
-        <translation>PC की अपनी आवाज़ (Jarvis, गेम, वीडियो, कॉल) को माइक से बाहर रखता है, ताकि उसे आपकी आवाज़ न समझा जाए और आप Jarvis के बीच में बोल सकें (PipeWire; लागू करने के लिए Jarvis फिर से शुरू करें)</translation>
+        <translation>PC की अपनी आवाज़ (Jarvis, गेम, वीडियो, कॉल) को माइक से बाहर रखता है, ताकि उसे आपकी आवाज़ न समझा जाए और Jarvis के बोलते समय भी आप बोल सकें (PipeWire; लागू करने के लिए Jarvis फिर से शुरू करें)</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1581,7 +1581,7 @@
     <message>
         <location line="+1"/>
         <source>The weather, briefings and heads-ups Jarvis gives you.</source>
-        <translation>मौसम, ब्रीफ़िंग और सूचनाएँ जो Jarvis आपको देता है।</translation>
+        <translation>मौसम, ब्रीफ़िंग और अलर्ट जो Jarvis आपको देता है।</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1792,7 +1792,7 @@
     <message>
         <location line="+1"/>
         <source>The Jarvis Android app reaches this PC from anywhere through your own private relay. It&apos;s end-to-end encrypted: the relay only passes on scrambled data, and nothing on this PC is open to the internet.</source>
-        <translation>Jarvis Android ऐप आपके अपने निजी रिले के ज़रिए कहीं से भी इस PC तक पहुँचता है। यह एंड-टू-एंड एन्क्रिप्टेड है: रिले सिर्फ़ उलझा हुआ डेटा आगे भेजता है, और इस PC पर कुछ भी इंटरनेट के लिए खुला नहीं है।</translation>
+        <translation>Jarvis Android ऐप आपके अपने निजी रिले के ज़रिए कहीं से भी इस PC तक पहुँचता है। यह एंड-टू-एंड एन्क्रिप्टेड है: रिले सिर्फ़ ऐसा डेटा आगे भेजता है जिसे वह पढ़ नहीं सकता, और इस PC पर कुछ भी इंटरनेट के लिए खुला नहीं है।</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1992,7 +1992,7 @@
     <message>
         <location line="+1"/>
         <source>e.g. I&apos;m in class until 5, I&apos;ll answer after</source>
-        <translation>जैसे मैं 5 बजे तक क्लास में हूँ, उसके बाद जवाब दूँगा</translation>
+        <translation>जैसे मैं 5 बजे तक क्लास में हूँ, उसके बाद बात करते हैं</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -2103,12 +2103,12 @@
     <message>
         <location line="+3"/>
         <source>Brought in (left at their defaults here: %1): Jarvis is restarting</source>
-        <translation>ले आया गया (यहाँ डिफ़ॉल्ट पर छोड़ा गया: %1): Jarvis फिर से शुरू हो रहा है</translation>
+        <translation>बैकअप लाया गया (ये यहाँ डिफ़ॉल्ट पर रहे: %1): Jarvis फिर से शुरू हो रहा है</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Brought in: Jarvis is restarting</source>
-        <translation>ले आया गया: Jarvis फिर से शुरू हो रहा है</translation>
+        <translation>बैकअप लाया गया: Jarvis फिर से शुरू हो रहा है</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -2341,7 +2341,7 @@
     <message>
         <location line="+1"/>
         <source>Jarvis acts without checking first. Quicker, for when you trust it with your PC and accounts.</source>
-        <translation>Jarvis पहले पूछे बिना काम करता है। ज़्यादा तेज़, जब आप उस पर अपने PC और खातों के लिए भरोसा करते हों।</translation>
+        <translation>Jarvis पहले पूछे बिना काम करता है। ज़्यादा तेज़; तब के लिए जब आप अपने PC और खातों के मामले में उस पर भरोसा करते हों।</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2422,7 +2422,7 @@
     <message>
         <location filename="../qml/Today.qml" line="+92"/>
         <source>Feels %1 in %2</source>
-        <translation>%2 में %1 जैसा महसूस</translation>
+        <translation>%2 में %1 जैसा लगता है</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2515,7 +2515,7 @@
     <message>
         <location line="+1"/>
         <source>Quit</source>
-        <translation>बंद करें</translation>
+        <translation>बाहर निकलें</translation>
     </message>
     <message>
         <location line="+13"/>

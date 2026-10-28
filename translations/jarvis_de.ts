@@ -11,7 +11,7 @@
     <message>
         <location line="+1"/>
         <source>Connect your accounts so Jarvis can read and act on them. You decide what it may do with each.</source>
-        <translation>Verbinde deine Konten, damit Jarvis sie lesen und darin handeln kann. Du entscheidest, was er bei jedem darf.</translation>
+        <translation>Verbinden Sie Ihre Konten, damit Jarvis sie lesen und darin Aktionen ausführen kann. Sie legen fest, was er bei jedem Konto darf.</translation>
     </message>
     <message>
         <location line="+21"/>
@@ -37,7 +37,7 @@
     <message>
         <location line="-28"/>
         <source>Choose what Jarvis may do with each account.</source>
-        <translation>Lege fest, was Jarvis mit jedem Konto darf.</translation>
+        <translation>Legen Sie fest, was Jarvis mit jedem Konto darf.</translation>
     </message>
     <message>
         <location line="+35"/>
@@ -97,12 +97,12 @@
     <message>
         <location line="+1"/>
         <source>Pick one to sign in from your browser, then press Refresh.</source>
-        <translation>Wähle eins aus, melde dich im Browser an und klicke dann auf „Aktualisieren“.</translation>
+        <translation>Wählen Sie eines aus, melden Sie sich im Browser an und klicken Sie dann auf „Aktualisieren“.</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Finish signing in in your browser, then press Refresh</source>
-        <translation>Schließe die Anmeldung im Browser ab und klicke dann auf „Aktualisieren“</translation>
+        <translation>Schließen Sie die Anmeldung im Browser ab und klicken Sie dann auf „Aktualisieren“</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -120,7 +120,7 @@
     <message>
         <location line="+1"/>
         <source>Every step Jarvis takes in this conversation, as it happens.</source>
-        <translation>Jeder Schritt, den Jarvis in diesem Gespräch macht, live.</translation>
+        <translation>Jeder Schritt, den Jarvis in diesem Gespräch ausführt, in Echtzeit.</translation>
     </message>
     <message>
         <location line="+86"/>
@@ -130,7 +130,7 @@
     <message>
         <location line="+14"/>
         <source>Nothing yet: ask Jarvis something</source>
-        <translation>Noch nichts: Frag Jarvis etwas</translation>
+        <translation>Noch nichts: Fragen Sie Jarvis etwas</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -147,8 +147,8 @@
         <location line="+3"/>
         <source>Averaged over the last %n replies: from the end of what you said to Jarvis&apos;s first word.</source>
         <translation>
-            <numerusform>Gemessen an der letzten Antwort: von deinem letzten Wort bis zum ersten Wort von Jarvis.</numerusform>
-            <numerusform>Durchschnitt der letzten %n Antworten: von deinem letzten Wort bis zum ersten Wort von Jarvis.</numerusform>
+            <numerusform>Gemessen an der letzten Antwort: von Ihrem letzten Wort bis zum ersten Wort von Jarvis.</numerusform>
+            <numerusform>Durchschnitt der letzten %n Antworten: von Ihrem letzten Wort bis zum ersten Wort von Jarvis.</numerusform>
         </translation>
     </message>
 </context>
@@ -199,7 +199,7 @@
     <message>
         <location line="+1"/>
         <source>Every conversation is saved here. Open one to carry on where you left off.</source>
-        <translation>Hier wird jedes Gespräch gespeichert. Öffne eins, um dort weiterzumachen, wo du aufgehört hast.</translation>
+        <translation>Hier wird jedes Gespräch gespeichert. Öffnen Sie eines, um dort weiterzumachen, wo Sie aufgehört haben.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -214,7 +214,7 @@
     <message>
         <location line="+48"/>
         <source>Now</source>
-        <translation>Aktuell</translation>
+        <translation>Jetzt</translation>
     </message>
     <message numerus="yes">
         <location line="+5"/>
@@ -257,7 +257,7 @@
     <message>
         <location line="+55"/>
         <source>Pick a conversation to read it</source>
-        <translation>Wähle ein Gespräch zum Lesen aus</translation>
+        <translation>Wählen Sie ein Gespräch aus, um es zu lesen</translation>
     </message>
 </context>
 <context>
@@ -275,7 +275,7 @@
     <message>
         <location line="+6"/>
         <source>Ask Jarvis</source>
-        <translation>Frag Jarvis</translation>
+        <translation>Jarvis fragen</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -309,7 +309,7 @@
     <message>
         <location line="-15"/>
         <source>Checks the key, mic, screen, accounts and models, and how to fix them.</source>
-        <translation>Prüft Schlüssel, Mikrofon, Bildschirm, Konten und Modelle und zeigt, wie du Probleme behebst.</translation>
+        <translation>Prüft Schlüssel, Mikrofon, Bildschirm, Konten und Modelle und zeigt, wie Sie Probleme beheben.</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -359,7 +359,7 @@
     <message>
         <location line="+1"/>
         <source>Copied. Look it over, then paste it into a bug report</source>
-        <translation>Kopiert. Sieh ihn durch und füge ihn dann in einen Fehlerbericht ein</translation>
+        <translation>Kopiert. Sehen Sie ihn durch und fügen Sie ihn dann in einen Fehlerbericht ein</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -415,7 +415,7 @@
     <message>
         <location line="+1"/>
         <source>Free Google AI Studio keys allow a limited number of requests per model each day. When one runs out, Jarvis uses the next model in that job&apos;s list (the Models page) until the quota resets at midnight Pacific time.</source>
-        <translation>Kostenlose Google-AI-Studio-Schlüssel erlauben pro Modell nur eine begrenzte Zahl von Anfragen am Tag. Ist eines aufgebraucht, nimmt Jarvis das nächste Modell in der Liste dieser Aufgabe (Seite „Modelle“), bis das Kontingent um Mitternacht pazifischer Zeit zurückgesetzt wird.</translation>
+        <translation>Kostenlose Google-AI-Studio-Schlüssel erlauben pro Modell nur eine begrenzte Zahl von Anfragen pro Tag. Ist das Kontingent eines Modells aufgebraucht, nutzt Jarvis das nächste Modell in der Liste dieser Aufgabe (Seite „Modelle“), bis das Kontingent um Mitternacht pazifischer Zeit zurückgesetzt wird.</translation>
     </message>
     <message numerus="yes">
         <location line="+23"/>
@@ -462,12 +462,12 @@
     <message>
         <location line="+8"/>
         <source>Say “%1”, tap the reactor, or type below</source>
-        <translation>Sag „%1“, tippe auf den Reaktor oder schreib unten</translation>
+        <translation>Sagen Sie „%1“, klicken Sie auf den Reaktor oder schreiben Sie unten</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Go ahead, I&apos;m listening</source>
-        <translation>Leg los, ich höre zu</translation>
+        <translation>Nur zu, ich höre zu</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -477,12 +477,12 @@
     <message>
         <location line="+1"/>
         <source>Say “%1” to cut in</source>
-        <translation>Sag „%1“, um zu unterbrechen</translation>
+        <translation>Sagen Sie „%1“, um zu unterbrechen</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>On it</source>
-        <translation>Bin dran</translation>
+        <translation>Wird erledigt</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -492,7 +492,7 @@
     <message>
         <location line="+0"/>
         <source>Weather and your schedule</source>
-        <translation>Wetter und dein Tagesplan</translation>
+        <translation>Wetter und Ihr Tagesplan</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -512,7 +512,7 @@
     <message>
         <location line="+0"/>
         <source>Your Gmail inbox</source>
-        <translation>Dein Gmail-Posteingang</translation>
+        <translation>Ihr Gmail-Posteingang</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -653,7 +653,7 @@
     <message>
         <location line="+1"/>
         <source>Jarvis reads this before every conversation. Tell it “remember…” or edit it here.</source>
-        <translation>Jarvis liest das vor jedem Gespräch. Sag „merk dir …“ oder bearbeite es hier.</translation>
+        <translation>Jarvis liest das vor jedem Gespräch. Sagen Sie „merk dir …“ oder bearbeiten Sie es hier.</translation>
     </message>
     <message>
         <location line="+30"/>
@@ -674,12 +674,12 @@
     <message>
         <location line="+5"/>
         <source>What Jarvis knows about you</source>
-        <translation>Was Jarvis über dich weiß</translation>
+        <translation>Was Jarvis über Sie weiß</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Plain notes, one per line. Jarvis adds to them as you talk.</source>
-        <translation>Einfache Notizen, eine pro Zeile. Jarvis ergänzt sie, während ihr redet.</translation>
+        <translation>Einfache Notizen, eine pro Zeile. Jarvis ergänzt sie, während Sie mit ihm sprechen.</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -696,7 +696,7 @@
     <message>
         <location line="+1"/>
         <source>%1 Say “remind me at 5 to call home”, or have Jarvis do something then: “every weekday at 8, check my inbox”.</source>
-        <translation>%1 Sag „erinnere mich um 5, zu Hause anzurufen“ oder lass Jarvis dann etwas erledigen: „prüf jeden Werktag um 8 meinen Posteingang“.</translation>
+        <translation>%1 Sagen Sie „erinnere mich um 5, zu Hause anzurufen“ oder lassen Sie Jarvis dann etwas erledigen: „prüf jeden Werktag um 8 meinen Posteingang“.</translation>
     </message>
     <message numerus="yes">
         <location line="+1"/>
@@ -714,7 +714,7 @@
     <message>
         <location line="+15"/>
         <source>%1 · Jarvis does it</source>
-        <translation>%1 · Jarvis erledigt das</translation>
+        <translation>%1 · Jarvis erledigt es</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -735,12 +735,12 @@
     <message>
         <location line="+1"/>
         <source>Say a routine&apos;s name and Jarvis runs its steps.</source>
-        <translation>Sag den Namen einer Routine, und Jarvis führt ihre Schritte aus.</translation>
+        <translation>Sagen Sie den Namen einer Routine, und Jarvis führt ihre Schritte aus.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>None yet. Say “when I say study mode, close Discord, open my notes and set a 50-minute timer”.</source>
-        <translation>Noch keine. Sag „wenn ich Lernmodus sage, schließ Discord, öffne meine Notizen und stell einen Timer auf 50 Minuten“.</translation>
+        <translation>Noch keine. Sagen Sie „wenn ich Lernmodus sage, schließ Discord, öffne meine Notizen und stell einen Timer auf 50 Minuten“.</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -761,12 +761,12 @@
     <message>
         <location line="+1"/>
         <source>Jarvis looks into these with your accounts and the web, and tells you only when something needs you.</source>
-        <translation>Jarvis prüft das über deine Konten und das Web und meldet sich nur, wenn du gebraucht wirst.</translation>
+        <translation>Jarvis prüft diese Punkte über Ihre Konten und das Web und meldet sich nur, wenn Sie gebraucht werden.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Nothing yet. Say “tell me if a payment fails”, or add one here.</source>
-        <translation>Noch nichts. Sag „sag mir, wenn eine Zahlung fehlschlägt“, oder füge hier etwas hinzu.</translation>
+        <translation>Noch nichts. Sagen Sie „sag mir, wenn eine Zahlung fehlschlägt“, oder fügen Sie hier etwas hinzu.</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -811,7 +811,7 @@
     <message>
         <location line="+37"/>
         <source>What to remind you of, or what Jarvis should do</source>
-        <translation>Woran du erinnert werden willst oder was Jarvis tun soll</translation>
+        <translation>Woran Sie erinnert werden möchten oder was Jarvis tun soll</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -841,7 +841,7 @@
     <message>
         <location line="+2"/>
         <source>Jarvis reminds you</source>
-        <translation>Jarvis erinnert dich</translation>
+        <translation>Jarvis erinnert Sie</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -851,7 +851,7 @@
     <message>
         <location line="+7"/>
         <source>What you say to start it, e.g. study mode</source>
-        <translation>Was du zum Starten sagst, z. B. Lernmodus</translation>
+        <translation>Was Sie zum Starten sagen, z. B. Lernmodus</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -861,7 +861,7 @@
     <message>
         <location line="+7"/>
         <source>e.g. Tell me if a payment fails or my professor emails</source>
-        <translation>z. B. Sag mir, wenn eine Zahlung fehlschlägt oder mein Professor mailt</translation>
+        <translation>z. B. Sag mir, wenn eine Zahlung fehlschlägt oder mein Professor mir schreibt</translation>
     </message>
 </context>
 <context>
@@ -882,7 +882,7 @@
     <message>
         <location line="+1"/>
         <source>Pick the models for each job. Each list is tried top to bottom: when one is busy or down, the next takes over.</source>
-        <translation>Wähle die Modelle für jede Aufgabe. Jede Liste wird von oben nach unten probiert: Ist eins ausgelastet oder ausgefallen, übernimmt das nächste.</translation>
+        <translation>Wählen Sie die Modelle für jede Aufgabe. Jede Liste wird von oben nach unten durchprobiert: Ist eines ausgelastet oder ausgefallen, übernimmt das nächste.</translation>
     </message>
     <message>
         <location line="+38"/>
@@ -921,8 +921,8 @@
         <location line="+9"/>
         <source>%1 · +%n fallback(s)</source>
         <translation>
-            <numerusform>%1 · +%n Ausweichmodell</numerusform>
-            <numerusform>%1 · +%n Ausweichmodelle</numerusform>
+            <numerusform>%1 · +%n Reserve</numerusform>
+            <numerusform>%1 · +%n Reserve</numerusform>
         </translation>
     </message>
     <message>
@@ -933,7 +933,7 @@
     <message>
         <location line="+7"/>
         <source>Keys stay in your system keychain, never in the settings file.</source>
-        <translation>Schlüssel bleiben im Schlüsselbund deines Systems, nie in der Einstellungsdatei.</translation>
+        <translation>Schlüssel bleiben im Schlüsselbund Ihres Systems, nie in der Einstellungsdatei.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1003,17 +1003,17 @@
     <message>
         <location line="+6"/>
         <source>Your Google account</source>
-        <translation>Dein Google-Konto</translation>
+        <translation>Ihr Google-Konto</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Sign in with Google for Gemini (and Claude) through your account&apos;s Antigravity quota, much more than a free AI Studio key.</source>
-        <translation>Melde dich mit Google an, um Gemini (und Claude) über das Antigravity-Kontingent deines Kontos zu nutzen, viel mehr als mit einem kostenlosen AI-Studio-Schlüssel.</translation>
+        <translation>Melden Sie sich mit Google an, um Gemini (und Claude) über das Antigravity-Kontingent Ihres Kontos zu nutzen – viel mehr als mit einem kostenlosen AI-Studio-Schlüssel.</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>It signs in the way Google&apos;s Antigravity app does, which Google doesn&apos;t offer to other apps: Google may limit or suspend accounts used like this. Use an account you can afford to lose.</source>
-        <translation>Die Anmeldung läuft wie bei Googles App Antigravity, was Google anderen Apps nicht anbietet: Google kann so genutzte Konten einschränken oder sperren. Nimm ein Konto, auf das du verzichten kannst.</translation>
+        <translation>Die Anmeldung erfolgt wie bei Googles App Antigravity, was Google anderen Apps nicht anbietet: Google kann so genutzte Konten einschränken oder sperren. Verwenden Sie ein Konto, auf das Sie verzichten können.</translation>
     </message>
     <message>
         <location line="+25"/>
@@ -1033,12 +1033,12 @@
     <message>
         <location line="+8"/>
         <source>First install the opencode-antigravity-auth plugin (npm i -g opencode-antigravity-auth): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
-        <translation>Installiere zuerst das Plugin opencode-antigravity-auth (npm i -g opencode-antigravity-auth): Jarvis meldet sich mit dessen Daten an. Oder trag ANTIGRAVITY_CLIENT_ID und ANTIGRAVITY_CLIENT_SECRET in die env-Datei von Jarvis ein.</translation>
+        <translation>Installieren Sie zuerst das Plugin opencode-antigravity-auth (npm i -g opencode-antigravity-auth): Jarvis meldet sich mit dessen Daten an. Oder tragen Sie ANTIGRAVITY_CLIENT_ID und ANTIGRAVITY_CLIENT_SECRET in die env-Datei von Jarvis ein.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Waiting for the browser…</source>
-        <translation>Warte auf den Browser…</translation>
+        <translation>Warten auf den Browser…</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1058,7 +1058,7 @@
     <message>
         <location line="+4"/>
         <source>Try this one sooner</source>
-        <translation>Früher probieren</translation>
+        <translation>Früher versuchen</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1101,7 +1101,7 @@
     <message>
         <location line="+28"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
-        <translation>Klick: Jarvis öffnen · Pause-Knopf: Zuhören an/aus · Roter Knopf (oder Rechtsklick): stoppen</translation>
+        <translation>Klick: Jarvis öffnen · Pause-Schaltfläche: Zuhören an/aus · Rote Schaltfläche (oder Rechtsklick): stoppen</translation>
     </message>
 </context>
 <context>
@@ -1114,7 +1114,7 @@
     <message>
         <location line="+1"/>
         <source>Give Jarvis more tools with MCP servers: a web address, or a command that runs on this PC.</source>
-        <translation>Gib Jarvis mehr Werkzeuge mit MCP-Servern: eine Webadresse oder ein Befehl, der auf diesem PC läuft.</translation>
+        <translation>Geben Sie Jarvis mehr Werkzeuge mit MCP-Servern: über eine Webadresse oder einen Befehl, der auf diesem PC läuft.</translation>
     </message>
     <message numerus="yes">
         <location line="+7"/>
@@ -1168,7 +1168,7 @@
     <message>
         <location line="+0"/>
         <source>Connecting… (a sign-in page may open in your browser)</source>
-        <translation>Verbinde… (im Browser kann sich eine Anmeldeseite öffnen)</translation>
+        <translation>Verbindung wird hergestellt… (im Browser kann sich eine Anmeldeseite öffnen)</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1198,7 +1198,7 @@
     <message>
         <location line="+1"/>
         <source>Start from a quick pick, or fill in any MCP server. Jarvis connects to it as soon as it&apos;s added.</source>
-        <translation>Nimm eine Schnellauswahl oder trag einen beliebigen MCP-Server ein. Jarvis verbindet sich, sobald er hinzugefügt ist.</translation>
+        <translation>Starten Sie mit einer Schnellauswahl oder tragen Sie einen beliebigen MCP-Server ein. Jarvis verbindet sich damit, sobald er hinzugefügt ist.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -1284,7 +1284,7 @@
     <message>
         <location line="+6"/>
         <source>Plugin added: connecting…</source>
-        <translation>Plugin hinzugefügt: verbinde…</translation>
+        <translation>Plugin hinzugefügt: Verbindung wird hergestellt…</translation>
     </message>
 </context>
 <context>
@@ -1297,7 +1297,7 @@
     <message>
         <location line="+1"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
-        <translation>Änderungen werden sofort gespeichert. Modelle und API-Schlüssel findest du auf der Seite „Modelle“.</translation>
+        <translation>Änderungen werden sofort gespeichert. Modelle und API-Schlüssel finden Sie auf der Seite „Modelle“.</translation>
     </message>
     <message>
         <location line="+31"/>
@@ -1332,7 +1332,7 @@
     <message>
         <location line="+1"/>
         <source>How Jarvis sounds and talks to you. Changes apply from the next conversation.</source>
-        <translation>Wie Jarvis klingt und mit dir spricht. Änderungen gelten ab dem nächsten Gespräch.</translation>
+        <translation>Wie Jarvis klingt und mit Ihnen spricht. Änderungen gelten ab dem nächsten Gespräch.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1372,7 +1372,7 @@
     <message>
         <location line="+4"/>
         <source>Also speaks and understands, when you (or someone on WhatsApp) speak them. Anything else is taken as mishearing.</source>
-        <translation>Spricht und versteht diese Sprachen außerdem, wenn du (oder jemand auf WhatsApp) sie sprichst. Alles andere gilt als verhört.</translation>
+        <translation>Spricht und versteht diese Sprachen außerdem, wenn Sie (oder jemand auf WhatsApp) sie sprechen. Alles andere wird als Verhörer gewertet.</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -1397,7 +1397,7 @@
     <message>
         <location line="+1"/>
         <source>Hear and speak with the models on the Models page instead of Gemini Live, for keys without it. Off, the backup voice only answers while Gemini Live can&apos;t be reached</source>
-        <translation>Hören und Sprechen mit den Modellen auf der Seite „Modelle“ statt mit Gemini Live, für Schlüssel ohne Gemini Live. Aus: Die Ersatzstimme antwortet nur, solange Gemini Live nicht erreichbar ist</translation>
+        <translation>Hören und Sprechen über die Modelle auf der Seite „Modelle“ statt über Gemini Live, für Schlüssel ohne Gemini Live. Wenn aus, antwortet die Ersatzstimme nur, solange Gemini Live nicht erreichbar ist</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -1422,7 +1422,7 @@
     <message>
         <location line="+2"/>
         <source>Path of your own openWakeWord .onnx model</source>
-        <translation>Pfad zu deinem eigenen openWakeWord-Modell (.onnx)</translation>
+        <translation>Pfad zu Ihrem eigenen openWakeWord-Modell (.onnx)</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1442,7 +1442,7 @@
     <message>
         <location line="+1"/>
         <source>Lower is snappier; higher cuts you off less</source>
-        <translation>Niedriger antwortet flotter, höher unterbricht dich seltener</translation>
+        <translation>Niedriger antwortet flotter, höher unterbricht Sie seltener</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1452,7 +1452,7 @@
     <message>
         <location line="+1"/>
         <source>Lower wakes more easily</source>
-        <translation>Niedriger weckt leichter</translation>
+        <translation>Niedriger reagiert leichter</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1488,7 +1488,7 @@
     <message>
         <location line="+0"/>
         <source>Wake-ups you dismiss teach Jarvis what isn&apos;t you</source>
-        <translation>Abgewiesene Aktivierungen zeigen Jarvis, was nicht du bist</translation>
+        <translation>Abgewiesene Aktivierungen zeigen Jarvis, was nicht Ihre Stimme ist</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1503,7 +1503,7 @@
     <message>
         <location line="+1"/>
         <source>Needs Learn my voice on: until then anyone can wake Jarvis</source>
-        <translation>Erfordert „Meine Stimme lernen“: Bis dahin kann jeder Jarvis wecken</translation>
+        <translation>Erfordert aktiviertes „Meine Stimme lernen“: Bis dahin kann jeder Jarvis wecken</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1518,12 +1518,12 @@
     <message>
         <location line="+1"/>
         <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (experimental on Windows: Health says if it&apos;s working; restart Jarvis to apply)</source>
-        <translation>Hält den Ton des PCs (Jarvis, Spiele, Videos, Anrufe) vom Mikrofon fern, damit er nicht als du gehört wird und du Jarvis ins Wort fallen kannst (unter Windows experimentell: „Diagnose“ zeigt, ob es funktioniert; wirkt nach einem Neustart von Jarvis)</translation>
+        <translation>Hält den Ton des PCs (Jarvis, Spiele, Videos, Anrufe) vom Mikrofon fern, damit er nicht als Ihre Stimme gilt und Sie Jarvis ins Wort fallen können (unter Windows experimentell: „Diagnose“ zeigt, ob es funktioniert; wirkt nach einem Neustart von Jarvis)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (PipeWire; restart Jarvis to apply)</source>
-        <translation>Hält den Ton des PCs (Jarvis, Spiele, Videos, Anrufe) vom Mikrofon fern, damit er nicht als du gehört wird und du Jarvis ins Wort fallen kannst (PipeWire; wirkt nach einem Neustart von Jarvis)</translation>
+        <translation>Hält den Ton des PCs (Jarvis, Spiele, Videos, Anrufe) vom Mikrofon fern, damit er nicht als Ihre Stimme gilt und Sie Jarvis ins Wort fallen können (PipeWire; wirkt nach einem Neustart von Jarvis)</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1538,7 +1538,7 @@
     <message>
         <location line="+0"/>
         <source>A few words only you know</source>
-        <translation>Ein paar Wörter, die nur du kennst</translation>
+        <translation>Ein paar Wörter, die nur Sie kennen</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1561,7 +1561,7 @@
     <message>
         <location line="+2"/>
         <source>Bind these to keyboard shortcuts (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</source>
-        <translation>Lege diese auf Tastenkürzel (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</translation>
+        <translation>Legen Sie diese auf Tastenkürzel (KDE: Systemeinstellungen → Tastatur → Kurzbefehle → Neu hinzufügen → Befehl).</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1571,12 +1571,12 @@
     <message>
         <location line="+1"/>
         <source>Drag over part of the screen and ask about it</source>
-        <translation>Bildschirmbereich aufziehen und dazu fragen</translation>
+        <translation>Bildschirmbereich auswählen und Fragen dazu stellen</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Your day</source>
-        <translation>Dein Tag</translation>
+        <translation>Ihr Tag</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1586,7 +1586,7 @@
     <message>
         <location line="+1"/>
         <source>Home city, for the weather (empty: guess from your network)</source>
-        <translation>Heimatstadt für das Wetter (leer: anhand deines Netzwerks schätzen)</translation>
+        <translation>Heimatstadt für das Wetter (leer: anhand Ihres Netzwerks ermitteln)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1601,7 +1601,7 @@
     <message>
         <location line="+0"/>
         <source>The first time Jarvis starts in a morning, it tells you about your day</source>
-        <translation>Beim ersten Start am Morgen erzählt dir Jarvis von deinem Tag</translation>
+        <translation>Beim ersten Start am Morgen erzählt Jarvis Ihnen von Ihrem Tag</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1611,7 +1611,7 @@
     <message>
         <location line="+0"/>
         <source>Jarvis doesn&apos;t speak up on its own: reminders, results and messages only go to the chat, notifications and your phone. It still answers you (also in the tray menu)</source>
-        <translation>Jarvis meldet sich nicht von selbst: Erinnerungen, Ergebnisse und Nachrichten landen nur im Chat, in Benachrichtigungen und auf deinem Handy. Antworten bekommst du trotzdem (auch im Menü im Infobereich)</translation>
+        <translation>Jarvis meldet sich nicht von selbst: Erinnerungen, Ergebnisse und Nachrichten erscheinen nur im Chat, in Benachrichtigungen und auf Ihrem Handy. Auf Sie reagiert er weiterhin (auch im Menü im Infobereich)</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1621,7 +1621,7 @@
     <message>
         <location line="+0"/>
         <source>Reminders a day and two hours before work is due (skipped once you&apos;ve turned it in)</source>
-        <translation>Erinnerungen einen Tag und zwei Stunden vor der Abgabe (entfallen, sobald du sie eingereicht hast)</translation>
+        <translation>Erinnerungen einen Tag und zwei Stunden vor der Abgabe (entfallen, sobald Sie sie eingereicht haben)</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1716,17 +1716,17 @@
     <message>
         <location line="+1"/>
         <source>Commands that delete, install or shut down, and account changes (sending email, new events), wait for your yes unless you asked for exactly that</source>
-        <translation>Befehle, die löschen, installieren oder herunterfahren, und Kontoänderungen (E-Mails senden, neue Termine) warten auf dein Ja, außer du hast genau darum gebeten</translation>
+        <translation>Befehle, die löschen, installieren oder herunterfahren, und Kontoänderungen (E-Mails senden, neue Termine) warten auf Ihr Ja, außer Sie haben genau darum gebeten</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Your instructions</source>
-        <translation>Deine Anweisungen</translation>
+        <translation>Ihre Anweisungen</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>How Jarvis should behave, and things it should know about you.</source>
-        <translation>Wie Jarvis sich verhalten soll und was er über dich wissen sollte.</translation>
+        <translation>Wie Jarvis sich verhalten soll und was er über Sie wissen sollte.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1736,22 +1736,22 @@
     <message>
         <location line="+1"/>
         <source>Send Jarvis tasks from anywhere through Telegram.</source>
-        <translation>Schick Jarvis von überall Aufgaben über Telegram.</translation>
+        <translation>Senden Sie Jarvis von überall Aufgaben über Telegram.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>In Telegram, message &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, send /newbot and copy the token it gives you.</source>
-        <translation>Schreib in Telegram &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, sende /newbot und kopiere das Token, das du bekommst.</translation>
+        <translation>Schreiben Sie in Telegram an &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, senden Sie /newbot und kopieren Sie das Token, das Sie erhalten.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Paste it here.</source>
-        <translation>Füge es hier ein.</translation>
+        <translation>Fügen Sie es hier ein.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Send your new bot the code below. Only that chat is answered.</source>
-        <translation>Schick deinem neuen Bot den Code unten. Nur dieser Chat bekommt Antworten.</translation>
+        <translation>Senden Sie Ihrem neuen Bot den Code unten. Nur dieser Chat erhält Antworten.</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -1761,7 +1761,7 @@
     <message>
         <location line="+0"/>
         <source>Paste your bot&apos;s token</source>
-        <translation>Token deines Bots einfügen</translation>
+        <translation>Token Ihres Bots einfügen</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -1771,7 +1771,7 @@
     <message>
         <location line="+1"/>
         <source>Send your bot this code: %1</source>
-        <translation>Schick deinem Bot diesen Code: %1</translation>
+        <translation>Senden Sie Ihrem Bot diesen Code: %1</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -1792,7 +1792,7 @@
     <message>
         <location line="+1"/>
         <source>The Jarvis Android app reaches this PC from anywhere through your own private relay. It&apos;s end-to-end encrypted: the relay only passes on scrambled data, and nothing on this PC is open to the internet.</source>
-        <translation>Die Jarvis-App für Android erreicht diesen PC von überall über dein eigenes privates Relay. Die Verbindung ist Ende-zu-Ende-verschlüsselt: Das Relay leitet nur verschlüsselte Daten weiter, und auf diesem PC ist nichts aus dem Internet erreichbar.</translation>
+        <translation>Die Jarvis-App für Android erreicht diesen PC von überall über Ihr eigenes privates Relay. Die Verbindung ist Ende-zu-Ende-verschlüsselt: Das Relay leitet nur verschlüsselte Daten weiter, und auf diesem PC ist nichts aus dem Internet erreichbar.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1807,7 +1807,7 @@
     <message>
         <location line="+3"/>
         <source>Signs in to your free Cloudflare account in your browser, puts the relay online and saves its address.</source>
-        <translation>Meldet dich im Browser bei deinem kostenlosen Cloudflare-Konto an, stellt das Relay online und speichert seine Adresse.</translation>
+        <translation>Meldet Sie im Browser bei Ihrem kostenlosen Cloudflare-Konto an, stellt das Relay online und speichert seine Adresse.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1817,22 +1817,22 @@
     <message>
         <location line="+1"/>
         <source>In the relay folder of Jarvis&apos;s files, sign in to a free Cloudflare account:</source>
-        <translation>Melde dich im Ordner relay der Jarvis-Dateien bei einem kostenlosen Cloudflare-Konto an:</translation>
+        <translation>Melden Sie sich im Ordner „relay“ der Jarvis-Dateien bei einem kostenlosen Cloudflare-Konto an:</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Put the relay online:</source>
-        <translation>Stell das Relay online:</translation>
+        <translation>Stellen Sie das Relay online:</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Paste the address it prints here.</source>
-        <translation>Füge die ausgegebene Adresse hier ein.</translation>
+        <translation>Fügen Sie die ausgegebene Adresse hier ein.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Your relay&apos;s address, like https://jarvis-relay.you.workers.dev</source>
-        <translation>Adresse deines Relays, z. B. https://jarvis-relay.you.workers.dev</translation>
+        <translation>Adresse Ihres Relays, z. B. https://jarvis-relay.you.workers.dev</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1847,7 +1847,7 @@
     <message>
         <location line="+0"/>
         <source>Connecting…</source>
-        <translation>Verbinde…</translation>
+        <translation>Verbindung wird hergestellt…</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1872,7 +1872,7 @@
     <message>
         <location line="+2"/>
         <source>In the Jarvis app, tap Pair and scan this code. It works once, for ten minutes.</source>
-        <translation>Tippe in der Jarvis-App auf „Pair“ und scanne diesen Code. Er gilt einmal, zehn Minuten lang.</translation>
+        <translation>Tippen Sie in der Jarvis-App auf „Pair“ und scannen Sie diesen Code. Er gilt einmalig für zehn Minuten.</translation>
     </message>
     <message>
         <location line="+18"/>
@@ -1882,7 +1882,7 @@
     <message>
         <location line="+1"/>
         <source>Jarvis links to your own WhatsApp like WhatsApp Web. It answers your contacts&apos; messages that don&apos;t need you, saying it&apos;s your assistant, and picks up calls you miss to take a message. It&apos;s not an official WhatsApp feature: WhatsApp may block numbers that act like bots, so Jarvis answers only saved contacts, never groups.</source>
-        <translation>Jarvis verbindet sich wie WhatsApp Web mit deinem eigenen WhatsApp. Er beantwortet Nachrichten deiner Kontakte, für die du nicht gebraucht wirst, sagt dabei, dass er dein Assistent ist, und nimmt verpasste Anrufe an, um etwas auszurichten. Das ist keine offizielle WhatsApp-Funktion: WhatsApp kann Nummern sperren, die sich wie Bots verhalten, daher antwortet Jarvis nur gespeicherten Kontakten, nie in Gruppen.</translation>
+        <translation>Jarvis verbindet sich wie WhatsApp Web mit Ihrem eigenen WhatsApp. Er beantwortet Nachrichten Ihrer Kontakte, für die Sie nicht gebraucht werden, sagt dabei, dass er Ihr Assistent ist, und nimmt Anrufe an, die Sie verpassen, um eine Nachricht entgegenzunehmen. Das ist keine offizielle WhatsApp-Funktion: WhatsApp kann Nummern sperren, die sich wie Bots verhalten, daher antwortet Jarvis nur gespeicherten Kontakten, nie in Gruppen.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1892,7 +1892,7 @@
     <message>
         <location line="+3"/>
         <source>Connecting to WhatsApp…</source>
-        <translation>Verbinde mit WhatsApp…</translation>
+        <translation>Verbindung mit WhatsApp wird hergestellt…</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1907,7 +1907,7 @@
     <message>
         <location line="+2"/>
         <source>On your phone: WhatsApp → Settings → Linked devices → Link a device, then scan this code. It renews itself.</source>
-        <translation>Auf dem Handy: WhatsApp → Einstellungen → Verknüpfte Geräte → Gerät hinzufügen, dann diesen Code scannen. Er erneuert sich selbst.</translation>
+        <translation>Auf Ihrem Handy: WhatsApp → Einstellungen → Verknüpfte Geräte → Gerät hinzufügen, dann diesen Code scannen. Er erneuert sich automatisch.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1942,7 +1942,7 @@
     <message>
         <location line="+0"/>
         <source>Just show them to me</source>
-        <translation>Nur mir anzeigen</translation>
+        <translation>Nur anzeigen</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1967,7 +1967,7 @@
     <message>
         <location line="+3"/>
         <source>Always let through (one name per line, as WhatsApp shows it): never answered by Jarvis, always told to you out loud, even in quiet hours</source>
-        <translation>Immer durchlassen (ein Name pro Zeile, wie WhatsApp ihn anzeigt): nie von Jarvis beantwortet, immer laut angesagt, auch in der Ruhezeit</translation>
+        <translation>Immer durchlassen (ein Name pro Zeile, wie WhatsApp ihn anzeigt): nie von Jarvis beantwortet, Ihnen immer laut angesagt, auch in der Ruhezeit</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1997,12 +1997,12 @@
     <message>
         <location line="+9"/>
         <source>Your data</source>
-        <translation>Deine Daten</translation>
+        <translation>Ihre Daten</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>On this PC Jarvis keeps what it remembers about you, your conversations, reminders and routines, short clips of your wake word (to learn your voice) and a log. What you say after the wake word, and screenshots when a task needs the screen, go to Google Gemini; account actions go through Composio.</source>
-        <translation>Auf diesem PC speichert Jarvis, was er sich über dich merkt, deine Gespräche, Erinnerungen und Routinen, kurze Aufnahmen deines Aktivierungsworts (um deine Stimme zu lernen) und ein Protokoll. Was du nach dem Aktivierungswort sagst und Screenshots, wenn eine Aufgabe den Bildschirm braucht, gehen an Google Gemini; Kontoaktionen laufen über Composio.</translation>
+        <translation>Auf diesem PC speichert Jarvis, was er sich über Sie merkt, Ihre Gespräche, Erinnerungen und Routinen, kurze Aufnahmen Ihres Aktivierungsworts (um Ihre Stimme zu lernen) und ein Protokoll. Was Sie nach dem Aktivierungswort sagen, und Screenshots, wenn eine Aufgabe den Bildschirm braucht, gehen an Google Gemini; Kontoaktionen laufen über Composio.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -2062,7 +2062,7 @@
     <message>
         <location line="+1"/>
         <source>One file with your settings, memory, reminders, scheduled tasks, routines, plugins, conversations and the clips Jarvis learned your voice from. Keys, account sign-ins, WhatsApp and your phone aren&apos;t in it: set those up again on the other computer.</source>
-        <translation>Eine Datei mit deinen Einstellungen, deinem Gedächtnis, Erinnerungen, geplanten Aufgaben, Routinen, Plugins, Gesprächen und den Aufnahmen, aus denen Jarvis deine Stimme gelernt hat. Schlüssel, Kontoanmeldungen, WhatsApp und dein Handy sind nicht enthalten: Richte sie auf dem anderen Computer neu ein.</translation>
+        <translation>Eine Datei mit Ihren Einstellungen, Ihrem Gedächtnis, Erinnerungen, geplanten Aufgaben, Routinen, Plugins, Gesprächen und den Aufnahmen, aus denen Jarvis Ihre Stimme gelernt hat. Schlüssel, Kontoanmeldungen, WhatsApp und Ihr Handy sind nicht enthalten: Richten Sie diese auf dem anderen Computer neu ein.</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2077,7 +2077,7 @@
     <message>
         <location line="+1"/>
         <source>Bringing one in replaces what&apos;s on this computer (conversations are added), then Jarvis restarts.</source>
-        <translation>Das Einspielen ersetzt, was auf diesem Computer ist (Gespräche werden ergänzt), danach startet Jarvis neu.</translation>
+        <translation>Das Einspielen ersetzt die Daten auf diesem Computer (Gespräche werden ergänzt), danach startet Jarvis neu.</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2181,7 +2181,7 @@
     <message>
         <location line="+0"/>
         <source>Ready</source>
-        <translation>Fertig</translation>
+        <translation>Bereit</translation>
     </message>
     <message>
         <location line="+75"/>
@@ -2201,7 +2201,7 @@
     <message>
         <location line="+1"/>
         <source>Say “%1” and ask for anything: questions, what’s on your screen, your apps, email, calendar, Classroom, reminders. A couple of minutes of setup and you’re ready.</source>
-        <translation>Sag „%1“ und frag nach allem Möglichen: Fragen, deinem Bildschirm, deinen Apps, E-Mails, Kalender, Classroom, Erinnerungen. Ein paar Minuten Einrichtung, und es kann losgehen.</translation>
+        <translation>Sagen Sie „%1“ und bitten Sie um alles Mögliche: Fragen, was auf Ihrem Bildschirm ist, Ihre Apps, E-Mails, Kalender, Classroom, Erinnerungen. Ein paar Minuten Einrichtung, und es kann losgehen.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -2211,17 +2211,17 @@
     <message>
         <location line="+1"/>
         <source>What you say after “%1”, and screenshots when a task needs the screen, go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Memory, reminders and conversations stay on this computer.</source>
-        <translation>Was du nach „%1“ sagst und Screenshots, wenn eine Aufgabe den Bildschirm braucht, gehen an Google Gemini. Kontoaktionen laufen über Composio, nur für die Konten, die du verbindest. Gedächtnis, Erinnerungen und Gespräche bleiben auf diesem Computer.</translation>
+        <translation>Was Sie nach „%1“ sagen, und Screenshots, wenn eine Aufgabe den Bildschirm braucht, gehen an Google Gemini. Kontoaktionen laufen über Composio, nur für die Konten, die Sie verbinden. Gedächtnis, Erinnerungen und Gespräche bleiben auf diesem Computer.</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Your Gemini key</source>
-        <translation>Dein Gemini-Schlüssel</translation>
+        <translation>Ihr Gemini-Schlüssel</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Jarvis thinks with Google Gemini. A free key takes a minute: sign in at &lt;a href=&quot;https://aistudio.google.com/apikey&quot;&gt;aistudio.google.com/apikey&lt;/a&gt;, press Create API key, and paste it here. It’s kept in your system keychain.</source>
-        <translation>Jarvis denkt mit Google Gemini. Ein kostenloser Schlüssel dauert eine Minute: Melde dich bei &lt;a href=&quot;https://aistudio.google.com/apikey&quot;&gt;aistudio.google.com/apikey&lt;/a&gt; an, klicke auf „Create API key“ und füge ihn hier ein. Er wird im Schlüsselbund deines Systems gespeichert.</translation>
+        <translation>Jarvis denkt mit Google Gemini. Ein kostenloser Schlüssel ist in einer Minute erstellt: Melden Sie sich bei &lt;a href=&quot;https://aistudio.google.com/apikey&quot;&gt;aistudio.google.com/apikey&lt;/a&gt; an, klicken Sie auf „Create API key“ und fügen Sie ihn hier ein. Er wird im Schlüsselbund Ihres Systems gespeichert.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2261,22 +2261,22 @@
     <message>
         <location line="+6"/>
         <source>Your microphone</source>
-        <translation>Dein Mikrofon</translation>
+        <translation>Ihr Mikrofon</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Say something: the bars should jump while you talk.</source>
-        <translation>Sag etwas: Die Balken sollten beim Sprechen ausschlagen.</translation>
+        <translation>Sagen Sie etwas: Die Balken sollten beim Sprechen ausschlagen.</translation>
     </message>
     <message>
         <location line="+37"/>
         <source>I can hear you.</source>
-        <translation>Ich höre dich.</translation>
+        <translation>Ich höre Sie.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Quiet so far. If the bars never move, pick the right input device in your system’s sound settings.</source>
-        <translation>Bisher still. Bewegen sich die Balken nie, wähle in den Toneinstellungen deines Systems das richtige Eingabegerät.</translation>
+        <translation>Bisher still. Bewegen sich die Balken nie, wählen Sie in den Toneinstellungen Ihres Systems das richtige Eingabegerät.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -2286,7 +2286,7 @@
     <message>
         <location line="+11"/>
         <source>Lower wakes more easily.</source>
-        <translation>Niedriger weckt leichter.</translation>
+        <translation>Niedriger reagiert leichter.</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2316,7 +2316,7 @@
     <message>
         <location line="+1"/>
         <source>You can change this any time in Settings.</source>
-        <translation>Du kannst das jederzeit in den Einstellungen ändern.</translation>
+        <translation>Sie können das jederzeit in den Einstellungen ändern.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2331,7 +2331,7 @@
     <message>
         <location line="+1"/>
         <source>Commands that delete, install or shut down, and changes to your accounts (sending email, creating events), wait for your yes, unless you asked for exactly that.</source>
-        <translation>Befehle, die löschen, installieren oder herunterfahren, und Änderungen an deinen Konten (E-Mails senden, Termine anlegen) warten auf dein Ja, außer du hast genau darum gebeten.</translation>
+        <translation>Befehle, die löschen, installieren oder herunterfahren, und Änderungen an Ihren Konten (E-Mails senden, Termine anlegen) warten auf Ihr Ja, außer Sie haben genau darum gebeten.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2341,7 +2341,7 @@
     <message>
         <location line="+1"/>
         <source>Jarvis acts without checking first. Quicker, for when you trust it with your PC and accounts.</source>
-        <translation>Jarvis handelt ohne Rückfrage. Schneller, wenn du ihm deinen PC und deine Konten anvertraust.</translation>
+        <translation>Jarvis handelt ohne Rückfrage. Schneller, wenn Sie ihm Ihren PC und Ihre Konten anvertrauen.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2351,12 +2351,12 @@
     <message>
         <location line="+1"/>
         <source>Connect Gmail, Calendar, Classroom, Drive and more on the Accounts page so Jarvis can use them. If something doesn’t work, the Health page says what and how to fix it.</source>
-        <translation>Verbinde Gmail, Kalender, Classroom, Drive und mehr auf der Seite „Konten“, damit Jarvis sie nutzen kann. Wenn etwas nicht funktioniert, zeigt die Seite „Diagnose“, was los ist und wie du es behebst.</translation>
+        <translation>Verbinden Sie Gmail, Kalender, Classroom, Drive und mehr auf der Seite „Konten“, damit Jarvis sie nutzen kann. Wenn etwas nicht funktioniert, zeigt die Seite „Diagnose“, was los ist und wie Sie es beheben.</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>Try it now</source>
-        <translation>Probier es aus</translation>
+        <translation>Jetzt ausprobieren</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2447,7 +2447,7 @@
     <message>
         <location line="+1"/>
         <source>Nothing scheduled. Try “remind me in 20 minutes to stretch”.</source>
-        <translation>Nichts geplant. Probier „erinnere mich in 20 Minuten, mich zu dehnen“.</translation>
+        <translation>Nichts geplant. Versuchen Sie „erinnere mich in 20 Minuten, mich zu dehnen“.</translation>
     </message>
     <message>
         <location line="+30"/>
@@ -2477,7 +2477,7 @@
     <message>
         <location line="+1"/>
         <source>Disk</source>
-        <translation>Festplatte</translation>
+        <translation>Datenträger</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2487,7 +2487,7 @@
     <message>
         <location line="+12"/>
         <source>Last answer started %1 s after you finished</source>
-        <translation>Letzte Antwort kam %1 s nach deinem letzten Wort</translation>
+        <translation>Letzte Antwort kam %1 s nach Ihrem letzten Wort</translation>
     </message>
 </context>
 <context>
@@ -2520,7 +2520,7 @@
     <message>
         <location line="+13"/>
         <source>Running in the tray. Say &quot;%1&quot;.</source>
-        <translation>Läuft im Infobereich. Sag „%1“.</translation>
+        <translation>Läuft im Infobereich. Sagen Sie „%1“.</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -2545,7 +2545,7 @@
     <message>
         <location line="+2"/>
         <source>quiet</source>
-        <translation>stumm</translation>
+        <translation>Ruhezeit</translation>
     </message>
     <message>
         <location line="+1"/>

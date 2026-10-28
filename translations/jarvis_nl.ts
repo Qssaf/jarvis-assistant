@@ -275,7 +275,7 @@
     <message>
         <location line="+6"/>
         <source>Ask Jarvis</source>
-        <translation>Vraag het Jarvis</translation>
+        <translation>Vraag Jarvis iets</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -375,8 +375,8 @@
         <location line="+0"/>
         <source>%n thing(s) to fix</source>
         <translation>
-            <numerusform>%n ding op te lossen</numerusform>
-            <numerusform>%n dingen op te lossen</numerusform>
+            <numerusform>%n probleem op te lossen</numerusform>
+            <numerusform>%n problemen op te lossen</numerusform>
         </translation>
     </message>
     <message>
@@ -442,7 +442,7 @@
     <message>
         <location line="+36"/>
         <source>Up late?</source>
-        <translation>Laat op?</translation>
+        <translation>Nog wakker?</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -781,27 +781,27 @@
     <message>
         <location line="+2"/>
         <source>Look every</source>
-        <translation>Controleer elke</translation>
+        <translation>Controleren:</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>30 minutes</source>
-        <translation>30 minuten</translation>
+        <translation>Elk half uur</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Hour</source>
-        <translation>1 uur</translation>
+        <translation>Elk uur</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>3 hours</source>
-        <translation>3 uur</translation>
+        <translation>Elke 3 uur</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>12 hours</source>
-        <translation>12 uur</translation>
+        <translation>Elke 12 uur</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -1168,7 +1168,7 @@
     <message>
         <location line="+0"/>
         <source>Connecting… (a sign-in page may open in your browser)</source>
-        <translation>Verbinden… (er kan een inlogpagina in je browser openen)</translation>
+        <translation>Verbinden… (er kan een inlogpagina in je browser opengaan)</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1198,7 +1198,7 @@
     <message>
         <location line="+1"/>
         <source>Start from a quick pick, or fill in any MCP server. Jarvis connects to it as soon as it&apos;s added.</source>
-        <translation>Begin met een snelle keuze of vul een willekeurige MCP-server in. Jarvis maakt verbinding zodra hij is toegevoegd.</translation>
+        <translation>Begin met een snelle keuze of vul een willekeurige MCP-server in. Jarvis maakt verbinding zodra die is toegevoegd.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -1518,17 +1518,17 @@
     <message>
         <location line="+1"/>
         <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (experimental on Windows: Health says if it&apos;s working; restart Jarvis to apply)</source>
-        <translation>Houdt het geluid van de pc zelf (Jarvis, games, video’s, gesprekken) uit de microfoon, zodat het niet als jou wordt gehoord en je door Jarvis heen kunt praten (experimenteel op Windows: ‘Diagnose’ laat zien of het werkt; herstart Jarvis om het toe te passen)</translation>
+        <translation>Houdt het geluid van de pc zelf (Jarvis, games, video’s, gesprekken) uit de microfoon, zodat het niet voor jou wordt aangezien en je door Jarvis heen kunt praten (experimenteel op Windows: ‘Diagnose’ laat zien of het werkt; herstart Jarvis om het toe te passen)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (PipeWire; restart Jarvis to apply)</source>
-        <translation>Houdt het geluid van de pc zelf (Jarvis, games, video’s, gesprekken) uit de microfoon, zodat het niet als jou wordt gehoord en je door Jarvis heen kunt praten (PipeWire; herstart Jarvis om het toe te passen)</translation>
+        <translation>Houdt het geluid van de pc zelf (Jarvis, games, video’s, gesprekken) uit de microfoon, zodat het niet voor jou wordt aangezien en je door Jarvis heen kunt praten (PipeWire; herstart Jarvis om het toe te passen)</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Spoken passphrase: asked for with every yes said out loud (sends, calls, account changes, risky commands). Never shown or said back</source>
-        <translation>Gesproken wachtzin: gevraagd bij elk hardop gezegd ja (versturen, bellen, accountwijzigingen, riskante opdrachten). Wordt nooit getoond of herhaald</translation>
+        <translation>Gesproken wachtzin: gevraagd bij elk ‘ja’ dat je hardop zegt (versturen, bellen, accountwijzigingen, riskante opdrachten). Wordt nooit getoond of herhaald</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1561,7 +1561,7 @@
     <message>
         <location line="+2"/>
         <source>Bind these to keyboard shortcuts (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</source>
-        <translation>Koppel deze aan sneltoetsen (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</translation>
+        <translation>Koppel deze aan sneltoetsen (KDE: Systeeminstellingen → Toetsenbord → Sneltoetsen → Nieuwe toevoegen → Commando).</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1756,7 +1756,7 @@
     <message>
         <location line="+6"/>
         <source>Bot token saved · paste a new one to replace it</source>
-        <translation>Bottoken opgeslagen · plak een nieuw om het te vervangen</translation>
+        <translation>Bottoken opgeslagen · plak een nieuw token om het te vervangen</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1807,7 +1807,7 @@
     <message>
         <location line="+3"/>
         <source>Signs in to your free Cloudflare account in your browser, puts the relay online and saves its address.</source>
-        <translation>Logt in je browser in op je gratis Cloudflare-account, zet de relay online en slaat het adres op.</translation>
+        <translation>Logt via je browser in op je gratis Cloudflare-account, zet de relay online en slaat het adres op.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1817,7 +1817,7 @@
     <message>
         <location line="+1"/>
         <source>In the relay folder of Jarvis&apos;s files, sign in to a free Cloudflare account:</source>
-        <translation>Log in de map relay van de Jarvis-bestanden in op een gratis Cloudflare-account:</translation>
+        <translation>Log in de map relay van Jarvis in op een gratis Cloudflare-account:</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1827,7 +1827,7 @@
     <message>
         <location line="+1"/>
         <source>Paste the address it prints here.</source>
-        <translation>Plak het adres dat verschijnt hier.</translation>
+        <translation>Plak hier het adres dat wordt getoond.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1907,7 +1907,7 @@
     <message>
         <location line="+2"/>
         <source>On your phone: WhatsApp → Settings → Linked devices → Link a device, then scan this code. It renews itself.</source>
-        <translation>Op je telefoon: WhatsApp → Instellingen → Gekoppelde apparaten → Een apparaat koppelen, en scan dan deze code. Hij vernieuwt zichzelf.</translation>
+        <translation>Op je telefoon: WhatsApp → Instellingen → Gekoppelde apparaten → Apparaat koppelen, en scan dan deze code. Hij vernieuwt zichzelf.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2113,12 +2113,12 @@
     <message>
         <location line="+14"/>
         <source>%1 is out (%2)</source>
-        <translation>%1 is uit (%2)</translation>
+        <translation>%1 is beschikbaar (%2)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%1 is out</source>
-        <translation>%1 is uit</translation>
+        <translation>%1 is beschikbaar</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2143,7 +2143,7 @@
     <message>
         <location line="+3"/>
         <source>Run the setup again</source>
-        <translation>Installatie opnieuw doorlopen</translation>
+        <translation>Opnieuw instellen</translation>
     </message>
     <message>
         <location line="+116"/>
@@ -2422,7 +2422,7 @@
     <message>
         <location filename="../qml/Today.qml" line="+92"/>
         <source>Feels %1 in %2</source>
-        <translation>Voelt als %1 in %2</translation>
+        <translation>Gevoelstemperatuur %1 in %2</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2432,7 +2432,7 @@
     <message>
         <location line="+11"/>
         <source>Previous</source>
-        <translation>Vorige nummer</translation>
+        <translation>Vorig nummer</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -2442,7 +2442,7 @@
     <message>
         <location line="+13"/>
         <source>Up next</source>
-        <translation>Hierna</translation>
+        <translation>Binnenkort</translation>
     </message>
     <message>
         <location line="+1"/>

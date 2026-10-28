@@ -67,7 +67,7 @@
     <message>
         <location line="+7"/>
         <source>Ask before changes</source>
-        <translation>Preguntar antes de cambios</translation>
+        <translation>Preguntar antes de cambiar</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -354,7 +354,7 @@
     <message>
         <location line="+5"/>
         <source>Copy a report</source>
-        <translation>Copiar un informe</translation>
+        <translation>Copiar informe</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1013,7 +1013,7 @@
     <message>
         <location line="+15"/>
         <source>It signs in the way Google&apos;s Antigravity app does, which Google doesn&apos;t offer to other apps: Google may limit or suspend accounts used like this. Use an account you can afford to lose.</source>
-        <translation>Inicia sesión igual que la app Antigravity de Google, algo que Google no ofrece a otras apps: Google puede limitar o suspender las cuentas que se usan así. Usa una cuenta que puedas permitirte perder.</translation>
+        <translation>Jarvis inicia sesión como lo hace la app Antigravity de Google, algo que Google no ofrece a otras apps: Google puede limitar o suspender las cuentas que se usan así. Usa una cuenta que puedas permitirte perder.</translation>
     </message>
     <message>
         <location line="+25"/>
@@ -1173,7 +1173,7 @@
     <message>
         <location line="+7"/>
         <source>Try now</source>
-        <translation>Probar ahora</translation>
+        <translation>Reintentar ahora</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -1198,7 +1198,7 @@
     <message>
         <location line="+1"/>
         <source>Start from a quick pick, or fill in any MCP server. Jarvis connects to it as soon as it&apos;s added.</source>
-        <translation>Empieza con una opción rápida o rellena cualquier servidor MCP. Jarvis se conecta en cuanto se añade.</translation>
+        <translation>Empieza con una opción rápida o configura cualquier servidor MCP. Jarvis se conecta en cuanto se añade.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -1442,7 +1442,7 @@
     <message>
         <location line="+1"/>
         <source>Lower is snappier; higher cuts you off less</source>
-        <translation>Más bajo responde antes; más alto te interrumpe menos</translation>
+        <translation>Más bajo: responde antes; más alto: te interrumpe menos</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1478,7 +1478,7 @@
     <message>
         <location line="+1"/>
         <source>Makes the next wake-up instant</source>
-        <translation>La siguiente activación es instantánea</translation>
+        <translation>Hace que la siguiente activación sea instantánea</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1488,7 +1488,7 @@
     <message>
         <location line="+0"/>
         <source>Wake-ups you dismiss teach Jarvis what isn&apos;t you</source>
-        <translation>Las activaciones que descartas enseñan a Jarvis qué no eres tú</translation>
+        <translation>Las activaciones que descartas enseñan a Jarvis cuándo no eres tú</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1498,12 +1498,12 @@
     <message>
         <location line="+1"/>
         <source>Nothing learned for this wake word yet (Learn my voice needs a few wake-ups first): until then anyone can wake Jarvis</source>
-        <translation>Aún no se ha aprendido nada para esta palabra de activación (Aprender mi voz necesita antes unas cuantas activaciones): hasta entonces cualquiera puede activar Jarvis</translation>
+        <translation>Aún no se ha aprendido nada para esta palabra de activación (Aprender mi voz necesita antes unas cuantas activaciones): hasta entonces cualquiera puede activar a Jarvis</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Needs Learn my voice on: until then anyone can wake Jarvis</source>
-        <translation>Requiere activar Aprender mi voz: hasta entonces cualquiera puede activar Jarvis</translation>
+        <translation>Requiere activar Aprender mi voz: hasta entonces cualquiera puede activar a Jarvis</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1586,7 +1586,7 @@
     <message>
         <location line="+1"/>
         <source>Home city, for the weather (empty: guess from your network)</source>
-        <translation>Ciudad, para el tiempo (vacío: se deduce de tu red)</translation>
+        <translation>Tu ciudad, para el tiempo (vacío: se deduce de tu red)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1706,7 +1706,7 @@
     <message>
         <location line="+3"/>
         <source>Start Jarvis when I log in</source>
-        <translation>Iniciar Jarvis al iniciar sesión</translation>
+        <translation>Abrir Jarvis al iniciar sesión</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1792,7 +1792,7 @@
     <message>
         <location line="+1"/>
         <source>The Jarvis Android app reaches this PC from anywhere through your own private relay. It&apos;s end-to-end encrypted: the relay only passes on scrambled data, and nothing on this PC is open to the internet.</source>
-        <translation>La app de Jarvis para Android llega a este PC desde cualquier lugar a través de tu propio retransmisor privado. Está cifrada de extremo a extremo: el retransmisor solo transmite datos cifrados y nada de este PC queda expuesto a internet.</translation>
+        <translation>La app de Jarvis para Android se conecta a este PC desde cualquier lugar a través de tu propio retransmisor privado. Está cifrada de extremo a extremo: el retransmisor solo transmite datos cifrados y nada de este PC queda expuesto a internet.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2072,7 +2072,7 @@
     <message>
         <location line="+3"/>
         <source>Bring one in</source>
-        <translation>Importar una</translation>
+        <translation>Importar una copia</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2082,13 +2082,13 @@
     <message>
         <location line="+6"/>
         <source>Save a Jarvis backup</source>
-        <translation>Guardar una copia de Jarvis</translation>
+        <translation>Guardar una copia de seguridad de Jarvis</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+8"/>
         <source>Jarvis backups (*.zip)</source>
-        <translation>Copias de Jarvis (*.zip)</translation>
+        <translation>Copias de seguridad de Jarvis (*.zip)</translation>
     </message>
     <message>
         <location line="-6"/>
@@ -2098,12 +2098,12 @@
     <message>
         <location line="+5"/>
         <source>Bring in a Jarvis backup</source>
-        <translation>Importar una copia de Jarvis</translation>
+        <translation>Importar una copia de seguridad de Jarvis</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Brought in (left at their defaults here: %1): Jarvis is restarting</source>
-        <translation>Importada (con valores predeterminados aquí: %1): Jarvis se está reiniciando</translation>
+        <translation>Importada (se dejan con su valor predeterminado: %1): Jarvis se está reiniciando</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2306,12 +2306,12 @@
     <message>
         <location line="+4"/>
         <source>Start Jarvis when I log in</source>
-        <translation>Iniciar Jarvis al iniciar sesión</translation>
+        <translation>Abrir Jarvis al iniciar sesión</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>How careful should I be?</source>
-        <translation>¿Con cuánto cuidado debo actuar?</translation>
+        <translation>¿Cuánta precaución debo tener?</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2422,7 +2422,7 @@
     <message>
         <location filename="../qml/Today.qml" line="+92"/>
         <source>Feels %1 in %2</source>
-        <translation>Sensación de %1 en %2</translation>
+        <translation>Sensación térmica de %1 en %2</translation>
     </message>
     <message>
         <location line="+44"/>

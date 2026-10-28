@@ -695,7 +695,7 @@
         <location line="+1"/>
         <source>%n coming up.</source>
         <translation>
-            <numerusform>即将到来 %n 项。</numerusform>
+            <numerusform>接下来有 %n 项。</numerusform>
         </translation>
     </message>
     <message>
@@ -722,12 +722,12 @@
     <message>
         <location line="+4"/>
         <source>Routines</source>
-        <translation>例程</translation>
+        <translation>例行程序</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Say a routine&apos;s name and Jarvis runs its steps.</source>
-        <translation>说出例程的名称，Jarvis 就会执行其中的步骤。</translation>
+        <translation>说出例行程序的名称，Jarvis 就会执行其中的步骤。</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -743,7 +743,7 @@
     <message>
         <location line="-25"/>
         <source>Add a routine</source>
-        <translation>添加例程</translation>
+        <translation>添加例行程序</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -773,7 +773,7 @@
     <message>
         <location line="+2"/>
         <source>Look every</source>
-        <translation>检查频率</translation>
+        <translation>每隔</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -813,7 +813,7 @@
     <message>
         <location line="+2"/>
         <source>Once</source>
-        <translation>一次</translation>
+        <translation>仅一次</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1226,7 +1226,7 @@
     <message>
         <location line="-3"/>
         <source>e.g. notion</source>
-        <translation>例如 notion</translation>
+        <translation>例如：notion</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1339,7 +1339,7 @@
     <message>
         <location line="+2"/>
         <source>Jarvis: refined, dry wit</source>
-        <translation>Jarvis：优雅，冷幽默</translation>
+        <translation>Jarvis：优雅、冷幽默</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1354,7 +1354,7 @@
     <message>
         <location line="+1"/>
         <source>Language Jarvis speaks and listens for</source>
-        <translation>Jarvis 说和听的语言</translation>
+        <translation>Jarvis 说话和聆听的语言</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1374,7 +1374,7 @@
     <message>
         <location line="+3"/>
         <source>Speak replies to typed messages</source>
-        <translation>朗读文字消息的回复</translation>
+        <translation>朗读对输入消息的回复</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1578,7 +1578,7 @@
     <message>
         <location line="+1"/>
         <source>e.g. London</source>
-        <translation>例如 London</translation>
+        <translation>例如：London</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1628,7 +1628,7 @@
     <message>
         <location line="+1"/>
         <source>e.g. 22:00</source>
-        <translation>例如 22:00</translation>
+        <translation>例如：22:00</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1638,7 +1638,7 @@
     <message>
         <location line="+1"/>
         <source>e.g. 07:00</source>
-        <translation>例如 07:00</translation>
+        <translation>例如：07:00</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -1663,7 +1663,7 @@
     <message>
         <location line="+1"/>
         <source>Window language</source>
-        <translation>窗口语言</translation>
+        <translation>界面语言</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -1683,7 +1683,7 @@
     <message>
         <location line="+4"/>
         <source>Each text shows in the first language that has it. English is the window&apos;s own, so languages under it aren&apos;t used.</source>
-        <translation>每段文字都以列表中第一个有该译文的语言显示。英语是窗口的原始语言，因此排在它下面的语言不会被使用。</translation>
+        <translation>每段文字都以列表中第一个有该译文的语言显示。英语是界面的原始语言，因此排在它下面的语言不会被使用。</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1708,7 +1708,7 @@
     <message>
         <location line="+6"/>
         <source>Your instructions</source>
-        <translation>你的指示</translation>
+        <translation>你的指令</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1738,7 +1738,7 @@
     <message>
         <location line="+1"/>
         <source>Send your new bot the code below. Only that chat is answered.</source>
-        <translation>把下面的代码发送给你的新机器人。Jarvis 只会回复该聊天。</translation>
+        <translation>把下面的配对码发送给你的新机器人。Jarvis 只会回复这个聊天。</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -1758,7 +1758,7 @@
     <message>
         <location line="+1"/>
         <source>Send your bot this code: %1</source>
-        <translation>把这个代码发送给你的机器人：%1</translation>
+        <translation>把这个配对码发送给你的机器人：%1</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -1794,7 +1794,7 @@
     <message>
         <location line="+3"/>
         <source>Signs in to your free Cloudflare account in your browser, puts the relay online and saves its address.</source>
-        <translation>在浏览器中登录你的免费 Cloudflare 账户，上线中继并保存其地址。</translation>
+        <translation>在浏览器中登录你的免费 Cloudflare 账户，部署中继并保存其地址。</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1809,7 +1809,7 @@
     <message>
         <location line="+1"/>
         <source>Put the relay online:</source>
-        <translation>上线中继：</translation>
+        <translation>部署中继：</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1954,12 +1954,12 @@
     <message>
         <location line="+3"/>
         <source>Always let through (one name per line, as WhatsApp shows it): never answered by Jarvis, always told to you out loud, even in quiet hours</source>
-        <translation>始终放行（每行一个名字，与 WhatsApp 中显示的一致）：Jarvis 从不代为回复，总会大声告诉你，即使在安静时段</translation>
+        <translation>始终放行（每行一个名字，与 WhatsApp 中显示的一致）：Jarvis 从不代为回复，并且总会语音告诉你，即使在安静时段也是如此</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>e.g. Alex</source>
-        <translation>例如 Alex</translation>
+        <translation>例如：Alex</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1969,7 +1969,7 @@
     <message>
         <location line="+1"/>
         <source>e.g. Sam</source>
-        <translation>例如 Sam</translation>
+        <translation>例如：Sam</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1989,7 +1989,7 @@
     <message>
         <location line="+1"/>
         <source>On this PC Jarvis keeps what it remembers about you, your conversations, reminders and routines, short clips of your wake word (to learn your voice) and a log. What you say after the wake word, and screenshots when a task needs the screen, go to Google Gemini; account actions go through Composio.</source>
-        <translation>Jarvis 在这台电脑上保存它对你的记忆、你的对话、提醒和例程、唤醒词的简短录音（用于学习你的声音）以及日志。你在唤醒词之后说的话，以及任务需要查看屏幕时的截图，会发送到 Google Gemini；账户操作通过 Composio 进行。</translation>
+        <translation>Jarvis 在这台电脑上保存它对你的记忆、你的对话、提醒和例行程序、唤醒词的简短录音（用于学习你的声音）以及日志。你在唤醒词之后说的话，以及任务需要查看屏幕时的截图，会发送到 Google Gemini；账户操作通过 Composio 进行。</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -2049,7 +2049,7 @@
     <message>
         <location line="+1"/>
         <source>One file with your settings, memory, reminders, scheduled tasks, routines, plugins, conversations and the clips Jarvis learned your voice from. Keys, account sign-ins, WhatsApp and your phone aren&apos;t in it: set those up again on the other computer.</source>
-        <translation>一个文件，包含你的设置、记忆、提醒、定时任务、例程、插件、对话，以及 Jarvis 用来学习你声音的录音。其中不包括密钥、账户登录、WhatsApp 和你的手机：需要在另一台电脑上重新设置。</translation>
+        <translation>一个文件，包含你的设置、记忆、提醒、定时任务、例行程序、插件、对话，以及 Jarvis 用来学习你声音的录音。其中不包括密钥、账户登录、WhatsApp 和你的手机：需要在另一台电脑上重新设置。</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2178,7 +2178,7 @@
     <message>
         <location line="+1"/>
         <source>Let’s get you ready</source>
-        <translation>一起来做好准备</translation>
+        <translation>我们开始吧</translation>
     </message>
     <message>
         <location line="+40"/>
@@ -2288,7 +2288,7 @@
     <message>
         <location line="+15"/>
         <source>Speak replies to typed messages</source>
-        <translation>朗读文字消息的回复</translation>
+        <translation>朗读对输入消息的回复</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -2409,7 +2409,7 @@
     <message>
         <location filename="../qml/Today.qml" line="+92"/>
         <source>Feels %1 in %2</source>
-        <translation>%2 体感 %1</translation>
+        <translation>%2 体感温度 %1</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2532,7 +2532,7 @@
     <message>
         <location line="+2"/>
         <source>quiet</source>
-        <translation>安静</translation>
+        <translation>勿扰</translation>
     </message>
     <message>
         <location line="+1"/>

@@ -47,7 +47,7 @@
     <message>
         <location line="+1"/>
         <source>Sign-in opened in your browser</source>
-        <translation>Accesso aperto nel browser</translation>
+        <translation>Pagina di accesso aperta nel browser</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -173,7 +173,7 @@
     <message>
         <location filename="../qml/ChatsPage.qml" line="+33"/>
         <source>just now</source>
-        <translation>proprio ora</translation>
+        <translation>poco fa</translation>
     </message>
     <message numerus="yes">
         <location line="+0"/>
@@ -1096,7 +1096,7 @@
     <message>
         <location line="+1"/>
         <source>BACKUP VOICE</source>
-        <translation>VOCE RISERVA</translation>
+        <translation>VOCE DI RISERVA</translation>
     </message>
     <message>
         <location line="+28"/>
@@ -1259,7 +1259,7 @@
     <message>
         <location line="+0"/>
         <source>Environment (optional)</source>
-        <translation>Ambiente (facoltativo)</translation>
+        <translation>Variabili d&apos;ambiente (facoltativo)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1332,7 +1332,7 @@
     <message>
         <location line="+1"/>
         <source>How Jarvis sounds and talks to you. Changes apply from the next conversation.</source>
-        <translation>Come suona Jarvis e come ti parla. Le modifiche valgono dalla prossima conversazione.</translation>
+        <translation>La voce di Jarvis e come ti parla. Le modifiche valgono dalla prossima conversazione.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1352,7 +1352,7 @@
     <message>
         <location line="+2"/>
         <source>Jarvis: refined, dry wit</source>
-        <translation>Jarvis: raffinato, ironia pungente</translation>
+        <translation>Jarvis: raffinato, ironia sottile</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1382,7 +1382,7 @@
     <message>
         <location line="+0"/>
         <source>Answer without thinking first: about 0.3 s quicker, a little less sharp</source>
-        <translation>Risponde senza pensarci prima: circa 0,3 s più veloce, un po&apos; meno acuto</translation>
+        <translation>Risponde senza pensarci prima: circa 0,3 s più veloce, un po&apos; meno preciso</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1478,7 +1478,7 @@
     <message>
         <location line="+1"/>
         <source>Makes the next wake-up instant</source>
-        <translation>Rende istantaneo il risveglio successivo</translation>
+        <translation>Rende immediata l&apos;attivazione successiva</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1498,12 +1498,12 @@
     <message>
         <location line="+1"/>
         <source>Nothing learned for this wake word yet (Learn my voice needs a few wake-ups first): until then anyone can wake Jarvis</source>
-        <translation>Nessun apprendimento ancora per questa parola di attivazione (Impara la mia voce ha bisogno di qualche attivazione): finché non c&apos;è, chiunque può attivare Jarvis</translation>
+        <translation>Nessun apprendimento ancora per questa parola di attivazione (Impara la mia voce ha bisogno di qualche attivazione): fino ad allora chiunque può attivare Jarvis</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Needs Learn my voice on: until then anyone can wake Jarvis</source>
-        <translation>Richiede Impara la mia voce attivo: finché non lo è, chiunque può attivare Jarvis</translation>
+        <translation>Richiede Impara la mia voce attivo: fino ad allora chiunque può attivare Jarvis</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1601,7 +1601,7 @@
     <message>
         <location line="+0"/>
         <source>The first time Jarvis starts in a morning, it tells you about your day</source>
-        <translation>La prima volta che Jarvis si avvia al mattino, ti racconta la tua giornata</translation>
+        <translation>La prima volta che Jarvis si avvia al mattino, ti presenta la giornata</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1827,7 +1827,7 @@
     <message>
         <location line="+1"/>
         <source>Paste the address it prints here.</source>
-        <translation>Incolla qui l&apos;indirizzo che stampa.</translation>
+        <translation>Incolla qui l&apos;indirizzo che mostra.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1882,7 +1882,7 @@
     <message>
         <location line="+1"/>
         <source>Jarvis links to your own WhatsApp like WhatsApp Web. It answers your contacts&apos; messages that don&apos;t need you, saying it&apos;s your assistant, and picks up calls you miss to take a message. It&apos;s not an official WhatsApp feature: WhatsApp may block numbers that act like bots, so Jarvis answers only saved contacts, never groups.</source>
-        <translation>Jarvis si collega al tuo WhatsApp come WhatsApp Web. Risponde ai messaggi dei tuoi contatti che non richiedono te, presentandosi come tuo assistente, e risponde alle chiamate perse per lasciare un messaggio. Non è una funzione ufficiale di WhatsApp: WhatsApp può bloccare i numeri che si comportano da bot, quindi Jarvis risponde solo ai contatti salvati, mai ai gruppi.</translation>
+        <translation>Jarvis si collega al tuo WhatsApp come WhatsApp Web. Risponde ai messaggi dei tuoi contatti che non richiedono te, presentandosi come tuo assistente, e risponde alle chiamate che non prendi per raccogliere un messaggio. Non è una funzione ufficiale di WhatsApp: WhatsApp può bloccare i numeri che si comportano da bot, quindi Jarvis risponde solo ai contatti salvati, mai ai gruppi.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2032,7 +2032,7 @@
     <message>
         <location line="+0"/>
         <source>Forever</source>
-        <translation>Sempre</translation>
+        <translation>Per sempre</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2296,7 +2296,7 @@
     <message>
         <location line="+1"/>
         <source>How I sound, and when I talk.</source>
-        <translation>Come suono e quando parlo.</translation>
+        <translation>La mia voce e quando parlo.</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -2422,7 +2422,7 @@
     <message>
         <location filename="../qml/Today.qml" line="+92"/>
         <source>Feels %1 in %2</source>
-        <translation>Percepita %1 a %2</translation>
+        <translation>Percepiti %1 a %2</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2535,17 +2535,17 @@
     <message>
         <location line="+1"/>
         <source>speaking</source>
-        <translation>parla</translation>
+        <translation>sta parlando</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>thinking</source>
-        <translation>pensa</translation>
+        <translation>sta pensando</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>quiet</source>
-        <translation>silenzioso</translation>
+        <translation>in silenzio</translation>
     </message>
     <message>
         <location line="+1"/>

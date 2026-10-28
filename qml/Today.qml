@@ -90,7 +90,7 @@ ScrollView {
                         spacing: 1
                         Txt { text: today.weather.condition || ""; weight: 600; Layout.fillWidth: true; elide: Text.ElideRight; wrapMode: Text.NoWrap }
                         Txt { kind: "small"; text: qsTr("Feels %1 in %2").arg(today.weather.feels || "").arg(today.weather.place || "")
-                              Layout.fillWidth: true; elide: Text.ElideRight; wrapMode: Text.NoWrap }
+                              Layout.fillWidth: true; elide: Text.ElideRight; maximumLineCount: 2 }
                     }
                     Txt { text: today.weather.temp || ""; kind: "heading"; font.pixelSize: Theme.px(22); weight: 500; wrapMode: Text.NoWrap }
                 }

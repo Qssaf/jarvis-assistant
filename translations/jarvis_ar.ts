@@ -470,7 +470,7 @@
     <message>
         <location line="+36" />
         <source>Up late?</source>
-        <translation>ساهر الليلة؟</translation>
+        <translation>ما زلت مستيقظًا؟</translation>
     </message>
     <message>
         <location line="+0" />
@@ -515,7 +515,7 @@
     <message>
         <location line="+9" />
         <source>Brief me</source>
-        <translation>أعطني موجز اليوم</translation>
+        <translation>لخّص لي يومي</translation>
     </message>
     <message>
         <location line="+0" />
@@ -707,7 +707,7 @@
     <message>
         <location line="+1" />
         <source>Plain notes, one per line. Jarvis adds to them as you talk.</source>
-        <translation>ملاحظات بسيطة، واحدة في كل سطر. يضيف إليها Jarvis أثناء حديثكما.</translation>
+        <translation>ملاحظات بسيطة، واحدة في كل سطر. يضيف إليها Jarvis أثناء حديثك معه.</translation>
     </message>
     <message>
         <location line="+16" />
@@ -1073,7 +1073,7 @@
     <message>
         <location line="+8" />
         <source>First install the opencode-antigravity-auth plugin (npm i -g opencode-antigravity-auth): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis's env file.</source>
-        <translation>ثبّت أولًا الإضافة opencode-antigravity-auth (npm i -g opencode-antigravity-auth): يسجّل Jarvis الدخول ببياناتها. أو ضع ANTIGRAVITY_CLIENT_ID و ANTIGRAVITY_CLIENT_SECRET في ملف env الخاص بـ Jarvis.</translation>
+        <translation>ثبّت أولًا الملحق opencode-antigravity-auth (npm i -g opencode-antigravity-auth): يسجّل Jarvis الدخول ببياناته. أو ضع ANTIGRAVITY_CLIENT_ID و ANTIGRAVITY_CLIENT_SECRET في ملف env الخاص بـ Jarvis.</translation>
     </message>
     <message>
         <location line="+3" />
@@ -1098,7 +1098,7 @@
     <message>
         <location line="+4" />
         <source>Try this one sooner</source>
-        <translation>تقديمه في القائمة</translation>
+        <translation>تقديمه في الترتيب</translation>
     </message>
     <message>
         <location line="+2" />
@@ -1225,7 +1225,7 @@
     <message>
         <location line="+7" />
         <source>Try now</source>
-        <translation>حاول الآن</translation>
+        <translation>أعد المحاولة الآن</translation>
     </message>
     <message>
         <location line="+12" />
@@ -1404,7 +1404,7 @@
     <message>
         <location line="+2" />
         <source>Jarvis: refined, dry wit</source>
-        <translation>Jarvis: أنيق، بدعابة جافة</translation>
+        <translation>Jarvis: راقٍ، بفكاهة رزينة</translation>
     </message>
     <message>
         <location line="+0" />
@@ -1424,7 +1424,7 @@
     <message>
         <location line="+4" />
         <source>Also speaks and understands, when you (or someone on WhatsApp) speak them. Anything else is taken as mishearing.</source>
-        <translation>لغات يتحدثها ويفهمها أيضًا عندما تتحدث بها أنت (أو أحد على WhatsApp). أي لغة أخرى تُعدّ سوء سماع.</translation>
+        <translation>لغات يتحدثها ويفهمها أيضًا عندما تتحدث بها أنت (أو أحد على WhatsApp). وأي لغة أخرى تُعامَل على أنها خطأ في السماع.</translation>
     </message>
     <message>
         <location line="+15" />
@@ -1504,7 +1504,7 @@
     <message>
         <location line="+1" />
         <source>Lower wakes more easily</source>
-        <translation>القيمة الأقل تجعل التنبيه أسهل</translation>
+        <translation>القيمة الأقل توقظه بسهولة أكبر</translation>
     </message>
     <message>
         <location line="+3" />
@@ -1530,7 +1530,7 @@
     <message>
         <location line="+1" />
         <source>Makes the next wake-up instant</source>
-        <translation>يجعل التنبيه التالي فوريًا</translation>
+        <translation>يجعل الاستيقاظ التالي فوريًا</translation>
     </message>
     <message>
         <location line="+3" />
@@ -1540,22 +1540,22 @@
     <message>
         <location line="+0" />
         <source>Wake-ups you dismiss teach Jarvis what isn't you</source>
-        <translation>التنبيهات التي ترفضها تعلّم Jarvis ما ليس صوتك</translation>
+        <translation>مرات الاستيقاظ التي تلغيها تعلّم Jarvis ما ليس صوتك</translation>
     </message>
     <message>
         <location line="+3" />
         <source>Only wake for my voice</source>
-        <translation>التنبّه لصوتي فقط</translation>
+        <translation>الاستيقاظ لصوتي فقط</translation>
     </message>
     <message>
         <location line="+1" />
         <source>Nothing learned for this wake word yet (Learn my voice needs a few wake-ups first): until then anyone can wake Jarvis</source>
-        <translation>لم يُتعلَّم شيء لكلمة التنبيه هذه بعد (يحتاج «تعلُّم صوتي» إلى بضع تنبيهات أولًا): حتى ذلك الحين يمكن لأي شخص تنبيه Jarvis</translation>
+        <translation>لم يُتعلَّم شيء لكلمة التنبيه هذه بعد (يحتاج «تعلُّم صوتي» إلى بضع مرات استيقاظ أولًا): حتى ذلك الحين يمكن لأي شخص إيقاظ Jarvis</translation>
     </message>
     <message>
         <location line="+1" />
         <source>Needs Learn my voice on: until then anyone can wake Jarvis</source>
-        <translation>يتطلب تفعيل «تعلُّم صوتي»: حتى ذلك الحين يمكن لأي شخص تنبيه Jarvis</translation>
+        <translation>يتطلب تفعيل «تعلُّم صوتي»: حتى ذلك الحين يمكن لأي شخص إيقاظ Jarvis</translation>
     </message>
     <message>
         <location line="+1" />
@@ -1638,7 +1638,7 @@
     <message>
         <location line="+1" />
         <source>Home city, for the weather (empty: guess from your network)</source>
-        <translation>مدينتك، للطقس (فارغ: تخمينها من شبكتك)</translation>
+        <translation>مدينتك، للطقس (اتركها فارغة لتخمينها من شبكتك)</translation>
     </message>
     <message>
         <location line="+1" />
@@ -1688,7 +1688,7 @@
     <message>
         <location line="+4" />
         <source>Quiet hours from (empty: none)</source>
-        <translation>ساعات الهدوء من (فارغ: بلا)</translation>
+        <translation>ساعات الهدوء من (اتركها فارغة لإلغائها)</translation>
     </message>
     <message>
         <location line="+1" />
@@ -2313,7 +2313,7 @@
     <message>
         <location line="+6" />
         <source>Your microphone</source>
-        <translation>الميكروفون</translation>
+        <translation>ميكروفونك</translation>
     </message>
     <message>
         <location line="+1" />
@@ -2338,7 +2338,7 @@
     <message>
         <location line="+11" />
         <source>Lower wakes more easily.</source>
-        <translation>القيمة الأقل تجعل التنبيه أسهل.</translation>
+        <translation>القيمة الأقل توقظه بسهولة أكبر.</translation>
     </message>
     <message>
         <location line="+6" />
@@ -2418,7 +2418,7 @@
     <message>
         <location line="+11" />
         <source>Skip setup</source>
-        <translation>تخطي الإعداد</translation>
+        <translation>تخطّي الإعداد</translation>
     </message>
     <message>
         <location line="+3" />
@@ -2474,7 +2474,7 @@
     <message>
         <location filename="../qml/Today.qml" line="+92" />
         <source>Feels %1 in %2</source>
-        <translation>تُحَسّ كأنها %1 في %2</translation>
+        <translation>الحرارة المحسوسة %1 في %2</translation>
     </message>
     <message>
         <location line="+44" />
@@ -2499,7 +2499,7 @@
     <message>
         <location line="+1" />
         <source>Nothing scheduled. Try “remind me in 20 minutes to stretch”.</source>
-        <translation>لا شيء مجدول. جرّب «ذكّرني بعد 20 دقيقة بأن أتمدد».</translation>
+        <translation>لا شيء مجدول. جرّب «ذكّرني بعد 20 دقيقة بأداء تمارين الإطالة».</translation>
     </message>
     <message>
         <location line="+30" />
