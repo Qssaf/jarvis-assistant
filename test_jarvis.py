@@ -1759,6 +1759,85 @@ same = jarvis.update_check()
 jarvis.requests.get = real_get
 assert newer["available"] and newer["latest"] == "99.0.0" and (newer["can_update"] or newer["how"]) and not same["available"]
 
+# Update now, from source: refused with a reason on local changes or another branch; otherwise git pull, then the packages
+# the way install.sh adds them (openwakeword without its dependencies)
+import hashlib, subprocess, sys, zipfile
+real_here, real_run = jarvis.HERE, subprocess.run
+repo = tempfile.mkdtemp()
+git = lambda *a: real_run(["git", "-C", repo, "-c", "user.name=t", "-c", "user.email=t@example.com", *a], capture_output=True, check=True)
+git("init", "-q", "-b", "main")
+open(os.path.join(repo, "requirements.txt"), "w").write("requests\n")
+git("add", ".")
+git("commit", "-q", "-m", "first")
+jarvis.HERE = repo
+jarvis.requests.get = lambda url, timeout: types.SimpleNamespace(ok=True, text='VERSION = "99.0.0"\n')
+assert jarvis.checkout_problem() == "" and jarvis.update_check()["can_update"]
+open(os.path.join(repo, "requirements.txt"), "a").write("numpy\n")
+ran = []
+subprocess.run = lambda args, **k: real_run(args, **k) if "pull" not in args and args[0] == "git" else \
+    ran.append(args) or types.SimpleNamespace(returncode=0, stdout="", stderr="")
+try:
+    jarvis.update_now()
+    raise AssertionError("a dirty checkout was updated")
+except ValueError as e:
+    assert "local changes" in str(e) and not ran, e
+git("checkout", "-q", "--", ".")
+git("checkout", "-q", "-b", "mine")
+assert "'mine' branch" in jarvis.checkout_problem() and not jarvis.update_check()["can_update"]
+git("checkout", "-q", "main")
+steps = []
+assert "99.0.0" in jarvis.update_now(steps.append)["result"]
+subprocess.run, jarvis.HERE, jarvis.requests.get = real_run, real_here, real_get
+assert ran[0][-2:] == ["pull", "--ff-only"] and ran[1][-2:] == ["-r", os.path.join(repo, "requirements.txt")], ran
+assert ran[2][-2:] == ["--no-deps", "openwakeword"] and steps == ["Downloading the update…", "Installing packages…"]
+
+# ...and Jarvis.exe: the release zip is checked against GitHub's sha256 (refused when missing or different), unpacked
+# beside the install, and swapped in by a script once Jarvis has quit
+buf = io.BytesIO()
+with zipfile.ZipFile(buf, "w") as z:
+    z.writestr("Jarvis/Jarvis.exe", b"MZ new")
+    z.writestr("Jarvis/_internal/base_library.zip", b"new")
+zipped = buf.getvalue()
+class Reply:
+    def __init__(self, data): self.data = data
+    def __enter__(self): return self
+    def __exit__(self, *a): pass
+    def raise_for_status(self): pass
+    def json(self): return self.data
+    def iter_content(self, size): return [self.data[i:i + size] for i in range(0, len(self.data), size)]
+def gh_release(digest):
+    asset = {"name": "Jarvis-windows.zip", "browser_download_url": "https://github.com/x/Jarvis-windows.zip"}
+    return {"tag_name": "v99.0.0", "assets": [dict(asset, digest=digest) if digest else asset]}
+install = os.path.join(tempfile.mkdtemp(), "Jarvis")
+os.makedirs(install)
+real_exe, real_swap, swapped = sys.executable, system.swap_in_after_exit, []
+sys.executable, system.swap_in_after_exit = os.path.join(install, "Jarvis.exe"), lambda *a: swapped.append(a)
+for digest in (None, "sha256:" + "0" * 64):
+    jarvis.requests.get = lambda url, **k: Reply(gh_release(digest) if "api.github.com" in url else zipped)
+    try:
+        jarvis.update_exe(lambda text: None)
+        raise AssertionError("an unchecked download was installed")
+    except ValueError as e:
+        assert "checksum" in str(e) and not swapped and not os.path.exists(install + "-update"), e
+jarvis.requests.get = lambda url, **k: Reply(gh_release("sha256:" + hashlib.sha256(zipped).hexdigest()) if "api.github.com" in url else zipped)
+jarvis.update_exe(lambda text: None)
+sys.executable, system.swap_in_after_exit, jarvis.requests.get = real_exe, real_swap, real_get
+new, where, _ = swapped[0]
+assert where == install and open(os.path.join(new, "Jarvis.exe"), "rb").read() == b"MZ new"
+assert not os.path.exists(os.path.join(install + "-update", "Jarvis-windows.zip"))
+real_popen, started = system.subprocess.Popen, []
+system.subprocess.Popen = lambda args, **k: started.append(args)
+system.swap_in_after_exit(new, install, ["--no-voice"])
+system.subprocess.Popen = real_popen
+script = open(started[0][-1], encoding="utf-8").read()
+os.remove(started[0][-1])
+assert f'"PID eq {os.getpid()}"' in script and f'robocopy "{new}" "{install}"' in script and "Jarvis.exe\" --no-voice" in script
+# nothing is copied over the live install unless both its old files were moved aside, and a failed copy puts both back
+exe, lib = os.path.join(install, "Jarvis.exe"), os.path.join(install, "_internal")
+assert f'move "{lib}" "{lib}.old" >NUL || goto start' in script and f'move "{exe}" "{exe}.old" >NUL ||' in script
+assert script.index(f'if exist "{lib}.old" goto start') < script.index("robocopy")
+assert f'move "{lib}.old" "{lib}"' in script.split(":undo")[1] and f'move "{exe}.old" "{exe}"' in script.split(":undo")[1]
+
 # recall finds past conversations by their words, with the lines around them
 os.makedirs(store.SESSIONS_DIR, exist_ok=True)
 store.write_json(os.path.join(store.SESSIONS_DIR, "20261001-100000-aaaaaa.json"), {"id": "20261001-100000-aaaaaa", "title": "Photo editors",
