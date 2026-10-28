@@ -506,26 +506,36 @@ def launch(command, env=None):
 
 def swap_in_after_exit(new, install, args):
     """Windows (Jarvis.exe updating itself): a small script waits for this process to end, puts the new build's files
-    over the install (its _internal folder is replaced whole, nothing else there is touched), starts Jarvis.exe again
-    with args and cleans up after itself. If the copy fails, the old _internal comes back and the download stays."""
-    pid, staging, old = os.getpid(), os.path.dirname(new), os.path.join(install, "_internal")
+    over the install (Jarvis.exe and its _internal folder are replaced whole, nothing else there is touched), starts
+    Jarvis.exe again with args and cleans up after itself. If either can't be moved aside, nothing is copied; if the
+    copy fails, both old ones come back. Either way the old Jarvis starts and the download stays."""
+    pid, staging = os.getpid(), os.path.dirname(new)
+    old, exe = os.path.join(install, "_internal"), os.path.join(install, "Jarvis.exe")
     script = os.path.join(tempfile.gettempdir(), "jarvis-update.cmd")
     with open(script, "w", encoding="utf-8") as f:
         f.write(f'''@echo off
 chcp 65001 >NUL
 :wait
 tasklist /FI "PID eq {pid}" /NH 2>NUL | find " {pid} " >NUL && (ping -n 2 127.0.0.1 >NUL & goto wait)
-move "{old}" "{old}.old" >NUL
+if exist "{old}.old" rmdir /s /q "{old}.old"
+if exist "{exe}.old" del /f /q "{exe}.old"
+if exist "{old}.old" goto start
+if exist "{exe}.old" goto start
+move "{old}" "{old}.old" >NUL || goto start
+move "{exe}" "{exe}.old" >NUL || (move "{old}.old" "{old}" >NUL & goto start)
 robocopy "{new}" "{install}" /E /R:10 /W:1 /NFL /NDL /NJH /NJS >NUL
 if errorlevel 8 goto undo
 rmdir /s /q "{old}.old"
+del /f /q "{exe}.old"
 rmdir /s /q "{staging}"
 goto start
 :undo
 rmdir /s /q "{old}"
+del /f /q "{exe}"
 move "{old}.old" "{old}" >NUL
+move "{exe}.old" "{exe}" >NUL
 :start
-start "" "{install}\\Jarvis.exe" {subprocess.list2cmdline(args)}
+start "" "{exe}" {subprocess.list2cmdline(args)}
 (goto) 2>NUL & del "%~f0"
 ''')
     subprocess.Popen(["cmd", "/c", script], creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0) |

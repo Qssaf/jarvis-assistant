@@ -1237,6 +1237,11 @@ system.subprocess.Popen = real_popen
 script = open(started[0][-1], encoding="utf-8").read()
 os.remove(started[0][-1])
 assert f'"PID eq {os.getpid()}"' in script and f'robocopy "{new}" "{install}"' in script and "Jarvis.exe\" --no-voice" in script
+# nothing is copied over the live install unless both its old files were moved aside, and a failed copy puts both back
+exe, lib = os.path.join(install, "Jarvis.exe"), os.path.join(install, "_internal")
+assert f'move "{lib}" "{lib}.old" >NUL || goto start' in script and f'move "{exe}" "{exe}.old" >NUL ||' in script
+assert script.index(f'if exist "{lib}.old" goto start') < script.index("robocopy")
+assert f'move "{lib}.old" "{lib}"' in script.split(":undo")[1] and f'move "{exe}.old" "{exe}"' in script.split(":undo")[1]
 
 # recall finds past conversations by their words, with the lines around them
 os.makedirs(store.SESSIONS_DIR, exist_ok=True)
