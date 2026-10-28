@@ -1,5 +1,5 @@
 """Jarvis's saved state: settings, plugins (MCP servers) and conversation sessions."""
-import json, os, re, sys, threading, time, uuid
+import json, os, re, shutil, sys, tempfile, threading, time, uuid
 
 import system
 
@@ -54,6 +54,7 @@ DEFAULT_SETTINGS = {
     "only_my_voice": False,        # on (once learned): the wake word wakes Jarvis only when the learned verifier is sure it's you
     "safety": "ask",               # ask: risky commands and account changes wait for your yes; full: Jarvis just does them
     "setup_done": False,           # the first-run setup has been gone through (or skipped)
+    "keep_days": 0,                # conversations, the change log and old logs go after this many days (tidy); 0 = kept for good
     # "backend model thinking-level", tried top to bottom; busy or rate-limited ones are skipped
     # the same for the other jobs (see brain.MODEL_JOBS); empty = Jarvis's built-in choice
     "look_models": [], "point_models": [], "point_strong_models": [], "search_models": [], "image_models": [],
@@ -188,6 +189,8 @@ def _update_settings(changes):
             if not hm or int(hm[1]) > 23 or int(hm[2]) > 59:
                 raise ValueError("quiet hours are times like 22:00, or empty")
             value = f"{int(hm[1]):02d}:{hm[2]}"  # (so they compare as text)
+        if key == "keep_days" and not 0 <= value <= 3650:
+            raise ValueError("keep things 0 (for good) to 3650 days")
         if key == "whatsapp_calls" and value not in ("answer", "decline", "off"):
             raise ValueError("WhatsApp calls are answer, decline or off")
         s[key] = value
@@ -333,10 +336,9 @@ def delete_data():
     """Delete everything Jarvis keeps about the user on this PC: memory, conversations, reminders, routines, voice clips
     and the files behind Classroom and calendar reminders, model use and the log. Keys, account sign-ins and settings stay
     (they're removed on their own pages)."""
-    import shutil
     with _lock:
-        for path in (MEMORY_FILE, REMINDERS_FILE, ROUTINES_FILE, CHANGES_FILE, *(os.path.join(DATA, name) for name in (
-                "usage.json", "deadlines.json", "calendar.json", "briefing.json", "jarvis.log.old"))):
+        for path in (MEMORY_FILE, REMINDERS_FILE, ROUTINES_FILE, CHANGES_FILE, *OLD_LOGS, *(os.path.join(DATA, name) for name in (
+                "usage.json", "deadlines.json", "calendar.json", "briefing.json"))):
             try:
                 os.remove(path)
             except FileNotFoundError:
@@ -345,9 +347,60 @@ def delete_data():
             shutil.rmtree(os.path.join(DATA, folder), ignore_errors=True)
         os.makedirs(SESSIONS_DIR, exist_ok=True)
         try:
-            open(os.path.join(DATA, "jarvis.log"), "w").close()  # (emptied, not removed: it's open for writing)
+            open(LOG_FILE, "w").close()  # (emptied, not removed: it's open for writing)
         except OSError:
             pass
+
+
+# ---------------------------------------------------------------- tidying up (once a day)
+LOG_FILE = os.path.join(DATA, "jarvis.log")
+OLD_LOGS = [LOG_FILE + ".1", LOG_FILE + ".2", LOG_FILE + ".old"]  # its earlier parts, newest first (.old: older versions')
+LOG_LIMIT = 5_000_000
+TEMP = tempfile.gettempdir()
+
+
+def rotate_log():
+    """A log over LOG_LIMIT becomes jarvis.log.1 (that one .2, the one before goes), so it never grows for good. It's
+    copied and emptied rather than renamed: Jarvis keeps writing to it (and Windows can't rename an open file)."""
+    try:
+        if os.path.getsize(LOG_FILE) <= LOG_LIMIT:
+            return
+        if os.path.exists(OLD_LOGS[0]):
+            os.replace(OLD_LOGS[0], OLD_LOGS[1])
+        shutil.copyfile(LOG_FILE, OLD_LOGS[0])
+        os.truncate(LOG_FILE, 0)
+    except OSError:
+        pass
+
+
+def tidy():
+    """Conversations, change-log entries and old logs older than keep_days go (0: kept for good); folders Jarvis left in
+    the temp dir (a picked part of the screen, a crashed recording's parts) go after a day; the log is rotated."""
+    rotate_log()
+    now = time.time()
+    for name in os.listdir(TEMP):
+        path = os.path.join(TEMP, name)
+        try:  # (only mkdtemp's names: never someone's own "jarvis-..." folder)
+            if re.fullmatch(r"jarvis-(?:region-|notes-)?\w{8}", name) and os.path.isdir(path) and now - os.path.getmtime(path) > 86400:
+                shutil.rmtree(path, ignore_errors=True)
+        except OSError:
+            pass
+    days = settings()["keep_days"]
+    if not days:
+        return
+    before = now - days * 86400
+    chats = [os.path.join(SESSIONS_DIR, n) for n in os.listdir(SESSIONS_DIR) if n.endswith(".json")] if os.path.isdir(SESSIONS_DIR) else []
+    with _lock:
+        for path in OLD_LOGS + chats:
+            try:
+                if os.path.getmtime(path) < before:
+                    os.remove(path)
+            except OSError:
+                pass
+        logged = read_json(CHANGES_FILE, [])
+        kept = [c for c in logged if c["at"] >= before]
+        if len(kept) < len(logged):
+            write_json(CHANGES_FILE, kept, private=True)
 
 
 # ---------------------------------------------------------------- start at login

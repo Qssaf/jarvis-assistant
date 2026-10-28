@@ -1756,6 +1756,42 @@ assert (store.memory(), store.reminders(), store.routines(), os.listdir(store.SE
 assert not os.path.exists(os.path.join(store.DATA, "wake")) and store.settings()["voice"] == "Puck"
 store.update_settings({"voice": "Charon"})
 
+# tidying up: the log is rotated by size and Jarvis's day-old temp folders go; conversations, changes and old logs only
+# once keep_days is set (0, the default, keeps them for good)
+real_temp, real_limit = store.TEMP, store.LOG_LIMIT
+store.TEMP, store.LOG_LIMIT = tempfile.mkdtemp(), 10  # (never the real temp dir)
+old, day_ago = time.time() - 40 * 86400, time.time() - 2 * 86400
+for name in ("jarvis-region-ab12_xyz", "jarvis-notes-q1w2e3r4", "jarvis-assistant", "jarvis-k9k9k9k9"):
+    os.makedirs(os.path.join(store.TEMP, name))
+    if name != "jarvis-k9k9k9k9":
+        os.utime(os.path.join(store.TEMP, name), (day_ago, day_ago))
+with open(store.LOG_FILE, "w") as f:
+    f.write("x" * 20)
+with open(store.OLD_LOGS[0], "w") as f:
+    f.write("older")
+os.utime(store.OLD_LOGS[0], (old, old))
+for sid, at in (("old", old), ("new", time.time())):
+    store.write_json(os.path.join(store.SESSIONS_DIR, f"{sid}.json"), {"id": sid, "updated": at})
+    os.utime(os.path.join(store.SESSIONS_DIR, f"{sid}.json"), (at, at))
+store.write_json(store.CHANGES_FILE, [{"at": old, "what": "old change"}, {"at": time.time(), "what": "new change"}])
+store.tidy()
+assert sorted(os.listdir(store.TEMP)) == ["jarvis-assistant", "jarvis-k9k9k9k9"], os.listdir(store.TEMP)
+assert [open(p).read() for p in (store.LOG_FILE, *store.OLD_LOGS[:2])] == ["", "x" * 20, "older"]
+assert sorted(os.listdir(store.SESSIONS_DIR)) == ["new.json", "old.json"] and len(store.changes()) == 2
+store.update_settings({"keep_days": "30"})
+store.tidy()
+assert os.listdir(store.SESSIONS_DIR) == ["new.json"] and [c["what"] for c in store.changes()] == ["new change"]
+assert os.path.exists(store.OLD_LOGS[0]) and not os.path.exists(store.OLD_LOGS[1])
+try:
+    store.update_settings({"keep_days": -1})
+    raise AssertionError("a negative keep_days was accepted")
+except ValueError:
+    pass
+store.update_settings({"keep_days": 0})
+store.delete_data()
+assert not any(os.path.exists(p) for p in store.OLD_LOGS) and os.listdir(store.SESSIONS_DIR) == []
+store.TEMP, store.LOG_LIMIT = real_temp, real_limit
+
 # Telegram: only the chat that sends the pairing code is answered; it gets the agent's reply, and the agent can't ask out loud
 import remote
 class FakeTelegram:
