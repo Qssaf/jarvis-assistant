@@ -1726,10 +1726,15 @@ def api_get(path, brain):
     if path == "/api/memory":
         return {"memory": store.memory()}
     if path == "/api/reminders":
-        return [{**r, "when": time.strftime("%a %d %b, %H:%M", time.localtime(r["at"])) + (f" · {r['repeat']}" if r.get("repeat") else "")}
+        return [{**r, "when": time.strftime("%a %d %b, %H:%M", time.localtime(r["at"])) + (f" · {r['repeat']}" if r.get("repeat") else "")
+                 + (" · paused" if r.get("off") else ""), "edit_at": time.strftime("%Y-%m-%d %H:%M", time.localtime(r["at"]))}
                 for r in store.reminders()]
     if path == "/api/routines":
         return [{"name": k, "steps": v} for k, v in sorted(store.routines().items())]
+    if path == "/api/checks":
+        s = store.settings()
+        return {"checks": [{"text": c, "on": True} for c in s["checks"]] + [{"text": c, "on": False} for c in s["checks_paused"]],
+                "every": s["checks_every"]}
     if path == "/api/conversation":
         return sessions.current
     if path.startswith("/api/search?q="):
@@ -2112,6 +2117,10 @@ def api_post(path, data, live, brain):
         store.set_memory(str(data.get("memory", "")))
     elif m := re.fullmatch(r"/api/reminders/(\w+)/cancel", path):
         store.cancel_reminder(m[1])
+    elif path == "/api/reminders":  # (the window's editor: a new one, or id's changed)
+        import brain as brain_mod
+        store.add_reminder(brain_mod.parse_when(at=data.get("at")), data.get("text", ""), str(data.get("repeat") or ""),
+                           data.get("task") is True, data.get("on") is not False, str(data.get("id") or ""))
     elif path == "/api/remote/token":
         remote_ref[0].set_token(str(data.get("token", "")))
         return remote_ref[0].status()
@@ -2144,6 +2153,11 @@ def api_post(path, data, live, brain):
         return out
     elif path == "/api/routines/delete":
         store.delete_routine(str(data.get("name", "")))
+    elif path == "/api/routines":
+        store.save_routine(data.get("name", ""), data.get("steps", ""), data.get("old", ""))
+    elif path == "/api/checks":  # (add, change, pause or, with no text, delete one)
+        store.save_check(data.get("text", ""), data.get("old", ""), data.get("on") is not False)
+        return api_get("/api/checks", brain)
     elif path == "/api/listen":
         listen_now.set()
     elif path == "/api/region":

@@ -1260,8 +1260,8 @@ def tool_set_reminder(text, in_minutes=None, at=None, repeat="", task=False):
 
 def tool_list_reminders():
     return {"reminders": [{"id": r["id"], "when": time.strftime("%a %d %b %H:%M", time.localtime(r["at"])), "text": r["text"],
-                           **({"repeat": r["repeat"]} if r.get("repeat") else {}), **({"task": True} if r.get("task") else {})}
-                          for r in store.reminders()]}
+                           **({"repeat": r["repeat"]} if r.get("repeat") else {}), **({"task": True} if r.get("task") else {}),
+                           **({"paused": True} if r.get("off") else {})} for r in store.reminders()]}
 
 
 def tool_recall(query="", day=""):
@@ -2516,7 +2516,7 @@ class Brain:
         return {"date": time.strftime("%A %d %B %Y, %H:%M"), "weather": w, "unread_emails": u, "calendar_today": c,
                 "classroom_due_this_week_not_turned_in": d,
                 "reminders_today": [r["text"] + time.strftime(" at %H:%M", time.localtime(r["at"])) for r in store.reminders()
-                                    if r["at"] < now + 86400]}
+                                    if r["at"] < now + 86400 and not r.get("off")]}
 
     def active_app_tools(self):
         """The direct account tools, minus paused accounts and changes to read-only ones. Changes that need the user's yes

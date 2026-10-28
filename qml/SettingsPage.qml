@@ -210,16 +210,6 @@ ScrollPage {
                 Field { Layout.fillWidth: true; text: page.s.quiet_until || ""; placeholderText: "e.g. 07:00"
                         onEditingFinished: if (text !== page.s.quiet_until) page.set("quiet_until", text) } }
         }
-        Setting { label: "Keep an eye on (one per line: Jarvis checks your accounts and the web, and tells you only when something needs you)"
-            Area { text: (page.s.checks || []).join("\n"); placeholder: "e.g. Tell me if a payment fails or my professor emails"
-                   onDone: v => page.set("checks", v) } }
-        Row2 {
-            Setting { label: "Check every"
-                Select { Layout.fillWidth: true; value: String(page.s.checks_every || 60); onPicked: v => page.set("checks_every", v)
-                         model: [{ value: "30", label: "30 minutes" }, { value: "60", label: "Hour" }, { value: "180", label: "3 hours" },
-                                 { value: "720", label: "12 hours" }] } }
-            Item { Layout.fillWidth: true }
-        }
     }
 
     Section {
