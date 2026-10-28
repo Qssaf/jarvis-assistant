@@ -13,7 +13,12 @@ user:
 - **Reminders and routines.**
 - **Wake word clips**: a few seconds of audio around each wake word, used only on this computer to learn your voice
   (Settings → *Learn my voice*), kept apart for each wake word.
-- **A log** of what Jarvis did, for troubleshooting.
+- **A log** of what Jarvis did, for troubleshooting (a new file past 5 MB; two old ones are kept).
+
+Settings → *Keep conversations and logs for* deletes conversations, the change list and log lines older than you choose,
+once a day (forever by default). *Save a backup* (Settings → *Move to another computer*) writes your settings, memory,
+reminders, routines, checks, plugins, conversations and wake-word clips into a .zip where you choose: keep it as private
+as those. It never holds keys, account sign-ins, WhatsApp or phone pairing.
 
 API keys and your spoken passphrase are kept in your system keychain (or, without one, a file only your user can read). Settings → *Delete
 everything Jarvis keeps about me* removes memory, conversations, reminders, routines, voice clips and the log.
@@ -46,7 +51,12 @@ everything Jarvis keeps about me* removes memory, conversations, reminders, rout
   Antigravity service. The sign-in is kept in Jarvis's data folder (`google.json`, readable only by your user).
 - **Other model providers** you add on the Models page: the same as Gemini, for the jobs you give them.
 - **The web**: pages Jarvis reads for you, the weather (Open-Meteo, wttr.in), YouTube and DuckDuckGo searches, and an
-  update check that reads Jarvis's version from GitHub.
+  update check that reads Jarvis's version from GitHub. *Update now* downloads the new version from GitHub (git, or the
+  release zip, checked against GitHub's checksum).
+- **Cloudflare, for your relay** (only if you press *Set up my relay*): Cloudflare's own `wrangler` tool signs you in in
+  your browser and deploys the relay to your account; Jarvis only keeps the relay's address.
+- **Offline voice models** (only if installed with `--offline-voice`): faster-whisper and Piper models are downloaded
+  from Hugging Face once; after that, hearing and speaking with them stays on your computer.
 - **Bug reports** are never sent by themselves: *Copy a report* puts one on your clipboard, with what you said, tool
   arguments, WhatsApp messages, names and numbers, tasks from your phone, email addresses and link parameters removed,
   for you to look over and paste.
