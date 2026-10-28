@@ -44,6 +44,7 @@ DEFAULT_SETTINGS = {
     "calendar_reminders": True,    # a reminder ten minutes before each Google Calendar event
     "checks": [],                  # things Jarvis keeps an eye on in the background ("tell me if a payment fails"), one per line
     "checks_every": 60,            # minutes between those checks (each one is a few agent requests)
+    "checks_paused": [],           # checks switched off in the window (kept, but not looked into)
     "whatsapp_replies": "contacts",  # contacts: Jarvis answers saved contacts' messages that don't need you; off: just shows them
     "whatsapp_calls": "answer",    # answer: picks up contacts' calls you don't and takes a message; decline; off: lets them ring
     "whatsapp_note": "",           # what Jarvis tells people on WhatsApp ("I'm in class until 5")
@@ -257,14 +258,21 @@ def next_time(at, repeat, now=None):
             return when
 
 
-def add_reminder(at, text, repeat="", task=False):
-    """task: at that time the agent does what text says (instead of Jarvis just saying it)."""
+def add_reminder(at, text, repeat="", task=False, on=True, rid=""):
+    """task: at that time the agent does what text says (instead of Jarvis just saying it). on=False: paused (its times
+    pass without it; only a repeating one, or a one-off would just be lost). rid: change that reminder instead of adding one."""
+    text = " ".join(str(text).split())
+    if not text:
+        raise ValueError("say what the reminder is for")
     if repeat and repeat not in REPEATS:
         raise ValueError(f"repeat is one of {', '.join(REPEATS)}")
-    r = {"id": uuid.uuid4().hex[:8], "at": float(at), "text": " ".join(str(text).split()), **({"repeat": repeat} if repeat else {}),
-         **({"task": True} if task else {})}
+    r = {"id": rid or uuid.uuid4().hex[:8], "at": float(at), "text": text, **({"repeat": repeat} if repeat else {}),
+         **({"task": True} if task else {}), **({"off": True} if not on and repeat else {})}
     with _lock:
-        write_json(REMINDERS_FILE, read_json(REMINDERS_FILE, []) + [r], private=True)
+        rs = read_json(REMINDERS_FILE, [])
+        if rid and not any(x["id"] == rid for x in rs):
+            raise ValueError("that reminder has already gone off or been cancelled")
+        write_json(REMINDERS_FILE, [x for x in rs if x["id"] != rid] + [r], private=True)
     return r
 
 
@@ -276,7 +284,8 @@ def cancel_reminder(rid):
 
 
 def pop_due(now=None):
-    """Remove and return reminders whose time has come (repeating ones move on to their next time instead)."""
+    """Remove and return reminders whose time has come (repeating ones move on to their next time instead; paused ones
+    aren't returned)."""
     now = now or time.time()
     with _lock:
         rs = read_json(REMINDERS_FILE, [])
@@ -284,7 +293,7 @@ def pop_due(now=None):
         if due:
             later = [r for r in rs if r["at"] > now] + [{**r, "at": next_time(r["at"], r["repeat"], now)} for r in due if r.get("repeat")]
             write_json(REMINDERS_FILE, later, private=True)
-    return due
+    return [r for r in due if not r.get("off")]
 
 
 # ---------------------------------------------------------------- routines: named sets of steps ("study mode")
@@ -295,12 +304,17 @@ def routines():
     return read_json(ROUTINES_FILE, {})
 
 
-def save_routine(name, steps):
-    name, steps = " ".join(str(name).lower().split()), str(steps).strip()
+def save_routine(name, steps, old="", new=False):
+    """old: the name it had (renamed in the window). new: added in the window (not over one with that name)."""
+    name, steps, old = " ".join(str(name).lower().split()), str(steps).strip(), " ".join(str(old).lower().split())
     if not name or not steps:
         raise ValueError("a routine needs a name and its steps")
     with _lock:
-        write_json(ROUTINES_FILE, {**routines(), name: steps}, private=True)
+        rs = routines()
+        if (new or old and old != name) and name in rs:
+            raise ValueError(f"there's already a routine called {name}")
+        rs.pop(old, None)
+        write_json(ROUTINES_FILE, {**rs, name: steps}, private=True)
     return name
 
 
@@ -311,6 +325,28 @@ def delete_routine(name):
         found = rs.pop(name, None) is not None
         write_json(ROUTINES_FILE, rs, private=True)
     return found
+
+
+# ---------------------------------------------------------------- checks: what Jarvis keeps an eye on (in the settings)
+def save_check(text, old="", on=True):
+    """Add a check, or change the one that now says old (in its place); on=False pauses it, no text deletes it."""
+    text, old = " ".join(str(text).split()), " ".join(str(old).split())
+    if not text and not old:
+        raise ValueError("say what to keep an eye on")
+    with _lock:  # (read and written together, like update_settings)
+        s = settings()
+        lists = {True: s["checks"], False: s["checks_paused"]}
+        at = len(lists[on])
+        if old:
+            was = next((k for k, l in lists.items() if old in l), None)
+            if was is None:
+                raise ValueError("that check is gone already")
+            if was == on:
+                at = lists[on].index(old)
+            lists[was].remove(old)
+        if text and text not in lists[True] + lists[False]:
+            lists[on].insert(at, text)
+        return _update_settings({"checks": lists[True], "checks_paused": lists[False]})
 
 
 # ---------------------------------------------------------------- what Jarvis changed (for "undo that")

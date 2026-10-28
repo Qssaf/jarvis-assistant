@@ -56,9 +56,15 @@ CANNED = {
                           "messages": CONVERSATION, "agent": []},
     "/api/memory": {"memory": "- Prefers to be called Sam.\n- Lives in Springfield.\n- Studies computer science, second year.\n"
                               "- Likes lo-fi while studying.\n- Lesson: in Discord, check the open chat before sending."},
-    "/api/reminders": [{"id": "a1", "text": "Call the dentist", "when": "Today 15:30"},
-                       {"id": "a2", "text": "Start the problem set", "when": "Tomorrow 18:00"},
-                       {"id": "a3", "text": "Water the plants", "when": "Sunday 10:00, every week"}],
+    "/api/reminders": [{"id": "a1", "text": "Call the dentist", "when": "Today 15:30", "edit_at": "2026-10-28 15:30"},
+                       {"id": "a2", "text": "Start the problem set", "when": "Tomorrow 18:00", "edit_at": "2026-10-29 18:00"},
+                       {"id": "a3", "text": "Check my inbox and tell me what matters", "when": "Thu 29 Oct, 08:00 · weekdays",
+                        "edit_at": "2026-10-29 08:00", "repeat": "weekdays", "task": True},
+                       {"id": "a4", "text": "Water the plants", "when": "Sun 01 Nov, 10:00 · weekly · paused", "edit_at": "2026-11-01 10:00",
+                        "repeat": "weekly", "off": True}],
+    "/api/checks": {"checks": [{"text": "Tell me if a payment fails", "on": True},
+                               {"text": "Tell me if my professor emails about the exam", "on": True},
+                               {"text": "Watch for cheap flights home in December", "on": False}], "every": 60},
     "/api/routines": [{"name": "study mode", "steps": "close Discord, open my notes, set a 50-minute timer"},
                       {"name": "good night", "steps": "lower the volume, lock the screen"}],
     "/api/workspaces": [{"slug": s, "name": n, "connected": c, "account": a, "mode": m} for s, n, c, a, m in [

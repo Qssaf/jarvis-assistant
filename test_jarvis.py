@@ -1611,6 +1611,64 @@ for r in store.reminders():
 assert brain.tool_checks("add", "tell me if a payment fails") == {"result": brain.CHECK_ADDED, "checks": ["tell me if a payment fails"]}
 assert "error" in brain.tool_checks("remove", " ") and brain.tool_checks("list")["checks"]  # ("" would match them all)
 assert brain.tool_checks("remove", "PAYMENT")["checks"] == [] and brain.tool_checks("list")["every_minutes"] == 60
+
+
+def refused(path, data, why):
+    try:
+        jarvis.api_post(path, data, None, None)
+    except ValueError as e:
+        assert why in str(e), e
+    else:
+        raise AssertionError(f"{path} accepted {data}")
+
+
+# the window edits reminders and scheduled tasks in place: same id, same checks as voice ones; a paused one's times pass
+jarvis.api_post("/api/reminders", {"text": "stretch", "at": "2096-01-06 08:00"}, None, None)  # (a Friday)
+r = store.reminders()[0]
+jarvis.api_post("/api/reminders", {"id": r["id"], "text": " check  my inbox ", "at": "2096-01-06 09:30", "repeat": "weekdays",
+                                   "task": True}, None, None)
+edited = store.reminders()
+assert len(edited) == 1 and edited[0]["id"] == r["id"] and edited[0]["text"] == "check my inbox" and edited[0]["task"]
+assert edited[0]["repeat"] == "weekdays" and time.localtime(edited[0]["at"]).tm_hour == 9
+refused("/api/reminders", {"text": " ", "at": "10:00"}, "what the reminder is for")
+refused("/api/reminders", {"text": "x", "at": "10:00", "repeat": "hourly"}, "repeat is one of")
+refused("/api/reminders", {"text": "x", "at": "2020-01-01 10:00"}, "already passed")
+refused("/api/reminders", {"id": "gone", "text": "x", "at": "10:00"}, "already gone off")
+jarvis.api_post("/api/reminders", {**edited[0], "at": "2096-01-06 09:30", "on": False}, None, None)
+listed = jarvis.api_get("/api/reminders", None)[0]
+assert listed["off"] and listed["when"].endswith("paused") and listed["edit_at"] == "2096-01-06 09:30"
+assert brain.tool_list_reminders()["reminders"][0]["paused"]
+assert store.pop_due(edited[0]["at"] + 60) == [] and time.localtime(store.reminders()[0]["at"]).tm_mday == 9  # (moved on to Monday)
+jarvis.api_post("/api/reminders", {"id": r["id"], "text": "stretch", "at": "2096-01-06 08:00", "repeat": "", "on": False}, None, None)
+assert not store.reminders()[0].get("off")  # (a paused one-off would pass unseen, with no switch to turn it back on)
+store.cancel_reminder(r["id"])
+
+# routines: added, renamed (not over another one) and changed from the window
+jarvis.api_post("/api/routines", {"name": "Study Mode", "steps": "close Discord"}, None, None)
+jarvis.api_post("/api/routines", {"name": "good night", "steps": "lock the screen"}, None, None)
+jarvis.api_post("/api/routines", {"name": "focus", "steps": "close Discord, open my notes", "old": "study mode"}, None, None)
+assert store.routines() == {"good night": "lock the screen", "focus": "close Discord, open my notes"}
+refused("/api/routines", {"name": "good night", "steps": "x", "old": "focus"}, "already a routine called good night")
+refused("/api/routines", {"name": "x", "steps": " "}, "needs a name and its steps")
+refused("/api/routines", {"name": "Focus", "steps": "x", "new": True}, "already a routine called focus")  # (added, not over it)
+brain.tool_routine("save", "focus", "open my notes")  # (the voice still changes one by its name)
+assert store.routines()["focus"] == "open my notes"
+for name in list(store.routines()):
+    store.delete_routine(name)
+
+# checks: added, changed in place, paused (kept but not looked into, so the voice and the check loop skip it) and deleted
+for text in ("tell me if a payment fails", "watch for flights"):
+    jarvis.api_post("/api/checks", {"text": text}, None, None)
+got = jarvis.api_post("/api/checks", {"text": "tell me if  a payment bounces", "old": "tell me if a payment fails"}, None, None)
+assert [c["text"] for c in got["checks"]] == ["tell me if a payment bounces", "watch for flights"] and got["every"] == 60
+got = jarvis.api_post("/api/checks", {"text": "tell me if a payment bounces", "old": "tell me if a payment bounces", "on": False}, None, None)
+assert got["checks"] == [{"text": "watch for flights", "on": True}, {"text": "tell me if a payment bounces", "on": False}]
+assert store.settings()["checks"] == ["watch for flights"] and brain.tool_checks("list")["checks"] == ["watch for flights"]
+refused("/api/checks", {"text": "x", "old": "not there"}, "gone already")
+refused("/api/checks", {"text": " "}, "what to keep an eye on")
+jarvis.api_post("/api/checks", {"text": "", "old": "watch for flights"}, None, None)
+jarvis.api_post("/api/checks", {"text": "", "old": "tell me if a payment bounces"}, None, None)
+assert store.settings()["checks"] == [] and store.settings()["checks_paused"] == []
 told, check_asks, real_notify = [], [], jarvis.system.notify
 jarvis.system.notify = lambda *a: None
 turns = []
