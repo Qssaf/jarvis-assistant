@@ -1,0 +1,51 @@
+# Jarvis for Arch Linux and its derivatives (CachyOS, EndeavourOS, Manjaro...).
+# Most of its Python packages aren't in Arch's repos, so the app goes in /opt and /usr/bin/jarvis keeps a per-user venv
+# of them with uv (see jarvis.sh). After tagging a release: bump pkgver, run updpkgsums, then makepkg --printsrcinfo > .SRCINFO
+pkgname=jarvis-assistant
+pkgver=2.1.0
+pkgrel=1
+pkgdesc='Voice assistant for your desktop: talks, sees the screen and gets things done (Gemini)'
+arch=('x86_64')
+url='https://github.com/Qssaf/jarvis-assistant'
+license=('MIT')
+depends=('uv' 'glib2' 'hicolor-icon-theme')
+optdepends=('pipewire: the microphone and speaker, with echo cancelling (or portaudio)'
+            'portaudio: the microphone and speaker without PipeWire'
+            'python-gobject: pressing app buttons by name (with at-spi2-core)'
+            'at-spi2-core: pressing app buttons by name'
+            'wdotool: mouse and keyboard control on Wayland'
+            'ydotool: typing on Wayland without wdotool'
+            'kdotool: finding, focusing and closing windows on KDE Wayland'
+            'spectacle: screenshots on KDE'
+            'grim: screenshots on wlroots desktops (Sway, Hyprland...)'
+            'gnome-screenshot: screenshots on GNOME'
+            'wl-clipboard: clipboard access on Wayland'
+            'xclip: clipboard access on X11'
+            'chromium: reading JavaScript-heavy web pages, and WhatsApp')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz"
+        'jarvis.sh'
+        'jarvis.desktop'
+        'jarvis-screenshot.desktop')
+sha256sums=('SKIP'  # (the v2.1.0 tarball: updpkgsums once it's tagged)
+            'bf3c844587d6ccd0c327db99149d05c90ae1ec8bfd759ddd333d89e5b63b1617'
+            '0c6829d1bf2448a1b064dde2ccea59bd90caa51249ece38c76dcbc1c48415988'
+            '8602a43e1b172f731b19ba0d78a284585d2e3a64076b48680be2db9c7a973c4d')
+
+build() {
+  cd "$pkgname-$pkgver"
+  # KDE's ~30 ms screenshots: KWin lets only the program jarvis-screenshot.desktop names use its screenshot interface
+  gcc $CPPFLAGS $CFLAGS $LDFLAGS -o jarvis-shot jarvis-shot.c $(pkg-config --cflags --libs gio-unix-2.0)
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -d "$pkgdir/opt/$pkgname"
+  cp -r --no-preserve=ownership *.py prompt.md requirements.txt icon.svg qml assets "$pkgdir/opt/$pkgname/"
+  rm "$pkgdir/opt/$pkgname/test_jarvis.py"
+  install -Dm755 jarvis-shot "$pkgdir/usr/lib/$pkgname/jarvis-shot"
+  install -Dm755 "$srcdir/jarvis.sh" "$pkgdir/usr/bin/jarvis"
+  install -Dm644 "$srcdir/jarvis.desktop" "$pkgdir/usr/share/applications/jarvis.desktop"
+  install -Dm644 "$srcdir/jarvis-screenshot.desktop" "$pkgdir/usr/share/applications/jarvis-screenshot.desktop"
+  install -Dm644 icon.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/$pkgname.svg"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

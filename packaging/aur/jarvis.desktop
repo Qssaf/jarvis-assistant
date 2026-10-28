@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Jarvis
+Comment=Voice assistant (say "Hey Jarvis")
+Exec=jarvis
+Icon=jarvis-assistant
+Terminal=false
+Categories=Utility;
+StartupNotify=false
