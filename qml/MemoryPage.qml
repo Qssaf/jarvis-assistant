@@ -18,11 +18,17 @@ ScrollPage {
 
     function load() {
         Api.get("/api/memory", d => { notes.text = d.memory; saved = d.memory })
+        lists()
+    }
+    function lists() {  // (not the notes: they may have unsaved edits)
         Api.get("/api/reminders", d => reminders = d)
         Api.get("/api/routines", d => routines = d)
         Api.get("/api/checks", d => { checks = d.checks; checksEvery = d.every })
     }
-    function save(path, body) { Api.post(path, body, () => { editing = ""; load() }, e => { Backend.toast(e.error, true); load() }) }
+    // From an editor: closes it once saved; a refused one stays open with what you typed.
+    function save(path, body) { Api.post(path, body, () => { editing = ""; lists() }, e => Backend.toast(e.error, true)) }
+    // A switch, a delete or the interval: leaves an open editor alone.
+    function change(path, body) { Api.post(path, body, lists, e => { Backend.toast(e.error, true); lists() }) }
     Component.onCompleted: load()
     onVisibleChanged: if (visible) load()
 
@@ -94,11 +100,11 @@ ScrollPage {
                         title: modelData.text
                         detail: modelData.when + (modelData.task ? " · Jarvis does it" : "")
                         Toggle { visible: !!modelData.repeat; checked: !modelData.off; Layout.preferredWidth: 44
-                                 onToggled: page.save("/api/reminders", { id: modelData.id, text: modelData.text, at: modelData.edit_at,
+                                 onToggled: page.change("/api/reminders", { id: modelData.id, text: modelData.text, at: modelData.edit_at,
                                                       repeat: modelData.repeat, task: !!modelData.task, on: checked }) }
                         Edit { onClicked: page.editing = "reminder " + modelData.id }
                         Remove { tip: "Cancel"
-                                 onClicked: Api.post(`/api/reminders/${modelData.id}/cancel`, {}, page.load) }
+                                 onClicked: page.change(`/api/reminders/${modelData.id}/cancel`, {}) }
                     }
                     ReminderForm { r: modelData; key: "reminder " + modelData.id }
                 }
@@ -128,7 +134,7 @@ ScrollPage {
                         detail: modelData.steps
                         Edit { onClicked: page.editing = "routine " + modelData.name }
                         Remove { tip: "Delete"
-                                 onClicked: Api.post("/api/routines/delete", { name: modelData.name }, page.load) }
+                                 onClicked: page.change("/api/routines/delete", { name: modelData.name }) }
                     }
                     RoutineForm { r: modelData; key: "routine " + modelData.name }
                 }
@@ -158,9 +164,9 @@ ScrollPage {
                         title: modelData.text
                         detail: modelData.on ? "" : "Paused"
                         Toggle { checked: modelData.on; Layout.preferredWidth: 44
-                                 onToggled: page.save("/api/checks", { text: modelData.text, old: modelData.text, on: checked }) }
+                                 onToggled: page.change("/api/checks", { text: modelData.text, old: modelData.text, on: checked }) }
                         Edit { onClicked: page.editing = "check " + modelData.text }
-                        Remove { tip: "Delete"; onClicked: page.save("/api/checks", { text: "", old: modelData.text }) }
+                        Remove { tip: "Delete"; onClicked: page.change("/api/checks", { text: "", old: modelData.text }) }
                     }
                     CheckForm { r: modelData; key: "check " + modelData.text }
                 }
@@ -176,7 +182,7 @@ ScrollPage {
             Select { Layout.preferredWidth: 160; value: String(page.checksEvery)
                      model: [{ value: "30", label: "30 minutes" }, { value: "60", label: "Hour" }, { value: "180", label: "3 hours" },
                              { value: "720", label: "12 hours" }]
-                     onPicked: v => page.save("/api/settings", { checks_every: v }) }
+                     onPicked: v => page.change("/api/settings", { checks_every: v }) }
         }
     }
 
@@ -246,7 +252,7 @@ ScrollPage {
             Layout.fillWidth: true
             spacing: 10
             Item { Layout.fillWidth: true }
-            Pill { text: "Cancel"; kind: "ghost"; onClicked: page.editing = "" }
+            Pill { text: "Cancel"; kind: "ghost"; onClicked: { page.editing = ""; page.lists() } }  // (its row may be gone)
             Pill { text: "Save"; kind: "primary"; symbol: "check"; onClicked: form.save() }
         }
     }
@@ -272,7 +278,7 @@ ScrollPage {
     component RoutineForm: Form {
         id: tf
         onReset: { tName.text = r.name || ""; tSteps.text = r.steps || ""; tName.forceActiveFocus() }
-        onSave: page.save("/api/routines", { name: tName.text, steps: tSteps.text, old: r.name || "" })
+        onSave: page.save("/api/routines", { name: tName.text, steps: tSteps.text, old: r.name || "", new: !r.name })
         Field { id: tName; Layout.fillWidth: true; placeholderText: "What you say to start it, e.g. study mode"; onAccepted: tf.save() }
         Field { id: tSteps; Layout.fillWidth: true; placeholderText: "Its steps, e.g. close Discord, open my notes, set a 50-minute timer"
                 onAccepted: tf.save() }

@@ -260,14 +260,14 @@ def next_time(at, repeat, now=None):
 
 def add_reminder(at, text, repeat="", task=False, on=True, rid=""):
     """task: at that time the agent does what text says (instead of Jarvis just saying it). on=False: paused (its times
-    pass without it). rid: change that reminder instead of adding one."""
+    pass without it; only a repeating one, or a one-off would just be lost). rid: change that reminder instead of adding one."""
     text = " ".join(str(text).split())
     if not text:
         raise ValueError("say what the reminder is for")
     if repeat and repeat not in REPEATS:
         raise ValueError(f"repeat is one of {', '.join(REPEATS)}")
     r = {"id": rid or uuid.uuid4().hex[:8], "at": float(at), "text": text, **({"repeat": repeat} if repeat else {}),
-         **({"task": True} if task else {}), **({"off": True} if not on else {})}
+         **({"task": True} if task else {}), **({"off": True} if not on and repeat else {})}
     with _lock:
         rs = read_json(REMINDERS_FILE, [])
         if rid and not any(x["id"] == rid for x in rs):
@@ -304,14 +304,14 @@ def routines():
     return read_json(ROUTINES_FILE, {})
 
 
-def save_routine(name, steps, old=""):
-    """old: the name it had (renamed in the window)."""
+def save_routine(name, steps, old="", new=False):
+    """old: the name it had (renamed in the window). new: added in the window (not over one with that name)."""
     name, steps, old = " ".join(str(name).lower().split()), str(steps).strip(), " ".join(str(old).lower().split())
     if not name or not steps:
         raise ValueError("a routine needs a name and its steps")
     with _lock:
         rs = routines()
-        if old and old != name and name in rs:
+        if (new or old and old != name) and name in rs:
             raise ValueError(f"there's already a routine called {name}")
         rs.pop(old, None)
         write_json(ROUTINES_FILE, {**rs, name: steps}, private=True)
@@ -330,21 +330,23 @@ def delete_routine(name):
 # ---------------------------------------------------------------- checks: what Jarvis keeps an eye on (in the settings)
 def save_check(text, old="", on=True):
     """Add a check, or change the one that now says old (in its place); on=False pauses it, no text deletes it."""
-    s, text, old = settings(), " ".join(str(text).split()), " ".join(str(old).split())
+    text, old = " ".join(str(text).split()), " ".join(str(old).split())
     if not text and not old:
         raise ValueError("say what to keep an eye on")
-    lists = {True: s["checks"], False: s["checks_paused"]}
-    at = len(lists[on])
-    if old:
-        was = next((k for k, l in lists.items() if old in l), None)
-        if was is None:
-            raise ValueError("that check is gone already")
-        if was == on:
-            at = lists[on].index(old)
-        lists[was].remove(old)
-    if text and text not in lists[True] + lists[False]:
-        lists[on].insert(at, text)
-    return update_settings({"checks": lists[True], "checks_paused": lists[False]})
+    with _lock:  # (read and written together, like update_settings)
+        s = settings()
+        lists = {True: s["checks"], False: s["checks_paused"]}
+        at = len(lists[on])
+        if old:
+            was = next((k for k, l in lists.items() if old in l), None)
+            if was is None:
+                raise ValueError("that check is gone already")
+            if was == on:
+                at = lists[on].index(old)
+            lists[was].remove(old)
+        if text and text not in lists[True] + lists[False]:
+            lists[on].insert(at, text)
+        return _update_settings({"checks": lists[True], "checks_paused": lists[False]})
 
 
 # ---------------------------------------------------------------- what Jarvis changed (for "undo that")

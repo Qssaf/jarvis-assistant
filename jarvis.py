@@ -2154,7 +2154,7 @@ def api_post(path, data, live, brain):
     elif path == "/api/routines/delete":
         store.delete_routine(str(data.get("name", "")))
     elif path == "/api/routines":
-        store.save_routine(data.get("name", ""), data.get("steps", ""), data.get("old", ""))
+        store.save_routine(data.get("name", ""), data.get("steps", ""), data.get("old", ""), data.get("new") is True)
     elif path == "/api/checks":  # (add, change, pause or, with no text, delete one)
         store.save_check(data.get("text", ""), data.get("old", ""), data.get("on") is not False)
         return api_get("/api/checks", brain)

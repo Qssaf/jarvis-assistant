@@ -1558,6 +1558,8 @@ listed = jarvis.api_get("/api/reminders", None)[0]
 assert listed["off"] and listed["when"].endswith("paused") and listed["edit_at"] == "2096-01-06 09:30"
 assert brain.tool_list_reminders()["reminders"][0]["paused"]
 assert store.pop_due(edited[0]["at"] + 60) == [] and time.localtime(store.reminders()[0]["at"]).tm_mday == 9  # (moved on to Monday)
+jarvis.api_post("/api/reminders", {"id": r["id"], "text": "stretch", "at": "2096-01-06 08:00", "repeat": "", "on": False}, None, None)
+assert not store.reminders()[0].get("off")  # (a paused one-off would pass unseen, with no switch to turn it back on)
 store.cancel_reminder(r["id"])
 
 # routines: added, renamed (not over another one) and changed from the window
@@ -1567,6 +1569,9 @@ jarvis.api_post("/api/routines", {"name": "focus", "steps": "close Discord, open
 assert store.routines() == {"good night": "lock the screen", "focus": "close Discord, open my notes"}
 refused("/api/routines", {"name": "good night", "steps": "x", "old": "focus"}, "already a routine called good night")
 refused("/api/routines", {"name": "x", "steps": " "}, "needs a name and its steps")
+refused("/api/routines", {"name": "Focus", "steps": "x", "new": True}, "already a routine called focus")  # (added, not over it)
+brain.tool_routine("save", "focus", "open my notes")  # (the voice still changes one by its name)
+assert store.routines()["focus"] == "open my notes"
 for name in list(store.routines()):
     store.delete_routine(name)
 
