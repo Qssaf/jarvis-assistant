@@ -152,7 +152,8 @@ ScrollPage {
                            : "Someone else saying the wake word doesn't wake Jarvis. Talk and push to talk always work"
                      checked: !!page.s.only_my_voice; onToggled: page.set("only_my_voice", checked) }
             Line {}
-            Toggle { Layout.fillWidth: true; text: "Echo cancelling"; hint: "Keeps the PC's own sound (Jarvis, games, videos, calls) out of the mic, so it isn't heard as you, and you can talk over Jarvis (PipeWire; restart Jarvis to apply)"
+            Toggle { Layout.fillWidth: true; text: "Echo cancelling"; hint: "Keeps the PC's own sound (Jarvis, games, videos, calls) out of the mic, so it isn't heard as you, and you can talk over Jarvis ("
+                           + (Qt.platform.os === "windows" ? "experimental on Windows: Health says if it's working" : "PipeWire") + "; restart Jarvis to apply)"
                      checked: !!page.s.echo_cancel; onToggled: page.set("echo_cancel", checked) }
         }
         Setting { label: "Spoken passphrase: asked for with every yes said out loud (sends, calls, account changes, risky commands). Never shown or said back"

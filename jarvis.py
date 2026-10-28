@@ -1482,7 +1482,13 @@ EC_MODULE = ("{ library.name = aec/libspa-aec-webrtc audio.rate = 16000 audio.ch
 
 
 def start_echo_cancel():
-    """Load PipeWire's echo canceller while Jarvis runs (nothing permanent); True once its mic and speaker exist."""
+    """Load PipeWire's echo canceller while Jarvis runs (nothing permanent); True once its mic and speaker exist.
+    Windows: the mic stream cancels the echo itself (system.mic_frames), back on the plain mic if it can't."""
+    if system.IS_WINDOWS:
+        if not (_importable("livekit") and _importable("soundcard")):
+            print("[voice] echo cancelling needs the livekit and soundcard packages (run install.ps1 again)", flush=True)
+            return False
+        return True
     if not system.have("pw-cli"):
         print("[voice] echo cancelling needs PipeWire", flush=True)
         return False
@@ -1803,6 +1809,9 @@ def health(live, brain):
           f'"{store.wake_phrase(cfg)}"' + ("" if not cfg["only_my_voice"] else ", only your voice" if learned and cfg["learn_my_voice"]
                                            else ", only your voice once learned: nothing yet, so anyone can wake it for now"),
           "your own model's file is gone: pick another wake word in Settings", "settings")
+    if cfg["echo_cancel"] and live is not None and getattr(live, "mic_seen", 0):
+        check("Echo cancelling", live.speaker.echo_cancelled, "on: you can talk over Jarvis" if live.speaker.echo_cancelled
+              else "not working: the mic is off while Jarvis talks", "the log says why; restart Jarvis, or turn it off in Settings", "settings")
     check("Speaker", system.IS_WINDOWS or system.have("pw-play") or _importable("sounddevice"),
           "PipeWire" if system.have("pw-play") else "sounddevice", "install PipeWire (pw-play) or the sounddevice package")
     try:

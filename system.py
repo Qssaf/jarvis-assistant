@@ -51,9 +51,24 @@ def describe():
 def mic_frames(target=None, on_source=None):
     """16 kHz mono int16 frames of 80 ms (1280 samples): PipeWire's pw-record when there (it can use the echo canceller),
     otherwise PortAudio through sounddevice (Windows, PulseAudio/ALSA systems). on_source gets the name of the node
-    pw-record really reads, a few seconds after each start."""
+    pw-record really reads, a few seconds after each start. On Windows any target means the echo canceller below,
+    and on_source hears about it only if that can't start (then it's the plain mic)."""
     import numpy as np
-    if not IS_WINDOWS and have("pw-record"):
+    if IS_WINDOWS and target:
+        while True:
+            started = time.time()
+            try:
+                yield from _echo_cancelled_mic()
+                print("[voice] the speakers changed: starting echo cancelling again", flush=True)
+            except Exception as e:
+                if time.time() - started < 10:
+                    print(f"[voice] echo cancelling couldn't start: {e}", flush=True)
+                    if on_source:
+                        on_source("the plain microphone")
+                    break
+                print(f"[voice] echo cancelling stopped ({e}): starting it again", flush=True)
+                time.sleep(1)
+    elif not IS_WINDOWS and have("pw-record"):
         while True:  # pw-record quits when PipeWire restarts (an update, a new device): start it again, or Jarvis goes deaf
             # dont-move: otherwise WirePlumber's "follow the default mic" (target.node -1 in its metadata) moves the stream
             # off the echo canceller onto the raw mic, and Jarvis hears its own voice with nothing taken out
@@ -75,6 +90,55 @@ def mic_frames(target=None, on_source=None):
         while True:
             frames, _ = stream.read(1280)
             yield frames[:, 0].copy()
+
+
+def _echo_cancelled_mic():
+    """Windows: the default mic with whatever the default speakers play (Jarvis, games, videos, calls) taken out, as
+    PipeWire's echo canceller does on Linux: the same WebRTC canceller (from livekit), fed a WASAPI loopback of the
+    speakers (soundcard). 80 ms frames like mic_frames; it ends when the default speakers change."""
+    import collections, ctypes, itertools
+    import numpy as np
+    import soundcard
+    from livekit import rtc
+    if IS_WINDOWS:
+        ctypes.windll.ole32.CoInitializeEx(None, 0)  # (soundcard's COM calls need it on each thread)
+    pcm = lambda block: bytearray((np.clip(block[:, 0], -1, 1) * 32767).astype(np.int16).tobytes())
+    speaker = soundcard.default_speaker()
+    loopback = soundcard.get_microphone(speaker.id, include_loopback=True)
+    apm = rtc.AudioProcessingModule(echo_cancellation=True, noise_suppression=True, high_pass_filter=True)
+    played, done, why = collections.deque(maxlen=50), threading.Event(), []  # 10 ms frames the speakers played (0.5 s at most)
+
+    def listen_to_speakers():
+        if IS_WINDOWS:
+            ctypes.windll.ole32.CoInitializeEx(None, 0)
+        try:
+            with loopback.recorder(16000, channels=1, blocksize=8000) as r:  # (silence comes in as zeros: soundcard fills the gaps)
+                while not done.is_set():
+                    played.append(pcm(r.record(160)))
+        except Exception as e:
+            why.append(e)
+        done.set()
+    threading.Thread(target=listen_to_speakers, daemon=True).start()
+    try:
+        # half a second of room in WASAPI's buffers (soundcard's default is one 10 ms period): a slower moment in
+        # voice_loop would otherwise drop mic sound, and the canceller would lose its place against the speakers
+        with soundcard.default_microphone().recorder(16000, channels=1, blocksize=8000) as mic:
+            out = []
+            for i in itertools.count():
+                if done.is_set():
+                    raise RuntimeError(f"the speakers' sound stopped coming in ({why[0] if why else 'closed'})")
+                if i % 300 == 299 and soundcard.default_speaker().id != speaker.id:
+                    return
+                while played:  # what was played goes in first: the canceller looks for it in the mic afterwards
+                    apm.process_reverse_stream(rtc.AudioFrame(played.popleft(), 16000, 1, 160))
+                frame = rtc.AudioFrame(pcm(mic.record(160)), 16000, 1, 160)
+                apm.process_stream(frame)  # (in place)
+                out.append(np.frombuffer(frame.data, np.int16).copy())
+                if len(out) == 8:
+                    yield np.concatenate(out)
+                    out = []
+    finally:
+        done.set()
 
 
 def mic_source(pid):
