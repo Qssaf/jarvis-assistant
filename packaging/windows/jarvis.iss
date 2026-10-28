@@ -20,6 +20,8 @@ UninstallDisplayIcon={app}\Jarvis.exe
 WizardStyle=modern
 Compression=lzma2
 SolidCompression=yes
+; (the start-at-login box starts unticked on updates too: Jarvis's own switch decides after the first install)
+UsePreviousTasks=no
 
 [Tasks]
 Name: startup; Description: "Start Jarvis when I log in"; Flags: unchecked
@@ -69,11 +71,13 @@ begin
     StartAtLogin;
 end;
 
-// Settings, memory, conversations and keys stay for a later install unless the user says otherwise.
+// Settings, memory and conversations stay for a later install unless the user says otherwise. Keys saved in
+// Windows Credential Manager stay either way (the uninstaller can't reach the keychain).
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
   if (CurUninstallStep = usPostUninstall) and not UninstallSilent and
-     (MsgBox('Also delete your Jarvis settings, memory and conversations from this PC?', mbConfirmation,
+     (MsgBox('Also delete your Jarvis settings, memory and conversations from this PC?'#13#10#13#10 +
+             'Keys saved in Windows Credential Manager are kept (remove the "jarvis" entries there yourself).', mbConfirmation,
              MB_YESNO or MB_DEFBUTTON2) = IDYES) then
     DelTree(ExpandConstant('{userappdata}\Jarvis'), True, True, True);
 end;
