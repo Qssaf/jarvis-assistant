@@ -21,3 +21,5 @@ pynput
 pywinctl
 keyring
 pywinauto; sys_platform == "win32"
+livekit; sys_platform == "win32"    # echo cancelling on Windows: WebRTC's canceller, as PipeWire's on Linux
+soundcard; sys_platform == "win32"  # (with what the speakers play, from a WASAPI loopback)

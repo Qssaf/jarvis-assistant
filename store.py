@@ -49,7 +49,7 @@ DEFAULT_SETTINGS = {
     "whatsapp_note": "",           # what Jarvis tells people on WhatsApp ("I'm in class until 5")
     "whatsapp_always": [],         # names Jarvis never answers for and always tells the user about out loud (even in quiet hours)
     "whatsapp_never": [],          # names Jarvis never answers for or speaks about: only shown in the chat
-    "echo_cancel": False,          # PipeWire echo cancelling (Linux): talk over Jarvis on speakers (experimental)
+    "echo_cancel": False,          # echo cancelling (PipeWire on Linux, WebRTC + a speaker loopback on Windows): talk over Jarvis on speakers (experimental)
     "learn_my_voice": True,        # learn from real wake-ups to ignore things that aren't you saying the wake word
     "only_my_voice": False,        # on (once learned): the wake word wakes Jarvis only when the learned verifier is sure it's you
     "safety": "ask",               # ask: risky commands and account changes wait for your yes; full: Jarvis just does them

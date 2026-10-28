@@ -1295,6 +1295,68 @@ assert started[0][1:5] == ["--target", "jarvis-ec-source", "-P", "{ node.dont-mo
 assert "--raw" in started[0], started
 system.subprocess, system.time, system.have, system.IS_WINDOWS = real_mic
 
+# Windows echo cancelling: what the speakers played goes to the canceller, and its output is what Jarvis hears
+class Rec:
+    def __init__(self, value):
+        self.value = value
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        pass
+
+    def record(self, n):
+        time.sleep(0.001)
+        return np.full((n, 1), self.value, np.float32)
+class Device:
+    def __init__(self, value):
+        self.id, self.value = "spk", value
+
+    def recorder(self, rate, channels):
+        return Rec(self.value)
+class Apm:
+    def __init__(self, **options):
+        self.options, self.played = options, 0
+
+    def process_reverse_stream(self, frame):
+        self.played += 1
+
+    def process_stream(self, frame):  # (a stand-in: takes the speakers' sound out once it has heard some)
+        if self.played:
+            frame.data[:] = bytes(len(frame.data))
+apms = []
+fake_rtc = types.SimpleNamespace(AudioProcessingModule=lambda **o: apms.append(Apm(**o)) or apms[-1],
+                                 AudioFrame=lambda data, rate, channels, n: types.SimpleNamespace(data=data))
+real_modules = {m: sys.modules.get(m) for m in ("soundcard", "livekit", "sounddevice")}
+sys.modules["soundcard"] = types.SimpleNamespace(default_speaker=lambda: Device(0.5), default_microphone=lambda: Device(0.25),
+                                                 get_microphone=lambda id, include_loopback: Device(0.5))
+sys.modules["livekit"] = types.SimpleNamespace(rtc=fake_rtc)
+ec = system._echo_cancelled_mic()
+frames = [next(ec) for _ in range(5)]
+ec.close()
+assert all(f.shape == (1280,) and f.dtype == np.int16 for f in frames) and not frames[-1].any() and apms[0].played
+assert apms[0].options["echo_cancellation"]
+# ...and when it can't start (no packages, no loopback), it's the plain mic, closed while Jarvis talks
+sys.modules["soundcard"] = sys.modules["livekit"] = None
+class Stream:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        pass
+
+    def read(self, n):
+        return np.ones((n, 1), np.int16), False
+sys.modules["sounddevice"] = types.SimpleNamespace(InputStream=lambda **k: Stream())
+told, system.IS_WINDOWS = [], True
+assert next(system.mic_frames("jarvis-ec-source", on_source=told.append))[0] == 1 and told == ["the plain microphone"]
+system.IS_WINDOWS = real_mic[3]
+for m, mod in real_modules.items():
+    sys.modules[m] = mod
+    if mod is None:
+        del sys.modules[m]
+
 # which mic pw-record really reads: its node's client is the process, and a link runs into that node
 dump = [{"id": 70, "type": "PipeWire:Interface:Client", "info": {"props": {"application.process.id": 4733}}},
         {"id": 73, "type": "PipeWire:Interface:Node", "info": {"props": {"node.name": "pw-record", "client.id": 70}}},
@@ -1490,8 +1552,13 @@ real_health = brain.AIStudio, system.screenshot
 brain.AIStudio, system.screenshot = FakeStudio, (lambda: b"jpeg")
 hb = types.SimpleNamespace(plugin_status=lambda: [{"name": "composio", "status": "error", "error": "signed out", "enabled": True, "tools": []}],
                            connected=set(), backend=lambda name: (object(), ""), down_until={})
-report = jarvis.health(types.SimpleNamespace(mic_seen=time.time(), raw_level=0.1, backup_now=lambda: False), hb)
+store.update_settings({"echo_cancel": True})
+report = jarvis.health(types.SimpleNamespace(mic_seen=time.time(), raw_level=0.1, backup_now=lambda: False,
+                                             speaker=types.SimpleNamespace(echo_cancelled=False)), hb)
+store.update_settings({"echo_cancel": False})
 got = {c["name"]: c for c in report["checks"]}
+# echo cancelling that's on in Settings but fell back to the plain mic says so
+assert got["Echo cancelling"]["ok"] is False and got["Echo cancelling"]["fix"], got["Echo cancelling"]
 assert got["Google AI Studio key"]["ok"] and got["Microphone"]["ok"] and got["Seeing the screen"]["ok"]
 # ...and whether the backup voice could take over from Gemini Live, with which models (shown there, not as two more jobs)
 assert got["Backup voice"]["ok"] and "hears with gemini-3.1-flash-lite via antigravity" in got["Backup voice"]["detail"] \

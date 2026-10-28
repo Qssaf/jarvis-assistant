@@ -25,7 +25,7 @@ jobs:
         run: >
           .venv\Scripts\pyinstaller --noconfirm --windowed --name Jarvis --icon icon.ico
           --add-data "qml;qml" --add-data "assets;assets" --add-data "prompt.md;." --add-data "icon.svg;." --add-data "icon.ico;."
-          --collect-data openwakeword --collect-submodules openwakeword
+          --collect-data openwakeword --collect-submodules openwakeword --collect-binaries livekit
           --hidden-import window --hidden-import remote
           jarvis.py
       - name: Smoke test (starts headless, writes its log, stays up)
