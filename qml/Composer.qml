@@ -38,23 +38,23 @@ Glass {
                     color: Theme.glass
                     border.width: 1
                     border.color: Theme.stroke
-                    Icon { x: 11; anchors.verticalCenter: parent.verticalCenter; name: "attach"; size: 14; color: Theme.text2 }
-                    Txt { id: name; x: 31; anchors.verticalCenter: parent.verticalCenter; kind: "small"; color: Theme.text
+                    Icon { anchors { left: parent.left; leftMargin: 11; verticalCenter: parent.verticalCenter } name: "attach"; size: 14; color: Theme.text2 }
+                    Txt { id: name; anchors { left: parent.left; leftMargin: 31; verticalCenter: parent.verticalCenter } kind: "small"; color: Theme.text
                           text: modelData.split("/").pop(); wrapMode: Text.NoWrap }
                     IconButton { anchors.right: parent.right; anchors.rightMargin: 3; anchors.verticalCenter: parent.verticalCenter
-                                 size: 24; glyph: 12; symbol: "close"; tip: "Remove"; onClicked: c.removed(modelData) }
+                                 size: 24; glyph: 12; symbol: "close"; tip: qsTr("Remove"); onClicked: c.removed(modelData) }
                 }
             }
         }
         RowLayout {
             spacing: 6
-            IconButton { size: 40; symbol: "attach"; tip: "Attach files (or drop them here)"; onClicked: c.attach() }
+            IconButton { size: 40; symbol: "attach"; tip: qsTr("Attach files (or drop them here)"); onClicked: c.attach() }
             ScrollView {
                 Layout.fillWidth: true
                 Layout.preferredHeight: Math.min(Math.max(40, input.implicitHeight), 5 * 22 + 18)
                 TextArea {
                     id: input
-                    placeholderText: "Ask Jarvis"
+                    placeholderText: qsTr("Ask Jarvis")
                     placeholderTextColor: Theme.text3
                     color: Theme.text
                     font.family: Theme.font
@@ -76,7 +76,7 @@ Glass {
             IconButton {
                 size: 40
                 symbol: Backend.listening ? "pause" : "mic"
-                tip: Backend.listening ? "Pause listening" : "Talk to Jarvis"
+                tip: Backend.listening ? qsTr("Pause listening") : qsTr("Talk to Jarvis")
                 tint: Backend.listening ? Theme.listen : Theme.glass
                 iconColor: Backend.listening ? Theme.accentInk : hovered ? Theme.text : Theme.text2
                 Rectangle {  // the voice level
@@ -99,7 +99,7 @@ Glass {
                 symbol: stopping ? "stop" : "send"
                 tint: stopping ? Theme.warmSoft : Theme.accent
                 iconColor: stopping ? Theme.warm : Theme.accentInk
-                tip: stopping ? "Stop (Esc)" : "Send (Enter)"
+                tip: stopping ? qsTr("Stop (Esc)") : qsTr("Send (Enter)")
                 Rectangle { anchors.fill: parent; radius: width / 2; visible: parent.stopping; color: "transparent"
                             border.width: 1; border.color: Theme.alpha(Theme.warm, 0.4) }
                 onClicked: { if (stopping) Backend.stop(); else { c.submitted(input.text); input.text = "" } }

@@ -6,8 +6,8 @@ import Jarvis
 // The user's accounts (through Composio): connect them, and decide what Jarvis may do with each.
 ScrollPage {
     id: page
-    title: "Accounts"
-    hint: "Connect your accounts so Jarvis can read and act on them. You decide what it may do with each."
+    title: qsTr("Accounts")
+    hint: qsTr("Connect your accounts so Jarvis can read and act on them. You decide what it may do with each.")
     property var items: []
     property bool loading: true
     property string problem: ""
@@ -28,7 +28,7 @@ ScrollPage {
     }
     Component.onCompleted: load()
 
-    actions: Pill { text: "Refresh"; symbol: "refresh"; enabled: !page.loading; onClicked: page.load() }
+    actions: Pill { text: qsTr("Refresh"); symbol: "refresh"; enabled: !page.loading; onClicked: page.load() }
 
     Card {
         Layout.fillWidth: true
@@ -39,14 +39,14 @@ ScrollPage {
             width: parent.width
             spacing: 12
             Icon { name: "alert"; color: Theme.warm; size: 18; Layout.preferredWidth: 18; Layout.preferredHeight: 18 }
-            Txt { Layout.fillWidth: true; text: "Couldn't reach your accounts: " + page.problem }
+            Txt { Layout.fillWidth: true; text: qsTr("Couldn't reach your accounts: %1").arg(page.problem) }
         }
     }
-    Txt { kind: "small"; text: "Checking your accounts…"; visible: page.loading && !page.items.length }
+    Txt { kind: "small"; text: qsTr("Checking your accounts…"); visible: page.loading && !page.items.length }
 
     Section {
-        title: "Connected"
-        description: "Choose what Jarvis may do with each account."
+        title: qsTr("Connected")
+        description: qsTr("Choose what Jarvis may do with each account.")
         visible: page.connected.length > 0
         spacing: 8
         ColumnLayout {
@@ -74,31 +74,31 @@ ScrollPage {
                             spacing: 2
                             Txt { text: row.modelData.name; weight: 600; elide: Text.ElideRight; wrapMode: Text.NoWrap; Layout.fillWidth: true }
                             Txt { kind: "small"; Layout.fillWidth: true; elide: Text.ElideRight; wrapMode: Text.NoWrap
-                                  text: row.modelData.account || "Connected" }
+                                  text: row.modelData.account || qsTr("Connected") }
                         }
                         RowLayout {  // shown on hover: they're rarely needed
                             spacing: 0
                             opacity: row.lit ? 1 : 0
                             Behavior on opacity { NumberAnimation { duration: Theme.fast } }
                             IconButton {
-                                symbol: "refresh"; size: 32; glyph: 16; color: Theme.text3; tip: "Sign in again"
-                                onClicked: page.connect(row.modelData, "Sign-in opened in your browser")
+                                symbol: "refresh"; size: 32; glyph: 16; color: Theme.text3; tip: qsTr("Sign in again")
+                                onClicked: page.connect(row.modelData, qsTr("Sign-in opened in your browser"))
                             }
                             IconButton {
                                 symbol: row.confirming ? "check" : "trash"; size: 32; glyph: 16
                                 color: row.confirming ? Theme.red : Theme.text3
-                                tip: row.confirming ? "Click again to disconnect" : "Disconnect"
+                                tip: row.confirming ? qsTr("Click again to disconnect") : qsTr("Disconnect")
                                 onClicked: {
                                     if (!row.confirming) { row.confirming = true; undo.restart(); return }
-                                    Api.post(`/api/workspaces/${row.modelData.slug}/disconnect`, {}, () => { Backend.toast(row.modelData.name + " disconnected", false); page.load() })
+                                    Api.post(`/api/workspaces/${row.modelData.slug}/disconnect`, {}, () => { Backend.toast(qsTr("%1 disconnected").arg(row.modelData.name), false); page.load() })
                                 }
                                 Timer { id: undo; interval: 4000; onTriggered: row.confirming = false }
                             }
                         }
                         Select {
                             Layout.preferredWidth: 200
-                            model: [{ value: "ask", label: "Ask before changes" }, { value: "full", label: "Full access" },
-                                    { value: "read_only", label: "Read only" }, { value: "paused", label: "Paused" }]
+                            model: [{ value: "ask", label: qsTr("Ask before changes") }, { value: "full", label: qsTr("Full access") },
+                                    { value: "read_only", label: qsTr("Read only") }, { value: "paused", label: qsTr("Paused") }]
                             value: row.modelData.mode
                             onPicked: v => Api.post(`/api/workspaces/${row.modelData.slug}/mode`, { mode: v }, () => Backend.toast(`${row.modelData.name}: ${displayText}`, false))
                         }
@@ -109,8 +109,8 @@ ScrollPage {
     }
 
     Section {
-        title: page.connected.length ? "More accounts" : "Accounts you can connect"
-        description: "Pick one to sign in from your browser, then press Refresh."
+        title: page.connected.length ? qsTr("More accounts") : qsTr("Accounts you can connect")
+        description: qsTr("Pick one to sign in from your browser, then press Refresh.")
         visible: page.others.length > 0
         Flow {
             Layout.fillWidth: true
@@ -123,8 +123,8 @@ ScrollPage {
                     implicitHeight: 36
                     symbol: page.glyph(modelData.slug)
                     text: modelData.name
-                    onClicked: page.connect(modelData, "Finish signing in in your browser, then press Refresh")
-                    Tip { text: "Connect " + tile.modelData.name; visible: tile.hovered }
+                    onClicked: page.connect(modelData, qsTr("Finish signing in in your browser, then press Refresh"))
+                    Tip { text: qsTr("Connect %1").arg(tile.modelData.name); visible: tile.hovered }
                 }
             }
         }

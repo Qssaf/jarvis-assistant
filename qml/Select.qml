@@ -28,15 +28,15 @@ ComboBox {
         Focus { visible: c.popup.visible }
     }
     contentItem: Text {
-        leftPadding: 14
-        rightPadding: 36
+        leftPadding: c.mirrored ? 36 : 14  // (the chevron's side is kept clear)
+        rightPadding: c.mirrored ? 14 : 36
         text: c.displayText
         font: c.font
         color: Theme.text
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
     }
-    indicator: Icon { name: "chevron"; size: 16; color: c.popup.visible ? Theme.accent : Theme.text2; x: c.width - width - 14; y: (c.height - height) / 2
+    indicator: Icon { name: "chevron"; size: 16; color: c.popup.visible ? Theme.accent : Theme.text2; x: c.mirrored ? 14 : c.width - width - 14; y: (c.height - height) / 2
                       rotation: c.popup.visible ? 180 : 0; Behavior on rotation { NumberAnimation { duration: Theme.fast } } }
     delegate: ItemDelegate {
         id: d

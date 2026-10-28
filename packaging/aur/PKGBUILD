@@ -41,6 +41,7 @@ package() {
   cd "$pkgname-$pkgver"
   install -d "$pkgdir/opt/$pkgname"
   cp -r --no-preserve=ownership *.py prompt.md requirements.txt icon.svg qml assets relay "$pkgdir/opt/$pkgname/"
+  install -Dm644 -t "$pkgdir/opt/$pkgname/translations" translations/*.qm
   rm "$pkgdir/opt/$pkgname/test_jarvis.py"
   install -Dm755 jarvis-shot "$pkgdir/usr/lib/$pkgname/jarvis-shot"
   install -Dm755 "$srcdir/jarvis.sh" "$pkgdir/usr/bin/jarvis"

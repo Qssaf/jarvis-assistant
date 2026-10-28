@@ -10,7 +10,7 @@ Slider {
     background: Rectangle {
         x: s.leftPadding; y: s.topPadding + s.availableHeight / 2 - 2
         width: s.availableWidth; height: 4; radius: 2; color: Theme.track
-        Rectangle { width: s.visualPosition * parent.width; height: 4; radius: 2; color: Theme.accent }
+        Rectangle { anchors.left: parent.left; width: s.position * parent.width; height: 4; radius: 2; color: Theme.accent }
     }
     handle: Rectangle {
         x: s.leftPadding + s.visualPosition * s.availableWidth - width / 2

@@ -6,8 +6,8 @@ import Jarvis
 // Which model does which job, and the providers and keys they come from. Changes save at once.
 ScrollPage {
     id: page
-    title: "Models"
-    hint: "Pick the models for each job. Each list is tried top to bottom: when one is busy or down, the next takes over."
+    title: qsTr("Models")
+    hint: qsTr("Pick the models for each job. Each list is tried top to bottom: when one is busy or down, the next takes over.")
     property var info: ({ providers: [], ollama: null })
     property var avail: ({ backends: [], live: [] })  // what each provider offers (asked for separately: it's slower)
     property var jobs: []
@@ -45,19 +45,19 @@ ScrollPage {
     function usableBackends(job) {  // (the local backend only hears and speaks; a provider of the user's own called "local" does it all)
         return page.avail.backends.filter(b => (!b.error || b.models.length) && (page.ownLocal() || b.name !== "local" || job === "hear" || job === "speak")).map(b => b.name)
     }
-    readonly property string status: looking ? "Looking up the models you can use…" : avail.backends
+    readonly property string status: looking ? qsTr("Looking up the models you can use…") : avail.backends
         .filter(b => b.models.length || (b.error && !/no API key|unknown backend|not signed in|not installed/.test(b.error)))
-        .map(b => b.models.length ? `${b.name}: ${b.models.length} models` : `${b.name}: ${b.error}`).join(" · ")
+        .map(b => b.models.length ? qsTr("%1: %n model(s)", "", b.models.length).arg(b.name) : `${b.name}: ${b.error}`).join(" · ")
     Component.onCompleted: load()
     Timer {  // while a Google sign-in waits in the browser: notice when it's done
         interval: 2000; repeat: true; running: !!page.info.google_signing
         onTriggered: Api.get("/api/models", d => { const was = page.info.google_signing; page.info = d; if (was && !d.google_signing) page.lookUp() })
     }
 
-    actions: Pill { text: "Refresh"; symbol: "refresh"; enabled: !page.looking; onClicked: page.lookUp() }
+    actions: Pill { text: qsTr("Refresh"); symbol: "refresh"; enabled: !page.looking; onClicked: page.lookUp() }
 
     Section {
-        title: "What each job uses"
+        title: qsTr("What each job uses")
         spacing: 12
         RowLayout {
             Layout.fillWidth: true
@@ -101,13 +101,13 @@ ScrollPage {
                                     Layout.fillWidth: true
                                     implicitHeight: name.implicitHeight
                                     Txt { id: name; text: job.modelData.label; weight: 600; elide: Text.ElideRight; wrapMode: Text.NoWrap
-                                          width: Math.min(implicitWidth, parent.width - (tag.visible ? tag.implicitWidth + 8 : 0)) }
-                                    Txt { id: tag; kind: "label"; visible: !job.modelData.custom; color: Theme.text3; text: "Jarvis's choice"; wrapMode: Text.NoWrap
-                                          x: name.width + 8; anchors.baseline: name.baseline }
+                                          anchors.left: parent.left; width: Math.min(implicitWidth, parent.width - (tag.visible ? tag.implicitWidth + 8 : 0)) }
+                                    Txt { id: tag; kind: "label"; visible: !job.modelData.custom; color: Theme.text3; text: qsTr("Jarvis's choice"); wrapMode: Text.NoWrap
+                                          anchors { left: name.right; leftMargin: 8; baseline: name.baseline } }
                                 }
                                 Txt { kind: "small"; text: job.modelData.hint; elide: Text.ElideRight; wrapMode: Text.NoWrap; Layout.fillWidth: true }
                             }
-                            Pill { visible: job.open && job.modelData.custom && job.modelData.job !== "agent"; text: "Use Jarvis's choice"; kind: "ghost"
+                            Pill { visible: job.open && job.modelData.custom && job.modelData.job !== "agent"; text: qsTr("Use Jarvis's choice"); kind: "ghost"
                                    symbol: "restore"; implicitHeight: 32; onClicked: page.save(job.modelData.job, []) }
                             RowLayout {  // a fixed width, so the pills line up from job to job
                                 visible: !job.open
@@ -116,11 +116,11 @@ ScrollPage {
                                 spacing: 12
                                 Chip { visible: job.first[0] !== ""; active: true; text: page.pretty(job.first[1] || ""); onClicked: job.open = true }
                                 Txt { kind: "small"; color: Theme.text3; wrapMode: Text.NoWrap; elide: Text.ElideRight; Layout.fillWidth: true
-                                      text: job.first[0] + (job.more > 0 ? ` · +${job.more} fallback${job.more > 1 ? "s" : ""}` : "") }
+                                      text: job.more > 0 ? qsTr("%1 · +%n fallback(s)", "", job.more).arg(job.first[0]) : job.first[0] }
                             }
                             Icon { name: "chevron-right"; size: 18; color: hit.containsMouse ? Theme.text : Theme.text3
                                    Layout.preferredWidth: 18; Layout.preferredHeight: 18
-                                   rotation: job.open ? 90 : 0; Behavior on rotation { NumberAnimation { duration: Theme.fast } } }
+                                   rotation: job.open ? (LayoutMirroring.enabled ? -90 : 90) : 0; Behavior on rotation { NumberAnimation { duration: Theme.fast } } }
                         }
                     }
                     ModelList { visible: job.open; Layout.bottomMargin: 16; job: job.modelData.job; entries: job.modelData.models }
@@ -130,16 +130,16 @@ ScrollPage {
     }
 
     Section {
-        title: "Providers and keys"
+        title: qsTr("Providers and keys")
         spacing: 12
         RowLayout {  // (instead of the description: the path goes in a tip)
             Layout.fillWidth: true
             Layout.topMargin: -12
             spacing: 4
             Txt { kind: "small"
-                  text: (/keychain/.test(page.info.storage || "keychain") ? "Keys stay in your system keychain" : "Keys stay in a private file on this PC")
-                        + ", never in the settings file." }
-            IconButton { symbol: "info"; size: 28; glyph: 16; color: Theme.text3; tip: "Kept in " + (page.info.storage || "your keychain") }
+                  text: (/keychain/.test(page.info.storage || "keychain") ? qsTr("Keys stay in your system keychain, never in the settings file.")
+                        : qsTr("Keys stay in a private file on this PC, never in the settings file.")) }
+            IconButton { symbol: "info"; size: 28; glyph: 16; color: Theme.text3; tip: page.info.storage ? qsTr("Kept in %1").arg(page.info.storage) : qsTr("Kept in your keychain") }
             Item { Layout.fillWidth: true }
         }
         ColumnLayout {
@@ -169,22 +169,22 @@ ScrollPage {
                             Layout.preferredWidth: 320
                             visible: !modelData.local
                             echoMode: TextInput.Password
-                            placeholderText: modelData.key ? "Key saved · paste a new one to replace it" : "Paste an API key"
-                            onAccepted: if (text) Api.post(`/api/keys/${modelData.name}`, { key: text }, d => { page.info = d; page.adding = ""; text = ""; Backend.toast("Key saved", false); page.lookUp() })
+                            placeholderText: modelData.key ? qsTr("Key saved · paste a new one to replace it") : qsTr("Paste an API key")
+                            onAccepted: if (text) Api.post(`/api/keys/${modelData.name}`, { key: text }, d => { page.info = d; page.adding = ""; text = ""; Backend.toast(qsTr("Key saved"), false); page.lookUp() })
                             onActiveFocusChanged: if (!activeFocus && !text && page.adding === modelData.name) page.adding = ""
                             Component.onCompleted: if (page.adding === modelData.name) forceActiveFocus()
                         }
                         Txt { kind: "small"; visible: !!modelData.local; Layout.preferredWidth: 320; horizontalAlignment: Text.AlignRight
                               color: page.info.ollama && page.info.ollama.length ? Theme.text2 : Theme.text3; elide: Text.ElideRight; wrapMode: Text.NoWrap
-                              text: page.info.ollama === null ? "Ollama isn't running" : (page.info.ollama.length ? page.info.ollama.join(", ") : "No models downloaded yet") }
-                        IconButton { visible: !!modelData.custom; symbol: "trash"; color: Theme.text3; tip: "Remove this provider"; Layout.rightMargin: -8
+                              text: page.info.ollama === null ? qsTr("Ollama isn't running") : (page.info.ollama.length ? page.info.ollama.join(", ") : qsTr("No models downloaded yet")) }
+                        IconButton { visible: !!modelData.custom; symbol: "trash"; color: Theme.text3; tip: qsTr("Remove this provider"); Layout.rightMargin: -8
                                      onClicked: Api.post(`/api/providers/${modelData.name}/delete`, {}, d => { page.info = d; page.lookUp() }) }
                     }
                 }
             }
             Divider {}
         }
-        Txt { kind: "label"; text: "More providers"; Layout.topMargin: 4 }
+        Txt { kind: "label"; text: qsTr("More providers"); Layout.topMargin: 4 }
         Flow {
             Layout.fillWidth: true
             spacing: 8
@@ -193,23 +193,23 @@ ScrollPage {
                 Chip { id: chip; required property var modelData; symbol: "plus"; text: modelData.name; onClicked: page.adding = modelData.name
                        Tip { text: chip.modelData.url; visible: chip.hovered } }
             }
-            Chip { symbol: "link"; text: "Another service"; checked: page.custom; onClicked: page.custom = !page.custom }
+            Chip { symbol: "link"; text: qsTr("Another service"); checked: page.custom; onClicked: page.custom = !page.custom }
         }
         RowLayout {
             Layout.fillWidth: true
             visible: page.custom
             spacing: 12
-            Field { id: pname; Layout.preferredWidth: 180; placeholderText: "name" }
+            Field { id: pname; Layout.preferredWidth: 180; placeholderText: qsTr("name") }
             Field { id: purl; Layout.fillWidth: true; placeholderText: "https://host/v1 (any OpenAI-compatible service)" }
-            Pill { text: "Add"; symbol: "plus"; implicitHeight: 44; enabled: pname.text && purl.text; kind: enabled ? "primary" : ""
+            Pill { text: qsTr("Add"); symbol: "plus"; implicitHeight: 44; enabled: pname.text && purl.text; kind: enabled ? "primary" : ""
                    onClicked: Api.post("/api/providers", { name: pname.text, url: purl.text }, d => { page.info = d; pname.text = purl.text = ""; page.custom = false; page.lookUp() }) }
         }
     }
 
     Section {
-        title: "Your Google account"
-        description: "Sign in with Google for Gemini (and Claude) through your account's Antigravity quota, much more than a free "
-                     + "AI Studio key."
+        title: qsTr("Your Google account")
+        description: qsTr("Sign in with Google for Gemini (and Claude) through your account's Antigravity quota, much more than a free "
+                     + "AI Studio key.")
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: warn.implicitHeight + 24
@@ -223,8 +223,8 @@ ScrollPage {
                 spacing: 12
                 Icon { name: "shield"; size: 18; color: Theme.warm; Layout.preferredWidth: 18; Layout.preferredHeight: 18; Layout.alignment: Qt.AlignTop }
                 Txt { kind: "small"; color: Theme.text; Layout.fillWidth: true; Layout.maximumWidth: 640
-                      text: "It signs in the way Google's Antigravity app does, which Google doesn't offer to other apps: "
-                            + "Google may limit or suspend accounts used like this. Use an account you can afford to lose." }
+                      text: qsTr("It signs in the way Google's Antigravity app does, which Google doesn't offer to other apps: "
+                            + "Google may limit or suspend accounts used like this. Use an account you can afford to lose.") }
             }
         }
         ColumnLayout {
@@ -248,9 +248,9 @@ ScrollPage {
                             color: Theme.accentSoft
                             Txt { anchors.centerIn: parent; text: (modelData.email || "G")[0].toUpperCase(); weight: 600; color: Theme.accent }
                         }
-                        Txt { text: modelData.email || "Google account"; weight: 500; Layout.fillWidth: true; elide: Text.ElideRight; wrapMode: Text.NoWrap }
-                        Txt { kind: "small"; color: Theme.text3; visible: modelData.source === "opencode"; text: "from opencode" }
-                        IconButton { visible: modelData.source === "jarvis"; symbol: "trash"; color: Theme.text3; tip: "Sign out"; Layout.rightMargin: -8
+                        Txt { text: modelData.email || qsTr("Google account"); weight: 500; Layout.fillWidth: true; elide: Text.ElideRight; wrapMode: Text.NoWrap }
+                        Txt { kind: "small"; color: Theme.text3; visible: modelData.source === "opencode"; text: qsTr("from opencode") }
+                        IconButton { visible: modelData.source === "jarvis"; symbol: "trash"; color: Theme.text3; tip: qsTr("Sign out"); Layout.rightMargin: -8
                                      onClicked: Api.post("/api/google/signout", { email: modelData.email }, d => { page.info = d; page.lookUp() }) }
                     }
                 }
@@ -258,10 +258,10 @@ ScrollPage {
             Divider {}
         }
         Txt { kind: "small"; Layout.fillWidth: true; visible: page.info.google_client === false; color: Theme.warm
-              text: "First install the opencode-antigravity-auth plugin (npm i -g opencode-antigravity-auth): Jarvis signs in "
-                    + "with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis's env file." }
+              text: qsTr("First install the opencode-antigravity-auth plugin (npm i -g opencode-antigravity-auth): Jarvis signs in "
+                    + "with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis's env file.") }
         Pill { visible: page.info.google_client !== false
-               text: page.info.google_signing ? "Waiting for the browser…" : (page.info.google || []).length ? "Add another account" : "Sign in with Google"
+               text: page.info.google_signing ? qsTr("Waiting for the browser…") : (page.info.google || []).length ? qsTr("Add another account") : qsTr("Sign in with Google")
                symbol: (page.info.google || []).length ? "plus" : ""
                kind: (page.info.google || []).length || page.info.google_signing ? "" : "primary"; enabled: !page.info.google_signing
                onClicked: Api.post("/api/google/signin", {}, d => page.info = d, e => Backend.toast(e.error, true)) }
@@ -308,16 +308,16 @@ ScrollPage {
                 Select { Layout.fillWidth: true; visible: page.modelsFor(row.parts[0], list.job).length > 0
                          model: page.options(page.modelsFor(row.parts[0], list.job), row.parts[1]); value: row.parts[1]
                          onPicked: v => list.update(row.index, [row.parts[0], v, row.parts[2]]) }
-                Field { Layout.fillWidth: true; visible: !page.modelsFor(row.parts[0], list.job).length; text: row.parts[1]; placeholderText: "model name"
+                Field { Layout.fillWidth: true; visible: !page.modelsFor(row.parts[0], list.job).length; text: row.parts[1]; placeholderText: qsTr("model name")
                         onEditingFinished: if (text && text !== row.parts[1]) list.update(row.index, [row.parts[0], text.trim(), row.parts[2]]) }
                 Select { Layout.preferredWidth: 120; model: page.options(list.levels(row.parts[0]), row.parts[2]); value: row.parts[2]
                          onPicked: v => list.update(row.index, [row.parts[0], row.parts[1], v]) }
-                IconButton { symbol: "chevron"; rotation: 180; size: 32; glyph: 16; color: Theme.text3; tip: "Try this one sooner"
+                IconButton { symbol: "chevron"; rotation: 180; size: 32; glyph: 16; color: Theme.text3; tip: qsTr("Try this one sooner")
                              enabled: row.index > 0; opacity: enabled ? 1 : 0.3; onClicked: list.move(row.index) }
-                IconButton { symbol: "trash"; size: 32; glyph: 16; color: Theme.text3; tip: "Remove"
+                IconButton { symbol: "trash"; size: 32; glyph: 16; color: Theme.text3; tip: qsTr("Remove")
                              enabled: list.job !== "agent" || list.entries.length > 1; opacity: enabled ? 1 : 0.3; onClicked: list.remove(row.index) }
             }
         }
-        Pill { text: "Add a model"; symbol: "plus"; kind: "ghost"; implicitHeight: 32; Layout.leftMargin: 20; onClicked: list.add() }
+        Pill { text: qsTr("Add a model"); symbol: "plus"; kind: "ghost"; implicitHeight: 32; Layout.leftMargin: 20; onClicked: list.add() }
     }
 }

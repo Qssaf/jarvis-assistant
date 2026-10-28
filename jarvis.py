@@ -1728,8 +1728,8 @@ def api_get(path, brain):
         return sessions.get(m[1])
     if path == "/api/settings":
         cfg = store.settings()
-        return {"settings": cfg, "voices": store.VOICES, "languages": store.LANGUAGES, "wake_words": store.WAKE_WORDS,
-                "wake_phrase": store.wake_phrase(cfg), "passphrase": bool(store.secret(store.PASSPHRASE)),
+        return {"settings": cfg, "voices": store.VOICES, "languages": store.LANGUAGES, "window_languages": store.WINDOW_LANGUAGES,
+                "wake_words": store.WAKE_WORDS, "wake_phrase": store.wake_phrase(cfg), "passphrase": bool(store.secret(store.PASSPHRASE)),
                 "voice_learned": os.path.exists(os.path.join(wake_folder(cfg["wake_word"]), "verifier.pkl"))}
     if path == "/api/models":
         return models_info()
@@ -2418,12 +2418,16 @@ def make_notch(live):
     """The pill at the top-middle of the screen that shows what Jarvis is doing (like a phone's dynamic island)."""
     import math
     import brain
-    from PySide6.QtCore import QRectF, Qt, QTimer
+    from PySide6.QtCore import QCoreApplication, QRectF, Qt, QTimer
     from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPainterPath, QPen, QRadialGradient
     from PySide6.QtWidgets import QApplication, QWidget
 
     colors = {"idle": "#3fd8ff", "listening": "#7cf0ff", "speaking": "#7cf0ff", "thinking": "#ff9d3f"}  # the app's cyan and orange
-    labels = {"idle": "", "listening": "LISTENING", "speaking": "SPEAKING", "thinking": "WORKING"}
+
+    def labels():  # (asked each time: the window's language can change)
+        return {"listening": QCoreApplication.translate("Notch", "LISTENING"), "speaking": QCoreApplication.translate("Notch", "SPEAKING"),
+                "thinking": QCoreApplication.translate("Notch", "WORKING"), "paused": QCoreApplication.translate("Notch", "PAUSED"),
+                "backup": QCoreApplication.translate("Notch", "BACKUP VOICE")}
 
     class Notch(QWidget):
         def __init__(self):
@@ -2432,7 +2436,6 @@ def make_notch(live):
             self.setAttribute(Qt.WA_TranslucentBackground)
             self.setAttribute(Qt.WA_ShowWithoutActivating)
             self.setCursor(Qt.PointingHandCursor)
-            self.setToolTip("Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop")
             self.font, self.small = QFont("Sans Serif", 10), QFont("Sans Serif", 7, QFont.DemiBold)
             self.small.setLetterSpacing(QFont.AbsoluteSpacing, 1.5)
             self.text, self.state, self.backup, self.width_now = "", "idle", False, 220.0
@@ -2452,9 +2455,13 @@ def make_notch(live):
                     self.hide()
                 return
             self.state, self.text = state, line
+            tip = QCoreApplication.translate("Notch", "Click: open Jarvis · Pause button: stop or start listening · "
+                                                         "Red button (or right-click): stop")
+            if self.toolTip() != tip:
+                self.setToolTip(tip)
             fm = QFontMetrics(self.font)
             target = min(max(260, fm.horizontalAdvance(line) + (220 if state != "idle" else 150)
-                             + (QFontMetrics(self.small).horizontalAdvance(" · BACKUP VOICE") if self.backup else 0)), 720)
+                             + (QFontMetrics(self.small).horizontalAdvance(" · " + labels()["backup"]) if self.backup else 0)), 720)
             self.width_now += (target - self.width_now) * 0.25  # ease towards the new size
             w, h = int(self.width_now), 40
             from PySide6.QtGui import QCursor  # the monitor you're working on
@@ -2508,9 +2515,10 @@ def make_notch(live):
                     tri.lineTo(w - 59, h / 2 + 5)
                     tri.closeSubpath()
                     p.fillPath(tri, QColor("white"))
-            label = labels.get(self.state, "") if live.mic or self.state != "listening" else "PAUSED"
+            names = labels()
+            label = names.get(self.state, "") if live.mic or self.state != "listening" else names["paused"]
             if self.backup:  # Gemini Live can't be used (or is switched off): the backup voice answers
-                label = " · ".join(filter(None, [label, "BACKUP VOICE"]))
+                label = " · ".join(filter(None, [label, names["backup"]]))
             p.setFont(self.small)
             p.setPen(color)
             lw = QFontMetrics(self.small).horizontalAdvance(label)
@@ -2536,7 +2544,7 @@ def make_notch(live):
 def run_tray(live, show=False):
     if os.environ.get("DISPLAY"):  # XWayland lets the notch sit exactly at the top centre
         os.environ["QT_QPA_PLATFORM"] = "xcb"
-    from PySide6.QtCore import QTimer
+    from PySide6.QtCore import QCoreApplication, QTimer
     from PySide6.QtQuick import QQuickWindow
     QQuickWindow.setDefaultAlphaBuffer(True)  # (the window has rounded, see-through corners)
     from PySide6.QtGui import QIcon, QPixmap
@@ -2556,38 +2564,50 @@ def run_tray(live, show=False):
     tray = QSystemTrayIcon(icons["idle"])
     tray.setToolTip("J.A.R.V.I.S.")
     menu = QMenu()
-    menu.addAction("Open Jarvis", show_hud)
-    menu.addAction("Talk", listen_now.set)
-    menu.addAction("Stop", live.stop)
-    dnd = menu.addAction("Do not disturb")
+    actions = [menu.addAction("", show_hud), menu.addAction("", listen_now.set), menu.addAction("", live.stop), menu.addAction("")]
+    dnd = actions[-1]
     dnd.setCheckable(True)
     dnd.triggered.connect(lambda on: store.update_settings({"do_not_disturb": on}))
-    menu.aboutToShow.connect(lambda: dnd.setChecked(store.settings()["do_not_disturb"]))  # (Settings may have changed it)
-    menu.addAction("Quit", app.quit)
+    actions.append(menu.addAction("", app.quit))
+
+    def menu_shown():  # (Settings may have changed do not disturb, or the window's language)
+        dnd.setChecked(store.settings()["do_not_disturb"])
+        for action, text in zip(actions, [QCoreApplication.translate("Tray", "Open Jarvis"), QCoreApplication.translate("Tray", "Talk"),
+                                          QCoreApplication.translate("Tray", "Stop"), QCoreApplication.translate("Tray", "Do not disturb"),
+                                          QCoreApplication.translate("Tray", "Quit")]):
+            action.setText(text)
+    menu.aboutToShow.connect(menu_shown)
     tray.setContextMenu(menu)
     tray.activated.connect(lambda reason: show_hud() if reason == QSystemTrayIcon.ActivationReason.Trigger else None)
     tray.show()
     system.notifier[0] = lambda title, text: tray.showMessage(title, text, tray.icon(), 6000)
-    tray.showMessage("J.A.R.V.I.S.", f'Running in the tray. Say "{store.wake_phrase()}".', tray.icon(), 4000)
     notch = make_notch(live)  # kept referenced for the app's lifetime
     import window
     app.setWindowIcon(icons["idle"])
     win = window.Window(get=lambda path: api_get(path, live.brain), post=lambda path, data: api_post(path, data, live, live.brain),
                         tool_label=tool_label, live=live, shown_state=shown_state, version=VERSION, show=show)
+    menu_shown()  # (in the window's language, now that it's loaded)
+    tray.showMessage("J.A.R.V.I.S.", QCoreApplication.translate("Tray", 'Running in the tray. Say "%1".').replace("%1", store.wake_phrase()),
+                     tray.icon(), 4000)
     clients.append(win.events)
     signal.signal(signal.SIGINT, lambda *a: app.quit())
     signal.signal(signal.SIGTERM, lambda *a: app.quit())
-    shown, ticks, cfg = ["idle", False, False], [0], [store.settings()]
+    shown, ticks, cfg = ["idle", False, False, []], [0], [store.settings()]
 
     def on_tick():  # also lets Python run its signal handlers while Qt's loop is busy
         ticks[0] += 1
         if ticks[0] % 10 == 0:  # (every 3 s: it reads the settings file)
             cfg[0] = store.settings()
         quiet, shown_state[1] = store.quiet_now(cfg[0]), live.backup_now(cfg[0])  # (the window and the notch show the backup voice too)
-        if shown != [shown_state[0], quiet, shown_state[1]]:
-            shown[:] = [shown_state[0], quiet, shown_state[1]]
+        if shown != [shown_state[0], quiet, shown_state[1], cfg[0]["window_languages"]]:
+            shown[:] = [shown_state[0], quiet, shown_state[1], cfg[0]["window_languages"]]
             tray.setIcon(icons.get(shown[0], icons["idle"]))
-            tray.setToolTip(f"J.A.R.V.I.S. · {shown[0]}" + (" · quiet" if shown[1] else "") + (" · backup voice" if shown[2] else ""))
+            states = {"idle": QCoreApplication.translate("Tray", "idle"), "listening": QCoreApplication.translate("Tray", "listening"),
+                      "speaking": QCoreApplication.translate("Tray", "speaking"), "thinking": QCoreApplication.translate("Tray", "thinking")}
+            tip = ["J.A.R.V.I.S.", states.get(shown[0], shown[0])]
+            tip += [QCoreApplication.translate("Tray", "quiet")] if shown[1] else []
+            tip += [QCoreApplication.translate("Tray", "backup voice")] if shown[2] else []
+            tray.setToolTip(" · ".join(tip))
     tick = QTimer()
     tick.timeout.connect(on_tick)
     tick.start(300)

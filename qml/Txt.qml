@@ -13,6 +13,7 @@ Text {
     font.letterSpacing: kind === "display" ? -0.8 : kind === "title" ? -0.5 : isLabel ? 0.3 : 0
     color: kind === "small" || isLabel ? Theme.text2 : Theme.text
     wrapMode: Text.Wrap
+    horizontalAlignment: Text.AlignLeft  // (set, so a right-to-left window mirrors it; unset, Latin text stays left there)
     linkColor: Theme.accent
     onLinkActivated: link => { if (/^(https?|mailto):/i.test(link)) Qt.openUrlExternally(link) }  // (text can come from anywhere)
 }

@@ -26,7 +26,7 @@ AbstractButton {
             Behavior on color { ColorAnimation { duration: 160 } }
             Rectangle {
                 width: 20; height: 20; radius: 10
-                y: 3; x: t.checked ? parent.width - width - 3 : 3
+                y: 3; x: t.checked !== t.mirrored ? parent.width - width - 3 : 3
                 color: "white"
                 Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
             }

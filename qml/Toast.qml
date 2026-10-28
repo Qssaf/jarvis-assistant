@@ -16,6 +16,6 @@ Glass {
     transform: Translate { y: (1 - t.opacity) * 8 }
     Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
     Timer { id: hide; interval: 3200; onTriggered: t.opacity = 0 }
-    StatusDot { id: dot; x: 18; anchors.verticalCenter: parent.verticalCenter; status: t.bad ? "error" : "ok" }
+    StatusDot { id: dot; anchors { left: parent.left; leftMargin: 18; verticalCenter: parent.verticalCenter } status: t.bad ? "error" : "ok" }
     Txt { id: label; anchors.left: dot.right; anchors.leftMargin: 10; anchors.verticalCenter: parent.verticalCenter; wrapMode: Text.NoWrap }
 }

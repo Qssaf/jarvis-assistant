@@ -3,13 +3,18 @@ Backend.request (off the UI thread) and hears everything that happens through Ba
 import json, os
 from concurrent.futures import ThreadPoolExecutor
 
-from PySide6.QtCore import Property, QByteArray, QObject, QRectF, Qt, QTimer, Signal, Slot, QUrl
+from PySide6.QtCore import Property, QByteArray, QCoreApplication, QLocale, QObject, QRectF, Qt, QTimer, QTranslator, Signal, Slot, QUrl
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QGuiApplication, QPainter, QPixmap
 from PySide6.QtQml import QQmlApplicationEngine, qmlRegisterSingletonInstance
 from PySide6.QtQuick import QQuickImageProvider
 from PySide6.QtSvg import QSvgRenderer
 
+import store
+
 HERE = os.path.dirname(os.path.abspath(__file__))
+TRANSLATIONS = os.path.join(HERE, "translations")  # jarvis_<code>.qm, made from the .ts files there by lrelease (en: plurals only)
+# New or changed texts: `pyside6-lupdate qml/*.qml jarvis.py window.py -ts translations/*.ts`, translate, then
+# `pyside6-lrelease translations/*.ts` (the tests check each .qm matches its .ts)
 
 # ---------------------------------------------------------------- icons: 24x24 line icons, drawn in any colour
 S = '<g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">{}</g>'
@@ -122,12 +127,14 @@ class Backend(QObject):
     changed = Signal()               # the polled values below
     toastRequested = Signal(str, bool)
     showRequested = Signal()
+    rtlChanged = Signal()
 
     def __init__(self, get, post, tool_label, live, shown_state, version):
         super().__init__()
         self.get, self.post, self.label, self.live, self.shown, self.ver = get, post, tool_label, live, shown_state, version
         self.pool = ThreadPoolExecutor(8, thread_name_prefix="ui")
         self._values = {}
+        self._rtl = False
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.poll)
         self.timer.start(33)  # ~30 fps: the orb follows your voice
@@ -148,6 +155,7 @@ class Backend(QObject):
     listening = Property(bool, lambda self: self._values.get("listening", False), notify=changed)
     micLevel = Property(float, lambda self: self._values.get("mic", 0.0), notify=changed)  # the raw mic, even when not listening
     backup = Property(bool, lambda self: self._values.get("backup", False), notify=changed)  # the backup voice answers, not Gemini Live
+    rtl = Property(bool, lambda self: self._rtl, notify=rtlChanged)  # the window reads right to left (Arabic first)
 
     @Property(str, constant=True)
     def version(self):
@@ -184,7 +192,7 @@ class Backend(QObject):
     @Slot(str)
     def copy(self, text):
         QGuiApplication.clipboard().setText(text)
-        self.toast("Copied", False)
+        self.toast(QCoreApplication.translate("Backend", "Copied"), False)
 
     @Slot(str)
     def open(self, target):
@@ -198,6 +206,10 @@ class Backend(QObject):
     @Slot(str, result=str)
     def toolLabel(self, name):
         return self.label(name)
+
+    @Slot(list)
+    def setLanguages(self, codes):  # (Settings: the window's languages changed)
+        current[0].languages(codes)
 
 
 class Window:
@@ -215,9 +227,32 @@ class Window:
         self.engine = QQmlApplicationEngine()
         self.engine.addImageProvider("icon", IconProvider())
         self.engine.setInitialProperties({"startShown": show})
+        self.translators = []
+        self.languages(store.settings()["window_languages"])
         self.engine.load(QUrl.fromLocalFile(os.path.join(HERE, "qml", "Main.qml")))
         if not self.engine.rootObjects():
             raise RuntimeError("the window couldn't be loaded (see the log)")
+
+    def languages(self, codes):
+        """Show the window in these languages: each text in the first one that has it ("en": as written, so none after it;
+        its file only says how English counts, "1 message" or "2 messages")."""
+        app = QCoreApplication.instance()
+        for t in self.translators:
+            app.removeTranslator(t)
+        codes = list(codes) + ["en"]
+        codes, self.translators = codes[:codes.index("en") + 1], []
+        for code in reversed(codes):  # (Qt asks the last one installed first)
+            t = QTranslator()
+            if t.load(os.path.join(TRANSLATIONS, f"jarvis_{code}.qm")):
+                app.installTranslator(t)
+                self.translators.append(t)
+        QLocale.setDefault(QLocale(codes[0]))  # (dates in the same language)
+        rtl = codes[:1] == ["ar"]
+        QGuiApplication.setLayoutDirection(Qt.RightToLeft if rtl else Qt.LeftToRight)  # (the tray menu)
+        if rtl != self.backend._rtl:
+            self.backend._rtl = rtl
+            self.backend.rtlChanged.emit()
+        self.engine.retranslate()
 
     def present(self):
         self.backend.showRequested.emit()  # (safe from any thread)

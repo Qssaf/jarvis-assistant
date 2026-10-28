@@ -55,7 +55,7 @@ Item {
     FileDialog {
         id: picker
         fileMode: FileDialog.OpenFiles
-        title: "Attach files for Jarvis"
+        title: qsTr("Attach files for Jarvis")
         onAccepted: home.attachments = home.attachments.concat(selectedFiles.map(u => decodeURIComponent(String(u).replace("file://", ""))))
     }
 
@@ -91,7 +91,7 @@ Item {
                     text: Backend.state === "idle" ? greeting() : Theme.stateName(Backend.state) + "…"
                     function greeting() {
                         const h = new Date().getHours()
-                        return h < 5 ? "Up late?" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"
+                        return h < 5 ? qsTr("Up late?") : h < 12 ? qsTr("Good morning") : h < 18 ? qsTr("Good afternoon") : qsTr("Good evening")
                     }
                 }
                 Item { width: 1; height: 8 }
@@ -99,9 +99,9 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     color: Theme.text2
                     font.pixelSize: Theme.px(15)
-                    text: Backend.state === "idle" ? `Say “${home.wake}”, tap the reactor, or type below`
-                        : Backend.state === "listening" ? (Backend.listening ? "Go ahead, I'm listening" : "Paused")
-                        : Backend.state === "speaking" ? `Say “${home.wake}” to cut in` : "On it"
+                    text: Backend.state === "idle" ? qsTr("Say “%1”, tap the reactor, or type below").arg(home.wake)
+                        : Backend.state === "listening" ? (Backend.listening ? qsTr("Go ahead, I'm listening") : qsTr("Paused"))
+                        : Backend.state === "speaking" ? qsTr("Say “%1” to cut in").arg(home.wake) : qsTr("On it")
                 }
                 Item { width: 1; height: 32 }
                 Grid {
@@ -110,9 +110,9 @@ Item {
                     columns: width > 640 ? 3 : 2
                     spacing: 12
                     Repeater {
-                        model: [["sun", "Brief me", "Weather and your schedule"], ["calendar", "What's due this week?", "From Google Classroom"],
-                                ["mail", "Any new emails?", "Your Gmail inbox"], ["screen", "What's on my screen?", "Jarvis takes a look"],
-                                ["timer", "Set a 10 minute timer", "With a notification"], ["image", "Paint a rainy city", "Make a picture"]]
+                        model: [["sun", qsTr("Brief me"), qsTr("Weather and your schedule")], ["calendar", qsTr("What's due this week?"), qsTr("From Google Classroom")],
+                                ["mail", qsTr("Any new emails?"), qsTr("Your Gmail inbox")], ["screen", qsTr("What's on my screen?"), qsTr("Jarvis takes a look")],
+                                ["timer", qsTr("Set a 10 minute timer"), qsTr("With a notification")], ["image", qsTr("Paint a rainy city"), qsTr("Make a picture")]]
                         Suggestion { required property var modelData; width: (ideas.width - (ideas.columns - 1) * ideas.spacing) / ideas.columns
                                      symbol: modelData[0]; title: modelData[1]; hint: modelData[2] }
                     }
@@ -125,7 +125,7 @@ Item {
             anchors { top: parent.top; topMargin: home.wide ? 52 : 62; right: parent.right; rightMargin: (parent.width - home.column) / 2 }
             visible: messages.count > 0
             implicitHeight: 36
-            text: "New chat"
+            text: qsTr("New chat")
             symbol: "plus"
             onClicked: Api.post("/api/new", {}, () => home.reload())
         }
@@ -135,8 +135,8 @@ Item {
             anchors { verticalCenter: fresh.verticalCenter; left: parent.left; leftMargin: (parent.width - home.column) / 2 }
             visible: Backend.backup
             dot: "working"
-            text: "Backup voice"
-            Tip { text: "The backup voice (Models page) answers instead of Gemini Live"; visible: backup.hovered }
+            text: qsTr("Backup voice")
+            Tip { text: qsTr("The backup voice (Models page) answers instead of Gemini Live"); visible: backup.hovered }
         }
 
         ListView {
@@ -165,9 +165,9 @@ Item {
                     x: (parent.width - home.column) / 2
                     width: home.column; height: 32
                     anchors.verticalCenter: parent.verticalCenter
-                    Orb { width: 24; height: 24; anchors.verticalCenter: parent.verticalCenter; rings: false; mode: "thinking" }
+                    Orb { width: 24; height: 24; anchors { left: parent.left; verticalCenter: parent.verticalCenter } rings: false; mode: "thinking" }
                     Rectangle {
-                        x: 36  // (the text column, like the tool chips)
+                        anchors { left: parent.left; leftMargin: 36 }  // (the text column, like the tool chips)
                         width: working.implicitWidth + 26; height: 32; radius: 16
                         color: Theme.glass
                         border.width: 1
@@ -185,12 +185,12 @@ Item {
                                     NumberAnimation { to: 1; duration: 700; easing.type: Easing.InOutSine }
                                 }
                             }
-                            Txt { anchors.verticalCenter: parent.verticalCenter; text: "Working on it…"; color: Theme.text2
+                            Txt { anchors.verticalCenter: parent.verticalCenter; text: qsTr("Working on it…"); color: Theme.text2
                                   font.pixelSize: Theme.px(13); wrapMode: Text.NoWrap }
                         }
                     }
                     Chip { anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                           symbol: "stop"; text: "Stop"; ink: Theme.warm; onClicked: Backend.stop() }
+                           symbol: "stop"; text: qsTr("Stop"); ink: Theme.warm; onClicked: Backend.stop() }
                 }
             }
         }
@@ -217,14 +217,15 @@ Item {
                 anchors.centerIn: parent
                 spacing: 10
                 Icon { anchors.horizontalCenter: parent.horizontalCenter; name: "attach"; size: 28; color: Theme.accent }
-                Txt { kind: "heading"; text: "Drop to attach" }
+                Txt { kind: "heading"; text: qsTr("Drop to attach") }
             }
         }
     }
 
     Today {
         id: today
-        x: home.wide ? home.width - width - 12 : (home.width - home.column) / 2 + (backup.visible ? backup.width + 12 : 0)
+        anchors { left: home.wide ? undefined : parent.left; right: home.wide ? parent.right : undefined; rightMargin: 12
+                  leftMargin: (home.width - home.column) / 2 + (backup.visible ? backup.width + 12 : 0) }  // (anchors: they mirror)
         y: 52
         width: home.wide ? 300 : home.column - (fresh.visible ? fresh.width + 12 : 0) - (backup.visible ? backup.width + 12 : 0)
         height: home.wide ? home.height - y - 24 : 56
@@ -251,7 +252,7 @@ Item {
         contentItem: Item {
             Rectangle {
                 id: well
-                x: 16; anchors.verticalCenter: parent.verticalCenter
+                anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
                 width: 36; height: 36; radius: 18
                 color: s.hovered ? Theme.alpha(Theme.accent, 0.22) : Theme.accentSoft
                 Icon { anchors.centerIn: parent; name: s.symbol; size: 18; color: Theme.accent }
