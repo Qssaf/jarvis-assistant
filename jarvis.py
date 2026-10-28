@@ -2255,7 +2255,8 @@ def api_post(path, data, live, brain):
         return {"files": store.export_data(target, VERSION), "path": target}
     elif path == "/api/data/import":
         import brain as brain_mod
-        skipped = store.import_data(local_path(str(data.get("path", ""))), taken={*brain_mod.PROVIDERS, *brain_mod.BACKENDS})
+        # (the offline "local" backend has no key, and a provider of the user's own may take its name)
+        skipped = store.import_data(local_path(str(data.get("path", ""))), taken={*brain_mod.PROVIDERS, *brain_mod.BACKENDS} - {"local"})
         store.sync_autostart(store.settings()["start_at_login"])
         restart_soon()
         return {"skipped": skipped}
