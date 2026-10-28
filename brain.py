@@ -1296,19 +1296,21 @@ notes_done = [lambda text: print(text, flush=True)]  # set by the app: says the 
 
 class Notes:
     """Records what the PC plays (a lecture, a call) or the room, transcribes it in chunks as it goes, and at the end
-    writes a summary and the transcript to a file. One recording at a time; three hours at most."""
+    writes a summary and the transcript to a file. One recording at a time; three hours at most. When several people
+    talk, turns start with **Speaker 1:** or a name, kept the same across chunks (each is told the labels used so far)."""
     CHUNK, LONGEST = 300, 3 * 3600
+    SPEAKER = re.compile(r"^\*\*([^*\n:]{1,40}):\*\* ?", re.M)
 
     def __init__(self, transcribe, summarise):
         self.transcribe, self.summarise = transcribe, summarise
-        self.on = None  # {"title", "source", "started", "stop" (Event), "parts" [text or None], "thread"}
-        self.pool = ThreadPoolExecutor(2)
+        self.on = None  # {"title", "source", "started", "stop" (Event), "parts" [text or None], "heard" [text], "thread"}
+        self.pool = ThreadPoolExecutor(1)  # (one at a time, in order: each chunk needs the speakers named before it)
 
     def start(self, title="", source="pc"):
         if self.on:
             return {"error": f"already taking notes ('{self.on['title']}', {self._minutes()} min so far): stop those first"}
         title = " ".join(str(title or "").split())[:80] or time.strftime("Notes %d %b %H:%M")
-        self.on = {"title": title, "source": source, "started": time.time(), "stop": threading.Event(), "parts": [], "folder": tempfile.mkdtemp(prefix="jarvis-notes-")}
+        self.on = {"title": title, "source": source, "started": time.time(), "stop": threading.Event(), "parts": [], "heard": [], "folder": tempfile.mkdtemp(prefix="jarvis-notes-")}
         self.on["thread"] = threading.Thread(target=self._record, args=(self.on,), daemon=True)
         self.on["thread"].start()
         return {"result": f"taking notes of {'what the PC is playing' if source == 'pc' else 'the room'}: '{title}'. Say stop the notes when it ends."}
@@ -1323,16 +1325,33 @@ class Notes:
             proc = system.record_audio(path, on["source"])
             on["stop"].wait(self.CHUNK)
             system.stop_recording(proc)
-            on["parts"].append(self.pool.submit(self._transcribe_file, path))
+            on["parts"].append(self.pool.submit(self._transcribe_file, path, on))
             n += 1
         if not on["stop"].is_set():  # (three hours: finish by itself)
             threading.Thread(target=self.stop, daemon=True).start()
 
-    def _transcribe_file(self, path):
+    def _prompt(self, heard):
+        prompt = ("Transcribe this recording word for word, in its own language. If more than one person speaks, start each "
+                  "turn on a new line with who speaks, in bold: their name when what's said makes it clear (**Dr. Lee:**), "
+                  "otherwise **Speaker 1:**, **Speaker 2:**... If only one person speaks, no labels. If nobody speaks, reply only: (silence)")
+        if not heard:
+            return prompt
+        speakers = list(dict.fromkeys(self.SPEAKER.findall("\n".join(heard))))
+        return prompt + (f"\nThis continues a longer recording whose earlier parts called the speakers: {', '.join(speakers)}. Use "
+                         "the same labels for the same people, and new ones only for new voices." if speakers else
+                         "\nThis continues a longer recording where one person has spoken so far (no labels). If someone else "
+                         "speaks now, label everyone, that person first.") + f"\nThe previous part ended: ...{heard[-1][-300:]}"
+
+    def _transcribe_file(self, path, on):
         try:
             with open(path, "rb") as f:
                 audio = f.read()
-            return self.transcribe(audio) if len(audio) > 16000 and audible(audio) else ""  # (models invent words for silence)
+            if len(audio) <= 16000 or not audible(audio):  # (models invent words for silence)
+                return ""
+            text = self.transcribe(audio, self._prompt(on["heard"]))
+            if text.strip() != "(silence)":
+                on["heard"].append(text)
+            return text
         except Exception as e:
             return f"(this part couldn't be transcribed: {str(e)[:100]})"
         finally:
@@ -1353,6 +1372,8 @@ class Notes:
 
     def _finish(self, on):
         transcript = "\n".join(t for t in (f.result() for f in on["parts"]) if t and t.strip() != "(silence)").strip()
+        if len(set(self.SPEAKER.findall(transcript))) == 1:  # (one person after all: no labels)
+            transcript = self.SPEAKER.sub("", transcript)
         try:
             summary = self.summarise(transcript) if transcript else "Nothing was heard."
         except Exception as e:
@@ -2264,17 +2285,16 @@ class Brain:
         self.load_plugins()
         vision[0] = lambda contents: self._generate(contents, entries=models_for("look"))
 
-        def transcribe(audio):
+        def transcribe(audio, prompt):
             parts = self._generate([{"role": "user", "parts": [{"inlineData": {"mimeType": "audio/wav", "data": base64.b64encode(audio).decode()}},
-                                                               {"text": "Transcribe this recording word for word, in its own language, with a "
-                                                                        "new line when the speaker changes. If nobody speaks, reply only: (silence)"}]}],
-                                   entries=models_for("look"))
+                                                               {"text": prompt}]}], entries=models_for("look"))
             return "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
 
         def summarise(transcript):
             parts = self._generate([{"role": "user", "parts": [{"text": "Write study notes from this transcript of a lecture or meeting: "
                                      "a two-sentence summary, then the key points as short bullets, then any dates, deadlines, homework or "
-                                     "action items. Markdown, in the transcript's language.\n\n" + transcript[:400000]}]}])
+                                     "action items. If lines start with who speaks (**Name:**), say who made a key point or asked a question where it "
+                                     "matters; otherwise don't mention speakers. Markdown, in the transcript's language.\n\n" + transcript[:400000]}]}])
             return "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
         notes[0] = Notes(transcribe, summarise)
         painter[0] = lambda contents, entries=None: self._generate(contents, entries=entries or models_for("image"), images=True)
