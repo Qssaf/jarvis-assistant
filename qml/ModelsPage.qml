@@ -38,12 +38,15 @@ ScrollPage {
                 .map(w => /^(gpt|glm|ai)$/i.test(w) ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1)).join(" ")
     }
     function modelsOf(name) { const b = page.avail.backends.find(b => b.name === name); return b ? b.models : [] }
-    function modelsFor(name, job) { return modelsOf(name).filter(m => /tts/i.test(m) === (job === "speak")) }  // (text-to-speech: Speaking only)
+    function modelsFor(name, job) { return modelsOf(name).filter(m => /tts|piper/i.test(m) === (job === "speak")) }  // (text-to-speech: Speaking only)
     // OpenAI's speaking voices: the third word of another service's Speaking line (Gemini's speak in Jarvis's voice from Settings)
     readonly property var voices: ["alloy", "ash", "ballad", "coral", "echo", "fable", "nova", "onyx", "sage", "shimmer", "verse"]
-    function usableBackends() { return page.avail.backends.filter(b => !b.error || b.models.length).map(b => b.name) }
+    function ownLocal() { return page.info.providers.some(p => p.name === "local" && p.custom) }
+    function usableBackends(job) {  // (the local backend only hears and speaks; a provider of the user's own called "local" does it all)
+        return page.avail.backends.filter(b => (!b.error || b.models.length) && (page.ownLocal() || b.name !== "local" || job === "hear" || job === "speak")).map(b => b.name)
+    }
     readonly property string status: looking ? "Looking up the models you can use…" : avail.backends
-        .filter(b => b.models.length || (b.error && !/no API key|unknown backend|not signed in/.test(b.error)))
+        .filter(b => b.models.length || (b.error && !/no API key|unknown backend|not signed in|not installed/.test(b.error)))
         .map(b => b.models.length ? `${b.name}: ${b.models.length} models` : `${b.name}: ${b.error}`).join(" · ")
     Component.onCompleted: load()
     Timer {  // while a Google sign-in waits in the browser: notice when it's done
@@ -273,12 +276,12 @@ ScrollPage {
         property var entries: []
         // (Whisper-style hearing models think none; a speaking model's third word is its voice, none for Jarvis's own)
         readonly property var thinking: job === "image" ? ["none"] : (job === "hear" ? ["none"] : []).concat(["minimal", "low", "medium", "high"])
-        function levels(backend) { return list.job !== "speak" ? list.thinking : /^(aistudio|antigravity)$/.test(backend) ? ["none"] : page.voices }
+        function levels(backend) { return list.job !== "speak" ? list.thinking : /^(aistudio|antigravity)$/.test(backend) || backend === "local" && !page.ownLocal() ? ["none"] : page.voices }
         function update(i, parts) { const all = entries.slice(); all[i] = parts.join(" "); page.save(job, all) }
         function move(i) { const all = entries.slice(); all.splice(i - 1, 0, all.splice(i, 1)[0]); page.save(job, all) }
         function remove(i) { const all = entries.slice(); all.splice(i, 1); page.save(job, all) }
         function add() {
-            const name = page.usableBackends()[0] || "aistudio", levels = list.levels(name)
+            const name = page.usableBackends(job)[0] || "aistudio", levels = list.levels(name)
             page.save(job, entries.concat([[name, page.modelsFor(name, job)[0] || "gemini-3.8-flash", levels[job === "speak" ? 0 : Math.min(1, levels.length - 1)]].join(" ")]))
         }
         Layout.fillWidth: true
@@ -299,7 +302,7 @@ ScrollPage {
                     Txt { anchors.centerIn: parent; text: row.index + 1; kind: "label"; color: row.index === 0 ? Theme.accent : Theme.text3
                           font.features: { "tnum": 1 } }
                 }
-                Select { Layout.preferredWidth: 150; model: page.options(page.usableBackends(), row.parts[0]); value: row.parts[0]
+                Select { Layout.preferredWidth: 150; model: page.options(page.usableBackends(list.job), row.parts[0]); value: row.parts[0]
                          onPicked: v => list.update(row.index, [v, page.modelsFor(v, list.job)[0] || row.parts[1],
                                                                  list.levels(v).includes(row.parts[2]) || list.job !== "speak" ? row.parts[2] : list.levels(v)[0]]) }
                 Select { Layout.fillWidth: true; visible: page.modelsFor(row.parts[0], list.job).length > 0

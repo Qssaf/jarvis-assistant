@@ -1,7 +1,7 @@
 """Jarvis's brain: a Gemini agent with PC tools, web search, Photopea and plugins (MCP servers, e.g. Composio).
 Models come from your Google AI Studio API key (GEMINI_API_KEY, in the environment or the env file in Jarvis's config
 folder). An optional local_backends.py can add more backends (see the README). The "agent_models" setting decides the order."""
-import asyncio, base64, hashlib, ipaddress, json, logging, os, re, select, shutil, socket, subprocess, tempfile, threading, time, uuid
+import asyncio, base64, hashlib, ipaddress, json, logging, os, re, select, shutil, socket, subprocess, sys, tempfile, threading, time, uuid
 from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 from urllib.parse import parse_qs, quote, urlencode, urlparse
 
@@ -367,8 +367,99 @@ class Antigravity:
         return sorted({re.sub(r"-tiered$", "", k) for k, v in found.items() if isinstance(v, dict) and v.get("supportsThinking")})
 
 
+# ---------------------------------------------------------------- the backup voice on this PC, with no service at all
+def installed(module):
+    """Whether a package is there to import, without importing it (faster-whisper and Piper take seconds to load)."""
+    from importlib.util import find_spec
+    return module in sys.modules or find_spec(module) is not None
+
+
+# Piper's voice for each of Jarvis's languages (store.LANGUAGES); Japanese and Thai voices need more packages: English
+PIPER_VOICES = {"en-US": "en_US-ryan-medium", "en-GB": "en_GB-alan-medium", "ar-XA": "ar_JO-kareem-medium", "fr-FR": "fr_FR-tom-medium",
+                "de-DE": "de_DE-thorsten-medium", "es-US": "es_MX-ald-medium", "it-IT": "it_IT-paola-medium",
+                "pt-BR": "pt_BR-faber-medium", "tr-TR": "tr_TR-dfki-medium", "hi-IN": "hi_IN-rohan-medium", "ko-KR": "ko_KR-kss-medium",
+                "cmn-CN": "zh_CN-huayan-medium", "ru-RU": "ru_RU-dmitri-medium", "nl-NL": "nl_NL-pim-medium",
+                "pl-PL": "pl_PL-darkman-medium", "id-ID": "id_ID-news_tts-medium", "vi-VN": "vi_VN-vais1000-medium"}
+
+
+class Local:
+    """The "local" backend, the backup voice's last resort, on this PC (the installer's --offline-voice): hears with faster-whisper
+    ("whisper-small", or another of its sizes) and speaks with Piper ("piper", in the voice for Jarvis's language). Each
+    model downloads into the data folder the first time it's needed, and works offline from then on."""
+    WHISPER = ("tiny", "base", "small", "medium", "large-v3-turbo")
+
+    def __init__(self):
+        if not (installed("faster_whisper") or installed("piper")):
+            raise LookupError("not installed (run the installer with --offline-voice, or -OfflineVoice on Windows)")
+        self.loaded, self.locks = {}, {}
+
+    def models(self):
+        return [f"whisper-{s}" for s in self.WHISPER] * installed("faster_whisper") + ["piper"] * installed("piper")
+
+    def generate(self, contents, model, thinking, **options):
+        parts = contents[-1]["parts"]
+        audio = next((p["inlineData"] for p in parts if p.get("inlineData", {}).get("mimeType", "").startswith("audio/")), None)
+        if model.startswith("whisper-") and audio:
+            return [{"text": self._hear(base64.b64decode(audio["data"]), model.removeprefix("whisper-"))}]
+        if model == "piper":
+            wav = self._speak("".join(p.get("text", "") for p in parts))
+            return [{"inlineData": {"mimeType": "audio/wav", "data": base64.b64encode(wav).decode()}}]
+        raise ValueError(f"local only writes down recordings (whisper-<size>) and speaks (piper), not {model}")  # (next in line)
+
+    def _load(self, name, make):
+        """A model, loaded once (the first time it's also downloaded: a few hundred MB for Whisper, 60 MB for a voice)."""
+        with self.locks.setdefault(name, threading.Lock()):
+            if name not in self.loaded:
+                self.loaded[name] = make()
+            return self.loaded[name]
+
+    def _hear(self, wav, size):
+        import io, wave
+        import numpy as np
+        from faster_whisper import WhisperModel
+
+        def make():
+            root = os.path.join(DATA, "models", "whisper")
+            try:  # (once downloaded, without asking Hugging Face first: it may be what's out of reach)
+                return WhisperModel(size, device="cpu", compute_type="int8", download_root=root, local_files_only=True)
+            except Exception:
+                print(f"[voice] downloading Whisper {size} for the offline voice", flush=True)
+                return WhisperModel(size, device="cpu", compute_type="int8", download_root=root)
+        cfg = store.settings()  # (more than one language: Whisper tells which)
+        language = None if cfg["languages"] else cfg["language"].split("-")[0].replace("cmn", "zh")
+        with wave.open(io.BytesIO(wav)) as w:  # (Jarvis's 16 kHz mono recordings, as Whisper takes them: PyAV 19 broke its reader)
+            samples = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float32) / 32768
+        segments, _ = self._load("whisper-" + size, make).transcribe(samples, language=language, vad_filter=True)
+        return " ".join(s.text.strip() for s in segments).strip()
+
+    def _speak(self, text):
+        import io, wave
+        from piper import PiperVoice
+        key = PIPER_VOICES.get(store.settings()["language"], "en_US-ryan-medium")
+
+        def make():
+            lang, name, quality = key.split("-")
+            folder = os.path.join(DATA, "models", "piper")
+            os.makedirs(folder, exist_ok=True)
+            for ext in (".onnx.json", ".onnx"):
+                path = os.path.join(folder, key + ext)
+                if not os.path.exists(path):  # (a download cut short stays a .part, never a broken voice)
+                    print(f"[voice] downloading Piper's {key}{ext} for the offline voice", flush=True)
+                    r = requests.get(f"https://huggingface.co/rhasspy/piper-voices/resolve/main/{lang.split('_')[0]}/{lang}/{name}/"
+                                     f"{quality}/{key}{ext}", timeout=30)
+                    r.raise_for_status()
+                    with open(path + ".part", "wb") as f:
+                        f.write(r.content)
+                    os.replace(path + ".part", path)
+            return PiperVoice.load(os.path.join(folder, key + ".onnx"))
+        out = io.BytesIO()
+        with wave.open(out, "wb") as w:
+            self._load(key, make).synthesize_wav(text, w)
+        return out.getvalue()
+
+
 # name -> class with generate(contents, model, thinking, tools=None, system=None, **options); local_backends.py may add more
-BACKENDS = {"aistudio": AIStudio, "antigravity": Antigravity}
+BACKENDS = {"aistudio": AIStudio, "antigravity": Antigravity, "local": Local}
 
 
 # ---------------------------------------------------------------- any OpenAI-compatible API, with your own key
@@ -2212,6 +2303,10 @@ HEAR_MODELS = [("antigravity", "gemini-3.1-flash-lite", "minimal"), ("aistudio",
 # its mouth: Gemini's text-to-speech models speak in Jarvis's voice (Settings); other services in the voice their line names
 SPEAK_MODELS = [("aistudio", "gemini-3.8-flash-tts", None), ("aistudio", "gemini-3.8-flash-lite-tts", None),
                 ("aistudio", "gemini-2.5-flash-preview-tts", None), ("openai", "gpt-4o-mini-tts", "fable")]
+if installed("faster_whisper"):  # on this PC, after every service (the installer's --offline-voice)
+    HEAR_MODELS.append(("local", "whisper-small", None))
+if installed("piper"):
+    SPEAK_MODELS.append(("local", "piper", None))
 
 
 def models_for(job):
@@ -2239,6 +2334,8 @@ class Brain:
     def __init__(self, notify=print):
         self.backends = {}
         for name, cls in BACKENDS.items():
+            if name in store.custom_providers():  # (a provider of the user's own keeps its name: "local" was free before)
+                continue
             try:
                 self.backends[name] = cls()
             except LookupError:  # not signed in: nothing to say until the user chooses to
@@ -2739,13 +2836,14 @@ class Brain:
         """The backend called `name`, made on first use for providers from Settings; (None, why) if it can't be."""
         if name not in self.backends:
             url = providers().get(name)
-            if name not in BACKENDS and not url:
+            ours = name in BACKENDS and name not in store.custom_providers()  # (as in __init__)
+            if not ours and not url:
                 return None, "unknown backend (the Models page)"
-            key = "" if name in BACKENDS else store.secret(name)
-            if name not in BACKENDS and not key and not is_local(url):
+            key = "" if ours else store.secret(name)
+            if not ours and not key and not is_local(url):
                 return None, "no API key (the Models page)"
             try:
-                self.backends[name] = BACKENDS[name]() if name in BACKENDS else OpenAICompatible(name, url, key)
+                self.backends[name] = BACKENDS[name]() if ours else OpenAICompatible(name, url, key)
             except Exception as e:  # e.g. no Gemini key yet
                 return None, str(e)
         return self.backends[name], ""
