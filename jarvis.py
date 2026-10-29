@@ -490,14 +490,18 @@ class Live:
     async def _type(self, text):
         emit("log", who="you", text=text)
         self.last_heard = text  # (a typed "yes" is a yes too)
-        await self._send(text)
+        await self._send(text, typed=True)
 
-    async def _send(self, text, track=True, announce=False):
-        """announce: the words to say, when it's Jarvis speaking up on its own."""
+    async def _send(self, text, track=True, announce=False, typed=False, ask=None):
+        """announce: the words to say, when it's Jarvis speaking up on its own. typed: the user's own words (not a note
+        from Jarvis). ask: the agent's question, which the backup voice says as it is."""
         await self._open()
         if (backup := self.backup_now()) or not self.session:
             if backup:  # Gemini Live can't be used, or is switched off: the backup voice says or answers it
-                self.backup.say(announce) if announce else self.backup.ask(text)
+                if announce or ask:
+                    self.backup.say(announce or ask, listen=bool(ask))
+                else:
+                    self.backup.ask(text, typed)
             return
         self.last, self.waiting = time.time(), True
         if announce:
@@ -1083,7 +1087,7 @@ class Live:
             self.backup.say(question, listen=True)
         else:
             self._go(self._send(f'(Your background task needs the user before it can go on. Ask them this, briefly and in your own words: '
-                                f'"{quoted}". When they answer, call answer_task with their answer.)', track=False))
+                                f'"{quoted}". When they answer, call answer_task with their answer.)', track=False, ask=question))
         end = time.time() + ASK_WAIT
         try:
             while time.time() < end and not cancel.is_set() and not q["answered"].wait(0.5):
@@ -1184,9 +1188,9 @@ class Backup:
             self.talked = self.quiet = 0
             self.frames = []
 
-    def ask(self, text):
-        """Answer what was typed (or a note from Jarvis itself, like the morning briefing)."""
-        self._start(self._answer, self.gen, self.live.quiet, None, text)
+    def ask(self, text, typed=False):
+        """Answer what was typed (typed), or a note from Jarvis itself, like the morning briefing."""
+        self._start(self._answer, self.gen, self.live.quiet, None, text, typed)
 
     def say(self, text, listen=False):
         """Say something on Jarvis's own (a reminder), or the agent's question to the user (listen: for their answer)."""
@@ -1211,7 +1215,7 @@ class Backup:
                 self.jobs.discard(token)
         threading.Thread(target=run, daemon=True).start()
 
-    def _answer(self, gen, quiet, frames, text=None):
+    def _answer(self, gen, quiet, frames, text=None, typed=False):
         import io, wave
         live = self.live
         if frames is not None:
@@ -1231,7 +1235,7 @@ class Backup:
             live.last_heard = text
             if ENDING.search(text):
                 live.mic = False  # back to the wake word, after the goodbye
-        if q := live.question:  # the agent asked the user something: this is their answer
+        if (frames is not None or typed) and (q := live.question):  # the agent asked the user something: this is their answer
             q["answer"] = text
             q["answered"].set()
             return

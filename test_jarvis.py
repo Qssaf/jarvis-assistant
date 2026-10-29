@@ -1301,12 +1301,14 @@ assert jarvis.LIVE_RETRY - 5 < fl.down_until - time.time() <= jarvis.LIVE_RETRY 
 assert fl.backup_now({"always_backup_voice": False})  # (the tray's few-seconds-old settings: Live being down still shows)
 # meanwhile typed text, announcements and wake-ups go straight to it
 asked, said, tried = [], [], []
-fl.backup.ask, fl.backup.say = asked.append, (lambda text, listen=False: said.append(text))
+fl.backup.ask, fl.backup.say = (lambda text, typed=False: asked.append(text)), (lambda text, listen=False: said.append(text))
 fl._go = lambda coro: tried.append(coro) or coro.close()
 asyncio.run(fl._send("what's on today?"))
 asyncio.run(fl._send('(Tell the user this now: "Take the bins out")', announce="Take the bins out"))
 fl.wake()
 assert asked == ["what's on today?"] and said == ["Take the bins out"] and len(woke) == 2 and tried == []
+asyncio.run(fl._send("(Your background task needs the user... call answer_task with their answer.)", ask="Delete 40 files?"))
+assert said[-1] == "Delete 40 files?" and len(asked) == 1  # (the agent's question is said, never taken as its own answer)
 fl.down_until = 0.0  # (a few minutes later: Live is tried again)
 fl.wake()
 assert len(tried) == 1 and len(woke) == 2
@@ -1372,6 +1374,11 @@ q = bl.question = {"text": "Sam Lee or Sam Leeds?", "answered": threading.Event(
 heard[0], n, bl.mic = "Sam Lee", len(asks), True
 say_out_loud()
 assert q["answered"].is_set() and q["answer"] == "Sam Lee" and len(asks) == n
+q = bl.question = {"text": "Send it?", "answered": threading.Event(), "answer": None}
+bk.ask("(A task you started has finished. Tell the user the outcome briefly: done)")  # (a note from Jarvis is no answer)
+bk.ask("yes", typed=True)
+settle()
+assert q["answer"] == "yes" and asks[-1].startswith("(A task you started"), (q, asks[-1])
 bl.question = None
 # "that's all": the goodbye is said, and it's back to the wake word
 heard[0], replies[:] = "that's all, thanks", ["Very good, sir."]
