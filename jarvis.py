@@ -2045,8 +2045,17 @@ def restart_soon(again=True):
         atexit._run_exitfuncs()  # (execv skips them: the echo canceller would stay loaded twice)
         if not again:
             os._exit(0)
-        os.execv(sys.executable, [sys.executable, os.path.abspath(__file__), *sys.argv[1:]])
+        if system.IS_WINDOWS:  # (its execv doesn't quote arguments, and starts a new process anyway)
+            subprocess.Popen(restart_argv())
+            os._exit(0)
+        os.execv(sys.executable, restart_argv())
     threading.Thread(target=go, daemon=True).start()
+
+
+def restart_argv():
+    """How this Jarvis was started: Jarvis.exe takes no script path (it would stop on an unknown argument)."""
+    script = [] if getattr(sys, "frozen", False) else [os.path.abspath(__file__)]
+    return [sys.executable, *script, *sys.argv[1:]]
 
 
 def _importable(module):

@@ -2339,6 +2339,11 @@ store.export_data(backup + ".zip", jarvis.VERSION)
 with zipfile.ZipFile(backup + ".zip") as z:
     assert json.loads(z.read("settings.json")) == {"languages": ["fr-FR"]}, z.read("settings.json")
 jarvis.restart_soon, store.sync_autostart = real_restart, real_sync
+# restarting after an import: Jarvis.exe is started again without a script path (argparse would stop on it)
+sys.frozen = True
+assert jarvis.restart_argv() == [sys.executable, *sys.argv[1:]]
+del sys.frozen
+assert jarvis.restart_argv() == [sys.executable, os.path.abspath(jarvis.__file__), *sys.argv[1:]]
 store.delete_data()
 store.update_settings({"voice": "Charon", "checks": []})
 store.save_plugins({})
