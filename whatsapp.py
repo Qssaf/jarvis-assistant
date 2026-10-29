@@ -627,10 +627,33 @@ class WhatsApp:
         self.dialing = True
         threading.Thread(target=self._dial, args=(found, message, on_answer), daemon=True).start()
 
+    def _start_call(self, chat):
+        try:
+            return self.evaluate(f"window.__jarvisDial({json.dumps(chat)})", timeout=60) or {"error": "no answer from WhatsApp"}
+        except TimeoutError:
+            return {"error": "WhatsApp didn't answer"}
+
+    def _reload(self):
+        """A fresh WhatsApp page (serve hooks in again), once its calling engine is ready; a dial that got stuck leaves it
+        refusing every call after ("wouldn't start the call") until then."""
+        self.cdp("Page.reload", session=self.session)
+        end = time.time() + 90
+        while time.time() < end:
+            time.sleep(2)
+            try:
+                if self.evaluate("window.__jarvisReady && window.__jarvisVoip && window.__jarvisVoip()") == "ready":
+                    return
+            except Exception:  # (mid-reload)
+                pass
+
     def _dial(self, found, message, on_answer):
         name = found["name"]
         try:
-            got = self.evaluate(f"window.__jarvisDial({json.dumps(found['chat'])})", timeout=60) or {"error": "no answer from WhatsApp"}
+            got = self._start_call(found["chat"])
+            if "error" in got:  # (it worked again only after a restart: a fresh page, and once more)
+                print(f"[whatsapp] calling {name}: {got['error']}; reloading WhatsApp and trying again", flush=True)
+                self._reload()
+                got = self._start_call(found["chat"])
             if "error" in got:
                 self.tell(f"I couldn't call {name} on WhatsApp: {got['error']}.")
                 return

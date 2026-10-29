@@ -897,6 +897,9 @@ def tool_list_windows():
 
 def tool_focus_window(name):
     problem = system.focus_window(name)
+    if problem.startswith("no window matching") and system.app_running(name):  # (it went round in circles over Vesktop in the tray)
+        problem += (f"; {name} is running without a window (in the system tray): open it with act's launch step and its "
+                    "window comes back")
     return {"error": problem} if problem else {"result": f"focused {name}"}
 
 

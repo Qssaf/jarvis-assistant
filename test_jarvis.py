@@ -2043,6 +2043,14 @@ assert "nothing is selected" in brain.tool_selection()["error"]
 system.selected_text = real_sel
 assert os.path.expanduser("~") in system.describe()
 
+# an app hidden in the tray has no window to focus: the agent is told to open it again (it tried shell commands instead)
+real_focus = system.focus_window
+system.focus_window = lambda name, wid=None: f"no window matching {name}"
+assert system.app_running(os.path.basename(sys.executable)) and not system.app_running("no-such-app-xyz")
+assert "act's launch step" in brain.tool_focus_window(os.path.basename(sys.executable))["error"]
+assert brain.tool_focus_window("no-such-app-xyz") == {"error": "no window matching no-such-app-xyz"}
+system.focus_window = real_focus
+
 # media keys go to the player
 pressed, real_media = [], system.media
 system.media = lambda action: pressed.append(action)
@@ -3165,6 +3173,20 @@ for _ in range(50):
     time.sleep(0.1)
 assert wa_told == ["Maya didn't pick up my WhatsApp call."] and wa.call is None, wa_told
 assert not any("Called Maya" in c["what"] for c in store.changes())  # (a call that never connected isn't a change)
+# a dial that gets stuck leaves WhatsApp refusing every call after it: the page is reloaded and it dials once more
+dials, wa_told[:] = [], []
+def stuck_once(js, timeout=30):
+    if js.startswith("window.__jarvisDial"):
+        dials.append(js)
+        if len(dials) == 1:
+            raise TimeoutError("Runtime.evaluate didn't answer")
+        return {"id": "k3"}
+    return "ready" if "__jarvisVoip" in js else "over" if js.startswith("window.__jarvisCall") else fake_page(js)
+reloads, real_cdp, real_wsleep = [], wa.cdp, whatsapp.time.sleep
+wa.evaluate, wa.cdp, whatsapp.time.sleep = stuck_once, (lambda method, **kw: reloads.append(method) or {}), (lambda s: None)
+wa._dial({"chat": "3@c.us", "name": "Maya"}, "hi", lambda: None)
+wa.cdp, whatsapp.time.sleep = real_cdp, real_wsleep
+assert reloads == ["Page.reload"] and len(dials) == 2 and wa_told == ["Maya didn't pick up my WhatsApp call."], (reloads, wa_told)
 wa.dialing = True
 try:
     wa.dial({"chat": "3@c.us", "name": "Maya"}, "hi")

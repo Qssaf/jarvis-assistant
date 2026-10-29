@@ -631,6 +631,13 @@ def focus_window(name, wid=None):
     return ""
 
 
+def app_running(name):
+    """A program by that name (Vesktop, vesktop.exe) is running, with or without a window (an app in the tray has none)."""
+    import psutil
+    name = name.split(": ", 1)[-1].strip().lower().removesuffix(".exe")
+    return bool(name) and any((p.info["name"] or "").lower().removesuffix(".exe") == name for p in psutil.process_iter(["name"]))
+
+
 def close_window(name):
     if KDE and WAYLAND and have("kdotool"):
         return _kde_window(name, "windowclose")

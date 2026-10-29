@@ -12,8 +12,8 @@ android {
         applicationId = "com.jarvis.assistant"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.14.0"
+        versionCode = 3
+        versionName = "2.1.0"
     }
 
     // release.yml's release build: signed with the keystore it names (made from the repository's secrets)
