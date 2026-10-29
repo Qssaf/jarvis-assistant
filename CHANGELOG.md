@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.1.0 — 2026-10-29
 
 ### Added
 - **A backup voice:** when Gemini Live can't be used (no key with Live, its quota used up, Google down), Jarvis still
@@ -35,13 +35,6 @@
   window's language. It changes at once, no restart; English stays the default.
 - **Notes say who's talking:** lecture and meeting notes label each speaker (*Speaker 1*, or a name when it comes up)
   consistently across the recording, and the summary says who made each point. One speaker stays unlabelled.
-
-### Fixed
-- A spoken passphrase said in the same breath as a request is no longer kept in the saved conversation.
-
-## 2.1.0 — 2026-10-27
-
-### Added
 - **Jarvis phones people for you:** *"call dad and tell him I'll be late"* rings them on your WhatsApp; Jarvis waits
   for their hello, gives the message in its own voice, takes their answer and tells you how it went. It never hangs up
   before they've answered.
@@ -72,6 +65,7 @@
   kept in your keychain, never shown or said back, and hidden in the chat. Tasks from your phone don't need it.
 
 ### Fixed
+- A spoken passphrase said in the same breath as a request is no longer kept in the saved conversation.
 - **Bug reports keep your WhatsApp private:** *Copy a report* left in WhatsApp messages, contacts' names and phone
   numbers, tasks sent from your phone, and every line after the first of a longer reply. They're all taken out now.
 - **A signed-out Google account no longer stops everything:** when a Google sign-in (Models page) was revoked or had
