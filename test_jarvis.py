@@ -2060,6 +2060,10 @@ def fake_popen(args, **kw):
         yield from [out] if out else []
         out and shells_done.wait()
     return types.SimpleNamespace(stdin=shells[-1][2], stdout=stdout(), poll=lambda: None if out else 1, kill=lambda: killed.append(1))
+with system._media_lock:  # (on Windows the window's test load already started a real PowerShell: start from none)
+    if system._media_shell[0]:
+        system._media_shell[0].kill()
+    system._media_shell[0] = None
 real_sub, real_windows, real_keys = system.subprocess, system.IS_WINDOWS, system.press_keys
 system.subprocess = types.SimpleNamespace(Popen=fake_popen, PIPE=real_sub.PIPE, DEVNULL=real_sub.DEVNULL)
 system.IS_WINDOWS, system.press_keys = True, lambda k: keys.append(k) or ""
