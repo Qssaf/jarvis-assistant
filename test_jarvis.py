@@ -1820,6 +1820,12 @@ assert [c["text"] for c in got["checks"]] == ["tell me if a payment bounces", "w
 got = jarvis.api_post("/api/checks", {"text": "tell me if a payment bounces", "old": "tell me if a payment bounces", "on": False}, None, None)
 assert got["checks"] == [{"text": "watch for flights", "on": True}, {"text": "tell me if a payment bounces", "on": False}]
 assert store.settings()["checks"] == ["watch for flights"] and brain.tool_checks("list")["checks"] == ["watch for flights"]
+assert brain.tool_checks("list")["paused"] == ["tell me if a payment bounces"]
+brain.tool_checks("add", "tell me if a payment  bounces")  # (said again: the paused one is back on, never twice)
+assert (store.settings()["checks"], store.settings()["checks_paused"]) == (["watch for flights", "tell me if a payment bounces"], [])
+jarvis.api_post("/api/checks", {"text": "tell me if a payment bounces", "old": "tell me if a payment bounces", "on": False}, None, None)
+assert brain.tool_checks("remove", "BOUNCES") == {"checks": ["watch for flights"], "every_minutes": 60}  # (a paused one goes too)
+jarvis.api_post("/api/checks", {"text": "tell me if a payment bounces"}, None, None)
 refused("/api/checks", {"text": "x", "old": "not there"}, "gone already")
 refused("/api/checks", {"text": " "}, "what to keep an eye on")
 jarvis.api_post("/api/checks", {"text": "", "old": "watch for flights"}, None, None)

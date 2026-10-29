@@ -1566,17 +1566,22 @@ CHECK_ADDED = "added: tell the user, and don't look into it now (the first check
 
 
 def tool_checks(action, text=""):
-    """Things Jarvis keeps an eye on in the background ("tell me if a payment fails"), checked every checks_every minutes."""
-    found = store.settings()["checks"]
+    """Things Jarvis keeps an eye on in the background ("tell me if a payment fails"), checked every checks_every minutes.
+    Paused ones (the Memory page) are listed apart: adding one again turns it back on, removing covers them too."""
+    text = " ".join(str(text).split())
     if action == "add":
-        if not text.strip():
+        if not text:
             return {"error": "say what to keep an eye on"}
-        return {"result": CHECK_ADDED, "checks": store.update_settings({"checks": found + [text]})["checks"]}
+        return {"result": CHECK_ADDED, "checks": store.save_check(text, text if text in store.settings()["checks_paused"] else "")["checks"]}
     elif action == "remove":
-        if not text.strip():  # ("" is part of every check: it would remove them all)
-            return {"error": "say which check to remove (part of its text)", "checks": found}
-        found = store.update_settings({"checks": [c for c in found if text.lower() not in c.lower()]})["checks"]
-    return {"checks": found, "every_minutes": store.settings()["checks_every"]}
+        if not text:  # ("" is part of every check: it would remove them all)
+            return {"error": "say which check to remove (part of its text)", "checks": store.settings()["checks"]}
+        s = store.settings()
+        for c in s["checks"] + s["checks_paused"]:
+            if text.lower() in c.lower():
+                store.save_check("", c)
+    s = store.settings()
+    return {"checks": s["checks"], **({"paused": s["checks_paused"]} if s["checks_paused"] else {}), "every_minutes": s["checks_every"]}
 
 
 whatsapp_link = [None]  # set by the app: the user's own WhatsApp, linked like WhatsApp Web (whatsapp.WhatsApp)

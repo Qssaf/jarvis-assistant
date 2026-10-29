@@ -828,7 +828,7 @@ def import_data(path, taken=()):
             r["off"] = True
             held.append("scheduled tasks")
     if isinstance(new.get("checks"), list) and new["checks"]:
-        new["checks_paused"] = new.pop("checks") + (new.get("checks_paused") if isinstance(new.get("checks_paused"), list) else [])
+        new["checks_paused"] = list(dict.fromkeys(new.pop("checks") + (new.get("checks_paused") if isinstance(new.get("checks_paused"), list) else [])))
         held.append("checks")
     if new.get("safety") == "full" != settings()["safety"]:
         del new["safety"]
