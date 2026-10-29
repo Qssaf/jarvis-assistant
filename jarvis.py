@@ -2230,8 +2230,12 @@ def api_post(path, data, live, brain):
         store.cancel_reminder(m[1])
     elif path == "/api/reminders":  # (the window's editor: a new one, or id's changed)
         import brain as brain_mod
-        store.add_reminder(brain_mod.parse_when(at=data.get("at")), data.get("text", ""), str(data.get("repeat") or ""),
-                           data.get("task") is True, data.get("on") is not False, str(data.get("id") or ""))
+        rid = str(data.get("id") or "")
+        # the time as the page loaded it (was): kept as it is now, since a repeating one may have gone off and moved on meanwhile
+        same = rid and data.get("was") and data.get("at") == data.get("was")
+        at = next((r["at"] for r in store.reminders() if r["id"] == rid), None) if same else None
+        store.add_reminder(brain_mod.parse_when(at=data.get("at")) if at is None else at, data.get("text", ""), str(data.get("repeat") or ""),
+                           data.get("task") is True, data.get("on") is not False, rid)
     elif path == "/api/remote/token":
         remote_ref[0].set_token(str(data.get("token", "")))
         return remote_ref[0].status()

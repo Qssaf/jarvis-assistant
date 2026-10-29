@@ -1797,6 +1797,14 @@ assert brain.tool_list_reminders()["reminders"][0]["paused"]
 assert store.pop_due(edited[0]["at"] + 60) == [] and time.localtime(store.reminders()[0]["at"]).tm_mday == 9  # (moved on to Monday)
 jarvis.api_post("/api/reminders", {"id": r["id"], "text": "stretch", "at": "2096-01-06 08:00", "repeat": "", "on": False}, None, None)
 assert not store.reminders()[0].get("off")  # (a paused one-off would pass unseen, with no switch to turn it back on)
+# a repeating one that went off while the page was open keeps its next time when the page sends back the time it loaded
+jarvis.api_post("/api/reminders", {"id": r["id"], "text": "stretch", "at": "2096-01-06 08:00", "repeat": "daily"}, None, None)
+loaded = jarvis.api_get("/api/reminders", None)[0]["edit_at"]
+moved = store.pop_due(store.reminders()[0]["at"] + 2) and store.reminders()[0]["at"]
+jarvis.api_post("/api/reminders", {"id": r["id"], "text": "stretch out", "at": loaded, "was": loaded, "repeat": "daily", "on": False}, None, None)
+assert store.reminders()[0]["at"] == moved and time.localtime(moved).tm_mday == 7 and store.reminders()[0]["off"]
+jarvis.api_post("/api/reminders", {"id": r["id"], "text": "stretch", "at": "2096-01-10 08:00", "was": loaded, "repeat": "daily"}, None, None)
+assert time.localtime(store.reminders()[0]["at"]).tm_mday == 10  # (a time the user changed is taken)
 store.cancel_reminder(r["id"])
 
 # routines: added, renamed (not over another one) and changed from the window

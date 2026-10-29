@@ -100,7 +100,7 @@ ScrollPage {
                         title: modelData.text
                         detail: modelData.task ? qsTr("%1 · Jarvis does it").arg(modelData.when) : modelData.when
                         Toggle { visible: !!modelData.repeat; checked: !modelData.off; Layout.preferredWidth: 44
-                                 onToggled: page.change("/api/reminders", { id: modelData.id, text: modelData.text, at: modelData.edit_at,
+                                 onToggled: page.change("/api/reminders", { id: modelData.id, text: modelData.text, at: modelData.edit_at, was: modelData.edit_at,
                                                       repeat: modelData.repeat, task: !!modelData.task, on: checked }) }
                         Edit { onClicked: page.editing = "reminder " + modelData.id }
                         Remove { tip: qsTr("Cancel")
@@ -260,7 +260,7 @@ ScrollPage {
         id: rf
         onReset: { rText.text = r.text || ""; rWhen.text = r.edit_at || ""; rRepeat.value = r.repeat || ""
                    rKind.value = r.task ? "task" : "say"; rText.forceActiveFocus() }
-        onSave: page.save("/api/reminders", { id: r.id || "", text: rText.text, at: rWhen.text, repeat: rRepeat.value,
+        onSave: page.save("/api/reminders", { id: r.id || "", text: rText.text, at: rWhen.text, was: r.edit_at || "", repeat: rRepeat.value,
                                               task: rKind.value === "task", on: !r.off })
         Field { id: rText; Layout.fillWidth: true; placeholderText: qsTr("What to remind you of, or what Jarvis should do"); onAccepted: rf.save() }
         RowLayout {
