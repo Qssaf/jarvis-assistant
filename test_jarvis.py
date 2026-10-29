@@ -2125,6 +2125,26 @@ assert store.reminders() == []
 events["items"] = [{"id": "e3", "summary": "Call", "start": {"dateTime": iso(now + 300)}}]  # too soon for a heads-up
 jarvis.calendar_pass(cal, now)
 assert store.reminders() == [] and store.read_json(os.path.join(store.DATA, "calendar.json"), {})["e3"]["reminder"] == ""
+# reminders that came due while Jarvis was off: a heads-up for an event that has started is dropped, another late one is
+# shown as missed (not said, as if it were now), one on time is said; an edit in the window keeps a heads-up's limit
+real_time, real_sleep, real_notify, real_emit, said, shown = jarvis.time.time, jarvis.time.sleep, system.notify, jarvis.emit, [], []
+heads = store.add_reminder(now - 86400 - 600, "📅 Exam starts in 10 minutes, at 13:00", until=now - 86400)
+assert store.add_reminder(heads["at"], heads["text"], rid=heads["id"])["until"] == now - 86400
+store.add_reminder(now - 3600, "stretch")
+store.add_reminder(now - 2, "drink water")
+class Stop(Exception):
+    pass
+def one_pass(seconds):
+    raise Stop
+jarvis.time.time, jarvis.time.sleep, system.notify = (lambda: now), one_pass, (lambda title, text: None)
+jarvis.emit = lambda kind, **kw: shown.append(kw.get("text"))
+try:
+    jarvis.reminder_loop(types.SimpleNamespace(announce=said.append))
+except Stop:
+    pass
+jarvis.time.time, jarvis.time.sleep, system.notify, jarvis.emit = real_time, real_sleep, real_notify, real_emit
+assert said == ["drink water"] and store.reminders() == [], said
+assert shown[0].startswith("⏰ Missed while Jarvis was off (") and shown[0].endswith("): stretch") and len(shown) == 2 and "Exam" not in str(shown), shown
 
 # the language: Jarvis speaks the one picked, and still expects English names mixed in
 live.brain = types.SimpleNamespace(accounts={}, app_tools_for=set(), connected=set(), plugin_status=lambda: [], active_app_tools=lambda: {})

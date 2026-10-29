@@ -274,9 +274,10 @@ def next_time(at, repeat, now=None):
             return when
 
 
-def add_reminder(at, text, repeat="", task=False, on=True, rid=""):
+def add_reminder(at, text, repeat="", task=False, on=True, rid="", until=0):
     """task: at that time the agent does what text says (instead of Jarvis just saying it). on=False: paused (its times
-    pass without it; only a repeating one, or a one-off would just be lost). rid: change that reminder instead of adding one."""
+    pass without it; only a repeating one, or a one-off would just be lost). rid: change that reminder instead of adding one.
+    until: when it stops making sense (a heads-up for an event: its start), so one missed while Jarvis was off is dropped."""
     text = " ".join(str(text).split())
     if not text:
         raise ValueError("say what the reminder is for")
@@ -288,6 +289,9 @@ def add_reminder(at, text, repeat="", task=False, on=True, rid=""):
         rs = read_json(REMINDERS_FILE, [])
         if rid and not any(x["id"] == rid for x in rs):
             raise ValueError("that reminder has already gone off or been cancelled")
+        until = until or next((x.get("until", 0) for x in rs if x["id"] == rid), 0)  # (an edit in the window keeps it)
+        if until:
+            r["until"] = float(until)
         write_json(REMINDERS_FILE, [x for x in rs if x["id"] != rid] + [r], private=True)
     return r
 

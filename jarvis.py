@@ -1375,15 +1375,25 @@ def tidy_loop():
         time.sleep(3600)
 
 
+MISSED = 600  # seconds: a reminder later than this (Jarvis was off) is shown as missed, not said as if it were now
+
+
 def reminder_loop(live):
     while True:
-        for r in store.pop_due():
+        now = time.time()
+        for r in store.pop_due(now):
             if r.get("task"):
                 threading.Thread(target=run_unattended, args=(live, SCHEDULED_NOTE + r["text"]), daemon=True).start()
-                continue
-            emit("log", who="system", text=f"⏰ Reminder: {r['text']}")
-            system.notify("Reminder", r["text"])
-            live.announce(r["text"])
+            elif r.get("until") and now >= r["until"]:  # (a heads-up for something that has already started or is due)
+                print(f"[reminders] dropped, too late: {r['text']}", flush=True)
+            elif now - r["at"] > MISSED:
+                missed = f"⏰ Missed while Jarvis was off ({time.strftime('%a %H:%M', time.localtime(r['at']))}): {r['text']}"
+                emit("log", who="system", text=missed)
+                system.notify("Missed reminder", r["text"])
+            else:
+                emit("log", who="system", text=f"⏰ Reminder: {r['text']}")
+                system.notify("Reminder", r["text"])
+                live.announce(r["text"])
         time.sleep(5)
 
 
@@ -1417,7 +1427,8 @@ def deadline_pass(brain):
                     store.cancel_reminder(seen[key])
                     seen[key] = None
             elif key not in seen and item["due"] - before > time.time():
-                seen[key] = store.add_reminder(item["due"] - before, f"📚 {item['title']} ({item['course']}) is due {when}, at {at_time}")["id"]
+                seen[key] = store.add_reminder(item["due"] - before, f"📚 {item['title']} ({item['course']}) is due {when}, at {at_time}",
+                                               until=item["due"])["id"]
     store.write_json(seen_file, seen, private=True)
 
 
@@ -1451,7 +1462,7 @@ def calendar_pass(brain, now=None):
         if at - HEADS_UP > now:
             where = f" ({e['location']})" if e.get("location") else ""
             r = store.add_reminder(at - HEADS_UP, f"📅 {e.get('summary', 'An event')}{where} starts in 10 minutes, at "
-                                                  f"{time.strftime('%H:%M', time.localtime(at))}")
+                                                  f"{time.strftime('%H:%M', time.localtime(at))}", until=at)
             seen[e["id"]] = {"at": at, "reminder": r["id"]}
         else:
             seen[e["id"]] = {"at": at, "reminder": ""}  # (too close for a heads-up)
