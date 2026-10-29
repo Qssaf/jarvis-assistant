@@ -65,7 +65,6 @@
   kept in your keychain, never shown or said back, and hidden in the chat. Tasks from your phone don't need it.
 
 ### Fixed
-- A spoken passphrase said in the same breath as a request is no longer kept in the saved conversation.
 - **Bug reports keep your WhatsApp private:** *Copy a report* left in WhatsApp messages, contacts' names and phone
   numbers, tasks sent from your phone, and every line after the first of a longer reply. They're all taken out now.
 - **A signed-out Google account no longer stops everything:** when a Google sign-in (Models page) was revoked or had
