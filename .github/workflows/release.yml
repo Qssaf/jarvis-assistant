@@ -18,6 +18,14 @@ jobs:
       SIGNING: ${{ secrets.WINDOWS_CERT_PFX != '' && 'yes' || '' }}
     steps:
       - uses: actions/checkout@v4
+      - name: The tag is jarvis.py's VERSION and CHANGELOG's newest section (bump them together before tagging)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          grep -q "^VERSION = \"$v\"" jarvis.py || { echo "jarvis.py's VERSION isn't $v"; exit 1; }
+          grep -q "^## $v " CHANGELOG.md || { echo "CHANGELOG.md has no '## $v ' section"; exit 1; }
+          ! grep -q "^## Unreleased" CHANGELOG.md || { echo "CHANGELOG.md's Unreleased section isn't named $v yet"; exit 1; }
       - uses: astral-sh/setup-uv@v6
       - name: Packages
         run: |
