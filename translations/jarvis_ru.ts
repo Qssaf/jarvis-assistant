@@ -2115,8 +2115,8 @@
     </message>
     <message>
         <location line="+3"/>
-        <source>Brought in (left at their defaults here: %1): Jarvis is restarting</source>
-        <translation>Загружено (здесь оставлены значения по умолчанию: %1): Jarvis перезапускается</translation>
+        <source>Brought in (held back or left at their defaults here: %1): Jarvis is restarting</source>
+        <translation>Загружено (здесь отложено или оставлено по умолчанию: %1): Jarvis перезапускается</translation>
     </message>
     <message>
         <location line="+1"/>

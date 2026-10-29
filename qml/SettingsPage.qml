@@ -565,7 +565,7 @@ ScrollPage {
             title: qsTr("Bring in a Jarvis backup")
             nameFilters: [qsTr("Jarvis backups (*.zip)")]
             onAccepted: Api.post("/api/data/import", { path: String(selectedFile) },
-                                 d => Backend.toast(d.skipped.length ? qsTr("Brought in (left at their defaults here: %1): Jarvis is restarting").arg(d.skipped.join(", "))
+                                 d => Backend.toast(d.skipped.length ? qsTr("Brought in (held back or left at their defaults here: %1): Jarvis is restarting").arg(d.skipped.join(", "))
                                                     : qsTr("Brought in: Jarvis is restarting"), false),
                                  e => Backend.toast(e.error, true))
         }

@@ -2089,8 +2089,8 @@
     </message>
     <message>
         <location line="+3"/>
-        <source>Brought in (left at their defaults here: %1): Jarvis is restarting</source>
-        <translation>นำเข้าแล้ว (ใช้ค่าเริ่มต้นของเครื่องนี้สำหรับ: %1): Jarvis กำลังรีสตาร์ต</translation>
+        <source>Brought in (held back or left at their defaults here: %1): Jarvis is restarting</source>
+        <translation>นำเข้าแล้ว (ระงับไว้หรือใช้ค่าเริ่มต้นของเครื่องนี้สำหรับ: %1): Jarvis กำลังรีสตาร์ต</translation>
     </message>
     <message>
         <location line="+1"/>

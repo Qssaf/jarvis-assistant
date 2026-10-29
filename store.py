@@ -215,17 +215,22 @@ MEMORY_FILE = os.path.join(DATA, "memory.md")
 
 def memory():
     try:
-        with open(MEMORY_FILE) as f:
-            return f.read().strip()
+        with open(MEMORY_FILE, "rb") as f:
+            raw = f.read()
     except OSError:
         return ""
+    try:
+        return raw.decode("utf-8").strip()
+    except UnicodeDecodeError:  # (Windows used to write it in its code page)
+        import locale
+        return raw.decode(locale.getpreferredencoding(False), "replace").strip()
 
 
 def set_memory(text):
     with _lock:
         os.makedirs(DATA, exist_ok=True)
         fd = os.open(MEMORY_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        with os.fdopen(fd, "w") as f:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.write(text.strip() + "\n" if text.strip() else "")
 
 
@@ -528,6 +533,7 @@ def set_secret(name, value):
 
 
 PASSPHRASE = "voice_passphrase"  # (a secret like a key: the keychain, never settings.json or the log)
+OTHER_SECRETS = ("telegram", PASSPHRASE)  # keychain names that aren't a provider's key: no provider may take them
 
 
 def _passphrase():
@@ -751,6 +757,8 @@ def export_data(path, version):
                 continue
             if name == "plugins.json":
                 z.writestr(name, json.dumps({n: {k: v for k, v in p.items() if k not in ("headers", "env")} for n, p in plugins().items()}, indent=1))
+            elif name == "memory.md":  # (UTF-8 whatever this PC's code page)
+                z.writestr(name, memory().encode("utf-8"))
             elif name == "settings.json":  # (as read: a 2.0 call_language comes as languages)
                 z.writestr(name, json.dumps({k: v for k, v in settings().items() if v != DEFAULT_SETTINGS[k]}, indent=1))
             else:
@@ -768,7 +776,8 @@ def import_data(path, taken=()):
     """Replace this PC's settings, memory, reminders, routines, plugins, account modes, providers, change log and wake-word
     clips with a backup's, and add its conversations. All of it is checked first: anything that isn't a sound Jarvis
     backup raises ValueError with nothing changed. taken: the built-in providers' names (a backup's can't replace them).
-    Returns the settings this PC couldn't take (e.g. a wake-word file not here)."""
+    What could run on its own (checks, scheduled tasks) comes in switched off, and safety and account modes never get
+    looser than here. Returns the settings this PC couldn't take (e.g. a wake-word file not here) and what was held back."""
     import shutil, zipfile
     try:
         z = zipfile.ZipFile(path)
@@ -804,7 +813,7 @@ def import_data(path, taken=()):
             isinstance(d.get("title"), str) and _number(d.get("updated")) and isinstance(d.get("messages"), list)
         if not ok:
             raise ValueError(f"the backup's {n} isn't right")
-    if set(data.get("providers.json", {})) & set(taken):  # (it would get this PC's key for that provider)
+    if set(data.get("providers.json", {})) & {*taken, *OTHER_SECRETS}:  # (it would get this PC's key for that provider)
         raise ValueError("the backup's providers.json replaces a built-in provider")
     try:
         notes = files.get("memory.md", b"").decode()
@@ -812,6 +821,30 @@ def import_data(path, taken=()):
         raise ValueError("the backup's memory.md is damaged")
     if any(n.endswith(".wav") and not b.startswith(b"RIFF") for n, b in files.items()):
         raise ValueError("the backup's wake-word clips are damaged")
+
+    held, new = [], data.get("settings.json", {})  # like a plugin's command: nothing from a backup runs until the user says so
+    for r in data.get("reminders.json", []):
+        if r.get("task") and not r.get("off"):
+            r["off"] = True
+            held.append("scheduled tasks")
+    if isinstance(new.get("checks"), list) and new["checks"]:
+        new["checks_paused"] = new.pop("checks") + (new.get("checks_paused") if isinstance(new.get("checks_paused"), list) else [])
+        held.append("checks")
+    if new.get("safety") == "full" != settings()["safety"]:
+        del new["safety"]
+        held.append("safety")
+    modes = connector_modes()
+    for n, m in data.get("connectors.json", {}).items():
+        if m == "full" != modes.get(n):
+            data["connectors.json"][n] = modes.get(n, "ask")
+            held.append("account modes")
+    providers_here = custom_providers()
+    for n, url in list(data.get("providers.json", {}).items()):
+        if url != providers_here.get(n) and secret(n):  # this PC's key for it only goes where it went before
+            if n in providers_here:
+                data["providers.json"][n] = providers_here[n]
+            else:
+                del data["providers.json"][n]
 
     for name, file in _backup_files().items():  # (one the backup hasn't: that PC had none either)
         if name in ("settings.json", "memory.md"):
@@ -846,9 +879,9 @@ def import_data(path, taken=()):
     if os.path.exists(SETTINGS_FILE):  # settings last, each through the Settings page's checks
         os.remove(SETTINGS_FILE)
     skipped = []
-    for k, v in data.get("settings.json", {}).items():
+    for k, v in new.items():
         try:
             update_settings({k: v})
         except Exception:  # (any value the checks refuse, e.g. 1e999 for a number)
             skipped.append(k)
-    return skipped
+    return skipped + list(dict.fromkeys(held))

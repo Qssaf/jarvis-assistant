@@ -2089,8 +2089,8 @@
     </message>
     <message>
         <location line="+3"/>
-        <source>Brought in (left at their defaults here: %1): Jarvis is restarting</source>
-        <translation>已导入（以下项在此保留默认值：%1）：Jarvis 正在重启</translation>
+        <source>Brought in (held back or left at their defaults here: %1): Jarvis is restarting</source>
+        <translation>已导入（以下项在此暂缓或保留默认值：%1）：Jarvis 正在重启</translation>
     </message>
     <message>
         <location line="+1"/>

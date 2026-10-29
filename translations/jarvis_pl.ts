@@ -2115,8 +2115,8 @@
     </message>
     <message>
         <location line="+3"/>
-        <source>Brought in (left at their defaults here: %1): Jarvis is restarting</source>
-        <translation>Wczytano (tu pozostają wartości domyślne: %1): Jarvis uruchamia się ponownie</translation>
+        <source>Brought in (held back or left at their defaults here: %1): Jarvis is restarting</source>
+        <translation>Wczytano (wstrzymane lub z wartościami domyślnymi: %1): Jarvis uruchamia się ponownie</translation>
     </message>
     <message>
         <location line="+1"/>

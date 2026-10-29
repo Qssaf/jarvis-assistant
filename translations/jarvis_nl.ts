@@ -2102,8 +2102,8 @@
     </message>
     <message>
         <location line="+3"/>
-        <source>Brought in (left at their defaults here: %1): Jarvis is restarting</source>
-        <translation>Teruggezet (hier op standaard gelaten: %1): Jarvis start opnieuw</translation>
+        <source>Brought in (held back or left at their defaults here: %1): Jarvis is restarting</source>
+        <translation>Teruggezet (tegengehouden of hier op standaard gelaten: %1): Jarvis start opnieuw</translation>
     </message>
     <message>
         <location line="+1"/>

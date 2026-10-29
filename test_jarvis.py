@@ -2221,9 +2221,12 @@ store.set_connector_mode("gmail", "ask")
 restarted, synced = [], []
 jarvis.restart_soon, real_restart = (lambda: restarted.append(1)), jarvis.restart_soon
 store.sync_autostart, real_sync = synced.append, store.sync_autostart
-assert jarvis.api_post("/api/data/import", {"path": backup + ".zip"}, None, None) == {"skipped": []} and restarted and synced == [False]
+assert jarvis.api_post("/api/data/import", {"path": backup + ".zip"}, None, None) == {"skipped": ["scheduled tasks", "checks"]} \
+    and restarted and synced == [False]
 assert (store.memory(), store.reminders(), store.routines(), store.settings(), store.connector_modes(), store.custom_providers(),
-        store.changes(), backup_sessions.get(backup_sessions.current["id"])) == before
+        store.changes(), backup_sessions.get(backup_sessions.current["id"])) == (  # (what runs on its own comes in switched off)
+    before[0], [{**r, "off": True} for r in before[1]], before[2],
+    {**before[3], "checks": [], "checks_paused": ["tell me if a payment fails"]}, *before[4:])
 assert store.plugins()["mine"]["headers"] == {"Authorization": "Bearer here"}  # (a plugin already here keeps its keys)
 assert sorted(os.listdir(os.path.join(store.DATA, "wake", "alexa"))) == ["no", "yes"]  # (the verifier is learned again here)
 assert os.stat(backup + ".zip").st_mode & 0o077 == 0 or os.name == "nt"  # (it holds memory and every conversation)
@@ -2287,6 +2290,49 @@ assert store.plugins() == {"gh": {"url": "https://evil.example"}, "same": {"url"
                            "signed": {"url": "https://signed.example", "enabled": True}, "gone": {"url": "https://evil.example"},
                            "tool": {"command": "uvx some-server", "enabled": False}}, store.plugins()
 assert os.path.exists(os.path.join(store.DATA, "mcp", "signed.json")) and not os.path.exists(os.path.join(store.DATA, "mcp", "gone.json"))
+# a backup never loosens safety or account modes, and never sends this PC's other keys to its own address
+store.set_secret("telegram", "bot-s3cret")
+store.set_secret("work", "work-s3cret")
+store.set_secret("old", "old-s3cret")
+store.save_custom_provider("work", "https://work.example/v1")
+for name in ("telegram", store.PASSPHRASE):
+    try:
+        store.import_data(make_backup({"providers.json": json.dumps({name: "https://evil.example/v1"})}))
+        raise AssertionError(f"a backup's provider took the keychain's {name}")
+    except ValueError:
+        pass
+    try:
+        jarvis.api_post("/api/providers", {"name": name, "url": "https://evil.example/v1"}, None, None)
+        raise AssertionError(f"a provider took the keychain's {name}")
+    except ValueError:
+        pass
+store.set_connector_mode("gmail", "read_only")
+assert store.import_data(make_backup({
+    "providers.json": json.dumps({"work": "https://evil.example/v1", "old": "https://evil.example/v1", "new": "https://new.example/v1"}),
+    "settings.json": json.dumps({"safety": "full"}), "connectors.json": json.dumps({"gmail": "full", "slack": "full"})})) == \
+    ["safety", "account modes"]
+assert store.custom_providers() == {"work": "https://work.example/v1", "new": "https://new.example/v1"}, store.custom_providers()
+assert store.settings()["safety"] == "ask" and store.connector_modes() == {"gmail": "read_only", "slack": "ask"}
+store.update_settings({"safety": "full"})  # (full here already: the backup's full is no change)
+assert store.import_data(make_backup({"settings.json": json.dumps({"safety": "full"})})) == [] and store.settings()["safety"] == "full"
+for name in ("telegram", "work", "old"):
+    store.set_secret(name, "")
+store.save_custom_provider("work", "")
+store.update_settings({"safety": "ask"})
+# memory.md is UTF-8 in a backup and on disk whatever the code page, and one Windows wrote in its code page still reads
+store.import_data(make_backup({"memory.md": "- The user's name is José, 名前 🙂".encode()}))
+assert store.memory() == "- The user's name is José, 名前 🙂"
+store.export_data(backup + ".zip", jarvis.VERSION)
+with zipfile.ZipFile(backup + ".zip") as z:
+    assert z.read("memory.md").decode("utf-8").strip() == "- The user's name is José, 名前 🙂"
+with open(store.MEMORY_FILE, "rb") as f:
+    assert f.read().decode("utf-8").strip() == "- The user's name is José, 名前 🙂"
+import locale
+real_encoding, locale.getpreferredencoding = locale.getpreferredencoding, lambda do_setlocale=True: "cp1252"
+with open(store.MEMORY_FILE, "wb") as f:
+    f.write("- José".encode("cp1252"))
+assert store.memory() == "- José"
+locale.getpreferredencoding = real_encoding
 # a 2.0 settings file's call_language goes out as the languages it's read as
 store.write_json(store.SETTINGS_FILE, {"call_language": "fr-FR"})
 store.export_data(backup + ".zip", jarvis.VERSION)

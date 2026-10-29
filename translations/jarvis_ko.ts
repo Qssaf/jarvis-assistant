@@ -2089,8 +2089,8 @@
     </message>
     <message>
         <location line="+3"/>
-        <source>Brought in (left at their defaults here: %1): Jarvis is restarting</source>
-        <translation>가져왔어요(이 PC에서는 기본값 유지: %1). Jarvis를 다시 시작하는 중</translation>
+        <source>Brought in (held back or left at their defaults here: %1): Jarvis is restarting</source>
+        <translation>가져왔어요(이 PC에서 보류되거나 기본값 유지: %1). Jarvis를 다시 시작하는 중</translation>
     </message>
     <message>
         <location line="+1"/>

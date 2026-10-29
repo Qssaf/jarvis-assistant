@@ -2184,7 +2184,7 @@ def api_post(path, data, live, brain):
     elif path == "/api/providers":
         import brain as brain_mod
         name, url = str(data.get("name", "")).strip().lower(), str(data.get("url", "")).strip().rstrip("/")
-        if not PROVIDER_NAME.match(name) or name in brain_mod.PROVIDERS or name in brain_mod.BACKENDS:
+        if not PROVIDER_NAME.match(name) or name in brain_mod.PROVIDERS or name in brain_mod.BACKENDS or name in store.OTHER_SECRETS:
             raise ValueError("pick a new name: lowercase letters, digits and _")
         if not re.match(r"^https?://[^\s/]+", url):
             raise ValueError("the address should look like https://host/v1")

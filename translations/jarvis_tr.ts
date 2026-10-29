@@ -2089,8 +2089,8 @@
     </message>
     <message>
         <location line="+3"/>
-        <source>Brought in (left at their defaults here: %1): Jarvis is restarting</source>
-        <translation>İçe aktarıldı (burada varsayılan değerlerinde bırakılanlar: %1): Jarvis yeniden başlatılıyor</translation>
+        <source>Brought in (held back or left at their defaults here: %1): Jarvis is restarting</source>
+        <translation>İçe aktarıldı (burada bekletilen veya varsayılan değerlerinde bırakılanlar: %1): Jarvis yeniden başlatılıyor</translation>
     </message>
     <message>
         <location line="+1"/>

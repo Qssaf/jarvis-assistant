@@ -2154,8 +2154,8 @@
     </message>
     <message>
         <location line="+3" />
-        <source>Brought in (left at their defaults here: %1): Jarvis is restarting</source>
-        <translation>تم الاستيراد (بقيت على قيمها الافتراضية هنا: %1): يُعاد تشغيل Jarvis</translation>
+        <source>Brought in (held back or left at their defaults here: %1): Jarvis is restarting</source>
+        <translation>تم الاستيراد (أُوقفت أو بقيت على قيمها الافتراضية هنا: %1): يُعاد تشغيل Jarvis</translation>
     </message>
     <message>
         <location line="+1" />
