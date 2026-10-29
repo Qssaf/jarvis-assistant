@@ -3184,7 +3184,15 @@ os.makedirs(os.path.join(os.environ["HOME"], ".local", "bin"))
 open(os.path.join(os.environ["HOME"], ".local", "bin", "jarvis"), "w").close()
 brain.store.sync_autostart(True)
 assert started == ["jarvis", os.path.expanduser("~/.local/bin/jarvis")]
-system.set_autostart, system.IS_WINDOWS = real_set, real_windows
+system.set_autostart, system.IS_WINDOWS = real_set, True
+os.environ["APPDATA"] = tempfile.mkdtemp()  # Windows: a Startup script cmd reads as UTF-8, whatever the user's name
+system.set_autostart(True, '"C:\\Users\\José\\Jarvis.exe"')
+bat = os.path.join(os.environ["APPDATA"], r"Microsoft\Windows\Start Menu\Programs\Startup", "Jarvis.bat")
+with open(bat, "rb") as f:
+    assert f.read() == '@echo off\r\nchcp 65001 >NUL\r\nstart "" "C:\\Users\\José\\Jarvis.exe"\r\n'.encode()
+system.set_autostart(False, "")
+assert not os.path.exists(bat)
+system.IS_WINDOWS = real_windows
 os.environ.clear()
 os.environ.update(real_env)
 

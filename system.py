@@ -27,7 +27,8 @@ def have(program):
 def run(args, timeout=15, env=None):
     """A short command's output (stdout and stderr), '' if it isn't installed."""
     try:
-        r = subprocess.run(args, capture_output=True, text=True, errors="replace", timeout=timeout, env=env)  # (a copied picture isn't UTF-8)
+        r = subprocess.run(args, capture_output=True, text=True, errors="replace", timeout=timeout, env=env,  # (a copied picture isn't UTF-8)
+                           creationflags=subprocess.CREATE_NO_WINDOW if IS_WINDOWS else 0)  # (Jarvis.exe has no console: no window pops up)
     except (OSError, subprocess.TimeoutExpired):
         return ""
     return (r.stdout + r.stderr).strip()
@@ -1050,14 +1051,14 @@ def set_autostart(enabled, command):
     """Start Jarvis at login: a .desktop file in ~/.config/autostart, or a shortcut script in the Windows Startup folder."""
     if IS_WINDOWS:
         path = os.path.join(os.environ["APPDATA"], r"Microsoft\Windows\Start Menu\Programs\Startup", "Jarvis.bat")
-        body = f'@echo off\r\nstart "" {command}\r\n'
+        body = f'@echo off\r\nchcp 65001 >NUL\r\nstart "" {command}\r\n'  # (UTF-8: a user name like José is in the path)
     else:
         path = os.path.expanduser("~/.config/autostart/jarvis.desktop")
         body = (f"[Desktop Entry]\nType=Application\nName=Jarvis\nExec={command}\nIcon={os.path.join(HERE, 'icon.svg')}\n"
                 "X-KDE-autostart-phase=2\nTerminal=false\n")
     if enabled:
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8", newline="") as f:
             f.write(body)
     elif os.path.exists(path):
         os.remove(path)

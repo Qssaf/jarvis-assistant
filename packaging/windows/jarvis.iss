@@ -41,6 +41,10 @@ Filename: "{app}\Jarvis.exe"; Description: "Start Jarvis"; Flags: nowait postins
 
 [UninstallDelete]
 Type: files; Name: "{userstartup}\Jarvis.bat"
+; (Jarvis.exe's own updates put files here this uninstaller never logged, and an interrupted one leaves .old copies)
+Type: filesandordirs; Name: "{app}\_internal"
+Type: filesandordirs; Name: "{app}\_internal.old"
+Type: files; Name: "{app}\Jarvis.exe.old"
 
 [Code]
 // "Start when I log in": the same Startup script Jarvis's own switch writes, and that switch turned on in its settings,
@@ -50,8 +54,9 @@ var
   Path, Rest: String;
   Json: AnsiString;
 begin
+  // (UTF-8 with chcp, as Jarvis writes it: {app} holds the user's name, which may not be ASCII)
   SaveStringToFile(ExpandConstant('{userstartup}\Jarvis.bat'),
-    '@echo off'#13#10'start "" "' + ExpandConstant('{app}\Jarvis.exe') + '"'#13#10, False);
+    Utf8Encode('@echo off'#13#10'chcp 65001 >NUL'#13#10'start "" "' + ExpandConstant('{app}\Jarvis.exe') + '"'#13#10), False);
   Path := ExpandConstant('{userappdata}\Jarvis\settings.json');
   if not LoadStringFromFile(Path, Json) then
     Json := '{}';
