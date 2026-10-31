@@ -38,6 +38,11 @@ EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py
   `requirements.txt`.
 - Finding the running Jarvis: never `pgrep -f`/`pkill -f` with "jarvis.py" in the pattern (it matches the shell running
   the command, which then kills itself); match `[.]venv/bin/python .../jarvis.py` in `ps -eo pid,args` instead.
+  SIGTERM quits it cleanly (exit handlers run); start the installed one again detached with `setsid -f
+  ~/.local/bin/jarvis` (environment variables such as `JARVIS_WA_LOG` reach it). Its log is `jarvis.log` in
+  `system.DATA` (`~/.local/share/jarvis` on Linux).
+- From `CONTRIBUTING.md`: a bug fix comes with a check that fails without it; nothing personal (names, numbers, emails,
+  keys) in code, tests, prompts or commit messages; user-visible changes get a `CHANGELOG.md` line.
 - Running a second copy alongside an installed Jarvis: set `JARVIS_HUD_PORT` to another port and point the XDG dirs
   elsewhere, otherwise `main()` finds the running instance and just opens its window.
 - In a fresh config dir, write `{}` to `<config>/jarvis/plugins.json` first. Otherwise the default Composio plugin
@@ -201,9 +206,10 @@ README: received packets decoded once though every relay forwards them, RFC 3711
 time). They talk JSON lines (`main.go`'s top comment): `WhatsApp.ask(cmd, ...)` waits for `{"id", "ok"|"error"}`,
 `tell_call` (`speak`, `hush`, `hangup`) gets no answer, and events (`msg`, `call`, `callstate`, `audio`, `state`, `qr`,
 `error`) go to `event` (events carry ids too: only a line without `ev` is an answer). Its stderr goes into Jarvis's
-log as `[whatsapp] helper:` (warnings only; `JARVIS_WA_LOG=info` or `debug` for calls or every stanza). whatsmeow keeps no history, so the helper saves messages in its own tables of the login's SQLite
-file (`DATA/whatsapp.db`, never in backups) and asks the phone for earlier ones (`BuildHistorySyncRequest`) when a chat
-has fewer than asked for. Chats are keyed by phone-number JID when the LID's is known. "contact" means the name is in
+log as `[whatsapp] helper:` (warnings only; `JARVIS_WA_LOG=info` or `debug` for calls or every stanza). whatsmeow
+keeps no history, so the helper saves messages in its own tables of the login's SQLite file (`DATA/whatsapp.db`,
+owner-only, never in backups) and asks the phone for earlier ones (`BuildHistorySyncRequest`) when a chat has fewer
+than asked for. Chats are keyed by phone-number JID when the LID's is known. "contact" means the name is in
 the phone's address book (`FullName`, from app state). Call audio is 16 kHz PCM both ways; Gemini's 24 kHz voice is
 resampled and paced in real time by the helper (`speak`: 60 ms MLow frames; the call keeps itself alive with silence).
 For an incoming call, a `CallAccept` means the user answered on another device. `helper()` finds the binary next to
