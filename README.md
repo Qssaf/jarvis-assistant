@@ -94,7 +94,7 @@ app with a notch at the top of the screen and a native dashboard window.
 
 ### WhatsApp
 Settings → *WhatsApp* → *Link WhatsApp*, then scan the code from your phone (WhatsApp → Linked devices), the same way
-as WhatsApp Web. Jarvis then:
+as WhatsApp Web (on Linux, Jarvis first builds its WhatsApp helper: install [Go](https://go.dev/dl)). Jarvis then:
 - answers your saved contacts' messages that don't need you, saying it's your assistant (never groups, never in a chat
   you're writing in yourself, at most 20 replies an hour), and tells you out loud about anything urgent;
 - picks up calls you don't answer within 20 seconds, talks with the caller in its own voice, takes a message and tells
@@ -228,8 +228,9 @@ the backup voice (when Live can't be used) uses the *Hearing you* and *Speaking*
 which is much larger than a free AI Studio key's. Add several accounts and they take turns when one hits its limit.
 **Use it at your own risk**: Jarvis signs in the way Google's Antigravity app does, which Google doesn't offer to other
 apps, and Google may limit or suspend accounts used this way. The voice still needs an AI Studio key. Jarvis doesn't ship
-Antigravity's sign-in details: install the [opencode-antigravity-auth](https://www.npmjs.com/package/opencode-antigravity-auth)
-plugin (`npm i -g opencode-antigravity-auth`) and Jarvis reads them from it, or put `ANTIGRAVITY_CLIENT_ID` and
+Antigravity's sign-in details: add the [Antigravity plugin](https://github.com/Qssaf/opencode-antigravity-auth-desktop) to
+opencode (`"plugins": ["github:Qssaf/opencode-antigravity-auth-desktop"]` in `opencode.json`, or a clone's folder) and
+Jarvis reads them from it, or put `ANTIGRAVITY_CLIENT_ID` and
 `ANTIGRAVITY_CLIENT_SECRET` in the env file.
 
 **Local models with [Ollama](https://ollama.com)**: install it, `ollama pull qwen3:8b` (pick a model that supports
@@ -265,8 +266,8 @@ The full picture is in [PRIVACY.md](PRIVACY.md); contributing: [CONTRIBUTING.md]
 - **Ask before risky actions** (on by default): shell commands that delete, install, kill or shut down, and changes to
   accounts in *ask* mode (sending email, creating events), are refused until the model passes `confirmed: true`, which
   it may only do when you asked for exactly that or said yes. Turn it off in Settings if you'd rather it just acts.
-- **WhatsApp** (if you link it) runs in a hidden browser on its own profile; Jarvis answers only saved contacts and
-  never shares anything about you with them.
+- **WhatsApp** (if you link it) runs in Jarvis's own helper (`jarvis-wa`, linked like WhatsApp Web, no browser);
+  Jarvis answers only saved contacts and never shares anything about you with them.
 - **Free-tier quotas**: when a model's daily quota runs out, Jarvis says so and uses the next model in that job's list
   until it resets (midnight Pacific); the Health page shows each model's requests today.
 
@@ -276,7 +277,7 @@ The full picture is in [PRIVACY.md](PRIVACY.md); contributing: [CONTRIBUTING.md]
 jarvis.py        tray app, wake word, Gemini Live session, notch, local API
 brain.py         the agent: models, tools, accounts (Composio), plugins (MCP), Photopea
 system.py        everything OS-specific: audio, screenshots, input, windows, apps, notifications
-whatsapp.py      your WhatsApp, linked like WhatsApp Web: replies, calls, reading and sending
+whatsapp.py      your WhatsApp, linked like WhatsApp Web: replies, calls, reading and sending (whatsapp-helper/: jarvis-wa, Go)
 phone.py         the Jarvis app's encrypted link through your relay (relay/: the Cloudflare Worker; android/: the app)
 remote.py        Jarvis on Telegram
 window.py        the window's bridge to Python, its icons   qml/  the window (Qt Quick)   assets/  its font

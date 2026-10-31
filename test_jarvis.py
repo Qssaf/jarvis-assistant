@@ -10,6 +10,7 @@ import system
 
 brain.OPENCODE_ACCOUNTS = os.path.join(_home, "opencode-accounts.json")  # (not the user's real Google sign-ins,
 brain.PLUGIN_CONSTANTS = [os.path.join(_home, "constants.js")]               # nor an installed plugin's client)
+brain.OPENCODE_CONFIG = os.path.join(_home, "opencode.json")
 brain.store.save_plugins({})  # (no Composio: a real Brain would connect to it, and could start a browser sign-in)
 
 # click grid: Gemini's 0-1000 coordinates map onto the screen, clamped to its edges
@@ -527,6 +528,21 @@ openwakeword.model.Model, jarvis.wake_model_file = (lambda **kw: kw), (lambda wo
 shutil.rmtree(jarvis.WAKE_DIR)
 assert "custom_verifier_models" not in lrn.wake_model({**store.settings(), "wake_word": lrn.word, "learn_my_voice": True})
 openwakeword.model.Model, jarvis.wake_model_file = real_model, real_file
+# the learned verifier runs in numpy, as scikit-learn would: listening never loads scikit-learn and SciPy (~120 MB)
+import pickle, subprocess
+from openwakeword.custom_verifier_model import train_verifier_model
+rng = np.random.default_rng(1)
+feats = np.concatenate([rng.normal(0.5, 1, (30, 16, 96)), rng.normal(-0.5, 2, (30, 16, 96))]).astype(np.float32)
+pipeline = train_verifier_model(feats, np.array([1] * 30 + [0] * 30))
+pkl = os.path.join(tempfile.mkdtemp(), "verifier.pkl")
+with open(pkl, "wb") as f:
+    pickle.dump(pipeline, f)
+probe = rng.normal(0, 1.5, (5, 16, 96)).astype(np.float32)
+assert np.allclose(jarvis.Verifier(pkl).predict_proba(probe), pipeline.predict_proba(probe), atol=1e-9)
+loaded = subprocess.run([sys.executable, "-c", "import sys; sys.path.insert(0, sys.argv[1]); import jarvis; jarvis.load_openwakeword()."
+                         "model.Model; print(sorted({'sklearn', 'scipy'} & set(sys.modules)))", os.path.dirname(os.path.abspath(__file__))],
+                        capture_output=True, text=True)
+assert loaded.stdout.strip() == "[]", loaded.stdout + loaded.stderr
 
 # session search finds words inside conversations, not just titles
 ss = store.Sessions.__new__(store.Sessions)
@@ -2645,12 +2661,13 @@ assert not any("antigravity" in s for s in said), said
 store.write_json(brain.OPENCODE_ACCOUNTS, {"accounts": [
     {"email": "a@x", "refreshToken": "r1|p|m", "managedProjectId": "m1", "fingerprint": {"userAgent": "ua"}},
     {"email": "b@x", "refreshToken": "r2", "managedProjectId": "m2", "enabled": False},
-    {"email": "c@x", "refreshToken": "r3", "managedProjectId": "m3"}]})
+    {"email": "c@x", "refreshToken": "r3", "managedProjectId": "m3"},
+    {"email": "d@x", "refreshToken": "r4", "projectId": "p4"}]})  # (added from the plugin's menu: no managedProjectId)
 store.write_json(brain.GOOGLE_FILE, {"accounts": [{"email": "c@x", "refresh_token": "r3", "project": "m3"}]}, private=True)
 assert [(a["email"], a["refresh_token"], a["project"], a["source"]) for a in brain.google_accounts()] == \
-    [("c@x", "r3", "m3", "jarvis"), ("a@x", "r1", "m1", "opencode")]
+    [("c@x", "r3", "m3", "jarvis"), ("a@x", "r1", "m1", "opencode"), ("d@x", "r4", "p4", "opencode")]
 brain.google_sign_out("c@x")
-assert [(a["email"], a["source"]) for a in brain.google_accounts()] == [("a@x", "opencode"), ("c@x", "opencode")]  # (opencode's own stay)
+assert [(a["email"], a["source"]) for a in brain.google_accounts()] == [("a@x", "opencode"), ("c@x", "opencode"), ("d@x", "opencode")]  # (opencode's own stay)
 # a revoked sign-in (Google's 400 "invalid_grant") is that account's problem, not a bad request: the next account
 # answers, and with none left it's an Overloaded, so the chain moves on to the AI Studio key (a BadRequest failed every task)
 ag = brain.Antigravity.__new__(brain.Antigravity)
@@ -2685,10 +2702,21 @@ try:
     brain.google_sign_in(timeout=1)
     assert False, "no client: no sign-in"
 except RuntimeError as e:
-    assert "opencode-antigravity-auth" in str(e)
+    assert brain.PLUGIN_REPO in str(e)
 with open(brain.PLUGIN_CONSTANTS[0], "w") as f:
     f.write('export const ANTIGRAVITY_CLIENT_ID = "id-1.apps";\nexport const ANTIGRAVITY_CLIENT_SECRET = "sec-1";\n')
 assert brain.google_client() == ("id-1.apps", "sec-1")
+os.remove(brain.PLUGIN_CONSTANTS[0])
+# ...or from a plugin folder opencode.json loads (a fork's checkout, bundled into dist/index.js)
+fork = os.path.join(_home, "my-antigravity-fork")
+os.makedirs(os.path.join(fork, "dist"))
+with open(os.path.join(fork, "dist", "index.js"), "w") as f:
+    f.write('var ANTIGRAVITY_CLIENT_ID = "id-2.apps";\nvar ANTIGRAVITY_CLIENT_SECRET = "sec-2";\n')
+store.write_json(brain.OPENCODE_CONFIG, {"plugins": [fork, "other-plugin@1.0"]})
+assert brain.google_client() == ("id-2.apps", "sec-2")
+with open(brain.PLUGIN_CONSTANTS[0], "w") as f:
+    f.write('export const ANTIGRAVITY_CLIENT_ID = "id-1.apps";\nexport const ANTIGRAVITY_CLIENT_SECRET = "sec-1";\n')
+assert brain.google_client() == ("id-2.apps", "sec-2")  # (the plugin opencode loads comes before other installed copies)
 
 # the sign-in page: only Google's answer to this sign-in (its state) counts; a refusal ends it with Google's reason
 import requests as _requests
@@ -3032,32 +3060,31 @@ pc_side = phone.Channel(to_phone, to_pc, sent=1)
 assert pc_side.open(vb("phone_frame")) == {"op": "hello"} and phone.Channel(to_pc, to_phone, got=1).open(vb("frame"))["name"] == "test-pc"
 
 # WhatsApp: Jarvis answers saved contacts after a burst of messages, leaves chats the user is writing in, keeps to its
-# hourly limit, and never sends to a name that isn't exactly one chat (the page itself is faked: no browser, no account)
-import sys, types, whatsapp
+# hourly limit, and never sends to a name that isn't exactly one chat (jarvis-wa itself is faked: no account)
+import sys, threading, types, whatsapp
 whatsapp.SETTLE, whatsapp.ANSWER_AFTER = 0.05, 0.05
 decided = ['{"reply": "Hi, it\'s Jarvis, Q\'s assistant!", "tell_user": ""}']
 asked_model = []
-wa_logs, wa_told, wa_told_how, page_calls = [], [], [], []
+wa_logs, wa_told, wa_told_how, page_calls, call_audio = [], [], [], [], []
 wa = whatsapp.WhatsApp(types.SimpleNamespace(_generate=lambda contents, **kw: asked_model.append(contents) or [{"text": decided[0]}]),
                        notify=wa_logs.append, tell=lambda text, **how: wa_told.append(text) or wa_told_how.append(how),
                        name=lambda: "Q")
 chats = [{"chat": "1@c.us", "name": "Sam Lee"}, {"chat": "2@c.us", "name": "Sam"}, {"chat": "3@c.us", "name": "Maya"}]
 
 
-def fake_page(js, timeout=30):
-    page_calls.append(js)
-    if js.startswith("window.__jarvisHistory"):
+def fake_page(cmd, timeout=30, **args):
+    page_calls.append((cmd, args))
+    if cmd == "history":
         return [{"id": "m1", "me": False, "text": "hey, you around?", "at": 0}]
-    if js.startswith("window.__jarvisSend"):
+    if cmd == "send":
         return f"sent{len(page_calls)}"
-    if js.startswith("window.__jarvisChats"):
+    if cmd == "chats":
         return chats
-    if js.startswith("window.__jarvisCall"):
-        return "over"  # (the user picked up on the phone)
-    return True
+    return None
 
 
-wa.evaluate, wa.state = fake_page, "connected"
+wa.ask, wa.state = fake_page, "connected"
+wa.tell_call = lambda cmd, **args: call_audio.append((cmd, args))
 
 
 def wa_says(**e):
@@ -3065,7 +3092,7 @@ def wa_says(**e):
 
 
 def sends():
-    return [c for c in page_calls if c.startswith("window.__jarvisSend")]
+    return [args for cmd, args in page_calls if cmd == "send"]
 
 
 wa_says()
@@ -3075,7 +3102,7 @@ for _ in range(100):
         break
     time.sleep(0.02)
 time.sleep(0.1)
-assert len(sends()) == 1 and "Hi, it's Jarvis" in sends()[0] and wa.mine and "Jarvis replied" in wa_logs[-1]
+assert len(sends()) == 1 and "Hi, it's Jarvis" in sends()[0]["text"] and wa.mine and "Jarvis replied" in wa_logs[-1]
 assert "Sam Lee: hey, you around?" in asked_model[0][0]["parts"][0]["text"] and "Q's AI assistant" in asked_model[0][0]["parts"][0]["text"]
 wa.event({"ev": "msg", "id": next(iter(wa.mine)), "chat": "1@c.us", "me": True, "text": "Hi, it's Jarvis", "name": "Sam Lee", "contact": True})
 assert "1@c.us" not in wa.user_wrote  # (Jarvis's own message isn't the user chatting)
@@ -3095,12 +3122,15 @@ time.sleep(0.3)
 assert len(sends()) == 1 and wa_told == ["WhatsApp from Sam: Sam says his car broke down and needs a lift"]
 assert wa.find("sam")[0]["chat"] == "2@c.us" and wa.find("Sam Le")[1]["close_matches"] == ["Sam Lee", "Sam"]
 wa_told.clear()
+wa.calls["c1"] = "ringing"
+threading.Timer(0.02, wa.event, args=({"ev": "callstate", "call": "c1", "state": "over"},)).start()  # (the user picked up on the phone)
 wa._ring({"id": "c1", "name": "Maya", "contact": True, "video": False, "group": False, "outgoing": False})
-assert "Maya is calling" in wa_told[0] and wa.call is None  # picked up on the phone: Jarvis stays out
+assert "Maya is calling" in wa_told[0] and wa.call is None and not wa.calls  # picked up on the phone: Jarvis stays out
+assert not any(cmd == "accept" for cmd, _ in page_calls)
 assert wa_told_how[-1] == {"keep": False}  # (a ring isn't kept in the agent's history: a dozen of them pushed a task out)
 store.update_settings({"whatsapp_calls": "decline"})
 wa._ring({"id": "c2", "name": "Maya", "contact": True, "video": False, "group": False, "outgoing": False})
-assert page_calls[-1] == "window.__jarvisButton('decline')"
+assert page_calls[-1] == ("decline", {"call": "c2"})
 store.update_settings({"whatsapp_calls": "answer"})
 try:
     store.update_settings({"whatsapp_calls": "maybe"})
@@ -3114,7 +3144,7 @@ wa_told.clear()
 before = len(page_calls)
 wa._ring({"id": "c3", "name": "Maya", "contact": True, "video": False, "group": False, "outgoing": False})
 assert wa_told == ["Maya is calling you on WhatsApp."] and wa_told_how[-1] == {"keep": False, "loud": True}
-assert not any("__jarvisCall" in c or "__jarvisButton" in c for c in page_calls[before:])  # (left ringing for the user)
+assert not page_calls[before:]  # (left ringing for the user)
 wa._ring({"id": "c4", "name": "stranger", "contact": True, "video": False, "group": False, "outgoing": False})
 assert len(wa_told) == 1 and "call from stranger" in wa_logs[-1]
 wa_says(chat="3@c.us", name="Maya")
@@ -3148,24 +3178,28 @@ assert brain.TOOLS["whatsapp_send"][0]("Maya", "on my way", confirmed=True) == {
 assert "whatsapp_read" in brain.OUTSIDE_CONTENT and brain.TOOLS["whatsapp_read"][0]()["chats"] == chats
 # groups are found and read too, each message by who wrote it (Jarvis said a group the user was in didn't exist)
 chats.append({"chat": "9@g.us", "name": "Chess Club", "group": True})
-wa.evaluate = lambda js, timeout=30: ([{"id": "g1", "me": False, "text": "contest at 5", "at": 0, "by": "Alex"}]
-                                      if js.startswith("window.__jarvisHistory") else fake_page(js))
+wa.ask = lambda cmd, timeout=30, **args: ([{"id": "g1", "me": False, "text": "contest at 5", "at": 0, "by": "Alex"}]
+                                           if cmd == "history" else fake_page(cmd, **args))
 assert brain.TOOLS["whatsapp_read"][0]("chess club")["messages"][0]["from"] == "Alex"
 # a voice message is listened to (it said "can't listen to voice notes"): the bytes go to the model as audio
 heard_media, real_vision = [], brain.vision[0]
 brain.vision[0] = lambda contents: heard_media.append(contents[0]["parts"][0]["inlineData"]) or [{"text": "See you at 5."}]
-wa.evaluate = lambda js, timeout=30: ({"id": "v1", "type": "ptt", "mime": "audio/ogg", "at": 0, "caption": "", "by": None, "me": False,
-                                       "data": "T2dnUw=="} if js.startswith("window.__jarvisMedia") else fake_page(js))
+wa.ask = lambda cmd, timeout=30, **args: ({"id": "v1", "type": "ptt", "mime": "audio/ogg", "at": 0, "caption": "", "by": None,
+                                            "me": False, "data": "T2dnUw=="} if cmd == "media" else fake_page(cmd, **args))
 got = brain.TOOLS["whatsapp_media"][0]("maya")
 assert got["voice message"] == "See you at 5." and got["from"] == "Maya" and heard_media == [{"mimeType": "audio/ogg", "data": "T2dnUw=="}], got
-wa.evaluate = lambda js, timeout=30: None if js.startswith("window.__jarvisMedia") else fake_page(js)
+wa.ask = lambda cmd, timeout=30, **args: None if cmd == "media" else fake_page(cmd, **args)
 assert "no voice message" in brain.TOOLS["whatsapp_media"][0]("maya")["error"]
 brain.vision[0] = real_vision
 # a call Jarvis places: refused without a yes; with one it rings, and nobody picking up is said (and the call is ended)
 wa_told.clear()
 assert brain.TOOLS["whatsapp_call"][0]("Maya", "dinner's at 8")["error"] == brain.NEEDS_YES
-wa.evaluate = lambda js, timeout=30: ({"id": "k1"} if js.startswith("window.__jarvisDial") else "over" if js.startswith("window.__jarvisCall")
-                                      else fake_page(js))
+def rings_out(cmd, timeout=30, **args):
+    if cmd != "dial":
+        return fake_page(cmd, **args)
+    threading.Timer(0.2, wa.event, args=({"ev": "callstate", "call": "k1", "state": "over"},)).start()  # (it rang out)
+    return {"id": "k1"}
+wa.ask = rings_out
 assert "calling Maya" in brain.TOOLS["whatsapp_call"][0]("Maya", "dinner's at 8", confirmed=True)["result"]
 for _ in range(50):
     if wa_told and not wa.dialing:
@@ -3173,20 +3207,38 @@ for _ in range(50):
     time.sleep(0.1)
 assert wa_told == ["Maya didn't pick up my WhatsApp call."] and wa.call is None, wa_told
 assert not any("Called Maya" in c["what"] for c in store.changes())  # (a call that never connected isn't a change)
-# a dial that gets stuck leaves WhatsApp refusing every call after it: the page is reloaded and it dials once more
-dials, wa_told[:] = [], []
-def stuck_once(js, timeout=30):
-    if js.startswith("window.__jarvisDial"):
-        dials.append(js)
-        if len(dials) == 1:
-            raise TimeoutError("Runtime.evaluate didn't answer")
-        return {"id": "k3"}
-    return "ready" if "__jarvisVoip" in js else "over" if js.startswith("window.__jarvisCall") else fake_page(js)
-reloads, real_cdp, real_wsleep = [], wa.cdp, whatsapp.time.sleep
-wa.evaluate, wa.cdp, whatsapp.time.sleep = stuck_once, (lambda method, **kw: reloads.append(method) or {}), (lambda s: None)
+# still ringing when Jarvis gives up: it hangs up itself
+wa_told.clear()
+whatsapp.RING_FOR, real_ring = 0.05, whatsapp.RING_FOR
+wa.ask = lambda cmd, timeout=30, **args: {"id": "k3"} if cmd == "dial" else fake_page(cmd, **args)
 wa._dial({"chat": "3@c.us", "name": "Maya"}, "hi", lambda: None)
-wa.cdp, whatsapp.time.sleep = real_cdp, real_wsleep
-assert reloads == ["Page.reload"] and len(dials) == 2 and wa_told == ["Maya didn't pick up my WhatsApp call."], (reloads, wa_told)
+whatsapp.RING_FOR = real_ring
+assert page_calls[-1] == ("hangup", {"call": "k3"}) and wa_told == ["Maya didn't pick up my WhatsApp call."], wa_told
+wa.calls.clear()
+# Jarvis's voice goes to the call it's on, and the caller talking over it hushes it
+wa.event({"ev": "callstate", "call": "k4", "state": "active"})
+heard = []
+wa.call = types.SimpleNamespace(c={"id": "k4"}, heard=heard.append)
+wa.event({"ev": "audio", "call": "k4", "pcm": "AAA="})
+wa.event({"ev": "audio", "call": "old", "pcm": "AAA="})  # (a call that ended)
+assert heard == [b"\x00\x00"] and wa.calls == {"k4": "active"}
+wa.event({"ev": "callstate", "call": "k4", "state": "over"})
+wa.call = None
+assert not wa.calls
+# events have ids too (a call's, a message's): only a line without "ev" answers a command (calls and messages were
+# taken for answers nobody waited for, and dropped)
+helper_says = [{"ev": "call", "id": "c9", "name": "Dad"}, {"ev": "msg", "id": "m9"}, {"id": 1, "ok": True}]
+seen, real_popen, real_helper, real_event, real_state = [], subprocess.Popen, whatsapp.helper, wa.event, wa.state
+whatsapp.helper, wa.event = lambda: "jarvis-wa", seen.append
+whatsapp.subprocess.Popen = lambda argv, **kw: real_popen(
+    [sys.executable, "-c", f"print({'\n'.join(json.dumps(m) for m in helper_says)!r})"], **kw)
+try:
+    wa.serve()
+except RuntimeError:  # (it stopped)
+    pass
+finally:
+    whatsapp.subprocess.Popen, whatsapp.helper, wa.event, wa.proc, wa.state = real_popen, real_helper, real_event, None, real_state
+assert [e["id"] for e in seen] == ["c9", "m9"], seen
 wa.dialing = True
 try:
     wa.dial({"chat": "3@c.us", "name": "Maya"}, "hi")
@@ -3205,7 +3257,7 @@ assert dialed.may_hang_up()
 # calls speak the user's language, and switch only to the others they allow (it answered in Korean on a noisy line)
 assert "Speak English. Never" in whatsapp.call_languages({"language": "en-US", "languages": []})
 assert "talk to you in French or Arabic, answer in that" in whatsapp.call_languages({"language": "en-US", "languages": ["fr-FR", "ar-XA"]})
-wa.evaluate = fake_page
+wa.ask = fake_page
 chats.pop()
 brain.whatsapp_link[0] = None
 if not system.IS_WINDOWS:  # the DevTools pipe: commands on fd 3, replies on fd 4, each JSON ending in a NUL

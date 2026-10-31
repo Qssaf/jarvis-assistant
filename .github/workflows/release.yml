@@ -39,10 +39,18 @@ jobs:
           --collect-data openwakeword --collect-submodules openwakeword --collect-binaries livekit
           --hidden-import window --hidden-import remote
           jarvis.py
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: whatsapp-helper/go.mod
+          cache-dependency-path: whatsapp-helper/go.sum
+      - name: WhatsApp helper (next to Jarvis.exe, where whatsapp.helper() looks)
+        working-directory: whatsapp-helper
+        run: go build -trimpath -ldflags="-s -w" -o ..\dist\Jarvis\jarvis-wa.exe .
       - name: Smoke test (starts headless, writes its log, stays up)
         shell: pwsh
         run: |
           if (-not (Test-Path dist\Jarvis\_internal\relay\worker.js)) { throw "the relay isn't in the build" }   # (Settings sets it up from there)
+          if (-not (Test-Path dist\Jarvis\jarvis-wa.exe)) { throw "the WhatsApp helper isn't in the build" }
           $env:QT_QPA_PLATFORM = "offscreen"
           $env:APPDATA = Join-Path $env:RUNNER_TEMP "appdata"
           New-Item -ItemType Directory -Force (Join-Path $env:APPDATA "Jarvis") | Out-Null

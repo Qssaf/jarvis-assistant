@@ -1022,8 +1022,8 @@
     </message>
     <message>
         <location line="+8"/>
-        <source>First install the opencode-antigravity-auth plugin (npm i -g opencode-antigravity-auth): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
-        <translation>ติดตั้งปลั๊กอิน opencode-antigravity-auth ก่อน (npm i -g opencode-antigravity-auth): Jarvis จะใช้ข้อมูลของปลั๊กอินนั้นลงชื่อเข้าใช้ หรือใส่ ANTIGRAVITY_CLIENT_ID และ ANTIGRAVITY_CLIENT_SECRET ในไฟล์ env ของ Jarvis</translation>
+        <source>First install the opencode-antigravity-auth plugin (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
+        <translation>ติดตั้งปลั๊กอิน opencode-antigravity-auth ก่อน (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis จะใช้ข้อมูลของปลั๊กอินนั้นลงชื่อเข้าใช้ หรือใส่ ANTIGRAVITY_CLIENT_ID และ ANTIGRAVITY_CLIENT_SECRET ในไฟล์ env ของ Jarvis</translation>
     </message>
     <message>
         <location line="+3"/>

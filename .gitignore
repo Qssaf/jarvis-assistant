@@ -5,3 +5,5 @@ local_backends.py
 env
 *.log
 graphify-out/
+whatsapp-helper/jarvis-wa
+whatsapp-helper/jarvis-wa.exe

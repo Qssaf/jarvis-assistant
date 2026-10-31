@@ -1032,8 +1032,8 @@
     </message>
     <message>
         <location line="+8"/>
-        <source>First install the opencode-antigravity-auth plugin (npm i -g opencode-antigravity-auth): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
-        <translation>Primeiro instale o plugin opencode-antigravity-auth (npm i -g opencode-antigravity-auth): o Jarvis entra com os dados dele. Ou coloque ANTIGRAVITY_CLIENT_ID e ANTIGRAVITY_CLIENT_SECRET no arquivo env do Jarvis.</translation>
+        <source>First install the opencode-antigravity-auth plugin (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
+        <translation>Primeiro instale o plugin opencode-antigravity-auth (github:Qssaf/opencode-antigravity-auth-desktop): o Jarvis entra com os dados dele. Ou coloque ANTIGRAVITY_CLIENT_ID e ANTIGRAVITY_CLIENT_SECRET no arquivo env do Jarvis.</translation>
     </message>
     <message>
         <location line="+3"/>

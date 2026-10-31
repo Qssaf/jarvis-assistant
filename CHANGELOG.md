@@ -64,6 +64,16 @@
   messages, calls, account changes, risky commands) also needs you to say it, so someone else in the room can't. It's
   kept in your keychain, never shown or said back, and hidden in the chat. Tasks from your phone don't need it.
 
+### Changed
+- **WhatsApp without a browser: about 1 GB less memory.** WhatsApp ran as WhatsApp Web in a hidden Chromium (~950 MB);
+  it's now a small helper, `jarvis-wa` (~30 MB, Go: whatsmeow for messages, WaCalls' code for calls), with the same
+  replies, calls, reading, sending, voice messages and photos. Link WhatsApp again once in Settings (and remove the old
+  "Chrome" device from your phone's Linked devices). Building it needs Go on Linux (Jarvis does it by itself; the
+  Windows app and the AUR package come with it). Older messages than the ones seen since linking are fetched from your
+  phone when asked for.
+- **Learning your voice no longer keeps ~200 MB:** the voice check is trained in a short-lived process, so
+  scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
+
 ### Fixed
 - **Bug reports keep your WhatsApp private:** *Copy a report* left in WhatsApp messages, contacts' names and phone
   numbers, tasks sent from your phone, and every line after the first of a longer reply. They're all taken out now.

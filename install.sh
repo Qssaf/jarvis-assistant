@@ -52,6 +52,15 @@ Categories=Utility;
 StartupNotify=false
 EOF
 
+# WhatsApp: its helper, jarvis-wa (Go; Jarvis also builds it by itself the first time WhatsApp is linked)
+if command -v go >/dev/null; then
+    mkdir -p "$DATA/bin"
+    (cd whatsapp-helper && go build -trimpath -ldflags="-s -w" -o "$DATA/bin/jarvis-wa" .) \
+        || echo "(couldn't build the WhatsApp helper: Jarvis tries again when you link WhatsApp)"
+else
+    echo "(optional) install Go (go.dev/dl) for WhatsApp: Jarvis builds its WhatsApp helper with it"
+fi
+
 # KDE Plasma on Wayland: a tiny helper that alone gets KWin's screenshot permission (~30 ms instead of starting Spectacle)
 case "$XDG_CURRENT_DESKTOP" in *KDE*)
     if command -v gcc >/dev/null && pkg-config --exists gio-unix-2.0 2>/dev/null; then

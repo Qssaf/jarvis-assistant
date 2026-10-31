@@ -258,7 +258,7 @@ ScrollPage {
             Divider {}
         }
         Txt { kind: "small"; Layout.fillWidth: true; visible: page.info.google_client === false; color: Theme.warm
-              text: qsTr("First install the opencode-antigravity-auth plugin (npm i -g opencode-antigravity-auth): Jarvis signs in "
+              text: qsTr("First install the opencode-antigravity-auth plugin (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis signs in "
                     + "with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis's env file.") }
         Pill { visible: page.info.google_client !== false
                text: page.info.google_signing ? qsTr("Waiting for the browser…") : (page.info.google || []).length ? qsTr("Add another account") : qsTr("Sign in with Google")

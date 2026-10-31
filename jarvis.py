@@ -1554,11 +1554,73 @@ def wake_folder(word):
     return os.path.join(WAKE_DIR, f"{os.path.splitext(os.path.basename(word))[0]}-{digest}")
 
 
+def load_openwakeword():
+    """openWakeWord, without the verifier trainer its package imports: scikit-learn and SciPy, ~120 MB kept for good, for
+    training only (VoiceLearner._train runs the real one in its own process)."""
+    if "openwakeword" not in sys.modules:
+        import types
+        stub = sys.modules["openwakeword.custom_verifier_model"] = types.ModuleType("openwakeword.custom_verifier_model")
+        stub.train_custom_verifier = None
+        try:
+            import openwakeword.model, openwakeword.utils
+        finally:
+            del sys.modules[stub.__name__]
+    import openwakeword.model, openwakeword.utils
+    return openwakeword
+
+
+def wake_detector(**kw):
+    """openWakeWord's Model, with ONNX Runtime's memory arena off: it's fed 80 ms at a time, and the arena would keep for
+    good the peak of the 4 s of audio openWakeWord runs through it at start (~30 MB, for the same speed)."""
+    import onnxruntime
+    real = onnxruntime.SessionOptions
+
+    class Options(real):  # (openWakeWord makes its own sessions, and its options)
+        def __init__(self):
+            super().__init__()
+            self.enable_cpu_mem_arena = False
+    onnxruntime.SessionOptions = Options
+    try:
+        return load_openwakeword().model.Model(**kw)
+    finally:
+        onnxruntime.SessionOptions = real
+        system.trim_memory()
+
+
+class Verifier:
+    """The verifier learned for the user's voice (verifier.pkl: scikit-learn's flatten, StandardScaler, LogisticRegression),
+    run in numpy: unpickling it for real imports scikit-learn and SciPy for good."""
+
+    def __init__(self, path):
+        import pickle
+
+        class Part:  # a scikit-learn object in the file: only its fitted numbers are read
+            def __setstate__(self, state):
+                self.__dict__.update(state)
+
+        class Reader(pickle.Unpickler):
+            def find_class(self, module, name):
+                return Part if module.split(".")[0] in ("sklearn", "openwakeword") else super().find_class(module, name)
+        with open(path, "rb") as f:
+            steps = [step for _, step in Reader(f).load().steps]
+        scaler, clf = steps[-2], steps[-1]
+        if len(steps) != 3 or clf.coef_.shape[0] != 1:
+            raise ValueError("not openWakeWord's verifier")
+        self.mean = scaler.mean_ if scaler.with_mean else 0.0
+        self.scale = scaler.scale_ if scaler.with_std else 1.0
+        self.coef, self.intercept = clf.coef_[0], clf.intercept_[0]
+
+    def predict_proba(self, x):
+        flat = np.asarray(x, dtype=np.float64).reshape(len(x), -1)
+        p = 1 / (1 + np.exp(-(((flat - self.mean) / self.scale) @ self.coef + self.intercept)))
+        return np.stack([1 - p, p], axis=1)
+
+
 def wake_model_file(word):
     """The .onnx file for a wake word: openWakeWord's own (downloaded the first time) or the user's."""
     if word not in store.WAKE_WORDS:
         return word
-    import openwakeword, openwakeword.utils
+    openwakeword = load_openwakeword()
     openwakeword.utils.download_models([word])
     return openwakeword.MODELS[word]["model_path"].replace(".tflite", ".onnx")
 
@@ -1622,10 +1684,12 @@ class VoiceLearner:
             return
         try:
             import glob
-            from openwakeword.custom_verifier_model import train_custom_verifier
             word, dirs, model, stamp = self.word, self.dirs, self.model, self.stamp  # (the wake word may change meanwhile)
             clips = {k: sorted(glob.glob(os.path.join(d, "*.wav"))) for k, d in dirs.items()}
-            train_custom_verifier(clips["yes"], clips["no"], model + ".new", wake_model_file(word), inference_framework="onnx")
+            # (in its own process: scikit-learn, SciPy and the training's peak, ~200 MB, would otherwise stay for good)
+            subprocess.run(restart_argv(["--learn-voice"]), check=True, timeout=1800, text=True,
+                           input=json.dumps([clips["yes"], clips["no"], model + ".new", wake_model_file(word)]),
+                           creationflags=subprocess.CREATE_NO_WINDOW if system.IS_WINDOWS else 0)
             os.replace(model + ".new", model)
             store.write_json(stamp, {"clips": len(clips["yes"]) + len(clips["no"]), "at": time.time()})
             print(f"[voice] learned your voice from {len(clips['yes'])} wake-ups and {len(clips['no'])} other clips", flush=True)
@@ -1637,7 +1701,6 @@ class VoiceLearner:
 
     def wake_model(self, cfg):
         """openWakeWord listening for the chosen wake word, with the user's verifier once one is learned for it."""
-        from openwakeword.model import Model
         if cfg["wake_word"] != self.word:
             self.use(cfg["wake_word"])
         path = wake_model_file(self.word)
@@ -1646,9 +1709,18 @@ class VoiceLearner:
             threading.Thread(target=self._train, daemon=True).start()  # (clips brought from another PC: learn from them now)
         # (the verifier's score replaces the model's from 0.1 up, so every score that could wake it is the verifier's;
         # raising that bar instead would let what scores between it and the wake threshold through unverified)
-        return Model(wakeword_models=[path], inference_framework="onnx", vad_threshold=0.5,
-                     **({"custom_verifier_models": {os.path.splitext(os.path.basename(path))[0]: self.model},
-                         "custom_verifier_threshold": 0.1} if self.verified else {}))
+        name, verifier = os.path.splitext(os.path.basename(path))[0], None
+        if self.verified:
+            try:
+                verifier = Verifier(self.model)
+            except Exception as e:  # (openWakeWord reads it itself, with scikit-learn)
+                print(f"[voice] reading the voice verifier with scikit-learn ({e})", flush=True)
+        model = wake_detector(wakeword_models=[path], inference_framework="onnx", vad_threshold=0.5,
+                              **({"custom_verifier_models": {name: self.model},
+                                  "custom_verifier_threshold": 0.1} if self.verified and not verifier else {}))
+        if verifier:
+            model.custom_verifier_models, model.custom_verifier_threshold = {name: verifier}, 0.1
+        return model
 
 
 learner = VoiceLearner()
@@ -2067,10 +2139,11 @@ def restart_soon(again=True):
     threading.Thread(target=go, daemon=True).start()
 
 
-def restart_argv():
-    """How this Jarvis was started: Jarvis.exe takes no script path (it would stop on an unknown argument)."""
+def restart_argv(args=None):
+    """How this Jarvis was started (or how to start it with other arguments): Jarvis.exe takes no script path (it would
+    stop on an unknown argument)."""
     script = [] if getattr(sys, "frozen", False) else [os.path.abspath(__file__)]
-    return [sys.executable, *script, *sys.argv[1:]]
+    return [sys.executable, *script, *(sys.argv[1:] if args is None else args)]
 
 
 def _importable(module):
@@ -2180,8 +2253,7 @@ def api_post(path, data, live, brain):
     elif path == "/api/settings":
         if str(data.get("wake_word", "hey_jarvis")) not in store.WAKE_WORDS:  # (a file that isn't a model would leave Jarvis deaf)
             try:
-                from openwakeword.model import Model
-                Model(wakeword_models=[os.path.abspath(os.path.expanduser(str(data["wake_word"]).strip()))], inference_framework="onnx")
+                load_openwakeword().model.Model(wakeword_models=[os.path.abspath(os.path.expanduser(str(data["wake_word"]).strip()))], inference_framework="onnx")
             except Exception as e:
                 raise ValueError(f"that isn't an openWakeWord model Jarvis can run ({str(e)[:120]})")
         new = store.update_settings(data)
@@ -2700,7 +2772,11 @@ def main():
     ap.add_argument("--task", metavar="TEXT", help="have the running Jarvis do a task and print its reply (for scripts)")
     ap.add_argument("--say", metavar="TEXT", help="have the running Jarvis say something out loud (\"the build finished\")")
     ap.add_argument("--mcp", action="store_true", help="an MCP server (stdio) that lets AI agents hand tasks to the running Jarvis")
+    ap.add_argument("--learn-voice", action="store_true", help=argparse.SUPPRESS)  # VoiceLearner._train's own process
     args = ap.parse_args()
+    if args.learn_voice:
+        from openwakeword.custom_verifier_model import train_custom_verifier
+        return train_custom_verifier(*json.load(sys.stdin), inference_framework="onnx")
     if args.mcp:
         return serve_mcp()
     if args.task or args.say:

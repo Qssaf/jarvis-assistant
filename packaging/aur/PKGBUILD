@@ -9,6 +9,7 @@ arch=('x86_64')
 url='https://github.com/Qssaf/jarvis-assistant'
 license=('MIT')
 depends=('uv' 'glib2' 'hicolor-icon-theme')
+makedepends=('go')
 optdepends=('pipewire: the microphone and speaker, with echo cancelling (or portaudio)'
             'portaudio: the microphone and speaker without PipeWire'
             'python-gobject: pressing app buttons by name (with at-spi2-core)'
@@ -21,7 +22,7 @@ optdepends=('pipewire: the microphone and speaker, with echo cancelling (or port
             'gnome-screenshot: screenshots on GNOME'
             'wl-clipboard: clipboard access on Wayland'
             'xclip: clipboard access on X11'
-            'chromium: reading JavaScript-heavy web pages, and WhatsApp')
+            'chromium: reading JavaScript-heavy web pages')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz"
         'jarvis.sh'
         'jarvis.desktop'
@@ -35,6 +36,10 @@ build() {
   cd "$pkgname-$pkgver"
   # KDE's ~30 ms screenshots: KWin lets only the program jarvis-screenshot.desktop names use its screenshot interface
   gcc $CPPFLAGS $CFLAGS $LDFLAGS -o jarvis-shot jarvis-shot.c $(pkg-config --cflags --libs gio-unix-2.0)
+  # WhatsApp (jarvis-wa: whatsapp.helper() finds it next to its source)
+  cd whatsapp-helper
+  export CGO_ENABLED=0 GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw"
+  go build -ldflags="-s -w" -o jarvis-wa .
 }
 
 package() {
@@ -44,6 +49,7 @@ package() {
   install -Dm644 -t "$pkgdir/opt/$pkgname/translations" translations/*.qm
   rm "$pkgdir/opt/$pkgname/test_jarvis.py"
   install -Dm755 jarvis-shot "$pkgdir/usr/lib/$pkgname/jarvis-shot"
+  install -Dm755 whatsapp-helper/jarvis-wa "$pkgdir/opt/$pkgname/whatsapp-helper/jarvis-wa"
   install -Dm755 "$srcdir/jarvis.sh" "$pkgdir/usr/bin/jarvis"
   install -Dm644 "$srcdir/jarvis.desktop" "$pkgdir/usr/share/applications/jarvis.desktop"
   install -Dm644 "$srcdir/jarvis-screenshot.desktop" "$pkgdir/usr/share/applications/jarvis-screenshot.desktop"

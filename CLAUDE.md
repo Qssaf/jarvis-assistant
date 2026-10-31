@@ -13,6 +13,7 @@ jarvis --listen                       # tell a running instance to start listeni
 jarvis --task "..." / --say "..."     # have it do a task (prints the reply) or say something; jarvis --mcp: the same as an MCP server
 EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py [case ...]  # agent eval (spends model requests)
 .venv/bin/python evals/voice_eval.py [case-prefix ...]   # ~110 real-life requests to the voice model (one Live session each)
+(cd whatsapp-helper && go vet ./... && go test ./...)  # the WhatsApp helper (CI runs it too)
 ```
 
 - CI (`.github/workflows/tests.yml`) runs lint and tests on Linux and Windows. `release.yml` builds `Jarvis.exe` with
@@ -194,22 +195,25 @@ Jetpack Compose (`Screens.kt` takes plain state, so `ScreensTest`'s Paparazzi re
 `~/.bubblewrap` (`ANDROID_HOME=~/.bubblewrap/android_sdk JAVA_HOME=~/.bubblewrap/jdk ./gradlew assembleDebug`); test
 the relay locally with `npx wrangler dev` in `relay/`.
 
-**WhatsApp.** `whatsapp.py` runs WhatsApp Web in a headless Chromium on its own profile (`DATA/whatsapp`), driven
-over the DevTools protocol (`system.Devtools`: a pipe on Linux, a 127.0.0.1 port on Windows). WhatsApp never sends a
-QR code to a browser whose brands say headless, so the page's user agent and brands are overridden; it also holds back
-QR codes after many link attempts in a row (keep experiments few), and a phone refuses to link a profile left over
-from earlier tries (a new link starts from a fresh profile). WhatsApp works in one tab only: a browser left running on
-the profile, or tabs restored from the last run, leave Jarvis's tab on "open in another window", so `Devtools` ends a
-stale browser and `serve` closes extra tabs. Calling is "deferred" until someone uses the page, so `SETUP_JS` starts
-it (`ensureVoipInitialized()`); incoming calls show up as the call collection's active call. `INIT_JS` runs before WhatsApp's scripts: the
-page's microphone is a stream Jarvis's call voice is played into (`__jarvisSpeak`), and whatever the page plays is
-tapped at `AudioNode.connect(destination)` and sent back as 16 kHz PCM through the `jarvisWA` binding while a call is
-on. `SETUP_JS` uses WhatsApp Web's own modules (`window.require('WAWeb...')`, the names whatsapp-web.js uses) for new
-messages, calls, sending, chats and history (message keys have no `_serialized`: use `toString()`). Auto-replies go through
-`brain._generate` with only that chat (no tools, no memory); answered calls are a separate Gemini Live session
-(`CallSession`). The agent's `whatsapp_read`/`whatsapp_send` reach it through `brain.whatsapp_link`; sending follows the
-`whatsapp` account mode and `confirmed`, and a name must match exactly one chat. What WhatsApp `tell`s the user joins the
-agent's history (`add_turn`, with a call's transcript), except rings (`keep=False`): the history is capped at 80 messages.
+**WhatsApp.** `whatsapp.py` drives `jarvis-wa` (`whatsapp-helper/`, Go, ~30 MB; it replaced WhatsApp Web in a headless
+Chromium, ~1 GB): whatsmeow for messages, and `internal/` is WaCalls' call code (MIT; our changes are listed in its
+README: received packets decoded once though every relay forwards them, RFC 3711 rollover guessing, one decode at a
+time). They talk JSON lines (`main.go`'s top comment): `WhatsApp.ask(cmd, ...)` waits for `{"id", "ok"|"error"}`,
+`tell_call` (`speak`, `hush`, `hangup`) gets no answer, and events (`msg`, `call`, `callstate`, `audio`, `state`, `qr`,
+`error`) go to `event` (events carry ids too: only a line without `ev` is an answer). Its stderr goes into Jarvis's
+log as `[whatsapp] helper:` (warnings only; `JARVIS_WA_LOG=info` or `debug` for calls or every stanza). whatsmeow keeps no history, so the helper saves messages in its own tables of the login's SQLite
+file (`DATA/whatsapp.db`, never in backups) and asks the phone for earlier ones (`BuildHistorySyncRequest`) when a chat
+has fewer than asked for. Chats are keyed by phone-number JID when the LID's is known. "contact" means the name is in
+the phone's address book (`FullName`, from app state). Call audio is 16 kHz PCM both ways; Gemini's 24 kHz voice is
+resampled and paced in real time by the helper (`speak`: 60 ms MLow frames; the call keeps itself alive with silence).
+For an incoming call, a `CallAccept` means the user answered on another device. `helper()` finds the binary next to
+Jarvis.exe (release.yml builds it), next to its source (the AUR package), or builds it into `DATA/bin` with `go` when
+missing or older than the source (install.sh does too). Auto-replies go through `brain._generate` with only that chat
+(no tools, no memory); answered calls are a separate Gemini Live session (`CallSession`). The agent's
+`whatsapp_read`/`whatsapp_send` reach it through `brain.whatsapp_link`; sending follows the `whatsapp` account mode and
+`confirmed`, and a name must match exactly one chat. What WhatsApp `tell`s the user joins the agent's history
+(`add_turn`, with a call's transcript), except rings (`keep=False`): the history is capped at 80 messages. A 2.1 browser
+profile (`DATA/whatsapp`) is deleted on start and the user is asked to link again.
 
 **State.** `store.py` keeps settings (unknown keys dropped, types coerced, `*_models`, `language`, `safety`... validated),
 plugins, `memory.md`, reminders (optionally repeating: `next_time`), routines, the change log and sessions under
@@ -258,8 +262,8 @@ says it. `hear`/`speak` are `MODEL_JOBS` whose failures all move on to the next 
 prompts.
 
 **Google sign-in.** The `antigravity` backend (brain.py) uses Google accounts signed in from the Models page
-(`google_sign_in`: Antigravity's OAuth client, read by `google_client()` from an installed opencode-antigravity-auth
-plugin or the env file and never committed (GitHub's push protection blocks it), PKCE, a callback on `localhost:51121`, then `loadCodeAssist` /
+(`google_sign_in`: Antigravity's OAuth client, read by `google_client()` from the opencode Antigravity plugin
+(`PLUGIN_REPO`, found through `opencode.json` first) or the env file and never committed (GitHub's push protection blocks it), PKCE, a callback on `localhost:51121`, then `loadCodeAssist` /
 `onboardUser` for the account's project) plus any from the opencode plugin's `antigravity-accounts.json`, rotating on 429
 and on a refused token refresh (raised as `Overloaded`, never `BadRequest`: that would stop the whole model chain).
 Opt-in and warned about (Google may suspend accounts used this way). With no account its constructor raises

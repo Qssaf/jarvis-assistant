@@ -1022,8 +1022,8 @@
     </message>
     <message>
         <location line="+8"/>
-        <source>First install the opencode-antigravity-auth plugin (npm i -g opencode-antigravity-auth): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
-        <translation>먼저 opencode-antigravity-auth 플러그인을 설치하세요(npm i -g opencode-antigravity-auth). Jarvis가 그 정보로 로그인해요. 또는 Jarvis의 env 파일에 ANTIGRAVITY_CLIENT_ID와 ANTIGRAVITY_CLIENT_SECRET을 넣으세요.</translation>
+        <source>First install the opencode-antigravity-auth plugin (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
+        <translation>먼저 opencode-antigravity-auth 플러그인을 설치하세요(github:Qssaf/opencode-antigravity-auth-desktop). Jarvis가 그 정보로 로그인해요. 또는 Jarvis의 env 파일에 ANTIGRAVITY_CLIENT_ID와 ANTIGRAVITY_CLIENT_SECRET을 넣으세요.</translation>
     </message>
     <message>
         <location line="+3"/>

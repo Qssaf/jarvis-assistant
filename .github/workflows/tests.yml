@@ -32,3 +32,10 @@ jobs:
       - name: Tests
         shell: bash
         run: .venv/${{ runner.os == 'Windows' && 'Scripts/python.exe' || 'bin/python' }} test_jarvis.py
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: whatsapp-helper/go.mod
+          cache-dependency-path: whatsapp-helper/go.sum
+      - name: WhatsApp helper (jarvis-wa)
+        working-directory: whatsapp-helper
+        run: go vet ./... && go test ./...

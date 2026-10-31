@@ -137,13 +137,19 @@ class AIStudio:
 # ---------------------------------------------------------------- Gemini and Claude through your Google account
 # Signs in the way Google's Antigravity IDE does, for the larger quotas of a Google account. It isn't an API Google offers
 # other apps and Google may limit or suspend accounts used this way, so it's opt-in (Models page) and the page says so.
-# Antigravity's OAuth client isn't in Jarvis's source: it comes from an installed opencode-antigravity-auth plugin, or
-# ANTIGRAVITY_CLIENT_ID / ANTIGRAVITY_CLIENT_SECRET in the environment or the env file.
-PLUGIN_CONSTANTS = [os.path.join(base, "opencode-antigravity-auth", "dist", "src", "constants.js") for base in (
+# Antigravity's OAuth client isn't in Jarvis's source: it comes from the opencode Antigravity plugin (PLUGIN_REPO, or
+# another copy as a fallback), or ANTIGRAVITY_CLIENT_ID / ANTIGRAVITY_CLIENT_SECRET in the environment or the env file.
+PLUGIN_REPO = "Qssaf/opencode-antigravity-auth-desktop"  # (not on npm: opencode installs it from GitHub)
+PLUGIN_FILES = ("dist/src/constants.js", "src/constants.ts", "dist/index.js")  # (npm's build, a source checkout, a bundled build)
+PLUGIN_CONSTANTS = [os.path.join(os.path.expanduser("~/.cache/opencode/npm/git-" + PLUGIN_REPO.split("/")[1] + "-*"), sub, f)
+                    for sub in ("", "*", "*/node_modules/@*/opencode-antigravity-auth") for f in PLUGIN_FILES] + \
+    [os.path.join(base, package, f) for base in (  # other copies of the plugin (upstream's npm package): the same client
     os.path.expanduser("~/.cache/opencode/node_modules"), os.path.expanduser("~/.config/opencode/node_modules"),
+    os.path.expanduser("~/.cache/opencode/npm/*/*/node_modules"), os.path.expanduser("~/.cache/opencode/npm/@*/*/*/node_modules"),
     "/usr/lib/node_modules", "/usr/local/lib/node_modules", os.path.expanduser("~/.npm-global/lib/node_modules"),
-    os.path.join(os.environ.get("APPDATA", ""), "npm", "node_modules"))] + \
-    [os.path.expanduser("~/.config/opencode/opencode-antigravity-auth/src/constants.ts")]  # (a source checkout)
+    os.path.expanduser("~/.local/lib/node_modules"), os.path.join(os.environ.get("APPDATA", ""), "npm", "node_modules"))
+    for package in ("@*/opencode-antigravity-auth", "opencode-antigravity-auth") for f in PLUGIN_FILES]  # (globs allowed)
+OPENCODE_CONFIG = os.path.expanduser("~/.config/opencode/opencode.json")  # its plugins may be folders: a fork's checkout
 GOOGLE_SCOPES = " ".join("https://www.googleapis.com/auth/" + s for s in
                          ("cloud-platform", "userinfo.email", "userinfo.profile", "cclog", "experimentsandconfigs"))
 GOOGLE_PORT = 51121
@@ -155,10 +161,22 @@ CLI_AGENT = "antigravity/cli/1.1.13 (aidev_client; os_type=linux; arch=amd64; cl
 google_signing = threading.Event()  # a sign-in page is waiting in the browser
 
 
+def plugin_constants():
+    """The files an Antigravity plugin's client may be in: the plugin folders opencode.json loads (a checkout of
+    PLUGIN_REPO), then opencode's copy of PLUGIN_REPO, then any other installed copy."""
+    import glob
+    config = store.read_json(OPENCODE_CONFIG, {})
+    config = config if isinstance(config, dict) else {}
+    local = [os.path.expanduser(p.removeprefix("file://")) for key in ("plugin", "plugins") for p in config.get(key) or []
+             if isinstance(p, str) and "antigravity" in p and os.path.isabs(os.path.expanduser(p.removeprefix("file://")))]
+    paths = [p if os.path.isfile(p) else os.path.join(p, f) for p in local for f in PLUGIN_FILES] + PLUGIN_CONSTANTS
+    return [found for path in paths for found in sorted(glob.glob(path))]
+
+
 def google_client():
     """Antigravity's OAuth client (id, secret), or None when neither the env file nor an installed plugin has it."""
     found = env_value("ANTIGRAVITY_CLIENT_ID"), env_value("ANTIGRAVITY_CLIENT_SECRET")
-    for path in PLUGIN_CONSTANTS:
+    for path in plugin_constants():
         if all(found):
             break
         if os.path.exists(path):
@@ -168,8 +186,8 @@ def google_client():
     return found if all(found) else None
 
 
-NO_CLIENT = ("install the opencode-antigravity-auth plugin (npm i -g opencode-antigravity-auth), or put ANTIGRAVITY_CLIENT_ID "
-             "and ANTIGRAVITY_CLIENT_SECRET in Jarvis's env file")
+NO_CLIENT = (f"add the Antigravity plugin to opencode (\"plugins\": [\"github:{PLUGIN_REPO}\"] in opencode.json), or put "
+             "ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis's env file")
 
 
 def google_accounts():
@@ -178,8 +196,9 @@ def google_accounts():
     seen = {a["refresh_token"] for a in own}
     for a in store.read_json(OPENCODE_ACCOUNTS, {}).get("accounts", []):
         token = str(a.get("refreshToken", "")).split("|")[0]
-        if a.get("enabled", True) and token and a.get("managedProjectId") and token not in seen:
-            own.append({"email": a.get("email", ""), "refresh_token": token, "project": a["managedProjectId"],
+        project = a.get("managedProjectId") or a.get("projectId")  # (accounts added from the menu have only projectId)
+        if a.get("enabled", True) and token and project and token not in seen:
+            own.append({"email": a.get("email", ""), "refresh_token": token, "project": project,
                         "source": "opencode", "fingerprint": a.get("fingerprint") or {}})
     return own
 

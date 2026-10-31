@@ -24,6 +24,16 @@ def have(program):
     return shutil.which(program) is not None
 
 
+def trim_memory():
+    """Hand memory freed after a one-off peak (loading models) back to the OS: glibc keeps it for the process otherwise."""
+    if sys.platform.startswith("linux"):
+        try:
+            import ctypes
+            ctypes.CDLL("libc.so.6").malloc_trim(0)
+        except (OSError, AttributeError):  # (musl has no malloc_trim)
+            pass
+
+
 def run(args, timeout=15, env=None):
     """A short command's output (stdout and stderr), '' if it isn't installed."""
     try:

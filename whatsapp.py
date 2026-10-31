@@ -1,23 +1,20 @@
 """Jarvis on the user's own WhatsApp, as a linked device (like WhatsApp Web): it sees new messages, answers the ones that
 don't need the user (saying it's Jarvis, their assistant), and picks up calls the user doesn't, talking with the caller in
-its own voice. WhatsApp Web runs in a headless browser on its own profile (system.Devtools); the JavaScript below reports
-messages and calls, sends replies, and carries call audio both ways (the page's microphone is Jarvis's voice, and what
-the page plays is the caller).
+its own voice. WhatsApp itself is jarvis-wa (whatsapp-helper/, Go: whatsmeow for messages, WaCalls' call code for calls),
+~30 MB where WhatsApp Web in a headless browser took ~1 GB: it reports messages and calls as JSON lines, answers
+commands, and carries call audio both ways.
 
 Not an official API: WhatsApp may ban numbers that act like bots, so Jarvis only answers saved contacts, never groups,
 waits for a burst of messages to end, and keeps to REPLY_LIMIT replies an hour."""
-import asyncio, base64, difflib, json, os, re, shutil, threading, time
+import asyncio, base64, difflib, json, os, re, shutil, subprocess, sys, threading, time
 
 import store
 import system
 
-PROFILE = os.path.join(store.DATA, "whatsapp")  # the browser profile: WhatsApp's login lives here
+DB = os.path.join(store.DATA, "whatsapp.db")  # the login (WhatsApp's keys) and the messages seen since linking
+OLD_PROFILE = os.path.join(store.DATA, "whatsapp")  # 2.1's browser profile (WhatsApp Web)
 STATE_FILE = os.path.join(store.DATA, "whatsapp.json")  # {"linked": bool, "name": the account's name}
-URL = "https://web.whatsapp.com"
-BROWSER_ARGS = ["--mute-audio",  # rings and calls never reach the PC's speakers
-                "--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream",  # never the real microphone
-                "--autoplay-policy=no-user-gesture-required", "--disable-background-timer-throttling",
-                "--disable-renderer-backgrounding", "--window-size=1280,900"]
+HELPER_SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "whatsapp-helper")
 QUIET = 30 * 60      # no auto-reply in a chat the user wrote in this recently: they're talking themselves
 SETTLE = 15          # seconds after someone's last message before replying (people send a few lines at once)
 REPLY_LIMIT = 20     # auto-replies an hour, all chats together
@@ -25,201 +22,31 @@ ANSWER_AFTER = 20    # seconds a call rings before Jarvis picks up (time for the
 CALL_LIMIT = 300     # seconds: Jarvis wraps a call up after this
 RING_FOR = 45        # seconds Jarvis lets its own call ring before giving up
 
-# before WhatsApp's own scripts, in every page: the microphone is Jarvis's voice, and what the page plays is sent to
-# Python while a call is on (window.__jarvisListening)
-INIT_JS = r"""(() => {
-const send = o => { try { window.jarvisWA(JSON.stringify(o)); } catch (e) {} };
-let mic = null, micDest = null, micAt = 0, playing = [];
-function micStream() {
-  if (!mic) { mic = new AudioContext({sampleRate: 48000}); micDest = mic.createMediaStreamDestination(); }
-  mic.resume();
-  return micDest.stream.clone();
-}
-const gum = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-navigator.mediaDevices.getUserMedia = async c => {
-  if (!c || !c.audio) return gum(c);
-  const s = c.video ? await gum({video: c.video}) : new MediaStream();
-  micStream().getAudioTracks().forEach(t => s.addTrack(t));
-  return s;
-};
-window.__jarvisSpeak = b64 => {  // 24 kHz 16-bit mono from Gemini, queued after what's already playing
-  micStream();
-  const bytes = Uint8Array.from(atob(b64), ch => ch.charCodeAt(0)), pcm = new Int16Array(bytes.buffer);
-  const buf = mic.createBuffer(1, pcm.length, 24000), ch = buf.getChannelData(0);
-  for (let i = 0; i < pcm.length; i++) ch[i] = pcm[i] / 32768;
-  const src = mic.createBufferSource();
-  src.buffer = buf; src.connect(micDest);
-  micAt = Math.max(micAt, mic.currentTime + 0.05);
-  src.start(micAt); micAt += buf.duration;
-  playing.push(src); src.onended = () => { playing = playing.filter(p => p !== src); };
-};
-window.__jarvisHush = () => { playing.forEach(p => { try { p.stop(); } catch (e) {} }); playing = []; micAt = 0; };
-const connect = AudioNode.prototype.connect;
-function tap(node) {
-  const ctx = node.context;
-  if (ctx === mic) return;
-  if (!ctx.__jarvisTap) {
-    const sp = ctx.createScriptProcessor(4096, 1, 1), step = ctx.sampleRate / 16000;
-    sp.onaudioprocess = e => {
-      if (!window.__jarvisListening) return;
-      const x = e.inputBuffer.getChannelData(0), out = new Int16Array(Math.floor(x.length / step));
-      for (let i = 0; i < out.length; i++) out[i] = Math.max(-1, Math.min(1, x[Math.floor(i * step)])) * 32767;
-      send({ev: 'audio', pcm: btoa(String.fromCharCode(...new Uint8Array(out.buffer)))});
-    };
-    connect.call(sp, ctx.destination);  // (a script processor only runs while connected; it outputs silence)
-    ctx.__jarvisTap = sp;
-  }
-  connect.call(node, ctx.__jarvisTap);
-}
-AudioNode.prototype.connect = function (dest, ...rest) {
-  if (dest instanceof AudioDestinationNode) { try { tap(this); } catch (e) {} }
-  return connect.call(this, dest, ...rest);
-};
-let heard = null;  // (a stream played through an <audio> element instead)
-const src = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'srcObject');
-Object.defineProperty(HTMLMediaElement.prototype, 'srcObject', {
-  get() { return src.get.call(this); },
-  set(v) {
-    try { if (v && v.getAudioTracks().length) { heard = heard || new AudioContext(); tap(heard.createMediaStreamSource(v)); } } catch (e) {}
-    src.set.call(this, v);
-  }});
-})()"""
 
-# the page's state; while it waits for a phone to link, the QR code's text
-STATE_JS = r"""(async () => {
-const R = window.require;
-try { if (!R('WAWebSocketModel').Socket || !R('WAWebConnModel').Conn) throw 0; } catch (e) { return {state: 'LOADING'}; }
-const st = R('WAWebSocketModel').Socket.state, C = R('WAWebConnModel').Conn;
-if (st === 'UNPAIRED_IDLE') {  // the code expired: a new one (or, where that's gone, a fresh page)
-  try { R('WAWebCmd').Cmd.refreshQR(); } catch (e) { location.reload(); }
-  return {state: st};
-}
-if (st !== 'UNPAIRED' || !C.ref) return {state: st, name: C.pushname || ''};
-const reg = await R('WAWebSignalStoreApi').waSignalStore.getRegistrationInfo();
-const noise = await R('WAWebUserPrefsInfoStore').waNoiseInfo.get(), b64 = R('WABase64').encodeB64;
-const adv = await R('WAWebUserPrefsMultiDevice').getADVSecretKey();
-return {state: st, qr: [C.ref, b64(noise.staticKeyPair.pubKey), b64(reg.identityKeyPair.pubKey), adv,
-                        R('WAWebCompanionRegClientUtils').DEVICE_PLATFORM].join(',')};
-})()"""
-
-# once connected: report new messages and calls, and the helpers Python calls
-SETUP_JS = r"""(() => {
-if (window.__jarvisReady) return true;
-const R = window.require, send = o => window.jarvisWA(JSON.stringify(o));
-const {Msg, Chat, Contact} = R('WAWebCollections'), G = R('WAWebContactGetters');
-const MEDIA = {image: 'a photo', video: 'a video', ptt: 'a voice message', audio: 'an audio file', document: 'a document',
-               sticker: 'a sticker', location: 'a location', vcard: 'a contact card', ptv: 'a video message'};
-const who = wid => {
-  const c = Contact.get(wid), ch = Chat.get(wid);
-  return (c && (G.getName(c) || G.getPushname(c))) || (ch && ch.formattedTitle) || String(wid.user || wid).split('@')[0];
-};
-const known = wid => { const c = Contact.get(wid); try { return !!c && R('WAWebFrontendContactGetters').getIsMyContact(c); } catch (e) { return false; } };
-const key = id => id._serialized || id.toString();  // (message keys no longer carry _serialized)
-const text = m => m.type === 'chat' ? (m.body || '') : MEDIA[m.type] ? `[${MEDIA[m.type]}]` + (m.caption ? ' ' + m.caption : '') : null;
-Msg.on('add', m => {
-  if (!m.isNewMsg) return;
-  const chat = m.id.remote, t = text(m);
-  if (t === null || chat.isGroup() || chat.isStatus() || String(chat).includes('broadcast') || String(chat).includes('newsletter')) return;
-  send({ev: 'msg', id: key(m.id), chat: key(chat), me: !!m.id.fromMe, text: t, name: who(chat), contact: known(chat)});
-});
-const calls = R('WAWebCallCollection'), map = Object.values(calls).find(v => v instanceof Map);
-const E = R('WAWebVoipEventConstants'), reported = new Set();
-const report = (c, how) => {  // a new call, however WhatsApp told us (each once)
-  if (!c || reported.has(c.id)) return;
-  reported.add(c.id);
-  send({ev: 'call', id: c.id, how, peer: String(c.peerJid), name: who(c.peerJid), contact: known(c.peerJid),
-        video: !!c.isVideo, group: !!c.isGroup, outgoing: !!c.outgoing});
-};
-const add = calls.add.bind(calls);
-calls.add = (props, opts) => { const c = add(props, opts); report(c, 'add'); return c; };
-calls.on(E.getChangeEvent(E.VoipCallCollectionEvents.ACTIVE_CALL), c => report(c, 'active'));
-// WhatsApp starts its calling engine only once the page has been seen and idle: start it now, or calls never ring here
-const voip = R('WAWebVoipInitEventEmitter').VoipInitEventEmitter;
-window.__jarvisVoip = () => voip.getIsVoipInited() ? 'ready' : voip.getDidVoipInitError() ? 'failed: ' + voip.getVoipInitFailureClass() : 'starting';
-R('WAWebVoipBackendLoadable').requireVoipJsBackend().then(() => R('WAWebEnsureVoipInited').ensureVoipInitialized())
-  .catch(e => send({ev: 'debug', text: 'calling engine: ' + e}));
-window.__jarvisCall = id => {  // ringing, active, or over
-  const c = calls.activeCall && calls.activeCall.id === id ? calls.activeCall : map && [...map.values()].find(c => c.id === id);
-  const S = R('WAWebVoipCallStateUtils');
-  if (!c) return 'over';
-  const st = c.getState();
-  if (c.outgoing) return S.isCallTerminal(st) ? 'over' : S.isCallConnected(st) || S.isCallActive(st) ? `active (state ${st})` : 'calling';
-  return S.isCallTerminal(st) ? 'over' : S.isCallRinging(st) || S.isCallIncoming(st) ? 'ringing' : `active (state ${st})`;
-};
-window.__jarvisDial = async jid => {  // a voice call to a contact, started the way WhatsApp's own call-back button does
-  const wid = R('WAWebWidFactory').createWid(jid), chat = Chat.get(wid);
-  const started = R('WAWebVoipStartCall').startWAWebVoipCall(chat && chat.contact ? chat.contact.id : wid, false, 0, 0, null,
-                                                              {entryTrust: 'user_gesture'});
-  // (it once never settled: the call hung for a minute, then blocked the next one. A call it did start is used, so it
-  // rings out and gets hung up as usual)
-  const ok = await Promise.race([R('WAWebVoipStartingCallSettle').waitForStartingCallToSettle(started).then(() => started),
-                                 new Promise(r => setTimeout(r, 20000, 'stuck'))]), c = calls.activeCall;
-  return c && c.outgoing ? {id: c.id} : {error: ok === 'stuck' ? 'WhatsApp got stuck starting the call'
-                                         : ok === false ? 'WhatsApp wouldn\'t start the call' : 'the call didn\'t start'};
-};
-window.__jarvisButton = words => {  // press a button in the call screen whose label has one of these words
-  const re = new RegExp(words, 'i');
-  const b = [...document.querySelectorAll('button, [role="button"]')].find(b =>
-    re.test(b.getAttribute('aria-label') || '') || re.test(b.getAttribute('title') || '') || re.test(b.innerText || ''));
-  if (b) b.click();
-  return !!b;
-};
-window.__jarvisSend = async (jid, body) => {
-  const wid = R('WAWebWidFactory').createWid(jid);
-  const chat = Chat.get(wid) || (await R('WAWebFindChatAction').findOrCreateLatestChat(wid))?.chat;
-  if (!chat) throw new Error('no such chat');
-  const me = R('WAWebUserPrefsMeUser'), from = chat.id.isLid() ? me.getMaybeMeLidUser() : me.getMaybeMePnUser();
-  const key = new (R('WAWebMsgKey'))({from, to: chat.id, id: await R('WAWebMsgKey').newId(), selfDir: 'out'});
-  const [added] = R('WAWebSendMsgChatAction').addAndSendMsgToChat(chat, {id: key, ack: 0, body, from, to: chat.id,
-    local: true, self: 'out', t: Math.floor(Date.now() / 1000), isNewMsg: true, type: 'chat',
-    ...R('WAWebGetEphemeralFieldsMsgActionsUtils').getEphemeralFields(chat)});
-  await added;
-  return key._serialized || key.toString();
-};
-window.__jarvisChats = n => Chat.getModelsArray().filter(c => !String(c.id).includes('newsletter')
-  && !String(c.id).includes('broadcast')).slice(0, n).map(c => {
-    const last = c.msgs.last(), group = c.id.isGroup();
-    return {chat: key(c.id), name: who(c.id), unread: c.unreadCount || 0, contact: known(c.id), group,
-            last: last ? (last.id.fromMe ? 'You: ' : group && last.author ? who(last.author) + ': ' : '') + (text(last) || '') : '',
-            at: c.t || 0};
-  });
-const earlier = async (c, enough) => {  // after a restart a chat holds only its last message until it's opened
-  for (let i = 0; i < 5 && !enough(c.msgs.getModelsArray()); i++) {
-    try { const got = await R('WAWebChatLoadMessages').loadEarlierMsgs({chat: c}); if (!got || !got.length) break; }
-    catch (e) { break; }
-  }
-};
-window.__jarvisHistory = async (jid, n) => {
-  const c = Chat.get(R('WAWebWidFactory').createWid(jid));
-  if (c) await earlier(c, msgs => msgs.length >= n);
-  return c ? c.msgs.getModelsArray().slice(-n).map(m => ({id: key(m.id), me: !!m.id.fromMe, text: text(m), at: m.t,
-                                                          by: m.author ? who(m.author) : null}))
-    .filter(m => m.text !== null) : [];
-};
-window.__jarvisMedia = async (jid, id) => {  // a voice message, audio file or photo, decrypted, as base64
-  const c = Chat.get(R('WAWebWidFactory').createWid(jid));
-  const media = m => ['ptt', 'audio', 'image'].includes(m.type) && (!id || key(m.id) === id);
-  if (c) await earlier(c, msgs => msgs.some(media));
-  const msgs = c ? c.msgs.getModelsArray().filter(m => ['ptt', 'audio', 'image'].includes(m.type)) : [];
-  const m = id ? msgs.find(m => key(m.id) === id) : msgs[msgs.length - 1];
-  if (!m) return null;
-  if (m.size > 15e6) return {error: 'too big'};
-  // (as whatsapp-web.js does: always download, a cached "RESOLVED" can have lost its bytes; then read WhatsApp's blob cache)
-  await m.downloadMedia({downloadEvenIfExpensive: true, rmrReason: 1, isUserInitiated: true});
-  if (!m.mediaData || m.mediaData.mediaStage.includes('ERROR') || m.mediaData.mediaStage === 'FETCHING') return {error: 'not downloaded'};
-  const blob = R('WAWebMediaInMemoryBlobCache').InMemoryMediaBlobCache.get(m.mediaObject && m.mediaObject.filehash)
-    || (m.mediaObject && m.mediaObject.mediaBlob && m.mediaObject.mediaBlob.forceToBlob());
-  if (!blob) return {error: 'not downloaded'};
-  const data = await new Promise((ok, fail) => { const f = new FileReader(); f.onload = () => ok(String(f.result).split(',')[1]);
-                                                 f.onerror = fail; f.readAsDataURL(blob); });
-  return {id: key(m.id), type: m.type, mime: (m.mimetype || '').split(';')[0], at: m.t, caption: m.caption || '',
-          by: m.id.fromMe ? null : m.author ? who(m.author) : who(c.id), me: !!m.id.fromMe, data};
-};
-window.__jarvisOffline = () => { try { R('WAWebStreamModel').Stream.markUnavailable(); } catch (e) {} };
-window.__jarvisOffline();
-window.__jarvisReady = true;
-return true;
-})()"""
+def helper():
+    """The jarvis-wa program: next to Jarvis.exe, built by a package, or built here from whatsapp-helper/ (and again
+    once an update changes its source)."""
+    exe = "jarvis-wa.exe" if system.IS_WINDOWS else "jarvis-wa"
+    if getattr(sys, "frozen", False):
+        return os.path.join(os.path.dirname(sys.executable), exe)
+    if os.path.exists(os.path.join(HELPER_SRC, exe)):
+        return os.path.join(HELPER_SRC, exe)
+    built = os.path.join(store.DATA, "bin", exe)
+    newest = max((os.path.getmtime(os.path.join(root, f)) for root, _, files in os.walk(HELPER_SRC) for f in files
+                  if f.endswith((".go", ".mod", ".sum", ".bin"))), default=0)
+    if os.path.exists(built) and os.path.getmtime(built) >= newest:
+        return built
+    go = shutil.which("go")
+    if not go:
+        if os.path.exists(built):
+            return built
+        raise RuntimeError("WhatsApp needs Go to build its helper: install Go (go.dev/dl), then Jarvis builds it by itself")
+    print("[whatsapp] building the WhatsApp helper (a minute, once)", flush=True)
+    r = subprocess.run([go, "build", "-trimpath", "-ldflags=-s -w", "-o", built, "."], cwd=HELPER_SRC, capture_output=True,
+                       text=True, errors="replace", timeout=900)
+    if r.returncode:
+        raise RuntimeError(f"couldn't build the WhatsApp helper: {(r.stderr or r.stdout).strip()[-300:]}")
+    return built
 
 REPLY_PROMPT = """You are Jarvis, {NAME}'s AI assistant, looking after their WhatsApp while they're busy. Below is a chat \
 between {NAME} and {WHO}; the last messages are from {WHO} and nobody has answered yet.
@@ -257,10 +84,6 @@ goodbye and call end_call.
 {NOTE}"""
 
 
-class Restart(Exception):
-    """Start the browser again (now that its user agent is known)."""
-
-
 class WhatsApp:
     def __init__(self, brain, notify=print, tell=lambda text, **kw: print(text), name=lambda: ""):
         # notify: the chat log; tell(text, keep=True, transcript="", loud=False): out loud (loud: even in quiet hours), to the
@@ -271,16 +94,16 @@ class WhatsApp:
         self.state, self.qr, self.error = "off", "", ""
         self.linking = False  # Settings asked for a QR code
         self.wake = threading.Event()
-        self.dt = None
-        self.n, self.waiting, self.lock = 0, {}, threading.Lock()  # DevTools requests in flight: id -> [event, reply]
-        self.session = None   # the page's DevTools session
+        self.proc = None      # jarvis-wa
+        self.n, self.waiting, self.lock = 0, {}, threading.Lock()  # commands in flight: id -> [event, reply]
+        self.write_lock = threading.Lock()
+        self.calls = {}       # call id -> ringing, active or over (as jarvis-wa reports them)
         self.pending = {}     # chat -> [timer, name] (a reply waits for the burst of messages to end)
         self.user_wrote = {}  # chat -> when the user last wrote there (not Jarvis)
         self.mine = set()     # message ids Jarvis sent
         self.replies = []     # when Jarvis auto-replied (for REPLY_LIMIT)
         self.call = None      # the call Jarvis is on: CallSession
         self.dialing = False  # Jarvis is placing a call (ringing, before the CallSession)
-        self.voip = ""        # WhatsApp's calling engine: starting, ready or failed (logged when it changes)
 
     # ---- Settings
     def status(self):
@@ -297,22 +120,27 @@ class WhatsApp:
         self.wake.set()
 
     def unlink(self):
-        if self.session and self.state == "connected":
+        if self.proc and self.state == "connected":
             try:
-                self.evaluate("window.require('WAWebSocketModel').Socket.logout()", timeout=15)
+                self.ask("logout", timeout=15)
             except Exception as e:
                 print(f"[whatsapp] logout: {e}", flush=True)
         self.linking = False
         self._save(linked=False, name="")
-        if self.dt:
-            self.dt.close()
+        self._stop()
 
     def _save(self, **changes):
         self.saved.update(changes)
         store.write_json(STATE_FILE, self.saved, private=True)
 
-    # ---- the browser
+    # ---- jarvis-wa
     def run(self):
+        if os.path.isdir(OLD_PROFILE):  # linked through WhatsApp Web before: that login can't move to jarvis-wa
+            shutil.rmtree(OLD_PROFILE, ignore_errors=True)
+            if self.saved.get("linked"):
+                self._save(linked=False)
+                self.notify("WhatsApp now runs without a browser (about 1 GB less memory): link it again in Settings → "
+                            "WhatsApp, and remove the old \"Chrome\" device under Linked devices on your phone.")
         while True:
             if not (self.saved.get("linked") or self.linking):
                 self.state = "off"
@@ -321,144 +149,104 @@ class WhatsApp:
                 continue
             try:
                 self.serve()
-            except Restart:
-                continue  # (the finally below closes the browser first)
             except Exception as e:
                 self.error = str(e)[:200] if self.saved.get("linked") or self.linking else ""  # (not after unlinking)
                 print(f"[whatsapp] {e}", flush=True)
             finally:
-                self.state, self.qr, self.session = "off", "", None
-                if self.dt:
-                    self.dt.close()
-                    self.dt = None
+                self.state, self.qr = "off", ""
+                self._stop()
             self.wake.wait(180 if self.error else 10)
             self.wake.clear()
 
     def serve(self):
-        browser = system.headless_browser()
-        if not browser:
-            raise RuntimeError("WhatsApp needs Chrome, Chromium, Brave or Edge installed")
         self.state = "starting"
-        if not self.saved.get("linked"):  # a new link starts from a fresh profile: a phone refused one left over from
-            shutil.rmtree(PROFILE, ignore_errors=True)  # earlier tries ("couldn't link device")
-        os.makedirs(PROFILE, mode=0o700, exist_ok=True)
-        # the page's workers say "HeadlessChrome" too unless the browser starts with a normal user agent, which needs its
-        # version: read on the first start (then it starts again with it), and kept
-        ua = self.saved.get("user_agent")
-        self.dt = system.Devtools(browser, PROFILE, BROWSER_ARGS + ([f"--user-agent={ua}"] if ua else []))
-        threading.Thread(target=self._read, args=(self.dt,), daemon=True).start()
-        version = self.cdp("Browser.getVersion")
-        major = version["product"].split("/")[-1].split(".")[0]
-        if not ua or f"Chrome/{major}." not in ua:
-            self._save(user_agent=re.sub(r"(Headless)?Chrome/[\d.]+", f"Chrome/{major}.0.0.0", version["userAgent"]))
-            raise Restart()
-        ua = self.saved["user_agent"]
-        pages = [t for t in self.cdp("Target.getTargets")["targetInfos"] if t["type"] == "page"]
-        if not pages:  # (just started, its first tab wasn't there yet: "list index out of range", and no WhatsApp for 3 minutes)
-            pages = [self.cdp("Target.createTarget", url="about:blank")]
-        page = pages[0]
-        for other in pages[1:]:  # tabs the browser restored from its last run: WhatsApp works in one tab only
-            self.cdp("Target.closeTarget", targetId=other["targetId"])
-        self.session = self.cdp("Target.attachToTarget", targetId=page["targetId"], flatten=True)["sessionId"]
-        # WhatsApp refuses a browser whose brands say headless (the QR code never comes)
-        self.cdp("Emulation.setUserAgentOverride", session=self.session, userAgent=ua, userAgentMetadata={
-            "brands": [{"brand": "Chromium", "version": major}, {"brand": "Google Chrome", "version": major},
-                       {"brand": "Not_A Brand", "version": "24"}],
-            "fullVersion": f"{major}.0.0.0", "platform": "Windows" if "Windows" in ua else "Linux", "platformVersion": "",
-            "architecture": "x86", "model": "", "mobile": False})
-        self.cdp("Runtime.enable", session=self.session)
-        self.cdp("Runtime.addBinding", session=self.session, name="jarvisWA")
-        self.cdp("Page.enable", session=self.session)
-        self.cdp("Page.addScriptToEvaluateOnNewDocument", session=self.session, source=INIT_JS)
-        self.cdp("Page.navigate", session=self.session, url=URL)
-        ready, started = False, time.time()
-        while self.dt and self.dt.proc.poll() is None:
-            s = self.evaluate(STATE_JS) or {}
-            state = s.get("state", "")
-            if state == "CONNECTED":
-                self.state = "connected"
-                if ready and not self.evaluate("!!window.__jarvisReady"):  # WhatsApp reloaded its page: hook in again
-                    ready = False
-                if self.evaluate("document.body.innerText.includes('open in another window')"):
-                    print("[whatsapp] open in another window: taking it back", flush=True)
-                    self.evaluate("window.__jarvisButton && window.__jarvisButton('use here')")
-                    ready = False  # ("use here" reloads the page, and Jarvis's hooks with it: calling one crashed WhatsApp for 3 minutes)
-                    time.sleep(2)
-                    continue
-                if ready:  # never "online": the phone keeps showing notifications
-                    # (guarded: a reload between the check above and these took WhatsApp down for 3 minutes)
-                    self.evaluate("window.__jarvisOffline && window.__jarvisOffline()")
-                    voip = self.evaluate("window.__jarvisVoip ? window.__jarvisVoip() : 'starting'")
-                    if voip != self.voip:
-                        self.voip = voip
-                        print(f"[whatsapp] calls: {voip}", flush=True)
-                else:
-                    ready = self.evaluate(SETUP_JS)
-                    self.linking, self.qr = False, ""
-                    if not self.saved.get("linked"):
-                        self.notify("WhatsApp linked: Jarvis now looks after your messages and calls.")
-                    self._save(linked=True, name=s.get("name", ""))
-                    print("[whatsapp] connected", flush=True)
-            elif state in ("UNPAIRED", "UNPAIRED_IDLE"):
-                if self.saved.get("linked"):  # logged out from the phone
-                    self._save(linked=False)
-                    self.notify("WhatsApp was unlinked from your phone: link it again in Settings to have Jarvis look after it.")
-                if not self.linking:
-                    return
-                self.state, self.qr = "qr", s.get("qr") or self.qr
-            elif ready and state not in ("OPENING", "PAIRING"):
-                self.state = "connecting"
-            elif not ready and not self.qr and time.time() - started > 240:  # (its first connections are often dropped: give it time)
-                raise RuntimeError("WhatsApp didn't answer; Jarvis tries again in a few minutes")
-            time.sleep(2 if self.state != "connected" else 5)
-        raise RuntimeError("the WhatsApp browser closed")
-
-    def cdp(self, method, session=None, timeout=30, **params):
-        with self.lock:
-            self.n += 1
-            n = self.n
-            self.waiting[n] = [threading.Event(), None]
-        msg = {"id": n, "method": method, "params": params}
-        if session:
-            msg["sessionId"] = session
-        self.dt.send(msg)
-        done = self.waiting[n][0].wait(timeout)
-        reply = self.waiting.pop(n)[1]
-        if not done:
-            raise TimeoutError(f"{method} didn't answer")
-        if "error" in reply:
-            raise RuntimeError(f"{method}: {reply['error'].get('message')}")
-        return reply.get("result", {})
-
-    def evaluate(self, js, timeout=30):
-        r = self.cdp("Runtime.evaluate", session=self.session, timeout=timeout, expression=js, awaitPromise=True,
-                     returnByValue=True)
-        if "exceptionDetails" in r:
-            raise RuntimeError(r["exceptionDetails"].get("exception", {}).get("description", "script error")[:300])
-        return r.get("result", {}).get("value")
-
-    def _read(self, dt):
-        while True:
+        if not self.saved.get("linked"):  # a new link starts from scratch (a phone refused one left over from earlier tries)
+            for leftover in (DB, DB + "-wal", DB + "-shm"):
+                if os.path.exists(leftover):
+                    os.remove(leftover)
+        os.makedirs(store.DATA, exist_ok=True)
+        self.proc = proc = subprocess.Popen(
+            [helper(), "-db", DB, *([] if self.saved.get("linked") else ["-link"])], stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            creationflags=subprocess.CREATE_NO_WINDOW if system.IS_WINDOWS else 0)
+        threading.Thread(target=lambda: [print(f"[whatsapp] helper: {line.decode(errors='replace').rstrip()}", flush=True)
+                                         for line in proc.stderr], daemon=True).start()  # (its log, into Jarvis's)
+        for line in proc.stdout:
             try:
-                m = dt.recv()
-            except (EOFError, OSError):
-                return
-            if "id" in m:
+                m = json.loads(line)
+            except ValueError:
+                continue
+            if "ev" not in m:  # a command's answer (events have ids too: a call's, a message's)
                 slot = self.waiting.get(m["id"])
                 if slot:
                     slot[1] = m
                     slot[0].set()
-            elif m.get("method") == "Runtime.bindingCalled" and m["params"].get("name") == "jarvisWA":
-                try:
-                    self.event(json.loads(m["params"]["payload"]))
-                except Exception as e:
-                    print(f"[whatsapp] {e}", flush=True)
+                continue
+            try:
+                self.event(m)
+            except Exception as e:
+                print(f"[whatsapp] {e}", flush=True)
+            if m["ev"] == "state" and m["state"] == "logged_out" and not self.linking:
+                return
+        raise RuntimeError(self.error or "the WhatsApp helper stopped")
+
+    def _stop(self):
+        proc, self.proc = self.proc, None
+        if proc:
+            try:
+                proc.stdin.close()  # (it hangs up and disconnects)
+                proc.wait(10)
+            except (OSError, subprocess.TimeoutExpired):
+                proc.kill()
+
+    def _send(self, msg):
+        if not self.proc:
+            raise RuntimeError("WhatsApp isn't running")
+        with self.write_lock:
+            self.proc.stdin.write(json.dumps(msg).encode() + b"\n")
+            self.proc.stdin.flush()
+
+    def ask(self, cmd, timeout=30, **args):
+        """A command's answer from jarvis-wa (RuntimeError with its error)."""
+        with self.lock:
+            self.n += 1
+            n = self.n
+            self.waiting[n] = [threading.Event(), None]
+        try:
+            self._send({"id": n, "cmd": cmd, **args})
+            if not self.waiting[n][0].wait(timeout):
+                raise TimeoutError(f"WhatsApp didn't answer ({cmd})")
+            reply = self.waiting[n][1]
+        finally:
+            self.waiting.pop(n, None)
+        if "error" in reply:
+            raise RuntimeError(reply["error"])
+        return reply.get("ok")
+
+    def tell_call(self, cmd, **args):
+        """Call audio for jarvis-wa (no answer: it plays as it comes)."""
+        try:
+            self._send({"cmd": cmd, **args})
+        except (OSError, RuntimeError, ValueError):  # (the helper is gone: the call ends with it)
+            pass
 
     # ---- messages
     def event(self, e):
         if e["ev"] == "audio":
-            if self.call:
+            if self.call and self.call.c["id"] == e["call"]:
                 self.call.heard(base64.b64decode(e["pcm"]))
+        elif e["ev"] == "callstate":
+            if e["state"] == "over":
+                self.calls.pop(e["call"], None)
+            else:
+                self.calls[e["call"]] = e["state"]
+        elif e["ev"] == "state":
+            self._state(e)
+        elif e["ev"] == "qr":
+            self.state, self.qr = "qr", e["code"]
+        elif e["ev"] == "error":
+            self.error = e["error"][:200]
+            print(f"[whatsapp] {e['error']}", flush=True)
         elif e["ev"] == "msg":
             if e["me"]:
                 if e["id"] not in self.mine:
@@ -475,11 +263,27 @@ class WhatsApp:
             timer.daemon = True
             self.pending[e["chat"]] = timer
             timer.start()
-        elif e["ev"] == "debug":
-            print(f"[whatsapp] {e['text']}", flush=True)
         elif e["ev"] == "call" and not e["outgoing"]:
-            print(f"[whatsapp] call from {e['name']} ({e['how']})", flush=True)
+            print(f"[whatsapp] call from {e['name']}", flush=True)
+            self.calls.setdefault(e["id"], "ringing")
             threading.Thread(target=self._ring, args=(e,), daemon=True).start()
+
+    def _state(self, e):
+        if e["state"] == "connected":
+            self.state, self.error = "connected", ""
+            if not self.saved.get("linked"):
+                self.linking, self.qr = False, ""
+                self.notify("WhatsApp linked: Jarvis now looks after your messages and calls.")
+            self._save(linked=True, name=e.get("name") or self.saved.get("name", ""))
+            print("[whatsapp] connected", flush=True)
+        elif e["state"] == "connecting":
+            self.state = "connecting"
+        elif e["state"] == "logged_out":
+            if self.saved.get("linked"):  # logged out from the phone
+                self._save(linked=False)
+                self.notify("WhatsApp was unlinked from your phone: link it again in Settings to have Jarvis look after it.")
+            elif self.linking and e.get("why"):  # (the QR codes ran out, or the phone refused)
+                self.linking, self.error = False, "linking didn't finish: try again"
 
     def _cancel(self, chat):
         timer = self.pending.pop(chat, None)
@@ -488,7 +292,7 @@ class WhatsApp:
 
     def _answer(self, chat, name):
         self.pending.pop(chat, None)
-        history = self.evaluate(f"window.__jarvisHistory({json.dumps(chat)}, 20)") or []
+        history = self.ask("history", chat=chat, count=20) or []
         recent = [m for m in history if not m["me"]][-3:]
         said = " / ".join(m["text"] for m in recent)[:300]
         if contact_rule(name) == "always":  # (never answered by Jarvis: said to the user, even in quiet hours)
@@ -504,7 +308,7 @@ class WhatsApp:
         decision = self.decide(name, history)
         reply, urgent = decision.get("reply", "").strip(), decision.get("tell_user", "").strip()
         if reply:
-            self.mine.add(self.evaluate(f"window.__jarvisSend({json.dumps(chat)}, {json.dumps(reply)})"))
+            self.mine.add(self.ask("send", chat=chat, text=reply))
             self.replies.append(time.time())
         self.notify(f"💬 WhatsApp from {name}: {said}" + (f"\nJarvis replied: {reply}" if reply else ""))
         if urgent:
@@ -537,13 +341,13 @@ class WhatsApp:
     # ---- for the agent's tools
     def chats(self, count=10):
         self._need()
-        return self.evaluate(f"window.__jarvisChats({int(count)})")
+        return self.ask("chats", count=int(count))
 
     def find(self, name):
         """The one chat whose name matches (case aside), or an error listing the near ones: a misheard name never sends
         a message to the wrong person."""
         self._need()
-        chats = self.evaluate("window.__jarvisChats(500)")
+        chats = self.ask("chats", count=500)
         want = name.strip().lower()
         exact = [c for c in chats if c["name"].lower() == want]
         if len(exact) == 1:
@@ -555,16 +359,16 @@ class WhatsApp:
 
     def history(self, chat, count=15):
         self._need()
-        return self.evaluate(f"window.__jarvisHistory({json.dumps(chat)}, {int(count)})")
+        return self.ask("history", chat=chat, count=int(count))
 
     def media(self, chat, id=""):
         """The newest (or that) voice message, audio or photo in a chat, with its bytes as base64; None if there's none."""
         self._need()
-        return self.evaluate(f"window.__jarvisMedia({json.dumps(chat)}, {json.dumps(id)})", timeout=90)
+        return self.ask("media", timeout=90, chat=chat, msg=id)
 
     def send(self, chat, text):
         self._need()
-        self.mine.add(self.evaluate(f"window.__jarvisSend({json.dumps(chat)}, {json.dumps(text)})"))
+        self.mine.add(self.ask("send", chat=chat, text=text))
         self.user_wrote[chat] = time.time()  # (the user asked for it: as if they wrote it)
 
     def _need(self):
@@ -583,7 +387,10 @@ class WhatsApp:
             self.notify(f"📞 WhatsApp {kind} from {c['name']}")
             return
         if mode == "decline":
-            self.evaluate("window.__jarvisButton('decline')")
+            try:
+                self.ask("decline", call=c["id"])
+            except (RuntimeError, TimeoutError):  # (they hung up first)
+                pass
             self.notify(f"📞 Declined a WhatsApp {kind} from {c['name']}")
             return
         if rule == "never":
@@ -597,15 +404,15 @@ class WhatsApp:
         end = time.time() + ANSWER_AFTER
         while time.time() < end:
             time.sleep(1)
-            state = self.evaluate(f"window.__jarvisCall({json.dumps(c['id'])})")
+            state = self.calls.get(c["id"], "over")
             if state != "ringing":
                 print(f"[whatsapp] the call is {state} before Jarvis picked up", flush=True)
                 return  # answered on the phone, declined, or they hung up
-        if not self.evaluate("window.__jarvisButton('accept|answer')"):
-            buttons = self.evaluate("[...document.querySelectorAll('button, [role=button]')].map(b => b.getAttribute('aria-label') "
-                                    "|| b.innerText).filter(Boolean).slice(0, 40)")
-            print(f"[whatsapp] no answer button; buttons on screen: {buttons}", flush=True)
-            self.notify(f"📞 Couldn't pick up {c['name']}'s call: WhatsApp's answer button wasn't there")
+        try:
+            self.ask("accept", call=c["id"])
+        except (RuntimeError, TimeoutError) as e:
+            print(f"[whatsapp] picking up {c['name']}: {e}", flush=True)
+            self.notify(f"📞 Couldn't pick up {c['name']}'s call: {e}")
             return
         print(f"[whatsapp] answered a call from {c['name']}", flush=True)
         self.call = CallSession(self, c)
@@ -627,44 +434,23 @@ class WhatsApp:
         self.dialing = True
         threading.Thread(target=self._dial, args=(found, message, on_answer), daemon=True).start()
 
-    def _start_call(self, chat):
-        try:
-            return self.evaluate(f"window.__jarvisDial({json.dumps(chat)})", timeout=60) or {"error": "no answer from WhatsApp"}
-        except TimeoutError:
-            return {"error": "WhatsApp didn't answer"}
-
-    def _reload(self):
-        """A fresh WhatsApp page (serve hooks in again), once its calling engine is ready; a dial that got stuck leaves it
-        refusing every call after ("wouldn't start the call") until then."""
-        self.cdp("Page.reload", session=self.session)
-        end = time.time() + 90
-        while time.time() < end:
-            time.sleep(2)
-            try:
-                if self.evaluate("window.__jarvisReady && window.__jarvisVoip && window.__jarvisVoip()") == "ready":
-                    return
-            except Exception:  # (mid-reload)
-                pass
-
     def _dial(self, found, message, on_answer):
         name = found["name"]
         try:
-            got = self._start_call(found["chat"])
-            if "error" in got:  # (it worked again only after a restart: a fresh page, and once more)
-                print(f"[whatsapp] calling {name}: {got['error']}; reloading WhatsApp and trying again", flush=True)
-                self._reload()
-                got = self._start_call(found["chat"])
-            if "error" in got:
-                self.tell(f"I couldn't call {name} on WhatsApp: {got['error']}.")
+            try:
+                got = self.ask("dial", timeout=60, chat=found["chat"])
+            except (RuntimeError, TimeoutError) as e:
+                self.tell(f"I couldn't call {name} on WhatsApp: {e}.")
                 return
+            self.calls.setdefault(got["id"], "ringing")
             print(f"[whatsapp] calling {name}", flush=True)
-            end, state = time.time() + RING_FOR, "calling"
-            while state == "calling" and time.time() < end:
+            end, state = time.time() + RING_FOR, "ringing"
+            while state == "ringing" and time.time() < end:
                 time.sleep(1)
-                state = self.evaluate(f"window.__jarvisCall({json.dumps(got['id'])})")
-            if not state.startswith("active"):
+                state = self.calls.get(got["id"], "over")
+            if state != "active":
                 if state != "over":
-                    self.evaluate("window.__jarvisButton('end call|hang up|cancel|leave')")
+                    self.ask("hangup", call=got["id"])
                 self.tell(f"{name} didn't pick up my WhatsApp call.")
                 return
             print(f"[whatsapp] {name} picked up", flush=True)
@@ -730,16 +516,16 @@ class CallSession:
                 self.loop.close()  # (one loop per call: left open, each call kept its file descriptors for good)
         threading.Thread(target=talk, daemon=True).start()
         try:
-            self.wa.evaluate("window.__jarvisListening = true")
             end = time.time() + CALL_LIMIT + 30
             while not self.done.wait(1) and time.time() < end:
-                if self.wa.evaluate(f"window.__jarvisCall({json.dumps(self.c['id'])})") == "over":
+                if self.c["id"] not in self.wa.calls:
                     print(f"[whatsapp] {self.who} hung up", flush=True)
                     break
         finally:
-            self.done.set()  # (first: with the browser gone, the evaluates below raise, and the voice session stayed open)
-            self.wa.evaluate("window.__jarvisListening = false; window.__jarvisHush()")
-            self.wa.evaluate("window.__jarvisButton('end call|hang up|leave')")
+            self.done.set()
+            self.wa.tell_call("hush")
+            if self.c["id"] in self.wa.calls:
+                self.wa.tell_call("hangup", call=self.c["id"])
         return "\n".join(self.lines)
 
     async def _talk(self):
@@ -790,7 +576,7 @@ class CallSession:
                                 await asyncio.sleep(3)  # (let the goodbye finish playing)
                                 return
                             if sc and sc.interrupted:  # the caller talked over Jarvis
-                                await asyncio.to_thread(self.wa.evaluate, "window.__jarvisHush()")
+                                self.wa.tell_call("hush")
                             if sc and sc.input_transcription and sc.input_transcription.text:
                                 self._line(self.who, sc.input_transcription.text)
                             if sc and sc.output_transcription and sc.output_transcription.text:
@@ -798,8 +584,7 @@ class CallSession:
                                 self.spoke_at = time.time()
                             for p in (sc.model_turn.parts if sc and sc.model_turn else []):
                                 if p.inline_data and p.inline_data.data:
-                                    data = base64.b64encode(p.inline_data.data).decode()
-                                    await asyncio.to_thread(self.wa.evaluate, f"window.__jarvisSpeak('{data}')")
+                                    self.wa.tell_call("speak", rate=24000, pcm=base64.b64encode(p.inline_data.data).decode())
                 tasks = [asyncio.create_task(mic()), asyncio.create_task(speak())]
                 deadline = time.time() + CALL_LIMIT
                 try:
