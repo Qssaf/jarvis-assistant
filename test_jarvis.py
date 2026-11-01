@@ -116,6 +116,19 @@ store.remember("Exam  on June 5")  # a fact said twice (or a lesson learnt twice
 assert store.memory().lower().count("exam on june 5") == 1, store.memory()
 store.add_reminder(100, "past"); store.add_reminder(4e9, "future")  # (2096: Windows can't show dates past 3000)
 assert [r["text"] for r in store.pop_due(now=200)] == ["past"] and [r["text"] for r in store.reminders()] == ["future"]
+# a save Windows refuses for a moment (the file open elsewhere: a reader, an antivirus) is tried again, not lost
+real_replace, refused = os.replace, [2]
+def busy_replace(a, b):
+    if refused[0]:
+        refused[0] -= 1
+        raise PermissionError(13, "in use")
+    real_replace(a, b)
+os.replace = busy_replace
+try:
+    store.write_json(f"{tmp}/busy.json", {"saved": 1})
+finally:
+    os.replace = real_replace
+assert store.read_json(f"{tmp}/busy.json", {}) == {"saved": 1} and not [f for f in os.listdir(tmp) if f.endswith(".tmp")]
 
 # "announced instead of acted" detection: promises get nudged, finished answers don't
 for text, nudge in [("Sure, I'll open Dolphin now, sir.", True), ("Let me check that.", True),

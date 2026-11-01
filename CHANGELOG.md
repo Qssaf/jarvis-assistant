@@ -84,6 +84,8 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
+- **Windows: settings and other files no longer fail to save** now and then when something else (an antivirus, the
+  search indexer) had them open for a moment: the save is tried again.
 - **Bug reports keep your WhatsApp private:** *Copy a report* left in WhatsApp messages, contacts' names and phone
   numbers, tasks sent from your phone, and every line after the first of a longer reply. They're all taken out now.
 - **A signed-out Google account no longer stops everything:** when a Google sign-in (Models page) was revoked or had

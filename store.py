@@ -98,7 +98,15 @@ def write_json(path, data, private=False):
     fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600 if private else 0o644)
     with os.fdopen(fd, "w") as f:
         json.dump(data, f, indent=1)
-    os.replace(tmp, path)  # atomic: a crash never leaves half a file
+    for wait in (0.05, 0.1, 0.2, 0.4, None):  # atomic: a crash never leaves half a file
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:  # (Windows: refused while anything has the file open, a reader or an antivirus)
+            if wait is None:
+                os.remove(tmp)
+                raise
+            time.sleep(wait)
 
 
 # ---------------------------------------------------------------- settings
