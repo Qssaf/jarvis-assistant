@@ -1982,6 +1982,16 @@
         <translation>ví dụ: Mình đang học đến 5 giờ, xong sẽ trả lời</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Tell people when I'm busy</source>
+        <translation>Cho mọi người biết khi nào tôi bận</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>From your Google Calendar: only the times, never what you're doing</source>
+        <translation>Từ Google Lịch của bạn: chỉ giờ, không bao giờ nói bạn đang làm gì</translation>
+    </message>
+    <message>
         <location line="+9"/>
         <source>Your data</source>
         <translation>Dữ liệu của bạn</translation>

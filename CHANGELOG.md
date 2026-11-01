@@ -63,6 +63,15 @@
 - **A spoken passphrase:** set one in Settings → Listening, and everything Jarvis asks your yes for out loud (sending
   messages, calls, account changes, risky commands) also needs you to say it, so someone else in the room can't. It's
   kept in your keychain, never shown or said back, and hidden in the chat. Tasks from your phone don't need it.
+- **WhatsApp voice messages are understood:** a voice message someone sends you is transcribed as it arrives, so
+  Jarvis's auto-reply answers what they said, and the chat log, *"read my WhatsApp"* and Jarvis's history show its words
+  instead of "[a voice message]".
+- **Jarvis talks with the people who message and call you:** it holds a real back-and-forth on WhatsApp (answers
+  follow-ups, asks what they need, passes things on) instead of one "he'll get back to you", and on calls it chats,
+  answers and checks it got their message right, answering as quickly as its own voice. Limits keep anyone from using
+  up your models: 8 replies an hour to one chat (20 in all), 3 picked-up calls an hour from one person, 20 voice
+  messages transcribed an hour, and only from your contacts; it won't write essays or homework for them. Settings →
+  WhatsApp → *Tell people when I'm busy* lets it share your Google Calendar's busy times (never what they are).
 
 ### Changed
 - **WhatsApp without a browser: about 1 GB less memory.** WhatsApp ran as WhatsApp Web in a hidden Chromium (~950 MB);

@@ -2047,6 +2047,16 @@
         <translation>مثل: أنا في المحاضرة حتى الخامسة، سأرد بعدها</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Tell people when I'm busy</source>
+        <translation>أخبر الناس متى أكون مشغولًا</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>From your Google Calendar: only the times, never what you're doing</source>
+        <translation>من تقويم Google: الأوقات فقط، وليس ما تفعله أبدًا</translation>
+    </message>
+    <message>
         <location line="+9" />
         <source>Your data</source>
         <translation>بياناتك</translation>

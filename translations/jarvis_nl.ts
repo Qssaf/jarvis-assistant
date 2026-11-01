@@ -1995,6 +1995,16 @@
         <translation>bijv. Ik zit tot 5 uur in de les, daarna antwoord ik</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Tell people when I&apos;m busy</source>
+        <translation>Mensen vertellen wanneer ik bezig ben</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>From your Google Calendar: only the times, never what you&apos;re doing</source>
+        <translation>Uit je Google Agenda: alleen de tijden, nooit wat je doet</translation>
+    </message>
+    <message>
         <location line="+9"/>
         <source>Your data</source>
         <translation>Je gegevens</translation>

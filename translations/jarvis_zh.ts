@@ -1982,6 +1982,16 @@
         <translation>例如：我 5 点前在上课，下课后回复</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Tell people when I&apos;m busy</source>
+        <translation>告诉别人我什么时候忙</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>From your Google Calendar: only the times, never what you&apos;re doing</source>
+        <translation>来自你的 Google 日历：只说时间，从不说你在做什么</translation>
+    </message>
+    <message>
         <location line="+9"/>
         <source>Your data</source>
         <translation>你的数据</translation>

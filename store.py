@@ -52,8 +52,9 @@ DEFAULT_SETTINGS = {
     "checks_every": 60,            # minutes between those checks (each one is a few agent requests)
     "checks_paused": [],           # checks switched off in the window (kept, but not looked into)
     "whatsapp_replies": "contacts",  # contacts: Jarvis answers saved contacts' messages that don't need you; off: just shows them
-    "whatsapp_calls": "answer",    # answer: picks up contacts' calls you don't and takes a message; decline; off: lets them ring
+    "whatsapp_calls": "answer",    # answer: picks up contacts' calls you don't and talks with them; decline; off: lets them ring
     "whatsapp_note": "",           # what Jarvis tells people on WhatsApp ("I'm in class until 5")
+    "whatsapp_share_free": False,  # on: Jarvis may tell people when you're busy today (Google Calendar times only, never what)
     "whatsapp_always": [],         # names Jarvis never answers for and always tells the user about out loud (even in quiet hours)
     "whatsapp_never": [],          # names Jarvis never answers for or speaks about: only shown in the chat
     "echo_cancel": False,          # echo cancelling (PipeWire on Linux, WebRTC + a speaker loopback on Windows): talk over Jarvis on speakers (experimental)

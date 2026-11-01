@@ -1982,6 +1982,16 @@
         <translation>예: 5시까지 수업 중이라 끝나고 답할게요</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Tell people when I&apos;m busy</source>
+        <translation>바쁜 시간을 상대에게 알리기</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>From your Google Calendar: only the times, never what you&apos;re doing</source>
+        <translation>Google 캘린더에서: 시간만 알리고, 무엇을 하는지는 절대 알리지 않아요</translation>
+    </message>
+    <message>
         <location line="+9"/>
         <source>Your data</source>
         <translation>내 데이터</translation>

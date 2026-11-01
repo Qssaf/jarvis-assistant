@@ -503,6 +503,9 @@ ScrollPage {
         Setting { label: qsTr("What Jarvis tells people")
             Area { text: page.s.whatsapp_note || ""; placeholder: qsTr("e.g. I'm in class until 5, I'll answer after")
                    onDone: v => page.set("whatsapp_note", v) } }
+        Toggle { Layout.fillWidth: true; text: qsTr("Tell people when I'm busy")
+                 hint: qsTr("From your Google Calendar: only the times, never what you're doing")
+                 checked: !!page.s.whatsapp_share_free; onToggled: page.set("whatsapp_share_free", checked) }
         Timer {  // while it's starting or showing a code: notice when the phone has linked
             interval: 2000; repeat: true; running: page.wa.state === "qr" || page.wa.state === "starting" || page.wa.state === "connecting" || !!page.wa.on_call
             onTriggered: Api.get("/api/whatsapp", d => page.wa = d)

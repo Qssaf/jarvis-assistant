@@ -13,6 +13,7 @@ jarvis --listen                       # tell a running instance to start listeni
 jarvis --task "..." / --say "..."     # have it do a task (prints the reply) or say something; jarvis --mcp: the same as an MCP server
 EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py [case ...]  # agent eval (spends model requests)
 .venv/bin/python evals/voice_eval.py [case-prefix ...]   # ~110 real-life requests to the voice model (one Live session each)
+.venv/bin/python evals/whatsapp_eval.py [case ...]       # made-up chats through WhatsApp auto-replies (REPLY_PROMPT)
 (cd whatsapp-helper && go vet ./... && go test ./...)  # the WhatsApp helper (CI runs it too)
 ```
 
@@ -215,7 +216,9 @@ resampled and paced in real time by the helper (`speak`: 60 ms MLow frames; the 
 For an incoming call, a `CallAccept` means the user answered on another device. `helper()` finds the binary next to
 Jarvis.exe (release.yml builds it), next to its source (the AUR package), or builds it into `DATA/bin` with `go` when
 missing or older than the source (install.sh does too). Auto-replies go through `brain._generate` with only that chat
-(no tools, no memory); answered calls are a separate Gemini Live session (`CallSession`). The agent's
+(no tools, no memory; `{FREE}`: calendar busy times when `whatsapp_share_free`), within `REPLY_LIMIT`/`CHAT_LIMIT` an
+hour; a contact's voice message is transcribed on arrival (`_listen`, `HEAR_LIMIT`) and its words saved as its text
+(`transcript`); the ids Jarvis sent persist in `whatsapp.json` (`mine`); answered calls are a separate Gemini Live session (`CallSession`). The agent's
 `whatsapp_read`/`whatsapp_send` reach it through `brain.whatsapp_link`; sending follows the `whatsapp` account mode and
 `confirmed`, and a name must match exactly one chat. What WhatsApp `tell`s the user joins the agent's history
 (`add_turn`, with a call's transcript), except rings (`keep=False`): the history is capped at 80 messages. A 2.1 browser

@@ -3112,7 +3112,7 @@ wa.event({"ev": "msg", "id": "u1", "chat": "3@c.us", "me": True, "text": "omw", 
 wa_says(chat="3@c.us", name="Maya")
 time.sleep(0.3)
 assert len(sends()) == 1 and "you're chatting with them" in wa_logs[-1]  # the user is talking to Maya themselves
-wa.replies = [time.time()] * whatsapp.REPLY_LIMIT
+wa.replies = [(time.time(), "x")] * whatsapp.REPLY_LIMIT
 wa_says(chat="2@c.us", name="Sam")
 time.sleep(0.3)
 assert len(sends()) == 1 and "a lot this hour" in wa_logs[-1]
@@ -3169,7 +3169,7 @@ wa.decide("Sam", [])
 store.update_settings({"languages": []})
 wa.decide("Sam", [])
 assert "if it's English or French, otherwise in English" in asked_model[0][0]["parts"][0]["text"]
-assert "like a text, in English." in asked_model[1][0]["parts"][0]["text"]
+assert "assistant texting, in English:" in asked_model[1][0]["parts"][0]["text"]
 # the agent's tools: an exact chat name only, and a message the user didn't confirm isn't sent
 brain.whatsapp_link[0] = wa
 assert set(brain.TOOLS["whatsapp_send"][0]("Sammy", "hi")["close_matches"]) == {"Sam Lee", "Sam"} and len(sends()) == 1
@@ -3190,6 +3190,56 @@ got = brain.TOOLS["whatsapp_media"][0]("maya")
 assert got["voice message"] == "See you at 5." and got["from"] == "Maya" and heard_media == [{"mimeType": "audio/ogg", "data": "T2dnUw=="}], got
 wa.ask = lambda cmd, timeout=30, **args: None if cmd == "media" else fake_page(cmd, **args)
 assert "no voice message" in brain.TOOLS["whatsapp_media"][0]("maya")["error"]
+# a voice message someone sends is heard as it arrives: the reply, the chat log and jarvis-wa's history get its words
+# (they were all "[a voice message]", so Jarvis answered one without knowing what it said)
+kept = ["[a voice message]"]
+def voice_page(cmd, timeout=30, **args):
+    if cmd == "media":
+        return {"id": "v2", "type": "ptt", "mime": "audio/ogg", "at": 0, "caption": "", "by": None, "me": False, "data": "T2dnUw=="}
+    if cmd == "transcript":
+        kept.append(args["text"])
+    return [{"id": "v2", "me": False, "text": kept[-1], "at": 0}] if cmd == "history" else fake_page(cmd, **args)
+wa.ask, asked_model[:], decided[0] = voice_page, [], '{"reply": "Got it, 5 then.", "tell_user": ""}'
+wa_says(id="v2", text="[a voice message]", kind="ptt")
+for _ in range(100):
+    if len(sends()) == 3:
+        break
+    time.sleep(0.02)
+assert kept[-1] == "[a voice message] See you at 5." and "Sam Lee: [a voice message] See you at 5." in asked_model[0][0]["parts"][0]["text"]
+assert sends()[-1]["text"] == "Got it, 5 then." and "See you at 5." in wa_logs[-1] and not wa.listening
+# ...but not from someone who isn't a contact (strangers sending voice notes would use up the models)
+wa_says(id="v3", chat="9@c.us", name="Stranger", contact=False, text="[a voice message]", kind="ptt")
+assert kept[-1] == "[a voice message] See you at 5." and "[a voice message]" == wa_logs[-1][-17:] and not wa.listening
+# it keeps a conversation going, within limits: one chat gets CHAT_LIMIT replies an hour, then Jarvis leaves it
+assert "Hold a real conversation" in asked_model[0][0]["parts"][0]["text"]
+wa.replies = [(time.time(), "1@c.us")] * whatsapp.CHAT_LIMIT
+wa_says(id="v4", text="and another thing")
+time.sleep(0.3)
+assert len(sends()) == 3 and "a lot this hour" in wa_logs[-1]
+wa.replies = []
+# what Jarvis sent is still known as its own after a restart (it took its own messages for the user's, and stopped)
+assert sends()[-1] and whatsapp.WhatsApp(wa.brain).mine == wa.mine and len(wa.mine) >= 2
+# a caller it has already talked with a lot this hour is left to ring
+wa.answered = [(time.time(), "Sam Lee")] * whatsapp.CALLER_LIMIT
+wa._ring({"id": "c9", "name": "Sam Lee", "video": False, "group": False, "contact": True})
+assert "let it ring" in wa_logs[-1] and not wa.call
+wa.answered = []
+# with "tell people when I'm busy" on, the prompts get the calendar's busy times, never what the events are
+from datetime import datetime as dt
+noon = dt.now().astimezone().replace(hour=14, minute=0, second=0, microsecond=0)
+wa.brain.connected, calendar_asked = {"googlecalendar"}, []
+wa.brain.app_data = lambda slug, args: calendar_asked.append(slug) or {"items": [
+    {"summary": "Dentist", "start": {"dateTime": noon.isoformat()}, "end": {"dateTime": noon.replace(hour=15).isoformat()}},
+    {"summary": "Lunch", "transparency": "transparent", "start": {"dateTime": noon.isoformat()}, "end": {"dateTime": noon.isoformat()}},
+    {"summary": "Holiday", "start": {"date": "2026-11-02"}, "end": {"date": "2026-11-03"}}]}
+assert wa._free() == ""  # (off by default)
+store.update_settings({"whatsapp_share_free": True})
+asked_model.clear()
+wa.decide("Sam", [])
+wa.decide("Sam", [])
+prompt_text = asked_model[0][0]["parts"][0]["text"]
+assert "Q is busy" in prompt_text and ": 14:00–15:00." in prompt_text and "Dentist" not in prompt_text and calendar_asked == ["GOOGLECALENDAR_EVENTS_LIST"]
+store.update_settings({"whatsapp_share_free": False})
 brain.vision[0] = real_vision
 # a call Jarvis places: refused without a yes; with one it rings, and nobody picking up is said (and the call is ended)
 wa_told.clear()

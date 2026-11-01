@@ -2008,6 +2008,16 @@
         <translation>например: я на занятиях до 5, отвечу позже</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Tell people when I&apos;m busy</source>
+        <translation>Сообщать людям, когда я занят</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>From your Google Calendar: only the times, never what you&apos;re doing</source>
+        <translation>Из Google Календаря: только время, никогда не то, чем вы заняты</translation>
+    </message>
+    <message>
         <location line="+9"/>
         <source>Your data</source>
         <translation>Ваши данные</translation>

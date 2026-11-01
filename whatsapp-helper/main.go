@@ -163,7 +163,7 @@ func handle(raw any) {
 		save(chat, e)
 		if !e.Info.IsGroup {
 			emit(map[string]any{"ev": "msg", "id": e.Info.ID, "chat": chat.String(), "me": e.Info.IsFromMe, "text": text,
-				"name": nameOf(chat), "contact": saved(chat)})
+				"kind": kind, "name": nameOf(chat), "contact": saved(chat)})
 		}
 	case *events.Receipt: // the user read a chat on another device
 		if e.IsFromMe && e.Type == types.ReceiptTypeRead {
@@ -376,6 +376,8 @@ func run(c map[string]any) {
 		out, err = messages(ctx, str("chat"), num("count", 15))
 	case "media":
 		out, err = mediaOf(ctx, str("chat"), str("msg"))
+	case "transcript": // a voice message's words, kept as its text
+		_, err = db.Exec(`UPDATE jarvis_msgs SET text = ? WHERE chat = ? AND id = ?`, str("text"), str("chat"), str("msg"))
 	case "send":
 		out, err = send(ctx, str("chat"), str("text"))
 	case "dial":

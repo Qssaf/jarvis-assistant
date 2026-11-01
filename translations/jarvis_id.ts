@@ -1982,6 +1982,16 @@
         <translation>mis. Saya sedang kuliah sampai jam 5, nanti saya balas</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Tell people when I&apos;m busy</source>
+        <translation>Beri tahu orang kapan saya sibuk</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>From your Google Calendar: only the times, never what you&apos;re doing</source>
+        <translation>Dari Google Kalender Anda: hanya waktunya, tidak pernah apa yang Anda lakukan</translation>
+    </message>
+    <message>
         <location line="+9"/>
         <source>Your data</source>
         <translation>Data Anda</translation>

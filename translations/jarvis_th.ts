@@ -1982,6 +1982,16 @@
         <translation>เช่น เรียนอยู่ถึงห้าโมง เดี๋ยวตอบหลังจากนั้น</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Tell people when I&apos;m busy</source>
+        <translation>บอกคนอื่นว่าฉันไม่ว่างเมื่อไหร่</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>From your Google Calendar: only the times, never what you&apos;re doing</source>
+        <translation>จาก Google ปฏิทินของคุณ: บอกแค่เวลา ไม่บอกว่าคุณทำอะไรอยู่</translation>
+    </message>
+    <message>
         <location line="+9"/>
         <source>Your data</source>
         <translation>ข้อมูลของคุณ</translation>

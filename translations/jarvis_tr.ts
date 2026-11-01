@@ -1982,6 +1982,16 @@
         <translation>ör. Saat 5&apos;e kadar dersteyim, sonra yanıt vereceğim</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Tell people when I&apos;m busy</source>
+        <translation>Ne zaman meşgul olduğumu insanlara söyle</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>From your Google Calendar: only the times, never what you&apos;re doing</source>
+        <translation>Google Takvim&apos;inden: yalnızca saatler, ne yaptığın asla</translation>
+    </message>
+    <message>
         <location line="+9"/>
         <source>Your data</source>
         <translation>Verileriniz</translation>

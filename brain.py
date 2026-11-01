@@ -1623,6 +1623,14 @@ def tool_whatsapp_read(chat="", count=10):
         for m in wa.history(found["chat"], min(int(count), 50))]}
 
 
+def media_text(m, ask):
+    """What the "look" models make of a WhatsApp voice message, audio or photo (m: WhatsApp.media's answer)."""
+    audio = m["type"] != "image"
+    parts = vision[0]([{"role": "user", "parts": [
+        {"inlineData": {"mimeType": m["mime"] or ("audio/ogg" if audio else "image/jpeg"), "data": m["data"]}}, {"text": ask}]}])
+    return "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
+
+
 def tool_whatsapp_media(chat, id="", question=""):
     wa = whatsapp_link[0]
     if not wa:
@@ -1634,11 +1642,9 @@ def tool_whatsapp_media(chat, id="", question=""):
     if not m or "error" in m:
         return {"error": f"couldn't get it from WhatsApp ({m['error']})" if m else f"no voice message, audio or photo in {found['name']}'s recent messages"}
     audio = m["type"] != "image"
-    ask = question or ("Transcribe this voice message word for word, in the language it's spoken in; if that isn't English, add an "
-                       "English translation after it." if audio else "Describe this photo; quote any text in it exactly.")
-    parts = vision[0]([{"role": "user", "parts": [
-        {"inlineData": {"mimeType": m["mime"] or ("audio/ogg" if audio else "image/jpeg"), "data": m["data"]}}, {"text": ask}]}])
-    answer = "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
+    answer = media_text(m, question or ("Transcribe this voice message word for word, in the language it's spoken in; if that isn't "
+                                        "English, add an English translation after it." if audio else
+                                        "Describe this photo; quote any text in it exactly."))
     return {"chat": found["name"], "from": "the user" if m["me"] else m["by"] or found["name"],
             "at": time.strftime("%a %d %b %H:%M", time.localtime(m["at"])), "id": m["id"],
             "voice message" if audio else "photo": answer, **({"caption": m["caption"]} if m["caption"] else {})}

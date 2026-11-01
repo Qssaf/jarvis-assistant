@@ -1995,6 +1995,16 @@
         <translation>ex.: Estou na aula até as 5, respondo depois</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Tell people when I&apos;m busy</source>
+        <translation>Dizer às pessoas quando estou ocupado</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>From your Google Calendar: only the times, never what you&apos;re doing</source>
+        <translation>Do seu Google Agenda: só os horários, nunca o que você está fazendo</translation>
+    </message>
+    <message>
         <location line="+9"/>
         <source>Your data</source>
         <translation>Seus dados</translation>
