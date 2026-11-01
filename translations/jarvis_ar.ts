@@ -1666,6 +1666,16 @@
         <translation>لا يتحدث Jarvis من تلقاء نفسه: تذهب التذكيرات والنتائج والرسائل إلى المحادثة والإشعارات وهاتفك فقط. ويظل يجيبك (متاح أيضًا في قائمة شريط النظام)</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Quiet over full-screen apps</source>
+        <translation>الهدوء فوق التطبيقات بملء الشاشة</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>While a game or a film is full screen, Jarvis keeps what it would say on its own to the chat and notifications. Reminders still speak</source>
+        <translation>عندما تكون لعبة أو فيلم بملء الشاشة، يُبقي Jarvis ما سيقوله من تلقاء نفسه في المحادثة والإشعارات. التذكيرات تُقال رغم ذلك</translation>
+    </message>
+    <message>
         <location line="+3" />
         <source>Classroom deadlines</source>
         <translation>مواعيد تسليم Classroom</translation>

@@ -45,6 +45,7 @@ DEFAULT_SETTINGS = {
     "show_thinking": False,        # the chat shows the agent's thinking and the voice model's decisions (never the notch)
     "morning_briefing": True,      # the first time Jarvis starts in a morning, it gives the day's briefing out loud
     "do_not_disturb": False,       # on: Jarvis never speaks up on its own (see quiet_now); it still answers the user
+    "quiet_fullscreen": True,      # on: nothing unprompted while a full-screen app has focus (a game, a film), but reminders
     "quiet_from": "", "quiet_until": "",  # quiet hours, "22:00" to "07:00" (crossing midnight); empty = none
     "deadline_reminders": True,    # reminders a day and two hours before Google Classroom work is due
     "calendar_reminders": True,    # a reminder ten minutes before each Google Calendar event

@@ -1602,6 +1602,16 @@
     </message>
     <message>
         <location line="+3"/>
+        <source>Quiet over full-screen apps</source>
+        <translation>전체 화면 앱에서는 조용히</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>While a game or a film is full screen, Jarvis keeps what it would say on its own to the chat and notifications. Reminders still speak</source>
+        <translation>게임이나 영화가 전체 화면일 때 Jarvis는 스스로 말할 내용을 채팅과 알림에만 남깁니다. 알림 예약은 그래도 말해요</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Classroom deadlines</source>
         <translation>Classroom 마감</translation>
     </message>

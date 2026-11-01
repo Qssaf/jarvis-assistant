@@ -583,6 +583,17 @@ def active_window():
     return str(w.getHandle()) if w else ""
 
 
+def fullscreen():
+    """Whether the focused window is full screen (a game, a film, a presentation)."""
+    if IS_WINDOWS:  # (Windows' own answer: busy (a full-screen app), a full-screen Direct3D game, or presentation mode)
+        import ctypes
+        state = ctypes.c_int()
+        return not ctypes.windll.shell32.SHQueryUserNotificationState(ctypes.byref(state)) and state.value in (2, 3, 4)
+    if KDE and WAYLAND and have("kdotool"):
+        return _kdo("kwinscript", "--inline", "output_result(String(!!workspace.activeWindow && workspace.activeWindow.fullScreen))") == "true"
+    return False
+
+
 def active_app():
     """The focused app's name, as the accessibility interface knows it."""
     if KDE and WAYLAND and have("kdotool"):

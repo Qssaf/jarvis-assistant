@@ -1615,6 +1615,16 @@
     </message>
     <message>
         <location line="+3"/>
+        <source>Quiet over full-screen apps</source>
+        <translation>Silenzio con le app a schermo intero</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>While a game or a film is full screen, Jarvis keeps what it would say on its own to the chat and notifications. Reminders still speak</source>
+        <translation>Mentre un gioco o un film è a schermo intero, Jarvis lascia nella chat e nelle notifiche ciò che direbbe di sua iniziativa. I promemoria li dice comunque</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Classroom deadlines</source>
         <translation>Scadenze di Classroom</translation>
     </message>

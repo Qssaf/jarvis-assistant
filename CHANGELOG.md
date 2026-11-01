@@ -63,6 +63,11 @@
 - **A spoken passphrase:** set one in Settings → Listening, and everything Jarvis asks your yes for out loud (sending
   messages, calls, account changes, risky commands) also needs you to say it, so someone else in the room can't. It's
   kept in your keychain, never shown or said back, and hidden in the chat. Tasks from your phone don't need it.
+- **Quiet over games and films:** while a full-screen app has focus, what Jarvis would say on its own (task results,
+  updates, the morning briefing) goes to the chat and notifications instead; your reminders still speak. Settings →
+  *Quiet over full-screen apps* (on by default; KDE Plasma on Wayland and Windows).
+- **Calendar heads-ups bring the meeting:** the reminder before an event carries its Meet, Zoom or Teams link and its
+  attached files, so *"open it"* joins or opens the doc. Links are shown, never read out.
 - **WhatsApp voice messages are understood:** a voice message someone sends you is transcribed as it arrives, so
   Jarvis's auto-reply answers what they said, and the chat log, *"read my WhatsApp"* and Jarvis's history show its words
   instead of "[a voice message]".

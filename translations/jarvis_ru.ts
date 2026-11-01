@@ -1628,6 +1628,16 @@
     </message>
     <message>
         <location line="+3"/>
+        <source>Quiet over full-screen apps</source>
+        <translation>Тишина при полноэкранных приложениях</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>While a game or a film is full screen, Jarvis keeps what it would say on its own to the chat and notifications. Reminders still speak</source>
+        <translation>Пока игра или фильм открыты на весь экран, Jarvis оставляет то, что сказал бы сам, только в чате и уведомлениях. Напоминания он всё равно произносит</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Classroom deadlines</source>
         <translation>Сроки в Classroom</translation>
     </message>

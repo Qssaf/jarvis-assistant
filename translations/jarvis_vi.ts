@@ -1602,6 +1602,16 @@
     </message>
     <message>
         <location line="+3"/>
+        <source>Quiet over full-screen apps</source>
+        <translation>Yên lặng khi ứng dụng toàn màn hình</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>While a game or a film is full screen, Jarvis keeps what it would say on its own to the chat and notifications. Reminders still speak</source>
+        <translation>Khi trò chơi hoặc phim đang toàn màn hình, Jarvis chỉ để những gì nó tự nói trong khung chat và thông báo. Lời nhắc vẫn được đọc</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Classroom deadlines</source>
         <translation>Hạn nộp Classroom</translation>
     </message>

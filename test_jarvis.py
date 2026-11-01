@@ -1640,6 +1640,22 @@ assert announced == []
 live.announce("Mum is calling you on WhatsApp.", loud=True)
 assert len(announced) == 1
 store.update_settings({"do_not_disturb": False})
+# over a full-screen game or film, the same, but a reminder (or a watch) the user set up still speaks
+real_fullscreen, system.fullscreen = system.fullscreen, lambda: True
+live.announce("The task finished: 3 files renamed")
+assert len(announced) == 1
+live.announce("Take the bins out", asked=True)
+assert len(announced) == 2
+store.update_settings({"quiet_fullscreen": False})
+live.announce("The task finished: 3 files renamed")
+assert len(announced) == 3
+real_send, sent = live._send, []  # (a link is kept for "open it", not read out)
+live._send = lambda text, **kw: sent.append(text) or asyncio.sleep(0)
+live.announce("Standup in 10 minutes. Join: https://meet.google.com/abc-defg-hij")
+live._send = real_send
+assert "Join: [a link, not read out: https://meet.google.com/abc-defg-hij]" in sent[-1], sent
+store.update_settings({"quiet_fullscreen": True})
+system.fullscreen = real_fullscreen
 live._go = lambda coro: coro.close()
 
 # after Stop, an unanswered request doesn't end the watchdog (it used to hand over to a _recover that did nothing, and
@@ -2162,6 +2178,17 @@ assert store.reminders() == []
 events["items"] = [{"id": "e3", "summary": "Call", "start": {"dateTime": iso(now + 300)}}]  # too soon for a heads-up
 jarvis.calendar_pass(cal, now)
 assert store.reminders() == [] and store.read_json(os.path.join(store.DATA, "calendar.json"), {})["e3"]["reminder"] == ""
+# a meeting's call link and attached doc come with its heads-up, so "open it" has them
+events["items"] = [{"id": "e4", "summary": "Standup", "start": {"dateTime": iso(now + 3600)}, "hangoutLink": "https://meet.google.com/abc-defg-hij",
+                    "attachments": [{"title": "Agenda", "fileUrl": "https://docs.google.com/document/d/x"}]},
+                   {"id": "e5", "summary": "Review", "start": {"dateTime": iso(now + 7200)},
+                    "description": "Join Zoom Meeting<br>https://us02web.zoom.us/j/123?pwd=abc<br>ID: 123"}]
+jarvis.calendar_pass(cal, now)
+texts = sorted(r["text"] for r in store.reminders())
+assert texts[1].endswith("at 10:00. Join: https://meet.google.com/abc-defg-hij. Agenda: https://docs.google.com/document/d/x"), texts
+assert texts[0].endswith("at 11:00. Join: https://us02web.zoom.us/j/123?pwd=abc"), texts
+for r in store.reminders():
+    store.cancel_reminder(r["id"])
 # reminders that came due while Jarvis was off: a heads-up for an event that has started is dropped, another late one is
 # shown as missed (not said, as if it were now), one on time is said; an edit in the window keeps a heads-up's limit
 real_time, real_sleep, real_notify, real_emit, said, shown = jarvis.time.time, jarvis.time.sleep, system.notify, jarvis.emit, [], []
@@ -2176,7 +2203,7 @@ def one_pass(seconds):
 jarvis.time.time, jarvis.time.sleep, system.notify = (lambda: now), one_pass, (lambda title, text: None)
 jarvis.emit = lambda kind, **kw: shown.append(kw.get("text"))
 try:
-    jarvis.reminder_loop(types.SimpleNamespace(announce=said.append))
+    jarvis.reminder_loop(types.SimpleNamespace(announce=lambda text, **how: said.append(text)))
 except Stop:
     pass
 jarvis.time.time, jarvis.time.sleep, system.notify, jarvis.emit = real_time, real_sleep, real_notify, real_emit

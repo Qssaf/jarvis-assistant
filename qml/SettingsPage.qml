@@ -216,6 +216,9 @@ ScrollPage {
             Toggle { Layout.fillWidth: true; text: qsTr("Do not disturb"); hint: qsTr("Jarvis doesn't speak up on its own: reminders, results and messages only go to the chat, notifications and your phone. It still answers you (also in the tray menu)")
                      checked: !!page.s.do_not_disturb; onToggled: page.set("do_not_disturb", checked) }
             Line {}
+            Toggle { Layout.fillWidth: true; text: qsTr("Quiet over full-screen apps"); hint: qsTr("While a game or a film is full screen, Jarvis keeps what it would say on its own to the chat and notifications. Reminders still speak")
+                     checked: !!page.s.quiet_fullscreen; onToggled: page.set("quiet_fullscreen", checked) }
+            Line {}
             Toggle { Layout.fillWidth: true; text: qsTr("Classroom deadlines"); hint: qsTr("Reminders a day and two hours before work is due (skipped once you've turned it in)")
                      checked: !!page.s.deadline_reminders; onToggled: page.set("deadline_reminders", checked) }
             Line {}
