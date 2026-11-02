@@ -1074,7 +1074,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2577"/>
+        <location filename="../jarvis.py" line="+2703"/>
         <source>LISTENING</source>
         <translation>ÉCOUTE</translation>
     </message>
@@ -1542,19 +1542,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+129"/>
+        <location line="+138"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>Enregistrer</translation>
     </message>
     <message>
-        <location line="-179"/>
-        <location line="+77"/>
+        <location line="-188"/>
+        <location line="+86"/>
         <source>Remove</source>
         <translation>Retirer</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-76"/>
         <source>Push to talk</source>
         <translation>Appuyer pour parler</translation>
     </message>
@@ -1644,7 +1644,27 @@
         <translation>Un rappel dix minutes avant chaque événement Google Agenda</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Keep track of my promises</source>
+        <translation>Suivre mes promesses</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
+        <translation>Quand vous écrivez « je te l'envoie demain » sur WhatsApp, Discord ou par e-mail, Jarvis crée un rappel ou l'ajoute à la liste du soir</translation>
+    </message>
+    <message>
         <location line="+4"/>
+        <source>Evening list at (who&apos;s waiting on you, what&apos;s due tomorrow; empty: none)</source>
+        <translation>Liste du soir à (qui attend votre réponse, ce qui est dû demain ; vide : aucune)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. 20:00</source>
+        <translation>ex. 20:00</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>Heures calmes à partir de (vide&#xa0;: aucune)</translation>
     </message>
@@ -2026,7 +2046,7 @@
     <message>
         <location line="+1"/>
         <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message, reply or react in a DM or server channel. New DMs and pings show up in Jarvis&apos;s chat.</source>
-        <translation>Jarvis lit et envoie des messages Discord pour vous via Vesktop, dans votre propre Discord : demandez-lui les nouveautés, ou d'écrire, répondre ou réagir dans un MP ou un salon de serveur. Les nouveaux MP et mentions apparaissent dans le chat de Jarvis.</translation>
+        <translation>Jarvis lit et envoie des messages Discord pour vous via Vesktop, dans votre propre Discord : demandez-lui les nouveautés, ou d&apos;écrire, répondre ou réagir dans un MP ou un salon de serveur. Les nouveaux MP et mentions apparaissent dans le chat de Jarvis.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2061,7 +2081,7 @@
     <message>
         <location line="+2"/>
         <source>Always let through (one name per line, as Discord shows it): never answered by Jarvis, always told to you out loud, even in quiet hours</source>
-        <translation>Toujours laisser passer (un nom par ligne, tel que Discord l'affiche) : jamais de réponse de Jarvis, toujours annoncé à voix haute, même pendant les heures calmes</translation>
+        <translation>Toujours laisser passer (un nom par ligne, tel que Discord l&apos;affiche) : jamais de réponse de Jarvis, toujours annoncé à voix haute, même pendant les heures calmes</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2071,7 +2091,7 @@
     <message>
         <location line="+3"/>
         <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
-        <translation>Les réponses utilisent ce que Jarvis dit aux gens dans la section WhatsApp. Vous pouvez aussi dire « ne réponds pas à Sam » ou « préviens-moi quand Alex m'écrit ».</translation>
+        <translation>Les réponses utilisent ce que Jarvis dit aux gens dans la section WhatsApp. Vous pouvez aussi dire « ne réponds pas à Sam » ou « préviens-moi quand Alex m&apos;écrit ».</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2081,10 +2101,20 @@
     <message>
         <location line="+1"/>
         <source>On this PC Jarvis keeps what it remembers about you, your conversations, reminders and routines, short clips of your wake word (to learn your voice) and a log. What you say after the wake word, and screenshots when a task needs the screen, go to Google Gemini; account actions go through Composio.</source>
-        <translation>Sur ce PC, Jarvis conserve ce qu&apos;il retient de vous, vos conversations, rappels et routines, de courts extraits de votre mot d&apos;activation (pour apprendre votre voix) et un journal. Ce que vous dites après le mot d&apos;activation, ainsi que les captures d&apos;écran quand une tâche a besoin de l&apos;écran, sont envoyés à Google Gemini&#xa0;; les actions sur vos comptes passent par Composio.</translation>
+        <translation>Sur ce PC, Jarvis conserve ce qu'il retient de vous, vos conversations, rappels et routines, de courts extraits de votre mot d'activation (pour apprendre votre voix) et un journal. Ce que vous dites après le mot d'activation, ainsi que les captures d'écran quand une tâche a besoin de l'écran, sont envoyés à Google Gemini ; les actions sur vos comptes passent par Composio.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Screen history</source>
+        <translation>Historique de l'écran</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
+        <translation>Jarvis note quelle fenêtre est devant vous (son titre seulement, jamais son contenu, sur ce PC) pour que vous puissiez demander « quel était ce site ouvert hier ? ». La navigation privée et les gestionnaires de mots de passe sont ignorés ; conservé deux semaines au plus</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Keep conversations and logs for</source>
         <translation>Conserver les conversations et journaux pendant</translation>
     </message>

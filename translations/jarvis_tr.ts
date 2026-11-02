@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2577"/>
+        <location filename="../jarvis.py" line="+2703"/>
         <source>LISTENING</source>
         <translation>DİNLİYOR</translation>
     </message>
@@ -1529,19 +1529,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+129"/>
+        <location line="+138"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>Kaydet</translation>
     </message>
     <message>
-        <location line="-179"/>
-        <location line="+77"/>
+        <location line="-188"/>
+        <location line="+86"/>
         <source>Remove</source>
         <translation>Kaldır</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-76"/>
         <source>Push to talk</source>
         <translation>Bas-konuş</translation>
     </message>
@@ -1631,7 +1631,27 @@
         <translation>Her Google Takvim etkinliğinden on dakika önce hatırlatma</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Keep track of my promises</source>
+        <translation>Sözlerimi takip et</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
+        <translation>WhatsApp, Discord veya e-postada "yarın gönderirim" yazdığında Jarvis bir hatırlatıcı kurar ya da akşam listesine ekler</translation>
+    </message>
+    <message>
         <location line="+4"/>
+        <source>Evening list at (who&apos;s waiting on you, what&apos;s due tomorrow; empty: none)</source>
+        <translation>Akşam listesi saati (yanıtını bekleyenler, yarın teslimi olanlar; boş: yok)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. 20:00</source>
+        <translation>ör. 20:00</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>Sessiz saatler başlangıcı (boş: yok)</translation>
     </message>
@@ -2013,7 +2033,7 @@
     <message>
         <location line="+1"/>
         <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message, reply or react in a DM or server channel. New DMs and pings show up in Jarvis&apos;s chat.</source>
-        <translation>Jarvis, Vesktop üzerinden kendi Discord hesabında senin için Discord mesajlarını okur ve gönderir: yenilikleri sor ya da bir DM'de veya sunucu kanalında yazmasını, yanıtlamasını veya tepki vermesini iste. Yeni DM'ler ve etiketlemeler Jarvis'in sohbetinde görünür.</translation>
+        <translation>Jarvis, Vesktop üzerinden kendi Discord hesabında senin için Discord mesajlarını okur ve gönderir: yenilikleri sor ya da bir DM&apos;de veya sunucu kanalında yazmasını, yanıtlamasını veya tepki vermesini iste. Yeni DM&apos;ler ve etiketlemeler Jarvis&apos;in sohbetinde görünür.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2043,12 +2063,12 @@
     <message>
         <location line="+6"/>
         <source>Answer my friends&apos; DMs (Discord may ban accounts that act like bots)</source>
-        <translation>Arkadaşlarımın DM'lerini yanıtla (Discord bot gibi davranan hesapları yasaklayabilir)</translation>
+        <translation>Arkadaşlarımın DM&apos;lerini yanıtla (Discord bot gibi davranan hesapları yasaklayabilir)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Always let through (one name per line, as Discord shows it): never answered by Jarvis, always told to you out loud, even in quiet hours</source>
-        <translation>Her zaman geçir (her satıra bir ad, Discord'un gösterdiği gibi): Jarvis asla yanıtlamaz, sessiz saatlerde bile sana her zaman sesli söyler</translation>
+        <translation>Her zaman geçir (her satıra bir ad, Discord&apos;un gösterdiği gibi): Jarvis asla yanıtlamaz, sessiz saatlerde bile sana her zaman sesli söyler</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2058,7 +2078,7 @@
     <message>
         <location line="+3"/>
         <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
-        <translation>Yanıtlar, WhatsApp bölümündeki Jarvis'in insanlara söyleyeceklerini kullanır. Ayrıca "Sam'e cevap verme" ya da "Alex yazınca bana söyle" demen yeterli.</translation>
+        <translation>Yanıtlar, WhatsApp bölümündeki Jarvis&apos;in insanlara söyleyeceklerini kullanır. Ayrıca &quot;Sam&apos;e cevap verme&quot; ya da &quot;Alex yazınca bana söyle&quot; demen yeterli.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2068,10 +2088,20 @@
     <message>
         <location line="+1"/>
         <source>On this PC Jarvis keeps what it remembers about you, your conversations, reminders and routines, short clips of your wake word (to learn your voice) and a log. What you say after the wake word, and screenshots when a task needs the screen, go to Google Gemini; account actions go through Composio.</source>
-        <translation>Jarvis bu bilgisayarda sizin hakkınızda hatırladıklarını, konuşmalarınızı, hatırlatıcılarınızı ve rutinlerinizi, uyandırma sözcüğünüzün kısa kayıtlarını (sesinizi öğrenmek için) ve bir günlük tutar. Uyandırma sözcüğünden sonra söyledikleriniz ve bir görev ekranı gerektirdiğinde ekran görüntüleri Google Gemini&apos;ye gider; hesap işlemleri Composio üzerinden yapılır.</translation>
+        <translation>Jarvis bu bilgisayarda sizin hakkınızda hatırladıklarını, konuşmalarınızı, hatırlatıcılarınızı ve rutinlerinizi, uyandırma sözcüğünüzün kısa kayıtlarını (sesinizi öğrenmek için) ve bir günlük tutar. Uyandırma sözcüğünden sonra söyledikleriniz ve bir görev ekranı gerektirdiğinde ekran görüntüleri Google Gemini'ye gider; hesap işlemleri Composio üzerinden yapılır.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Screen history</source>
+        <translation>Ekran geçmişi</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
+        <translation>Jarvis önündeki pencereyi not eder (yalnızca başlığını, içeriğini asla, bu bilgisayarda) böylece "dün açtığım o site neydi?" diye sorabilirsin. Gizli gezinme ve parola yöneticileri atlanır; en fazla iki hafta saklanır</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Keep conversations and logs for</source>
         <translation>Konuşmaların ve günlüklerin saklanma süresi</translation>
     </message>

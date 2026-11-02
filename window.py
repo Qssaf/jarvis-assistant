@@ -140,6 +140,13 @@ class Backend(QObject):
         self.timer.start(33)  # ~30 fps: the orb follows your voice
         self.poll()
 
+    def watch(self, shown):
+        if shown:
+            self.poll()
+            self.timer.start(33)
+        else:
+            self.timer.stop()
+
     def put(self, event):  # (the app's event queues call this: see jarvis.emit)
         self.event.emit(json.dumps(event, ensure_ascii=False, default=str))
 
@@ -232,6 +239,9 @@ class Window:
         self.engine.load(QUrl.fromLocalFile(os.path.join(HERE, "qml", "Main.qml")))
         if not self.engine.rootObjects():
             raise RuntimeError("the window couldn't be loaded (see the log)")
+        root = self.engine.rootObjects()[0]  # the 30 fps poll only while the window is up (hidden, it was ~1% of a core)
+        root.visibleChanged.connect(self.backend.watch)
+        self.backend.watch(root.isVisible())
 
     def languages(self, codes):
         """Show the window in these languages: each text in the first one that has it ("en": as written, so none after it;

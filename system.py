@@ -24,6 +24,18 @@ def have(program):
     return shutil.which(program) is not None
 
 
+def lean_memory():
+    """glibc gives each thread that allocates its own arena (up to 8 per core) and keeps what's freed in it: Jarvis has
+    ~60 threads, mostly asleep, so freed memory piled up in dozens of them. Two shared arenas, set before the threads
+    start, hold far less for the same speed on light threads."""
+    if sys.platform.startswith("linux"):
+        try:
+            import ctypes
+            ctypes.CDLL("libc.so.6").mallopt(-8, 2)  # M_ARENA_MAX
+        except (OSError, AttributeError):
+            pass
+
+
 def trim_memory():
     """Hand memory freed after a one-off peak (loading models) back to the OS: glibc keeps it for the process otherwise."""
     if sys.platform.startswith("linux"):
@@ -592,6 +604,32 @@ def fullscreen():
     if KDE and WAYLAND and have("kdotool"):
         return _kdo("kwinscript", "--inline", "output_result(String(!!workspace.activeWindow && workspace.activeWindow.fullScreen))") == "true"
     return False
+
+
+def focused():
+    """(app, title) of the focused window, cheaply (for the screen history: called every few seconds); ("", "") if unknown."""
+    if IS_WINDOWS:
+        import ctypes, psutil
+        user32, hwnd = ctypes.windll.user32, ctypes.windll.user32.GetForegroundWindow()
+        if not hwnd:
+            return "", ""
+        title = ctypes.create_unicode_buffer(512)
+        user32.GetWindowTextW(hwnd, title, 512)
+        pid = ctypes.c_ulong()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        try:
+            app = psutil.Process(pid.value).name().removesuffix(".exe")
+        except Exception:
+            app = ""
+        return app, title.value
+    if KDE and WAYLAND and have("kdotool"):
+        out = _kdo("getactivewindow", "getwindowclassname", "getwindowname").split("\n", 1)
+        return (out[0].split(".")[-1], out[1].strip()) if len(out) == 2 else ("", "")
+    if WAYLAND:
+        return "", ""
+    import pywinctl
+    w = pywinctl.getActiveWindow()
+    return ((w.getAppName() or "").removesuffix(".exe"), w.title) if w else ("", "")
 
 
 def active_app():

@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2577"/>
+        <location filename="../jarvis.py" line="+2703"/>
         <source>LISTENING</source>
         <translation>MENDENGARKAN</translation>
     </message>
@@ -1529,19 +1529,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+129"/>
+        <location line="+138"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>Simpan</translation>
     </message>
     <message>
-        <location line="-179"/>
-        <location line="+77"/>
+        <location line="-188"/>
+        <location line="+86"/>
         <source>Remove</source>
         <translation>Hapus</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-76"/>
         <source>Push to talk</source>
         <translation>Tekan untuk bicara</translation>
     </message>
@@ -1631,7 +1631,27 @@
         <translation>Pengingat sepuluh menit sebelum setiap acara Google Calendar</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Keep track of my promises</source>
+        <translation>Catat janji-janjiku</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
+        <translation>Saat kamu menulis "besok kukirim" di WhatsApp, Discord, atau email, Jarvis memasang pengingat atau memasukkannya ke daftar malam</translation>
+    </message>
+    <message>
         <location line="+4"/>
+        <source>Evening list at (who&apos;s waiting on you, what&apos;s due tomorrow; empty: none)</source>
+        <translation>Daftar malam pukul (siapa yang menunggu balasanmu, apa yang jatuh tempo besok; kosong: tidak ada)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. 20:00</source>
+        <translation>mis. 20:00</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>Jam tenang mulai (kosong: tidak ada)</translation>
     </message>
@@ -2058,7 +2078,7 @@
     <message>
         <location line="+3"/>
         <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
-        <translation>Balasan memakai apa yang Jarvis sampaikan ke orang dari bagian WhatsApp. Kamu juga bisa bilang "jangan balas Sam" atau "kabari aku kalau Alex mengirim pesan".</translation>
+        <translation>Balasan memakai apa yang Jarvis sampaikan ke orang dari bagian WhatsApp. Kamu juga bisa bilang &quot;jangan balas Sam&quot; atau &quot;kabari aku kalau Alex mengirim pesan&quot;.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2071,7 +2091,17 @@
         <translation>Di PC ini Jarvis menyimpan apa yang diingatnya tentang Anda, percakapan, pengingat dan rutinitas Anda, klip pendek kata pemicu Anda (untuk mempelajari suara Anda), dan log. Ucapan Anda setelah kata pemicu, serta tangkapan layar saat tugas memerlukan layar, dikirim ke Google Gemini; tindakan akun melalui Composio.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Screen history</source>
+        <translation>Riwayat layar</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
+        <translation>Jarvis mencatat jendela mana yang ada di depanmu (judulnya saja, tak pernah isinya, di PC ini) supaya kamu bisa bertanya "situs apa yang kubuka kemarin?". Penjelajahan pribadi dan pengelola kata sandi dilewati; disimpan paling lama dua minggu</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Keep conversations and logs for</source>
         <translation>Simpan percakapan dan log selama</translation>
     </message>

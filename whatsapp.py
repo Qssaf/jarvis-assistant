@@ -9,6 +9,7 @@ waits for a burst of messages to end, and keeps to REPLY_LIMIT replies an hour."
 import asyncio, base64, json, os, re, shutil, subprocess, sys, threading, time
 
 import brain
+import people
 import store
 import system
 
@@ -293,11 +294,17 @@ class WhatsApp:
         self._message(e)
 
     def _message(self, e):
+        one = not e["chat"].endswith("@g.us")  # (a person's page: one-to-one chats only)
         if e["me"]:
             if e["id"] not in self.mine:
                 self.user_wrote[e["chat"]] = time.time()
                 self._cancel(e["chat"])
+                if one:
+                    people.talked(e["name"], "whatsapp", True)
+                    people.tracker[0] and people.tracker[0].heard("whatsapp", e["name"], e["text"])
             return
+        if one and e["contact"]:
+            people.talked(e["name"], "whatsapp", False)
         print(f"[whatsapp] message from {e['name']}", flush=True)
         mode, rule = store.settings()["whatsapp_replies"], contact_rule(e["name"])
         if rule == "never" or (rule != "always" and (mode == "off" or not e["contact"])):  # (shown, never answered or said)

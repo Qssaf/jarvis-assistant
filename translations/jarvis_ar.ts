@@ -1114,7 +1114,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2577"/>
+        <location filename="../jarvis.py" line="+2703"/>
         <source>LISTENING</source>
         <translation>يستمع</translation>
     </message>
@@ -1594,19 +1594,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+129"/>
+        <location line="+138"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>حفظ</translation>
     </message>
     <message>
-        <location line="-179"/>
-        <location line="+77"/>
+        <location line="-188"/>
+        <location line="+86"/>
         <source>Remove</source>
         <translation>إزالة</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-76"/>
         <source>Push to talk</source>
         <translation>الضغط للتحدث</translation>
     </message>
@@ -1696,7 +1696,27 @@
         <translation>تذكير قبل عشر دقائق من كل حدث في Google Calendar</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Keep track of my promises</source>
+        <translation>تتبّع وعودي</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
+        <translation>عندما تكتب "سأرسله غدًا" على WhatsApp أو Discord أو البريد، يضبط Jarvis تذكيرًا أو يضعه في قائمة المساء</translation>
+    </message>
+    <message>
         <location line="+4"/>
+        <source>Evening list at (who&apos;s waiting on you, what&apos;s due tomorrow; empty: none)</source>
+        <translation>قائمة المساء عند (من ينتظر ردك، وما المستحق غدًا؛ فارغ: بلا)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. 20:00</source>
+        <translation>مثل: 20:00</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>ساعات الهدوء من (اتركها فارغة لإلغائها)</translation>
     </message>
@@ -2123,7 +2143,7 @@
     <message>
         <location line="+3"/>
         <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
-        <translation>تستخدم الردود ما يخبر به Jarvis الناس من قسم WhatsApp. يمكنك أيضًا أن تقول ببساطة "لا ترد على سام" أو "أخبرني عندما يراسلني أليكس".</translation>
+        <translation>تستخدم الردود ما يخبر به Jarvis الناس من قسم WhatsApp. يمكنك أيضًا أن تقول ببساطة &quot;لا ترد على سام&quot; أو &quot;أخبرني عندما يراسلني أليكس&quot;.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2136,7 +2156,17 @@
         <translation>يحتفظ Jarvis على هذا الحاسوب بما يتذكره عنك، ومحادثاتك وتذكيراتك وروتيناتك، ومقاطع قصيرة من كلمة التنبيه (ليتعلّم صوتك) وسجلًا. أما ما تقوله بعد كلمة التنبيه، ولقطات الشاشة حين تحتاج مهمة إلى الشاشة، فتذهب إلى Google Gemini؛ وتمر إجراءات الحسابات عبر Composio.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Screen history</source>
+        <translation>سجل الشاشة</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
+        <translation>يسجّل Jarvis النافذة التي أمامك (عنوانها فقط، لا محتواها، على هذا الحاسوب) لتسأل "ما ذلك الموقع الذي فتحته أمس؟". يتجاوز التصفح الخاص ومديري كلمات المرور؛ ويُحفظ أسبوعين على الأكثر</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Keep conversations and logs for</source>
         <translation>الاحتفاظ بالمحادثات والسجلات لمدة</translation>
     </message>

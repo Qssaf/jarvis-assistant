@@ -11,6 +11,7 @@ import base64, collections, hashlib, json, threading, time, urllib.request
 import requests
 
 import brain
+import people
 import store
 import system
 import whatsapp
@@ -92,6 +93,15 @@ JS = r"""async (cmd, a) => {
     if (!m) return {error: "no such message there"};
     await C.RestAPI.put({url: `/channels/${id}/messages/${m.id}/reactions/${encodeURIComponent(a.emoji)}/@me`});
     return {to: who(m.author), text: text(m)};
+  }
+  if (cmd === "waiting") {  // one-to-one DMs whose last message (in the last three days) isn't the user's
+    const made = id => Number((BigInt(id) >> 22n) + 1420070400000n), recentEnough = id => made(id) > Date.now() - 3 * 86400e3;
+    const chats = C.PrivateChannelSortStore.getPrivateChannelIds().slice(0, 30).map(id => C.ChannelStore.getChannel(id))
+      .filter(c => c?.type === 1 && c.lastMessageId && recentEnough(c.lastMessageId) && !C.UserGuildSettingsStore.isChannelMuted(null, c.id));
+    const last = await Promise.all(chats.map(async c => C.MessageStore.getMessage(c.id, c.lastMessageId)
+      || (await C.RestAPI.get({url: `/channels/${c.id}/messages`, query: {limit: 1}})).body[0]));
+    return chats.map((c, i) => ({c, m: last[i]})).filter(({m}) => m && m.author.id !== me)
+      .map(({c, m}) => ({name: title(c), text: text(m), at: made(m.id) / 1000}));
   }
   if (cmd === "listen") {  // DMs and pings to the page binding jarvisDiscord, once (again after Discord reloads)
     if (window.__jarvisListen === a.v) return true;
@@ -243,11 +253,17 @@ class Listener:
             time.sleep(10)
 
     def message(self, e):
+        one = not (e["server"] or e["group"])  # (a person's page: one-to-one DMs only)
         if e["me"]:
             if (e["channel"], e["text"]) not in self.mine:
                 self.user_wrote[e["channel"]] = time.time()
                 self._cancel(e["channel"])
+                if one:
+                    people.talked(e["chat"], "discord", True)
+                    people.tracker[0] and people.tracker[0].heard("discord", e["chat"], e["text"])
             return
+        if one and e["friend"]:
+            people.talked(e["from"], "discord", False, aka=e["user"])
         rule = whatsapp.contact_rule([e["from"], e["user"]], "discord")
         said = f"Discord from {e['from']}" + (f" in {e['chat']}" if e["server"] or e["group"] else "") + f": {e['text'][:300]}"
         if rule == "always":

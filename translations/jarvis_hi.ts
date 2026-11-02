@@ -1074,7 +1074,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2577"/>
+        <location filename="../jarvis.py" line="+2703"/>
         <source>LISTENING</source>
         <translation>सुन रहा</translation>
     </message>
@@ -1542,19 +1542,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+129"/>
+        <location line="+138"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>सहेजें</translation>
     </message>
     <message>
-        <location line="-179"/>
-        <location line="+77"/>
+        <location line="-188"/>
+        <location line="+86"/>
         <source>Remove</source>
         <translation>हटाएँ</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-76"/>
         <source>Push to talk</source>
         <translation>पुश टू टॉक</translation>
     </message>
@@ -1644,7 +1644,27 @@
         <translation>हर Google Calendar इवेंट से दस मिनट पहले रिमाइंडर</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Keep track of my promises</source>
+        <translation>मेरे वादों का ध्यान रखें</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
+        <translation>जब आप WhatsApp, Discord या ईमेल पर "कल भेज दूँगा" लिखते हैं, Jarvis रिमाइंडर लगा देता है या उसे शाम की सूची में डाल देता है</translation>
+    </message>
+    <message>
         <location line="+4"/>
+        <source>Evening list at (who&apos;s waiting on you, what&apos;s due tomorrow; empty: none)</source>
+        <translation>शाम की सूची का समय (कौन आपके जवाब का इंतज़ार कर रहा है, कल क्या देय है; खाली: कोई नहीं)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. 20:00</source>
+        <translation>जैसे 20:00</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>शांत समय कब से (खाली: कोई नहीं)</translation>
     </message>
@@ -2071,7 +2091,7 @@
     <message>
         <location line="+3"/>
         <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
-        <translation>जवाब WhatsApp सेक्शन में लिखी बात का इस्तेमाल करते हैं जो Jarvis लोगों को बताता है। आप बस यह भी कह सकते हैं: "Sam को जवाब मत देना" या "Alex का संदेश आए तो बताना"।</translation>
+        <translation>जवाब WhatsApp सेक्शन में लिखी बात का इस्तेमाल करते हैं जो Jarvis लोगों को बताता है। आप बस यह भी कह सकते हैं: &quot;Sam को जवाब मत देना&quot; या &quot;Alex का संदेश आए तो बताना&quot;।</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2084,7 +2104,17 @@
         <translation>इस PC पर Jarvis रखता है: आपके बारे में जो याद रखता है, आपकी बातचीत, रिमाइंडर और रूटीन, आपके वेक वर्ड की छोटी क्लिप (आपकी आवाज़ सीखने के लिए) और एक लॉग। वेक वर्ड के बाद आप जो कहते हैं, और जब किसी काम के लिए स्क्रीन चाहिए तो स्क्रीनशॉट, Google Gemini को जाते हैं; खातों के काम Composio से होते हैं।</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Screen history</source>
+        <translation>स्क्रीन इतिहास</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
+        <translation>Jarvis नोट करता है कि आपके सामने कौन-सी विंडो है (सिर्फ़ उसका शीर्षक, अंदर की चीज़ें कभी नहीं, इसी PC पर), ताकि आप पूछ सकें "कल वह कौन-सी साइट खुली थी?"। प्राइवेट ब्राउज़िंग और पासवर्ड मैनेजर छोड़ दिए जाते हैं; ज़्यादा से ज़्यादा दो हफ़्ते रखा जाता है</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Keep conversations and logs for</source>
         <translation>बातचीत और लॉग कितने समय रखें</translation>
     </message>

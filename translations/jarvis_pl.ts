@@ -1084,7 +1084,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2577"/>
+        <location filename="../jarvis.py" line="+2703"/>
         <source>LISTENING</source>
         <translation>SŁUCHAM</translation>
     </message>
@@ -1555,19 +1555,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+129"/>
+        <location line="+138"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>Zapisz</translation>
     </message>
     <message>
-        <location line="-179"/>
-        <location line="+77"/>
+        <location line="-188"/>
+        <location line="+86"/>
         <source>Remove</source>
         <translation>Usuń</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-76"/>
         <source>Push to talk</source>
         <translation>Naciśnij i mów</translation>
     </message>
@@ -1657,7 +1657,27 @@
         <translation>Przypomnienie dziesięć minut przed każdym wydarzeniem w Kalendarzu Google</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Keep track of my promises</source>
+        <translation>Pilnuj moich obietnic</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
+        <translation>Gdy napiszesz „wyślę jutro” na WhatsAppie, Discordzie lub w mailu, Jarvis ustawi przypomnienie albo doda to do wieczornej listy</translation>
+    </message>
+    <message>
         <location line="+4"/>
+        <source>Evening list at (who&apos;s waiting on you, what&apos;s due tomorrow; empty: none)</source>
+        <translation>Wieczorna lista o (kto czeka na twoją odpowiedź, co na jutro; puste: brak)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. 20:00</source>
+        <translation>np. 20:00</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>Godziny ciszy od (puste: brak)</translation>
     </message>
@@ -2097,7 +2117,17 @@
         <translation>Na tym komputerze Jarvis przechowuje to, co o tobie pamięta, twoje rozmowy, przypomnienia i rutyny, krótkie nagrania słowa wybudzającego (by nauczyć się twojego głosu) oraz dziennik. To, co mówisz po słowie wybudzającym, oraz zrzuty ekranu, gdy zadanie wymaga ekranu, trafiają do Google Gemini; działania na kontach przechodzą przez Composio.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Screen history</source>
+        <translation>Historia ekranu</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
+        <translation>Jarvis zapisuje, które okno masz na wierzchu (tylko tytuł, nigdy zawartość, na tym komputerze), żebyś mógł zapytać „jaka to była strona, którą wczoraj otworzyłem?”. Przeglądanie prywatne i menedżery haseł są pomijane; przechowywane najwyżej dwa tygodnie</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Keep conversations and logs for</source>
         <translation>Przechowuj rozmowy i dzienniki przez</translation>
     </message>

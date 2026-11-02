@@ -1074,7 +1074,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2577"/>
+        <location filename="../jarvis.py" line="+2703"/>
         <source>LISTENING</source>
         <translation>OUVINDO</translation>
     </message>
@@ -1542,19 +1542,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+129"/>
+        <location line="+138"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>Salvar</translation>
     </message>
     <message>
-        <location line="-179"/>
-        <location line="+77"/>
+        <location line="-188"/>
+        <location line="+86"/>
         <source>Remove</source>
         <translation>Remover</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-76"/>
         <source>Push to talk</source>
         <translation>Apertar para falar</translation>
     </message>
@@ -1644,7 +1644,27 @@
         <translation>Um lembrete dez minutos antes de cada evento do Google Agenda</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Keep track of my promises</source>
+        <translation>Acompanhar minhas promessas</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
+        <translation>Quando você escreve "te mando amanhã" no WhatsApp, Discord ou e-mail, o Jarvis cria um lembrete ou coloca na lista da noite</translation>
+    </message>
+    <message>
         <location line="+4"/>
+        <source>Evening list at (who&apos;s waiting on you, what&apos;s due tomorrow; empty: none)</source>
+        <translation>Lista da noite às (quem espera sua resposta, o que vence amanhã; vazio: nenhuma)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. 20:00</source>
+        <translation>ex.: 20:00</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>Horário silencioso a partir de (vazio: nenhum)</translation>
     </message>
@@ -2071,7 +2091,7 @@
     <message>
         <location line="+3"/>
         <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
-        <translation>As respostas usam o que o Jarvis diz às pessoas na seção do WhatsApp. Você também pode só dizer "não responda ao Sam" ou "me avise quando o Alex me mandar mensagem".</translation>
+        <translation>As respostas usam o que o Jarvis diz às pessoas na seção do WhatsApp. Você também pode só dizer &quot;não responda ao Sam&quot; ou &quot;me avise quando o Alex me mandar mensagem&quot;.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2084,7 +2104,17 @@
         <translation>Neste PC, o Jarvis guarda o que lembra sobre você, suas conversas, lembretes e rotinas, clipes curtos da sua palavra de ativação (para aprender sua voz) e um log. O que você diz depois da palavra de ativação, e capturas de tela quando uma tarefa precisa da tela, vão para o Google Gemini; ações nas contas passam pelo Composio.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Screen history</source>
+        <translation>Histórico de tela</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
+        <translation>O Jarvis anota qual janela está na sua frente (só o título, nunca o conteúdo, neste PC) para você perguntar "qual era aquele site que abri ontem?". Navegação privada e gerenciadores de senhas são ignorados; guardado por no máximo duas semanas</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Keep conversations and logs for</source>
         <translation>Manter conversas e logs por</translation>
     </message>

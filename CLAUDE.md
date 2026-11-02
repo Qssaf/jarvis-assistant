@@ -129,7 +129,9 @@ phone tasks are exempt). `emit` and `ask_user` replace it with `•••`, so i
 what every message tells the user to say. `VoiceLearner` keeps clips and verifier per wake word (`wake_folder`:
 "Hey Jarvis" at the folder's root, a custom model by its contents' hash), and `voice_loop` reloads when the word
 changes. openWakeWord's verifier score replaces the model's from `custom_verifier_threshold` (0.1) up, so "Only wake
-for my voice" raises the score needed (`wake_bar`, `ONLY_ME`), not that threshold (raising it skips verification).
+for my voice" raises the score needed (`wake_bar`, `ONLY_ME`), not that threshold (raising it skips verification). `WakeGate` runs the model only while `MicLevel.sound` (and
+`WAKE_TAIL` after), keeping its Silero VAD fed on quiet frames (a VAD that missed the gap zeroed sure wake-ups) and
+replaying `WAKE_PRE_ROLL` frames when sound returns; `evals/wake_eval.py` replays the user's own clips both ways.
 
 **Models per job.** `MODEL_JOBS` (agent, look, point, point_strong, search, image) each run on `models_for(job)`: the
 `<job>_models` setting (lines `"backend model thinking"`) or the built-in list. `_generate` skips entries in
@@ -238,6 +240,20 @@ drops it; `a.v` is the JS's hash). People rules (`<app>_always`/`<app>_never`, `
 `discord_replies` ("friends": friends' one-to-one DMs only). Jarvis's own replies are known by `(channel, text)` in
 `mine` (memory only).
 
+**People, promises, attention.** `people.py`: `people.json` holds a page per person (notes with an optional `until`,
+`seen`/`wrote` per app from one-to-one WhatsApp and Discord messages via `talked`, which writes at most every 5 min per
+person, and `promises`). `Tracker` (`people.tracker[0]`, made in `main()`) takes the user's own outgoing messages (and
+WhatsApp sends Jarvis made for them; Discord's come back through `Listener`), keeps only ones `HINT` says talk about
+later, and after `wait` seconds asks the agent's models once per burst (`PROMPT`); a promise with a time gets a
+reminder, the rest go on the evening list. `evals/proactive_eval.py` checks the prompt. `Brain.person` and
+`Brain.waiting_on_me` are the tools (dispatched in `_run_tool`); `evening_digest` (jarvis.py) scans the day's sent
+mail, then tells `digest_text(waiting_on_me())` once a day. `Attention` (jarvis.py, `attention.json`): `announce(...,
+kind=)` of a kind the user let pass three times in a row (no speech within `HEEDED` s) is only shown for a backoff;
+`loud` and `asked` (reminders, scheduled tasks) are never held back. Skills (`store.skills`, the `skill` tool): ways
+a screen task worked, offered in `_ask` through `matching_skills`; a task of 3+ screen steps that saved none gets one
+`SKILL_NUDGE` (its answer is kept). `activity.py` (opt-in `screen_history`): `system.focused()` every `POLL` s, a line
+per change in `DATA/activity/<day>.jsonl`, never in backups.
+
 **State.** `store.py` keeps settings (unknown keys dropped, types coerced, `*_models`, `language`, `safety`... validated),
 plugins, `memory.md`, reminders (optionally repeating: `next_time`), routines, the change log and sessions under
 `system.CONFIG` / `system.DATA`. Files holding tokens are written with `private=True`. `delete_data` removes everything
@@ -246,13 +262,15 @@ secrets in one zip (no keys, logins, WhatsApp profile, phone keys or the pickled
 names are checked on import). `tidy` (daily `tidy_loop`) deletes what's older than `keep_days`, and `rotate_log` caps
 `jarvis.log` at startup.
 
+**Memory.** `main()` calls `system.lean_memory()` first (glibc `M_ARENA_MAX` 2: ~60 mostly idle threads each kept an arena of freed memory); `system.trim_memory()` runs after each agent task, voice session and hourly.
+
 **Background loops.** `background(fn, restart=True)` restarts a loop that dies (voice, reminders, calendar/Classroom
 reminders, the user's `checks`, the phone links), with backoff; `system.mic_frames` restarts `pw-record` itself when PipeWire restarts.
 
 **Window and API.** The window is Qt Quick: `window.py` registers a `Backend` QObject as the QML singleton `Jarvis.Backend`
 (`qml/*.qml`, theme tokens in `qml/Theme.qml`). QML calls `Api.get/post` → `Backend.request` (thread pool) → `get(path)`/`post(path,
 data)`, which map to `api_get`/`api_post` in jarvis.py, and events from `emit()` reach it because `Backend` sits in `clients` (it has
-`put()`). Polled values (state, mic level) refresh at 30 fps. The look ("glass": tokens in `Theme.qml`, shared pieces
+`put()`). Polled values (state, mic level) refresh at 30 fps, only while the window is shown (`Backend.watch`); the notch ticks at 30 fps only while it shows. The look ("glass": tokens in `Theme.qml`, shared pieces
 like `Glass`, `Section`, `Chip`, `StatusDot`, the arc reactor in `Orb.qml`) is shared with the phone app's `Theme.kt`.
 QML gotchas: `AbstractButton` has a FINAL `icon` (ours is `symbol`); local
 `Label.qml`/`Page.qml` get shadowed by QtQuick.Controls (ours are `Txt`, `ScrollPage`); `#AARRGGBB` colours; font sizes go

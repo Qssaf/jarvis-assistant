@@ -83,6 +83,8 @@ def simulated(case, name, args):
         return {"result": "not listening any more"}
     if name == "ignore":
         return {"result": "ignored"}
+    if name == "person" and (args.get("note") or args.get("forget")):  # (never the real people.json)
+        return {"result": f"noted about {args.get('name')}"}
     if name == "people_rules":  # (never the real settings)
         return {"result": f"saved: {args.get('name')} → {args.get('rule')} ({args.get('app', 'both')})"}
     if name in ("whatsapp_send", "whatsapp_call", "discord_send", "discord_react"):  # (never the real WhatsApp or Discord: the gate as the real tool)
@@ -162,7 +164,7 @@ def simulated(case, name, args):
 
 
 REAL = {"web_search", "read_webpage", "youtube_search", "weather", "classroom_due", "classroom_announcements", "briefing", "drive_file", "recall",
-        "list_windows", "list_reminders", "discord_read"}
+        "list_windows", "list_reminders", "discord_read", "person", "waiting_on_me", "screen_history"}
 
 
 def run_tool(case, name, args):
@@ -456,6 +458,12 @@ CASES = [
      lambda c, s: (arg(c, "people_rules", "rule") == "always" and arg(c, "people_rules", "app", "both") in ("discord", "both")) or "people_rules always Alex"),
     ("discord_react", ["React with a laughing emoji to Sam's last message on Discord."],
      lambda c, s: called(c, "discord_react") or (called(c, "discord_read") and "?" in " ".join(s)) or "discord_react (or asks which Sam)"),
+    ("person_note", ["Sam Lee is my cousin, keep that in mind."],
+     lambda c, s: ("cousin" in str(arg(c, "person", "note", "")).lower() and not called(c, "remember")) or "person with a note, not remember"),
+    ("person_read", ["What's up with Sam?"], lambda c, s: called(c, "person") or "person"),
+    ("waiting", ["Who's waiting on me?"], lambda c, s: called(c, "waiting_on_me") or "waiting_on_me"),
+    ("screen_history", ["What was that site I had open yesterday about recipes?"],
+     lambda c, s: called(c, "screen_history") or "screen_history"),
     ("discord_news", ["Anything new on Discord?"], lambda c, s: (called(c, "discord_read") and not called(c, "act", "look")) or "discord_read, not the screen"),
     ("task_form", ["Fill out the form on my screen with my details."], lambda c, s: called(c, "do_task") or "do_task"),
     ("task_flight", ["Find the cheapest flight to London next month."], lambda c, s: called(c, "do_task", "web_search") or bool(re.search(r"\b(from|departure|depart)\b", s[0], re.I)) or "search, do_task, or ask where from"),

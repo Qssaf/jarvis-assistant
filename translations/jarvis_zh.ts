@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2577"/>
+        <location filename="../jarvis.py" line="+2703"/>
         <source>LISTENING</source>
         <translation>聆听中</translation>
     </message>
@@ -1529,19 +1529,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+129"/>
+        <location line="+138"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location line="-179"/>
-        <location line="+77"/>
+        <location line="-188"/>
+        <location line="+86"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-76"/>
         <source>Push to talk</source>
         <translation>按键说话</translation>
     </message>
@@ -1631,7 +1631,27 @@
         <translation>每个 Google 日历活动开始前十分钟提醒</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Keep track of my promises</source>
+        <translation>记住我的承诺</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
+        <translation>当你在 WhatsApp、Discord 或邮件里写“明天发给你”时，Jarvis 会设置提醒，或把它放进晚间清单</translation>
+    </message>
+    <message>
         <location line="+4"/>
+        <source>Evening list at (who&apos;s waiting on you, what&apos;s due tomorrow; empty: none)</source>
+        <translation>晚间清单时间（谁在等你回复、明天到期的事；留空：不需要）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. 20:00</source>
+        <translation>例如：20:00</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>安静时段开始（留空：无）</translation>
     </message>
@@ -2071,7 +2091,17 @@
         <translation>Jarvis 在这台电脑上保存它对你的记忆、你的对话、提醒和例行程序、唤醒词的简短录音（用于学习你的声音）以及日志。你在唤醒词之后说的话，以及任务需要查看屏幕时的截图，会发送到 Google Gemini；账户操作通过 Composio 进行。</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Screen history</source>
+        <translation>屏幕历史</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
+        <translation>Jarvis 会记下你前台的窗口（只记标题，从不记内容，仅存于本机），这样你可以问“我昨天开的那个网站是什么？”。会跳过隐私浏览和密码管理器；最多保留两周</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Keep conversations and logs for</source>
         <translation>对话和日志保留时长</translation>
     </message>

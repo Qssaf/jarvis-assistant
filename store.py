@@ -61,6 +61,9 @@ DEFAULT_SETTINGS = {
     "discord_replies": "off",      # friends: Jarvis answers friends' DMs that don't need you (Discord bans bots: opt-in); off: just shows them
     "discord_always": [],          # Discord names always told to the user out loud (even in quiet hours), never answered
     "discord_never": [],           # Discord names Jarvis never answers or speaks about: only shown in the chat
+    "track_promises": True,        # promises in what you send ("I'll send it tomorrow") get a reminder or go on the evening list
+    "evening_digest": "20:00",     # who's waiting on you and what's due tomorrow, said once a day at this time; empty = off
+    "screen_history": False,       # a private timeline of the windows you had open (titles only, on this PC), for "what was that site?"
     "echo_cancel": False,          # echo cancelling (PipeWire on Linux, WebRTC + a speaker loopback on Windows): talk over Jarvis on speakers (experimental)
     "learn_my_voice": True,        # learn from real wake-ups to ignore things that aren't you saying the wake word
     "only_my_voice": False,        # on (once learned): the wake word wakes Jarvis only when the learned verifier is sure it's you
@@ -208,7 +211,7 @@ def _update_settings(changes):
             value = list(dict.fromkeys(value))
         if key == "window_languages":
             value = list(dict.fromkeys(v for v in value if v in WINDOW_LANGUAGES)) or ["en"]
-        if key in ("quiet_from", "quiet_until") and value:
+        if key in ("quiet_from", "quiet_until", "evening_digest") and value:
             hm = re.fullmatch(r"(\d{1,2})[:.](\d{2})", value.strip())
             if not hm or int(hm[1]) > 23 or int(hm[2]) > 59:
                 raise ValueError("quiet hours are times like 22:00, or empty")
@@ -331,6 +334,74 @@ def pop_due(now=None):
     return [r for r in due if not r.get("off")]
 
 
+# ---------------------------------------------------------------- skills: ways a screen task worked, learned by the agent
+SKILLS_FILE = os.path.join(DATA, "skills.json")  # name -> {"task", "steps", "at", "worked", "failed"}
+SKILL_LIMIT = 60
+WORD = re.compile(r"[^\W\d_]{3,}")
+COMMON = {"the", "and", "for", "with", "that", "this", "then", "from", "into", "open", "please", "can", "you", "jarvis", "my", "me"}
+
+
+def skills():
+    found = read_json(SKILLS_FILE, {})
+    return found if isinstance(found, dict) else {}
+
+
+def _words(text):
+    return {w for w in WORD.findall(text.lower()) if w not in COMMON}
+
+
+def save_skill(name, task, steps):
+    """A way a task worked (steps: the agent's own words or act steps), replacing an older way with that name."""
+    name, steps = " ".join(str(name).split())[:80], str(steps).strip()[:4000]
+    if not name or not steps:
+        raise ValueError("a skill needs a name and its steps")
+    with _lock:
+        found = skills()
+        old = found.pop(name.lower(), {})
+        found[name.lower()] = {"name": name, "task": " ".join(str(task).split())[:300], "steps": steps, "at": time.time(),
+                               "worked": old.get("worked", 0) + 1, "failed": 0}
+        if len(found) > SKILL_LIMIT:  # the least proven and oldest go first
+            for k in sorted(found, key=lambda k: (found[k]["worked"] - found[k]["failed"], found[k]["at"]))[:len(found) - SKILL_LIMIT]:
+                del found[k]
+        write_json(SKILLS_FILE, found, private=True)
+    return found[name.lower()]
+
+
+def skill_outcome(name, worked):
+    """A saved way was tried again: one that failed twice and never worked since goes."""
+    with _lock:
+        found = skills()
+        s = found.get(name.lower().strip())
+        if not s:
+            return None
+        s["worked" if worked else "failed"] += 1
+        if not worked and s["failed"] >= 2 and s["failed"] > s["worked"] - 1:
+            del found[name.lower().strip()]
+            s = {**s, "dropped": True}
+        write_json(SKILLS_FILE, found, private=True)
+    return s
+
+
+def forget_skill(name):
+    with _lock:
+        found = skills()
+        gone = found.pop(name.lower().strip(), None)
+        write_json(SKILLS_FILE, found, private=True)
+    return bool(gone)
+
+
+def matching_skills(task, limit=2):
+    """Saved ways for a task like this one: most of a skill's words (its name and task) are in it."""
+    want = _words(task)
+    scored = []
+    for s in skills().values():
+        theirs = _words(f"{s['name']} {s['task']}")
+        shared = len(want & theirs)
+        if theirs and shared >= 2 and shared / len(theirs) >= 0.5:
+            scored.append((shared / len(theirs), s))
+    return [s for _, s in sorted(scored, key=lambda x: -x[0])[:limit]]
+
+
 # ---------------------------------------------------------------- routines: named sets of steps ("study mode")
 ROUTINES_FILE = os.path.join(DATA, "routines.json")
 
@@ -405,13 +476,13 @@ def delete_data():
     and the files behind Classroom and calendar reminders, model use and the log. Keys, account sign-ins and settings stay
     (they're removed on their own pages)."""
     with _lock:
-        for path in (MEMORY_FILE, REMINDERS_FILE, ROUTINES_FILE, CHANGES_FILE, *OLD_LOGS, *(os.path.join(DATA, name) for name in (
-                "usage.json", "deadlines.json", "calendar.json", "briefing.json"))):
+        for path in (MEMORY_FILE, REMINDERS_FILE, ROUTINES_FILE, CHANGES_FILE, SKILLS_FILE, *OLD_LOGS, *(os.path.join(DATA, name) for name in (
+                "usage.json", "deadlines.json", "calendar.json", "briefing.json", "people.json", "attention.json", "digest.json"))):
             try:
                 os.remove(path)
             except FileNotFoundError:
                 pass
-        for folder in ("sessions", "wake"):
+        for folder in ("sessions", "wake", "activity"):
             shutil.rmtree(os.path.join(DATA, folder), ignore_errors=True)
         os.makedirs(SESSIONS_DIR, exist_ok=True)
         try:
@@ -747,6 +818,12 @@ BACKUP_CHECKS = {  # what a sound file looks like, so a bad one can't break a lo
         isinstance(r, dict) and isinstance(r.get("id"), str) and _number(r.get("at")) and isinstance(r.get("text"), str)
         and r.get("repeat", "") in ("", *REPEATS) for r in d),
     "routines.json": lambda d: isinstance(d, dict) and all(isinstance(v, str) for v in d.values()),
+    "people.json": lambda d: isinstance(d, dict) and all(isinstance(p, dict) and all(
+        isinstance(n, dict) and isinstance(n.get("text") or n.get("what"), str) and _number(n.get("at"))
+        for n in p.get("notes", []) + p.get("promises", [])) for p in d.values()),
+    "skills.json": lambda d: isinstance(d, dict) and all(
+        isinstance(v, dict) and isinstance(v.get("name"), str) and isinstance(v.get("steps"), str) and isinstance(v.get("task"), str)
+        and _number(v.get("at")) for v in d.values()),
     "changes.json": lambda d: isinstance(d, list) and all(isinstance(c, dict) and _number(c.get("at")) and isinstance(c.get("what"), str) for c in d),
     "plugins.json": lambda d: isinstance(d, dict) and all(  # (headers and env may hold API keys: a backup never has them)
         re.fullmatch(r"[a-z0-9_-]{1,32}", n) and isinstance(p, dict) and isinstance(p.get("url") or p.get("command"), str)
@@ -760,6 +837,7 @@ BACKUP_CHECKS = {  # what a sound file looks like, so a bad one can't break a lo
 def _backup_files():
     """Name in the backup -> the file on this PC (looked up each time: tests point them elsewhere)."""
     return {"settings.json": SETTINGS_FILE, "memory.md": MEMORY_FILE, "reminders.json": REMINDERS_FILE, "routines.json": ROUTINES_FILE,
+            "people.json": os.path.join(DATA, "people.json"), "skills.json": SKILLS_FILE,
             "changes.json": CHANGES_FILE, "plugins.json": PLUGINS_FILE, "connectors.json": CONNECTORS_FILE, "providers.json": PROVIDERS_FILE}
 
 

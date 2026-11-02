@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2577"/>
+        <location filename="../jarvis.py" line="+2703"/>
         <source>LISTENING</source>
         <translation>ĐANG NGHE</translation>
     </message>
@@ -1529,19 +1529,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+129"/>
+        <location line="+138"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>Lưu</translation>
     </message>
     <message>
-        <location line="-179"/>
-        <location line="+77"/>
+        <location line="-188"/>
+        <location line="+86"/>
         <source>Remove</source>
         <translation>Gỡ bỏ</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-76"/>
         <source>Push to talk</source>
         <translation>Nhấn để nói</translation>
     </message>
@@ -1631,7 +1631,27 @@
         <translation>Nhắc mười phút trước mỗi sự kiện trên Google Calendar</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Keep track of my promises</source>
+        <translation>Ghi nhớ lời hứa của tôi</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
+        <translation>Khi bạn viết "mai mình gửi" trên WhatsApp, Discord hay email, Jarvis đặt lời nhắc hoặc đưa vào danh sách buổi tối</translation>
+    </message>
+    <message>
         <location line="+4"/>
+        <source>Evening list at (who&apos;s waiting on you, what&apos;s due tomorrow; empty: none)</source>
+        <translation>Danh sách buổi tối lúc (ai đang chờ bạn trả lời, việc gì đến hạn ngày mai; để trống: không có)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. 20:00</source>
+        <translation>ví dụ: 20:00</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>Giờ yên lặng từ (để trống: không có)</translation>
     </message>
@@ -2058,7 +2078,7 @@
     <message>
         <location line="+3"/>
         <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
-        <translation>Câu trả lời dùng điều Jarvis nói với mọi người trong mục WhatsApp. Bạn cũng có thể chỉ cần nói "đừng trả lời Sam" hoặc "báo tôi khi Alex nhắn".</translation>
+        <translation>Câu trả lời dùng điều Jarvis nói với mọi người trong mục WhatsApp. Bạn cũng có thể chỉ cần nói &quot;đừng trả lời Sam&quot; hoặc &quot;báo tôi khi Alex nhắn&quot;.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2071,7 +2091,17 @@
         <translation>Trên máy tính này, Jarvis lưu những gì đã ghi nhớ về bạn, các cuộc trò chuyện, lời nhắc và quy trình, các đoạn ghi âm ngắn từ đánh thức của bạn (để học giọng bạn) và một tệp nhật ký. Những gì bạn nói sau từ đánh thức, và ảnh chụp màn hình khi tác vụ cần đến màn hình, được gửi tới Google Gemini; thao tác với tài khoản đi qua Composio.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Screen history</source>
+        <translation>Lịch sử màn hình</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
+        <translation>Jarvis ghi lại cửa sổ đang ở phía trước (chỉ tiêu đề, không bao giờ ghi nội dung, ngay trên máy này) để bạn hỏi "hôm qua mình mở trang gì nhỉ?". Bỏ qua duyệt web riêng tư và trình quản lý mật khẩu; lưu tối đa hai tuần</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Keep conversations and logs for</source>
         <translation>Lưu cuộc trò chuyện và nhật ký trong</translation>
     </message>

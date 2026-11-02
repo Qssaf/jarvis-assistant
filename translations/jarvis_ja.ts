@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2577"/>
+        <location filename="../jarvis.py" line="+2703"/>
         <source>LISTENING</source>
         <translation>聞き取り中</translation>
     </message>
@@ -1529,19 +1529,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+129"/>
+        <location line="+138"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location line="-179"/>
-        <location line="+77"/>
+        <location line="-188"/>
+        <location line="+86"/>
         <source>Remove</source>
         <translation>削除</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-76"/>
         <source>Push to talk</source>
         <translation>プッシュトゥトーク</translation>
     </message>
@@ -1631,7 +1631,27 @@
         <translation>Googleカレンダーの各予定の10分前にお知らせします</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Keep track of my promises</source>
+        <translation>約束を覚えておく</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
+        <translation>WhatsApp、Discord、メールで「明日送るね」と書くと、Jarvis がリマインダーを設定するか、夜のリストに入れます</translation>
+    </message>
+    <message>
         <location line="+4"/>
+        <source>Evening list at (who&apos;s waiting on you, what&apos;s due tomorrow; empty: none)</source>
+        <translation>夜のリストの時刻（返信を待っている人、明日が期限のもの。空欄：なし）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. 20:00</source>
+        <translation>例: 20:00</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>静かにする時間の開始（空欄: なし）</translation>
     </message>
@@ -2071,7 +2091,17 @@
         <translation>このPCには、Jarvisが覚えたあなたのこと、会話、リマインダーとルーティン、ウェイクワードの短い録音（声の学習用）、ログが保存されます。ウェイクワードの後に話した内容と、タスクで画面が必要なときのスクリーンショットはGoogle Geminiに送られます。アカウントの操作はComposioを経由します。</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Screen history</source>
+        <translation>画面の履歴</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
+        <translation>Jarvis は手前にあるウィンドウを記録します（タイトルのみで中身は記録せず、この PC 内に保存）。「昨日開いていたあのサイトは？」と聞けるようにするためです。プライベートブラウズとパスワード管理ソフトは除外し、保存は最長 2 週間です</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Keep conversations and logs for</source>
         <translation>会話とログの保存期間</translation>
     </message>

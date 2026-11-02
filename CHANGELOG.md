@@ -74,6 +74,14 @@
   nothing on screen; *"@name"* pings. New DMs and pings show in Jarvis's chat. Settings → *Discord* → *Restart
   Vesktop* turns it on once. Optional: Jarvis answers your friends' DMs that don't need you (off by default: Discord
   may ban accounts that act like bots).
+- **People pages:** *"what's up with Sam?"* brings what Jarvis knows about them (*"Sam is my cousin"*, notes that end
+  on a date), when you last wrote to each other, what you promised them, and your latest messages and emails.
+- **Promises kept:** *"I'll send it tomorrow"* in a chat or email gets a reminder (or goes on the evening list).
+- **The evening list** at 20:00 (Settings → *Your day*): who's waiting on your reply, unread emails from people, and
+  what's on tomorrow. Ask any time: *"who's waiting on me?"*
+- **Jarvis learns when to speak up:** kinds of news you keep letting pass are only shown, not said, for a while.
+- **Jarvis gets quicker at your apps:** the way a screen task worked is kept and reused, and dropped if it stops working.
+- **Screen history** (opt-in): window titles only, on your PC, for *"what was that site I had open yesterday?"*
 - **"Don't answer Sam"**, *"tell me when Alex messages me"*: say it, and Jarvis keeps it in Settings' *Never answer* /
   *Always let through* lists for WhatsApp, Discord or both (*"answer her again"* undoes it).
 - **WhatsApp voice messages are understood:** a voice message someone sends you is transcribed as it arrives, so
@@ -97,6 +105,8 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
+- **Lighter when idle:** the wake word's model rests while the room is quiet (it still hears a soft "Hey"), the
+  window stops updating while it's hidden, and freed memory goes back to the system after tasks and voice sessions.
 - A message or account change Jarvis made by voice (WhatsApp, Discord, an email...) sometimes went twice: the voice
   model called it again right after it worked. The same change now waits until you speak again.
 - **Windows: settings and other files no longer fail to save** now and then when something else (an antivirus, the

@@ -1584,6 +1584,22 @@ for _ in range(150):
     mic(frame(300))
 out = mic(frame(6000))
 assert np.sqrt(np.mean(out.astype(np.float32) ** 2)) < 6000 and not (np.abs(out) == 32767).any(), mic.gain
+# the wake-word model sleeps while the room is quiet (its voice check keeps listening), and gets the frames just before a sound
+ran = []
+fake_wake = types.SimpleNamespace(vad_threshold=0.5, vad=lambda f: ran.append("vad"), predict=lambda f: ran.append("model") or {"w": 0.0})
+gate, mic, recent = jarvis.WakeGate(fake_wake), jarvis.MicLevel(), collections.deque(maxlen=25)
+for i in range(60):
+    f = mic(frame(2))
+    recent.append(f)
+    gate.score(f, recent, mic.sound)
+assert ran.count("model") == jarvis.WAKE_TAIL and ran.count("vad") == 60 - jarvis.WAKE_TAIL, ran.count("model")
+ran.clear()
+f = mic(frame(3000))
+recent.append(f)
+gate.score(f, recent, mic.sound)
+assert ran == ["model"] * (jarvis.WAKE_PRE_ROLL + 1) and fake_wake.vad_threshold == 0.5  # (the frames before, then this one)
+ran.clear()
+assert gate.score(mic(frame(2)), recent, False, force=True) == 0.0 and ran == ["model"]  # (Talk: always heard)
 
 # a long name with underscores is looked up by name; only when no file has it is it taken for an id
 db.connected, calls = {"googledrive"}, []
@@ -1895,7 +1911,7 @@ told, check_asks, real_notify = [], [], jarvis.system.notify
 jarvis.system.notify = lambda *a: None
 turns = []
 told_loud = []
-check_live = types.SimpleNamespace(announce=lambda text, loud=False: told.append(text) or told_loud.append(loud), brain=types.SimpleNamespace(
+check_live = types.SimpleNamespace(announce=lambda text, loud=False, kind="": told.append(text) or told_loud.append(loud), brain=types.SimpleNamespace(
     ask=lambda text, on_tool, unattended: check_asks.append((text, unattended)) or reply[0], add_turn=lambda *t: turns.append(t)))
 reply = ["Nothing."]
 jarvis.run_unattended(check_live, "check", check=True)
@@ -1930,7 +1946,7 @@ jarvis.system.notify = real_notify
 assert told_loud[-2:] == [False, True]
 
 # other programs on this PC: `jarvis --task` runs unattended and gets the reply, `--say` speaks; the MCP server wraps both
-api_live = types.SimpleNamespace(announce=lambda text, loud=False: told.append(text))
+api_live = types.SimpleNamespace(announce=lambda text, loud=False, kind="": told.append(text))
 api_brain = types.SimpleNamespace(ask=lambda text, on_tool, unattended: check_asks.append((text, unattended)) or "3 events today.")
 assert jarvis.api_post("/api/task", {"text": "what's on my calendar?"}, api_live, api_brain) == {"reply": "3 events today."}
 assert check_asks[-1] == (jarvis.EXTERNAL_NOTE + "what's on my calendar?", True)
@@ -3320,6 +3336,113 @@ listener.message({**dm, "me": True, "text": "back now"})
 assert "c1" in listener.user_wrote
 store.update_settings({"discord_replies": "off"})
 discord.call = real_dc_call
+
+# people: a page per person (notes with an end date, when they last wrote each way, promises), and their index for prompts
+import people
+people.FILE = os.path.join(_home, "people-test.json")
+people._stamped.clear()  # (the WhatsApp checks above wrote to the other file)
+people.add_note("Sam Lee", "my cousin")
+people.add_note("sam lee", "exam on Friday", until=time.time() - 1)  # (over already)
+people.talked("Sam Lee", "whatsapp", False)
+people.talked("Sam Lee", "discord", True, aka="samlee")
+pg = people.page("SAMLEE")
+assert pg["name"] == "Sam Lee" and pg["notes"] == ["my cousin"] and "whatsapp" in pg["they last wrote"] and "discord" in pg["the user last wrote"], pg
+assert people.index() == "- Sam Lee: my cousin"
+# promises: only messages about later are asked about, a burst goes in one request, a timed one gets a reminder, the
+# rest go on the evening list, and none is kept twice
+asked_promises, noted = [], []
+tomorrow_9 = time.strftime("%Y-%m-%d 09:00", time.localtime(time.time() + 86400))
+promise_model = types.SimpleNamespace(_generate=lambda contents: asked_promises.append(contents[0]["parts"][0]["text"]) or [{"text": json.dumps([
+    {"to": "Sam Lee", "what": "send Sam the notes", "when": tomorrow_9}, {"to": "Maya", "what": "call Maya back", "when": ""},
+    {"to": "Nobody", "what": "something", "when": ""}])}])
+tracker = people.Tracker(promise_model, notify=noted.append, wait=60)
+tracker.heard("whatsapp", "Sam Lee", "lol ok")
+assert not tracker.queue  # (nothing about later: never asked)
+tracker.heard("whatsapp", "Sam Lee", "I'll send you the notes tomorrow")
+tracker.heard("discord", "Maya", "gonna call you back later")
+kept = tracker.flush()
+assert len(asked_promises) == 1 and "- on whatsapp, to Sam Lee: I'll send you the notes tomorrow" in asked_promises[0]
+assert [k["to"] for k in kept] == ["Sam Lee", "Maya"] and kept[0]["due"] and not kept[1]["due"], kept  # ("Nobody" wasn't written to)
+assert any(r["text"] == "🤝 You promised Sam Lee: send Sam the notes" for r in store.reminders()) and len(noted) == 2
+assert people.page("Sam Lee")["promised"][0].startswith("send Sam the notes (due ")
+assert [p["what"] for p in people.promises()] == ["send Sam the notes", "call Maya back"]
+tracker.heard("whatsapp", "Sam Lee", "I'll send you the notes tomorrow, promise")
+assert tracker.flush() == [] and len(noted) == 2
+store.update_settings({"track_promises": False})
+tracker.heard("whatsapp", "Sam Lee", "I'll call you tomorrow")
+assert not tracker.queue
+store.update_settings({"track_promises": True})
+# "forget that promise": it goes, with its reminder
+assert people.drop("Sam Lee", "notes") == 1 and not any("send Sam the notes" in r["text"] for r in store.reminders())
+# the person tool: a note with an end date, and the page (no app linked here)
+real_wa, brain.whatsapp_link[0] = brain.whatsapp_link[0], None
+discord.call = lambda cmd, **args: (_ for _ in ()).throw(RuntimeError("Vesktop isn't running"))
+b = brain.Brain.__new__(brain.Brain)
+b.connected = set()
+assert b.person("sam", note="exam on Monday", until=time.strftime("%Y-%m-%d", time.localtime(time.time() + 3 * 86400)))["page"]["notes"][1].startswith("exam on Monday (until ")
+assert b.person("Sam Lee")["notes"][0] == "my cousin" and "error" in b.person("Sam", note="x", until="next week")
+# who's waiting on the user: their message is the last one, old enough; groups, strangers and the user's own last word aren't
+now = time.time()
+brain.whatsapp_link[0] = types.SimpleNamespace(state="connected", chats=lambda n: [
+    {"name": "Sam Lee", "group": False, "contact": True, "last": "are you coming?", "at": now - 5 * 3600},
+    {"name": "Chess Club", "group": True, "contact": False, "last": "Alex: gg", "at": now - 5 * 3600},
+    {"name": "Maya", "group": False, "contact": True, "last": "You: see you", "at": now - 5 * 3600},
+    {"name": "Bo", "group": False, "contact": True, "last": "hi", "at": now - 600}])
+discord.call = lambda cmd, **args: [{"name": "Alex", "text": "u up?", "at": now - 3 * 3600}]
+waiting = b.waiting_on_me()
+assert waiting["waiting on whatsapp"] == ["Sam Lee (5 h ago): are you coming?"] and waiting["waiting on discord"] == ["Alex (3 h ago): u up?"]
+assert waiting["promised, no time set"] == ["Maya: call Maya back"], waiting
+assert jarvis.digest_text(waiting) == ("Waiting on your reply: Sam Lee (5 h ago) on WhatsApp; Alex (3 h ago) on Discord. "
+                                       "You promised: Maya: call Maya back."), jarvis.digest_text(waiting)
+assert jarvis.digest_text({}) == ""
+brain.whatsapp_link[0], discord.call = real_wa, real_dc_call
+# what Jarvis says on its own and the user lets pass three times in a row is only shown for a while; a word back resets it
+jarvis.ATTENTION_FILE = os.path.join(_home, "attention-test.json")
+heed = jarvis.Attention()
+for _ in range(3):
+    heed.said("whatsapp")
+    heed.pending = ("whatsapp", time.time() - 100)  # (90 s went by in silence)
+    heed.settle()
+assert not heed.allows("whatsapp") and heed.allows("discord") and heed.allows("")
+heed.said("discord")
+heed.heard()
+assert store.read_json(jarvis.ATTENTION_FILE, {})["discord"]["ignored"] == 0
+# skills: the way a screen task worked is offered for a task like it; one that fails twice goes
+assert brain.TOOLS["skill"][0]("save", "Submit homework on Classroom", "submit my physics homework on classroom",
+                               "act [{launch: firefox}, {click_on: 'Turn in'}]")["result"].startswith("saved")
+assert store.matching_skills("submit the chemistry homework on Classroom")[0]["name"] == "Submit homework on Classroom"
+assert not store.matching_skills("what's the weather in Classroom 4?")
+asked_with = []
+sb = brain.Brain.__new__(brain.Brain)
+sb.cancel, sb.contents, sb._tools, sb._system = threading.Event(), [], lambda: None, lambda: ""
+sb._generate = lambda msgs, **kw: asked_with.append(msgs[-1]["parts"][0]["text"]) or [{"text": "Done."}]
+sb._ask("submit the chemistry homework on classroom", lambda n: None, None)
+assert "Saved ways that worked before" in asked_with[0] and "{click_on: 'Turn in'}" in asked_with[0]
+assert brain.TOOLS["skill"][0]("failed", "submit homework on classroom")["result"].startswith("noted")
+assert "dropped" in brain.TOOLS["skill"][0]("failed", "Submit homework on Classroom")["result"] and not store.skills()
+# a task that took three screen steps and saved nothing is asked once to keep the way; its answer stays the same
+turns = [[{"functionCall": {"name": "act", "args": {"steps": [{"click_on": "the box"}, {"type": "hi"}, {"keys": "Return"}]}}}],
+         [{"text": "Sent it."}],
+         [{"functionCall": {"name": "skill", "args": {"action": "save", "name": "send a chat message", "task": "send hi", "steps": "..."}}}, {"text": "Done."}]]
+seen_turns = []
+sb._generate = lambda msgs, **kw: seen_turns.append(msgs[-1]["parts"][0].get("text", "")) or turns[len(seen_turns) - 1]
+sb._run_tool = lambda name, args: ({"result": "saved" if name == "skill" else ["done"]}, None)
+assert sb._ask("say hi in the chat", lambda n: None, None) == "Sent it." and len(seen_turns) == 3 and "save the way with skill" in seen_turns[2]
+# screen history: the focused window's title when it changes (private windows never), searched by words or read as a day
+import activity
+activity.FOLDER = os.path.join(_home, "activity")
+day = time.strftime("%Y-%m-%d")
+os.makedirs(activity.FOLDER, exist_ok=True)
+t0 = time.time() - 3600
+with open(os.path.join(activity.FOLDER, f"{day}.jsonl"), "w") as f:
+    for i, (app, title) in enumerate([("firefox", "Pasta recipes - Food Site"), ("firefox", "Pasta recipes - Food Site"),
+                                      ("konsole", "~"), ("firefox", "News")]):
+        f.write(json.dumps({"t": t0 + i * 60, "app": app, "title": title}) + "\n")
+store.update_settings({"screen_history": True})
+assert activity.search("recipe")["windows"][0].endswith("firefox: Pasta recipes - Food Site") and len(activity.search("recipe")["windows"]) == 1
+assert len(activity.search(day=day)["windows"]) == 3 and activity.search("nothing like it")["windows"] == []
+assert activity.PRIVATE.search("Mozilla Firefox Private Browsing") and activity.PRIVATE.search("KeePassXC")
+store.update_settings({"screen_history": False})
 # connecting restarts Vesktop with the port, kept in vesktop-flags.conf where the launcher reads it (Arch's), once
 launcher, started = os.path.join(_home, "vesktop"), []
 with open(launcher, "w") as f:

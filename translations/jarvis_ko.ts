@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2577"/>
+        <location filename="../jarvis.py" line="+2703"/>
         <source>LISTENING</source>
         <translation>듣는 중</translation>
     </message>
@@ -1529,19 +1529,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+129"/>
+        <location line="+138"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>저장</translation>
     </message>
     <message>
-        <location line="-179"/>
-        <location line="+77"/>
+        <location line="-188"/>
+        <location line="+86"/>
         <source>Remove</source>
         <translation>제거</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-76"/>
         <source>Push to talk</source>
         <translation>눌러서 말하기</translation>
     </message>
@@ -1631,7 +1631,27 @@
         <translation>Google Calendar 일정마다 10분 전에 알려 줘요</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Keep track of my promises</source>
+        <translation>내 약속 챙기기</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
+        <translation>WhatsApp, Discord, 이메일에 "내일 보낼게"라고 쓰면 Jarvis가 알림을 설정하거나 저녁 목록에 넣습니다</translation>
+    </message>
+    <message>
         <location line="+4"/>
+        <source>Evening list at (who&apos;s waiting on you, what&apos;s due tomorrow; empty: none)</source>
+        <translation>저녁 목록 시각(내 답장을 기다리는 사람, 내일 마감인 것; 비우면 없음)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. 20:00</source>
+        <translation>예: 20:00</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>조용한 시간 시작 (비우면 없음)</translation>
     </message>
@@ -2058,7 +2078,7 @@
     <message>
         <location line="+3"/>
         <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
-        <translation>답장에는 WhatsApp 섹션의 'Jarvis가 사람들에게 전할 말'이 쓰입니다. "Sam에게는 답장하지 마"나 "Alex가 메시지 보내면 알려 줘"라고 말해도 됩니다.</translation>
+        <translation>답장에는 WhatsApp 섹션의 &apos;Jarvis가 사람들에게 전할 말&apos;이 쓰입니다. &quot;Sam에게는 답장하지 마&quot;나 &quot;Alex가 메시지 보내면 알려 줘&quot;라고 말해도 됩니다.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2071,7 +2091,17 @@
         <translation>Jarvis는 이 PC에 나에 대해 기억한 내용, 대화, 알림과 루틴, 호출어 짧은 녹음(목소리 학습용), 로그를 보관해요. 호출어 뒤에 말한 내용과 작업에 화면이 필요할 때의 스크린샷은 Google Gemini로 전송되고, 계정 작업은 Composio를 거쳐요.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Screen history</source>
+        <translation>화면 기록</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
+        <translation>Jarvis가 앞에 있는 창을 기록합니다(제목만, 내용은 절대 아님, 이 PC에만). "어제 열었던 그 사이트 뭐였지?"라고 물을 수 있게요. 사생활 보호 모드와 비밀번호 관리자는 건너뛰며, 최대 2주간 보관합니다</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Keep conversations and logs for</source>
         <translation>대화와 로그 보관 기간</translation>
     </message>

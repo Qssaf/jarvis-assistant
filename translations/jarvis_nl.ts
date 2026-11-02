@@ -1074,7 +1074,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2577"/>
+        <location filename="../jarvis.py" line="+2703"/>
         <source>LISTENING</source>
         <translation>LUISTERT</translation>
     </message>
@@ -1542,19 +1542,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+129"/>
+        <location line="+138"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>Opslaan</translation>
     </message>
     <message>
-        <location line="-179"/>
-        <location line="+77"/>
+        <location line="-188"/>
+        <location line="+86"/>
         <source>Remove</source>
         <translation>Verwijderen</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-76"/>
         <source>Push to talk</source>
         <translation>Push-to-talk</translation>
     </message>
@@ -1644,7 +1644,27 @@
         <translation>Een herinnering tien minuten voor elke afspraak in Google Agenda</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Keep track of my promises</source>
+        <translation>Mijn beloftes bijhouden</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
+        <translation>Als je op WhatsApp, Discord of per e-mail "ik stuur het morgen" schrijft, zet Jarvis een herinnering of zet het op de avondlijst</translation>
+    </message>
+    <message>
         <location line="+4"/>
+        <source>Evening list at (who&apos;s waiting on you, what&apos;s due tomorrow; empty: none)</source>
+        <translation>Avondlijst om (wie op je antwoord wacht, wat morgen af moet; leeg: geen)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. 20:00</source>
+        <translation>bijv. 20:00</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>Stille uren vanaf (leeg: geen)</translation>
     </message>
@@ -2026,7 +2046,7 @@
     <message>
         <location line="+1"/>
         <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message, reply or react in a DM or server channel. New DMs and pings show up in Jarvis&apos;s chat.</source>
-        <translation>Jarvis leest en verstuurt Discord-berichten voor je via Vesktop, in je eigen Discord: vraag wat er nieuw is, of laat het schrijven, antwoorden of reageren in een DM of serverkanaal. Nieuwe DM's en vermeldingen verschijnen in de chat van Jarvis.</translation>
+        <translation>Jarvis leest en verstuurt Discord-berichten voor je via Vesktop, in je eigen Discord: vraag wat er nieuw is, of laat het schrijven, antwoorden of reageren in een DM of serverkanaal. Nieuwe DM&apos;s en vermeldingen verschijnen in de chat van Jarvis.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2056,7 +2076,7 @@
     <message>
         <location line="+6"/>
         <source>Answer my friends&apos; DMs (Discord may ban accounts that act like bots)</source>
-        <translation>DM's van mijn vrienden beantwoorden (Discord kan accounts blokkeren die zich als bots gedragen)</translation>
+        <translation>DM&apos;s van mijn vrienden beantwoorden (Discord kan accounts blokkeren die zich als bots gedragen)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2071,7 +2091,7 @@
     <message>
         <location line="+3"/>
         <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
-        <translation>Antwoorden gebruiken wat Jarvis mensen vertelt uit het WhatsApp-gedeelte. Je kunt ook gewoon zeggen "antwoord Sam niet" of "zeg het als Alex me een bericht stuurt".</translation>
+        <translation>Antwoorden gebruiken wat Jarvis mensen vertelt uit het WhatsApp-gedeelte. Je kunt ook gewoon zeggen &quot;antwoord Sam niet&quot; of &quot;zeg het als Alex me een bericht stuurt&quot;.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2084,7 +2104,17 @@
         <translation>Op deze pc bewaart Jarvis wat hij over je onthoudt, je gesprekken, herinneringen en routines, korte opnames van je activeringswoord (om je stem te leren) en een logboek. Wat je na het activeringswoord zegt, en schermafbeeldingen als een taak het scherm nodig heeft, gaan naar Google Gemini; accountacties lopen via Composio.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Screen history</source>
+        <translation>Schermgeschiedenis</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
+        <translation>Jarvis houdt bij welk venster je voor je hebt (alleen de titel, nooit de inhoud, op deze pc), zodat je kunt vragen "welke site had ik gisteren open?". Privé browsen en wachtwoordmanagers worden overgeslagen; hooguit twee weken bewaard</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Keep conversations and logs for</source>
         <translation>Gesprekken en logboeken bewaren</translation>
     </message>

@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2577"/>
+        <location filename="../jarvis.py" line="+2703"/>
         <source>LISTENING</source>
         <translation>กำลังฟัง</translation>
     </message>
@@ -1529,19 +1529,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+129"/>
+        <location line="+138"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>บันทึก</translation>
     </message>
     <message>
-        <location line="-179"/>
-        <location line="+77"/>
+        <location line="-188"/>
+        <location line="+86"/>
         <source>Remove</source>
         <translation>นำออก</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-76"/>
         <source>Push to talk</source>
         <translation>กดเพื่อพูด</translation>
     </message>
@@ -1631,7 +1631,27 @@
         <translation>เตือนสิบนาทีก่อนทุกกิจกรรมใน Google Calendar</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Keep track of my promises</source>
+        <translation>ติดตามสัญญาของฉัน</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
+        <translation>เมื่อคุณเขียนว่า "พรุ่งนี้จะส่งให้" ใน WhatsApp, Discord หรืออีเมล Jarvis จะตั้งการแจ้งเตือน หรือใส่ไว้ในรายการตอนเย็น</translation>
+    </message>
+    <message>
         <location line="+4"/>
+        <source>Evening list at (who&apos;s waiting on you, what&apos;s due tomorrow; empty: none)</source>
+        <translation>รายการตอนเย็นเวลา (ใครรอคำตอบจากคุณ อะไรครบกำหนดพรุ่งนี้; ว่าง: ไม่มี)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. 20:00</source>
+        <translation>เช่น 20:00</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>ช่วงเวลาเงียบ ตั้งแต่ (เว้นว่าง: ไม่มี)</translation>
     </message>
@@ -2058,7 +2078,7 @@
     <message>
         <location line="+3"/>
         <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
-        <translation>การตอบกลับใช้สิ่งที่ Jarvis บอกผู้คนจากส่วน WhatsApp คุณยังพูดง่ายๆ ได้ว่า "ไม่ต้องตอบแซม" หรือ "บอกฉันเมื่ออเล็กซ์ส่งข้อความมา"</translation>
+        <translation>การตอบกลับใช้สิ่งที่ Jarvis บอกผู้คนจากส่วน WhatsApp คุณยังพูดง่ายๆ ได้ว่า &quot;ไม่ต้องตอบแซม&quot; หรือ &quot;บอกฉันเมื่ออเล็กซ์ส่งข้อความมา&quot;</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2071,7 +2091,17 @@
         <translation>บนพีซีเครื่องนี้ Jarvis เก็บสิ่งที่จำเกี่ยวกับคุณ การสนทนา การเตือนและรูทีน คลิปสั้นๆ ของคำปลุก (เพื่อเรียนรู้เสียงของคุณ) และบันทึกการทำงาน สิ่งที่คุณพูดหลังคำปลุก และภาพหน้าจอเมื่องานต้องใช้หน้าจอ จะส่งไปยัง Google Gemini ส่วนการทำงานกับบัญชีจะผ่าน Composio</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Screen history</source>
+        <translation>ประวัติหน้าจอ</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
+        <translation>Jarvis จดว่าหน้าต่างไหนอยู่ด้านหน้า (เฉพาะชื่อหน้าต่าง ไม่เคยจดเนื้อหา และเก็บในพีซีนี้) เพื่อให้คุณถามได้ว่า "เมื่อวานเปิดเว็บอะไรไว้นะ?" ข้ามโหมดส่วนตัวและโปรแกรมจัดการรหัสผ่าน เก็บไว้นานสุดสองสัปดาห์</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Keep conversations and logs for</source>
         <translation>เก็บการสนทนาและบันทึกการทำงานไว้นาน</translation>
     </message>

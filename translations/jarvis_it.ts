@@ -1074,7 +1074,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2577"/>
+        <location filename="../jarvis.py" line="+2703"/>
         <source>LISTENING</source>
         <translation>IN ASCOLTO</translation>
     </message>
@@ -1542,19 +1542,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+129"/>
+        <location line="+138"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>Salva</translation>
     </message>
     <message>
-        <location line="-179"/>
-        <location line="+77"/>
+        <location line="-188"/>
+        <location line="+86"/>
         <source>Remove</source>
         <translation>Rimuovi</translation>
     </message>
     <message>
-        <location line="-67"/>
+        <location line="-76"/>
         <source>Push to talk</source>
         <translation>Push-to-talk</translation>
     </message>
@@ -1644,7 +1644,27 @@
         <translation>Un promemoria dieci minuti prima di ogni evento di Google Calendar</translation>
     </message>
     <message>
+        <location line="+3"/>
+        <source>Keep track of my promises</source>
+        <translation>Tieni traccia delle mie promesse</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
+        <translation>Quando scrivi "te lo mando domani" su WhatsApp, Discord o email, Jarvis imposta un promemoria o lo mette nella lista della sera</translation>
+    </message>
+    <message>
         <location line="+4"/>
+        <source>Evening list at (who&apos;s waiting on you, what&apos;s due tomorrow; empty: none)</source>
+        <translation>Lista della sera alle (chi aspetta una tua risposta, cosa scade domani; vuoto: nessuna)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>e.g. 20:00</source>
+        <translation>es. 20:00</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>Ore di silenzio dalle (vuoto: nessuna)</translation>
     </message>
@@ -2071,7 +2091,7 @@
     <message>
         <location line="+3"/>
         <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
-        <translation>Le risposte usano ciò che Jarvis dice alle persone dalla sezione WhatsApp. Puoi anche dire "non rispondere a Sam" o "avvisami quando Alex mi scrive".</translation>
+        <translation>Le risposte usano ciò che Jarvis dice alle persone dalla sezione WhatsApp. Puoi anche dire &quot;non rispondere a Sam&quot; o &quot;avvisami quando Alex mi scrive&quot;.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2081,10 +2101,20 @@
     <message>
         <location line="+1"/>
         <source>On this PC Jarvis keeps what it remembers about you, your conversations, reminders and routines, short clips of your wake word (to learn your voice) and a log. What you say after the wake word, and screenshots when a task needs the screen, go to Google Gemini; account actions go through Composio.</source>
-        <translation>Su questo PC Jarvis conserva ciò che ricorda di te, le conversazioni, i promemoria e le routine, brevi clip della parola di attivazione (per imparare la tua voce) e un registro. Ciò che dici dopo la parola di attivazione, e gli screenshot quando un&apos;attività ha bisogno dello schermo, vanno a Google Gemini; le azioni sugli account passano da Composio.</translation>
+        <translation>Su questo PC Jarvis conserva ciò che ricorda di te, le conversazioni, i promemoria e le routine, brevi clip della parola di attivazione (per imparare la tua voce) e un registro. Ciò che dici dopo la parola di attivazione, e gli screenshot quando un'attività ha bisogno dello schermo, vanno a Google Gemini; le azioni sugli account passano da Composio.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Screen history</source>
+        <translation>Cronologia dello schermo</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
+        <translation>Jarvis annota quale finestra hai davanti (solo il titolo, mai il contenuto, su questo PC) così puoi chiedere "che sito avevo aperto ieri?". La navigazione privata e i gestori di password vengono saltati; conservata al massimo due settimane</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Keep conversations and logs for</source>
         <translation>Conserva conversazioni e registri per</translation>
     </message>

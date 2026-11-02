@@ -226,6 +226,15 @@ ScrollPage {
             Line {}
             Toggle { Layout.fillWidth: true; text: qsTr("Calendar heads-up"); hint: qsTr("A reminder ten minutes before each Google Calendar event")
                      checked: !!page.s.calendar_reminders; onToggled: page.set("calendar_reminders", checked) }
+            Line {}
+            Toggle { Layout.fillWidth: true; text: qsTr("Keep track of my promises"); hint: qsTr("When you write \"I'll send it tomorrow\" on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list")
+                     checked: !!page.s.track_promises; onToggled: page.set("track_promises", checked) }
+        }
+        Row2 {
+            Setting { label: qsTr("Evening list at (who's waiting on you, what's due tomorrow; empty: none)")
+                Field { Layout.fillWidth: true; text: page.s.evening_digest || ""; placeholderText: qsTr("e.g. 20:00")
+                        onEditingFinished: if (text !== page.s.evening_digest) page.set("evening_digest", text) } }
+            Item { Layout.fillWidth: true }
         }
         Row2 {
             Setting { label: qsTr("Quiet hours from (empty: none)")
@@ -555,6 +564,8 @@ ScrollPage {
         description: qsTr("On this PC Jarvis keeps what it remembers about you, your conversations, reminders and routines, short clips "
                      + "of your wake word (to learn your voice) and a log. What you say after the wake word, and screenshots when a "
                      + "task needs the screen, go to Google Gemini; account actions go through Composio.")
+        Toggle { Layout.fillWidth: true; text: qsTr("Screen history"); hint: qsTr("Jarvis notes which window you have in front (its title only, never what's in it, on this PC) so you can ask \"what was that site I had open yesterday?\". Private browsing and password managers are skipped; kept two weeks at most")
+                 checked: !!page.s.screen_history; onToggled: page.set("screen_history", checked) }
         Row2 {
             Setting { label: qsTr("Keep conversations and logs for")
                 Select { Layout.fillWidth: true; value: String(page.s.keep_days || 0); onPicked: v => page.set("keep_days", v)

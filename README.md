@@ -123,6 +123,23 @@ With [Vesktop](https://github.com/Vencord/Vesktop) (Discord with Vencord built i
 Sam"* or *"tell me when Alex messages me"*. Vesktop listens on a local debugging port (127.0.0.1 only); anything
 running as you can use it, as it can already read Vesktop's files.
 
+### The people in your life
+Jarvis keeps a page per person: what you told it (*"Sam is my cousin"*, *"Maya's exam is Friday"*, which goes once it's
+past), when you last wrote to each other on WhatsApp and Discord, and what you promised them. *"What's up with Sam?"*
+brings that together with your latest messages and emails with them.
+- **Promises:** when you write *"I'll send it tomorrow"* (or Jarvis sends it for you), it notes the promise and sets a
+  reminder for then, or puts it on the evening list when there's no time. Say *"forget that promise"* if it wasn't one.
+- **The evening list** (Settings → *Your day*, 20:00 by default): who's waiting on your reply on WhatsApp and Discord,
+  unread emails from people, tomorrow's calendar, Classroom work and reminders. Ask any time: *"who's waiting on me?"*
+- **Learning when to speak up:** something Jarvis says on its own that you let pass three times in a row (WhatsApp
+  news, check results, the evening list...) is only shown, not said, for a while (2 hours, then longer), until you
+  answer one.
+- **Getting quicker at your apps:** when a task takes several steps on screen and works, Jarvis keeps the way it did
+  it and uses it next time; a way that stops working twice is dropped.
+- **Screen history** (Settings → *Your data*, off by default): the titles of the windows you had in front, kept on this
+  PC for two weeks at most, so *"what was that recipe site I had open yesterday?"* has an answer. No screenshots and no
+  text recognition, so it costs almost nothing; private browsing and password managers are skipped.
+
 ### Routines and reminders
 Say *"when I say study mode, close Discord, open my notes and set a 50-minute timer"*, then just *"study mode"*.
 Reminders can repeat: *"remind me every weekday at 8 to check Classroom"*.
