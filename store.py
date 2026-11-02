@@ -58,6 +58,9 @@ DEFAULT_SETTINGS = {
     "whatsapp_share_free": False,  # on: Jarvis may tell people when you're busy today (Google Calendar times only, never what)
     "whatsapp_always": [],         # names Jarvis never answers for and always tells the user about out loud (even in quiet hours)
     "whatsapp_never": [],          # names Jarvis never answers for or speaks about: only shown in the chat
+    "discord_replies": "off",      # friends: Jarvis answers friends' DMs that don't need you (Discord bans bots: opt-in); off: just shows them
+    "discord_always": [],          # Discord names always told to the user out loud (even in quiet hours), never answered
+    "discord_never": [],           # Discord names Jarvis never answers or speaks about: only shown in the chat
     "echo_cancel": False,          # echo cancelling (PipeWire on Linux, WebRTC + a speaker loopback on Windows): talk over Jarvis on speakers (experimental)
     "learn_my_voice": True,        # learn from real wake-ups to ignore things that aren't you saying the wake word
     "only_my_voice": False,        # on (once learned): the wake word wakes Jarvis only when the learned verifier is sure it's you
@@ -197,6 +200,8 @@ def _update_settings(changes):
             raise ValueError("check every 15-1440 minutes")
         if key == "whatsapp_replies" and value not in ("contacts", "off"):
             raise ValueError("WhatsApp replies are contacts or off")
+        if key == "discord_replies" and value not in ("friends", "off"):
+            raise ValueError("Discord replies are friends or off")
         if key == "languages":
             if any(v not in LANGUAGES for v in value):
                 raise ValueError(f"languages are from {', '.join(LANGUAGES)}")
@@ -213,7 +218,7 @@ def _update_settings(changes):
         if key == "whatsapp_calls" and value not in ("answer", "decline", "off"):
             raise ValueError("WhatsApp calls are answer, decline or off")
         s[key] = value
-    if {n.lower() for n in s["whatsapp_always"]} & {n.lower() for n in s["whatsapp_never"]}:
+    if any({n.lower() for n in s[f"{app}_always"]} & {n.lower() for n in s[f"{app}_never"]} for app in ("whatsapp", "discord")):
         raise ValueError("a name can't be both always let through and never answered")
     write_json(SETTINGS_FILE, {k: v for k, v in s.items() if v != DEFAULT_SETTINGS[k]})
     return s

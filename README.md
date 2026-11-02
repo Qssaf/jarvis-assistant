@@ -111,11 +111,17 @@ WhatsApp may block numbers that act like bots, which is why Jarvis stays this ca
 
 ### Discord
 With [Vesktop](https://github.com/Vencord/Vesktop) (Discord with Vencord built in) open, Settings → *Discord* →
-*Restart Vesktop* once. Jarvis then reads your DMs, the server channels that mention you and any channel (*"what's new
-in the study server?"*), and sends what you ask (*"tell Sam I'm on my way"*, *"post 'gg' in Gaming #general"*), inside
-your own Discord: no bot, nothing on screen. It never writes on its own (Discord bans accounts that act like bots).
-Vesktop then listens on a local debugging port (127.0.0.1 only); anything running as you can use it, as it can already
-read Vesktop's files.
+*Restart Vesktop* once. Jarvis then, inside your own Discord (no bot, nothing on screen):
+- reads your DMs, the server channels that mention you and any channel (*"what's new in the study server?"*), and
+  looks at pictures or listens to voice messages people send;
+- sends, replies and reacts when you ask (*"tell Sam I'm on my way"*, *"reply 'yes' to his last message"*, *"react 😂"*,
+  *"post 'gg' in Gaming #general"*; *"@name"* pings them);
+- shows new DMs and pings in its chat, and, if you turn it on, answers your friends' DMs that don't need you (off by
+  default: Discord may ban accounts that act like bots).
+
+*Always let through* and *Never answer* work as for WhatsApp; for both apps you can also just say *"don't answer
+Sam"* or *"tell me when Alex messages me"*. Vesktop listens on a local debugging port (127.0.0.1 only); anything
+running as you can use it, as it can already read Vesktop's files.
 
 ### Routines and reminders
 Say *"when I say study mode, close Discord, open my notes and set a 50-minute timer"*, then just *"study mode"*.

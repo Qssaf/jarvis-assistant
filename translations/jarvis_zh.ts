@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2558"/>
+        <location filename="../jarvis.py" line="+2577"/>
         <source>LISTENING</source>
         <translation>聆听中</translation>
     </message>
@@ -1928,21 +1928,23 @@
     </message>
     <message>
         <location line="+4"/>
+        <location line="+42"/>
         <source>Messages</source>
         <translation>消息</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-40"/>
         <source>Answer my contacts</source>
         <translation>回复我的联系人</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+42"/>
         <source>Just show them to me</source>
         <translation>只显示给我</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-41"/>
         <source>Calls</source>
         <translation>来电</translation>
     </message>
@@ -1968,21 +1970,23 @@
     </message>
     <message>
         <location line="+1"/>
+        <location line="+38"/>
         <source>e.g. Alex</source>
         <translation>例如：Alex</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-37"/>
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
         <translation>从不回应（每行一个名字）：Jarvis 从不回复或接听，只在对话中显示他们的消息</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location line="+38"/>
         <source>e.g. Sam</source>
         <translation>例如：Sam</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-36"/>
         <source>What Jarvis tells people</source>
         <translation>Jarvis 对别人说的话</translation>
     </message>
@@ -2008,8 +2012,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message someone or a server channel. It sends only what you ask for (Discord bans accounts that act like bots).</source>
-        <translation>Jarvis 通过 Vesktop 在你自己的 Discord 里替你读取和发送消息：问它有什么新消息，或让它给某人或某个服务器频道发消息。它只发送你要求的内容（Discord 会封禁像机器人一样行事的账号）。</translation>
+        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message, reply or react in a DM or server channel. New DMs and pings show up in Jarvis&apos;s chat.</source>
+        <translation>Jarvis 通过 Vesktop 在你自己的 Discord 里替你读取和发送消息：问它有什么新消息，或让它在私信或服务器频道里发消息、回复或添加表情回应。新的私信和提及会显示在 Jarvis 的聊天中。</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2037,7 +2041,27 @@
         <translation>重启 Vesktop</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+6"/>
+        <source>Answer my friends&apos; DMs (Discord may ban accounts that act like bots)</source>
+        <translation>回复我好友的私信（Discord 可能封禁像机器人一样行事的账号）</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Always let through (one name per line, as Discord shows it): never answered by Jarvis, always told to you out loud, even in quiet hours</source>
+        <translation>始终放行（每行一个名字，与 Discord 显示的一致）：Jarvis 从不替你回复，总会大声告诉你，即使在安静时段</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Never answer (one name per line): Jarvis never replies, and only shows their messages in the chat</source>
+        <translation>从不回复（每行一个名字）：Jarvis 从不回复，只在聊天中显示他们的消息</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
+        <translation>回复会用到 WhatsApp 部分里“Jarvis 要告诉别人的话”。你也可以直接说“别回 Sam”或“Alex 给我发消息时告诉我”。</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Your data</source>
         <translation>你的数据</translation>
     </message>

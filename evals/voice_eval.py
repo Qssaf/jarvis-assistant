@@ -83,10 +83,12 @@ def simulated(case, name, args):
         return {"result": "not listening any more"}
     if name == "ignore":
         return {"result": "ignored"}
-    if name in ("whatsapp_send", "whatsapp_call", "discord_send"):  # (never the real WhatsApp or Discord: the gate as the real tool)
+    if name == "people_rules":  # (never the real settings)
+        return {"result": f"saved: {args.get('name')} → {args.get('rule')} ({args.get('app', 'both')})"}
+    if name in ("whatsapp_send", "whatsapp_call", "discord_send", "discord_react"):  # (never the real WhatsApp or Discord: the gate as the real tool)
         if not args.get("confirmed"):
             return {"error": brain.NEEDS_YES, "to": args.get("to")}
-        return ({"result": f"sent to {args.get('to')}"} if name != "whatsapp_call" else
+        return ({"result": f"sent to {args.get('to') or args.get('chat')}"} if name != "whatsapp_call" else
                 {"result": f"calling {args.get('to')} now: when the call ends, Jarvis tells the user how it went (say only that you're calling)"})
     if name == "answer_task":
         return {"error": "no task is waiting for an answer: treat it as a new request"}
@@ -448,6 +450,13 @@ CASES = [
     ("msg_discord", ["Send 'on my way' to Sam on Discord."], lambda c, s: ("on my way" in str(arg(c, "discord_send", "text", "")).lower() and arg(c, "discord_send", "confirmed", False))
      or (called(c, "discord_read") and not called(c, "discord_send") and "?" in " ".join(s))  # (reads are real: no Sam there, it asks)
      or "discord_send with the exact words, confirmed (or asks which Sam)"),
+    ("people_never", ["Don't answer Sam anymore, on WhatsApp or Discord."],
+     lambda c, s: (arg(c, "people_rules", "rule") == "never" and "sam" in str(arg(c, "people_rules", "name", "")).lower()) or "people_rules never Sam"),
+    ("people_always", ["Tell me out loud whenever Alex messages me on Discord."],
+     lambda c, s: (arg(c, "people_rules", "rule") == "always" and arg(c, "people_rules", "app", "both") in ("discord", "both")) or "people_rules always Alex"),
+    ("discord_react", ["React with a laughing emoji to Sam's last message on Discord."],
+     lambda c, s: called(c, "discord_react") or (called(c, "discord_read") and "?" in " ".join(s)) or "discord_react (or asks which Sam)"),
+    ("discord_news", ["Anything new on Discord?"], lambda c, s: (called(c, "discord_read") and not called(c, "act", "look")) or "discord_read, not the screen"),
     ("task_form", ["Fill out the form on my screen with my details."], lambda c, s: called(c, "do_task") or "do_task"),
     ("task_flight", ["Find the cheapest flight to London next month."], lambda c, s: called(c, "do_task", "web_search") or bool(re.search(r"\b(from|departure|depart)\b", s[0], re.I)) or "search, do_task, or ask where from"),
     ("task_instagram", ["Open Instagram and go through my saved reels and tell me which ones are worth adding."],

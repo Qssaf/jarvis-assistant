@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2558"/>
+        <location filename="../jarvis.py" line="+2577"/>
         <source>LISTENING</source>
         <translation>듣는 중</translation>
     </message>
@@ -1928,21 +1928,23 @@
     </message>
     <message>
         <location line="+4"/>
+        <location line="+42"/>
         <source>Messages</source>
         <translation>메시지</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-40"/>
         <source>Answer my contacts</source>
         <translation>연락처에 답하기</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+42"/>
         <source>Just show them to me</source>
         <translation>나에게만 보여 주기</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-41"/>
         <source>Calls</source>
         <translation>전화</translation>
     </message>
@@ -1968,21 +1970,23 @@
     </message>
     <message>
         <location line="+1"/>
+        <location line="+38"/>
         <source>e.g. Alex</source>
         <translation>예: 민준</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-37"/>
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
         <translation>답하지 않기 (한 줄에 이름 하나씩): Jarvis가 답장하거나 전화를 받지 않고, 메시지를 채팅에만 보여 줘요</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location line="+38"/>
         <source>e.g. Sam</source>
         <translation>예: 서연</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-36"/>
         <source>What Jarvis tells people</source>
         <translation>Jarvis가 상대에게 전할 말</translation>
     </message>
@@ -2008,8 +2012,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message someone or a server channel. It sends only what you ask for (Discord bans accounts that act like bots).</source>
-        <translation>Jarvis가 Vesktop을 통해 내 Discord에서 메시지를 읽고 보내 줍니다. 새 소식을 묻거나 누군가 또는 서버 채널에 메시지를 보내 달라고 하세요. 요청한 것만 보냅니다(Discord는 봇처럼 행동하는 계정을 차단합니다).</translation>
+        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message, reply or react in a DM or server channel. New DMs and pings show up in Jarvis&apos;s chat.</source>
+        <translation>Jarvis가 Vesktop을 통해 내 Discord에서 메시지를 읽고 보내 줍니다. 새 소식을 묻거나 DM이나 서버 채널에서 보내기, 답장, 반응을 부탁하세요. 새 DM과 멘션은 Jarvis 채팅에 표시됩니다.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2037,7 +2041,27 @@
         <translation>Vesktop 다시 시작</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+6"/>
+        <source>Answer my friends&apos; DMs (Discord may ban accounts that act like bots)</source>
+        <translation>친구의 DM에 답장(Discord는 봇처럼 행동하는 계정을 차단할 수 있습니다)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Always let through (one name per line, as Discord shows it): never answered by Jarvis, always told to you out loud, even in quiet hours</source>
+        <translation>항상 알림(한 줄에 한 이름, Discord에 보이는 대로): Jarvis가 답장하지 않고, 조용한 시간에도 항상 소리 내어 알려 줍니다</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Never answer (one name per line): Jarvis never replies, and only shows their messages in the chat</source>
+        <translation>답장 안 함(한 줄에 한 이름): Jarvis가 답장하지 않고, 메시지는 채팅에만 표시합니다</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
+        <translation>답장에는 WhatsApp 섹션의 'Jarvis가 사람들에게 전할 말'이 쓰입니다. "Sam에게는 답장하지 마"나 "Alex가 메시지 보내면 알려 줘"라고 말해도 됩니다.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Your data</source>
         <translation>내 데이터</translation>
     </message>

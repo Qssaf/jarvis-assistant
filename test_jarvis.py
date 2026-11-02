@@ -2267,8 +2267,9 @@ for bad in ("25:00", "7pm", "12:60"):
     except ValueError:
         pass
 # the morning briefing waits for quiet hours to end
-briefed, slept, quiet_left, real_quiet, real_time = [], [], [True, True], store.quiet_now, jarvis.time
+briefed, slept, quiet_left, real_quiet, real_time, real_full = [], [], [True, True], store.quiet_now, jarvis.time, system.fullscreen
 store.quiet_now = lambda *a: bool(quiet_left and quiet_left.pop())
+system.fullscreen = lambda: False  # (the real desktop's: it hung here while a game was full screen)
 jarvis.time = types.SimpleNamespace(sleep=slept.append, strftime=time.strftime, time=time.time,
                                     localtime=lambda *a: time.localtime(at(8)))
 ready = threading.Event()
@@ -2277,7 +2278,7 @@ try:
     jarvis.morning_briefing(types.SimpleNamespace(brain=types.SimpleNamespace(tools_ready=ready), quiet=True,
                                                   _send=briefed.append, _go=lambda x: None))
 finally:
-    store.quiet_now, jarvis.time = real_quiet, real_time
+    store.quiet_now, jarvis.time, system.fullscreen = real_quiet, real_time, real_full
 assert slept == [60, 60] and "good morning" in briefed[0], (slept, briefed)
 try:
     store.update_settings({"language": "xx-XX"})
@@ -2961,7 +2962,7 @@ brian = types.SimpleNamespace(name="act", args={"steps": [{"keys": "ctrl+k"}, {"
 assert "expect" in asyncio.run(live._tool(brian, halt))["error"] and len(sent_steps) == 4
 # the same goes for the message tools: discord_send called twice in a row with the same words sent them twice
 tool_sends = []
-live.brain = types.SimpleNamespace(_run_tool=lambda name, args: (tool_sends.append(args) or {"result": f"sent to {args['to']}"}, None), app_tools={})
+live.brain = types.SimpleNamespace(_run_tool=lambda name, args: (tool_sends.append(args) or {"result": f"sent to {args.get('to')}"}, None), app_tools={})
 live.last_said, live.user_spoke_at = "", time.time()
 roast = types.SimpleNamespace(name="discord_send", args={"to": "Club #chat", "text": "gg", "confirmed": True})
 assert asyncio.run(live._tool(roast, halt)) == {"result": "sent to Club #chat"}
@@ -2969,6 +2970,19 @@ assert "NOT DONE" in asyncio.run(live._tool(roast, halt))["error"] and len(tool_
 assert "error" not in asyncio.run(live._tool(types.SimpleNamespace(name="whatsapp_send", args=roast.args), halt))  # (another app)
 live.user_spoke_at = time.time() + 1  # "send it again"
 assert "error" not in asyncio.run(live._tool(roast, halt)) and len(tool_sends) == 3
+# ...and any account change (an email went twice the same way), but not a read, nor a change that failed
+live.brain.app_tools, live.user_spoke_at = {"GMAIL_SEND_EMAIL": None, "GMAIL_FETCH_EMAILS": None}, time.time()
+mail = types.SimpleNamespace(name="GMAIL_SEND_EMAIL", args={"recipient_email": "jo@example.com", "body": "late", "confirmed": True})
+fetch = types.SimpleNamespace(name="GMAIL_FETCH_EMAILS", args={"query": "is:unread"})
+asyncio.run(live._tool(mail, halt))
+assert "NOT DONE" in asyncio.run(live._tool(mail, halt))["error"] and len(tool_sends) == 4
+asyncio.run(live._tool(fetch, halt))
+asyncio.run(live._tool(fetch, halt))
+assert len(tool_sends) == 6
+live.brain = types.SimpleNamespace(_run_tool=lambda name, args: (tool_sends.append(args) or {"error": "rate limited"}, None), app_tools={})
+asyncio.run(live._tool(types.SimpleNamespace(name="discord_send", args={"to": "Sam", "text": "yo"}), halt))
+asyncio.run(live._tool(types.SimpleNamespace(name="discord_send", args={"to": "Sam", "text": "yo"}), halt))
+assert len(tool_sends) == 8
 live.brain = real_brain
 # something Jarvis announces is in the chat once: tell() logged it, so the spoken copy isn't added again
 logged, real_emit = [], jarvis.emit
@@ -3240,7 +3254,7 @@ dc_calls, real_dc_call = [], discord.call
 def fake_dc(cmd, **args):
     dc_calls.append((cmd, args))
     return {"targets": dc_targets, "server": [{"name": "Chess Club #general", "unread": True}], "send": {"ok": True},
-            "history": [{"me": False, "by": "Alex", "text": "contest at 5", "at": 0}]}.get(cmd)
+            "history": [{"id": "5", "me": False, "by": "Alex", "text": "contest at 5", "at": 0}]}.get(cmd)
 discord.call = fake_dc
 dc_sends = lambda: [a for c, a in dc_calls if c == "send"]
 assert brain.pick("SAMLEE", dc_targets)[0]["id"] == "1" and brain.pick("sam_", dc_targets)[0]["id"] == "2"
@@ -3249,9 +3263,62 @@ assert brain.TOOLS["discord_send"][0]("sam", "hi")["error"] == brain.NEEDS_YES a
 assert "is a server" in brain.TOOLS["discord_send"][0]("chess club", "hi", confirmed=True)["error"] and not dc_sends()
 assert "too long" in brain.TOOLS["discord_send"][0]("sam", "x" * 2001, confirmed=True)["error"] and not dc_sends()
 assert brain.TOOLS["discord_send"][0]("Sam", "on my way", confirmed=True) == {"result": "sent to Sam"}
-assert dc_sends() == [{"id": "2", "kind": "friend", "text": "on my way"}]
+assert dc_sends() == [{"id": "2", "kind": "friend", "text": "on my way", "reply": ""}]
 assert brain.TOOLS["discord_read"][0]("chess club #general")["messages"][0]["from"] == "Alex" and "discord_read" in brain.OUTSIDE_CONTENT
 assert brain.TOOLS["discord_read"][0]("chess club")["channels"][0]["unread"]
+# a reply to their newest message, and a reaction (both through the account's gates)
+dc_calls.clear()
+assert brain.TOOLS["discord_send"][0]("Sam", "yes!", reply_to="last", confirmed=True)["result"] == "sent to Sam"
+assert dc_sends() == [{"id": "2", "kind": "friend", "text": "yes!", "reply": "last"}]
+discord.call = lambda cmd, **args: dc_calls.append((cmd, args)) or ({"to": "Sam", "text": "gg"} if cmd == "react" else fake_dc(cmd, **args))
+assert brain.TOOLS["discord_react"][0]("Sam", "😂")["error"] == brain.NEEDS_YES and dc_calls[-1][0] == "targets"
+assert "reacted 😂 to Sam" in brain.TOOLS["discord_react"][0]("Sam", "😂", confirmed=True)["result"] and dc_calls[-1][0] == "react"
+# a picture someone sent goes to the "look" models
+real_media, real_vision = discord.media, brain.vision[0]
+discord.media = lambda target, msg="": {"type": "image", "mime": "image/png", "data": "iVBO", "id": "9", "me": False, "by": "Sam",
+                                        "caption": "", "at": 0}
+brain.vision[0] = lambda contents: [{"text": "A cat on a laptop."}]
+assert brain.TOOLS["discord_media"][0]("sam")["picture"] == "A cat on a laptop." and "discord_media" in brain.OUTSIDE_CONTENT
+discord.media, brain.vision[0] = real_media, real_vision
+# "don't answer Sam" / "tell me when Alex messages me": the people rules, for both apps or one, saved in Settings
+assert brain.TOOLS["people_rules"][0]("Sam", "never", "discord") == {"discord": {"always": [], "never": ["Sam"]}}  # (the friend's exact name)
+brain.TOOLS["people_rules"][0]("sam", "always", "discord")
+assert store.settings()["discord_always"] == ["Sam"] and store.settings()["discord_never"] == []  # (moved, never in both)
+assert whatsapp.contact_rule(["Sammy", "SAM"], "discord") == "always" and whatsapp.contact_rule("Sam") == ""
+brain.TOOLS["people_rules"][0]("Sam", "normal")
+assert store.settings()["discord_always"] == []
+# new Discord messages: "always" is said out loud, "never" and strangers only go in the chat, a muted chat stays quiet,
+# and with replies on, a friend's DM is answered (Jarvis's own reply isn't the user talking)
+heard_dc, told_dc = [], []
+listener = discord.Listener(types.SimpleNamespace(_generate=lambda contents: [{"text": '{"reply": "Hi, I\'m Jarvis.", "tell_user": ""}'}]),
+                            notify=heard_dc.append, tell=lambda text, loud=False: told_dc.append((text, loud)))
+dm = {"me": False, "channel": "c1", "chat": "Maya", "server": False, "group": False, "from": "Maya", "user": "maya_", "friend": True,
+      "muted": False, "text": "you there?"}
+store.update_settings({"discord_always": ["maya_"]})
+listener.message(dm)
+assert told_dc == [("Discord from Maya: you there?", True)]
+store.update_settings({"discord_always": [], "discord_never": ["Maya"]})
+listener.message(dm)
+listener.message({**dm, "from": "Bo", "user": "bo", "muted": True})
+assert heard_dc == ["💬 Discord from Maya: you there?"] and not listener.pending
+store.update_settings({"discord_never": []})
+listener.message(dm)
+assert heard_dc[-1] == "💬 Discord from Maya: you there?" and not listener.pending  # (replies are off by default)
+store.update_settings({"discord_replies": "friends"})
+listener.message({**dm, "friend": False})
+listener.message({**dm, "server": True})
+assert not listener.pending
+discord.call = lambda cmd, **args: dc_calls.append((cmd, args)) or ([{"me": False, "text": "you there?"}] if cmd == "history" else None)
+listener.message(dm)
+assert "c1" in listener.pending
+listener.pending["c1"].cancel()
+listener._answer(dm)
+assert dc_calls[-1] == ("send", {"id": "c1", "kind": "dm", "text": "Hi, I'm Jarvis."}) and "Jarvis replied" in heard_dc[-1]
+listener.message({**dm, "me": True, "text": "Hi, I'm Jarvis."})
+assert "c1" not in listener.user_wrote
+listener.message({**dm, "me": True, "text": "back now"})
+assert "c1" in listener.user_wrote
+store.update_settings({"discord_replies": "off"})
 discord.call = real_dc_call
 # connecting restarts Vesktop with the port, kept in vesktop-flags.conf where the launcher reads it (Arch's), once
 launcher, started = os.path.join(_home, "vesktop"), []

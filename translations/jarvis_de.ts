@@ -1074,7 +1074,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2558"/>
+        <location filename="../jarvis.py" line="+2577"/>
         <source>LISTENING</source>
         <translation>HÖRT ZU</translation>
     </message>
@@ -1941,21 +1941,23 @@
     </message>
     <message>
         <location line="+4"/>
+        <location line="+42"/>
         <source>Messages</source>
         <translation>Nachrichten</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-40"/>
         <source>Answer my contacts</source>
         <translation>Meinen Kontakten antworten</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+42"/>
         <source>Just show them to me</source>
         <translation>Nur anzeigen</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-41"/>
         <source>Calls</source>
         <translation>Anrufe</translation>
     </message>
@@ -1981,21 +1983,23 @@
     </message>
     <message>
         <location line="+1"/>
+        <location line="+38"/>
         <source>e.g. Alex</source>
         <translation>z. B. Alex</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-37"/>
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
         <translation>Nie antworten (ein Name pro Zeile): Jarvis antwortet nie und nimmt nie ab, sondern zeigt ihre Nachrichten nur im Chat</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location line="+38"/>
         <source>e.g. Sam</source>
         <translation>z. B. Sam</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-36"/>
         <source>What Jarvis tells people</source>
         <translation>Was Jarvis anderen sagt</translation>
     </message>
@@ -2021,8 +2025,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message someone or a server channel. It sends only what you ask for (Discord bans accounts that act like bots).</source>
-        <translation>Jarvis liest und sendet Discord-Nachrichten für dich über Vesktop, in deinem eigenen Discord: Frag, was es Neues gibt, oder lass jemandem oder einem Serverkanal schreiben. Es sendet nur, worum du bittest (Discord sperrt Konten, die sich wie Bots verhalten).</translation>
+        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message, reply or react in a DM or server channel. New DMs and pings show up in Jarvis&apos;s chat.</source>
+        <translation>Jarvis liest und sendet Discord-Nachrichten für dich über Vesktop, in deinem eigenen Discord: Frag, was es Neues gibt, oder lass es in einer DM oder einem Serverkanal schreiben, antworten oder reagieren. Neue DMs und Erwähnungen erscheinen in Jarvis' Chat.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2050,7 +2054,27 @@
         <translation>Vesktop neu starten</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+6"/>
+        <source>Answer my friends&apos; DMs (Discord may ban accounts that act like bots)</source>
+        <translation>Auf DMs meiner Freunde antworten (Discord kann Konten sperren, die sich wie Bots verhalten)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Always let through (one name per line, as Discord shows it): never answered by Jarvis, always told to you out loud, even in quiet hours</source>
+        <translation>Immer durchlassen (ein Name pro Zeile, wie Discord ihn zeigt): nie von Jarvis beantwortet, dir immer laut gesagt, auch in Ruhezeiten</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Never answer (one name per line): Jarvis never replies, and only shows their messages in the chat</source>
+        <translation>Nie antworten (ein Name pro Zeile): Jarvis antwortet nie und zeigt ihre Nachrichten nur im Chat</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
+        <translation>Antworten nutzen, was Jarvis Leuten sagt, aus dem WhatsApp-Bereich. Du kannst auch einfach sagen: "Antworte Sam nicht" oder "Sag mir, wenn Alex mir schreibt".</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Your data</source>
         <translation>Ihre Daten</translation>
     </message>

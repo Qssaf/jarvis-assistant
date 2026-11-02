@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2558"/>
+        <location filename="../jarvis.py" line="+2577"/>
         <source>LISTENING</source>
         <translation>ĐANG NGHE</translation>
     </message>
@@ -1928,21 +1928,23 @@
     </message>
     <message>
         <location line="+4"/>
+        <location line="+42"/>
         <source>Messages</source>
         <translation>Tin nhắn</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-40"/>
         <source>Answer my contacts</source>
         <translation>Trả lời danh bạ của tôi</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+42"/>
         <source>Just show them to me</source>
         <translation>Chỉ hiện cho tôi xem</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-41"/>
         <source>Calls</source>
         <translation>Cuộc gọi</translation>
     </message>
@@ -1968,21 +1970,23 @@
     </message>
     <message>
         <location line="+1"/>
+        <location line="+38"/>
         <source>e.g. Alex</source>
         <translation>ví dụ: Minh</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-37"/>
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
         <translation>Không bao giờ trả lời (mỗi dòng một tên): Jarvis không trả lời hay nghe máy, chỉ hiện tin nhắn của họ trong khung trò chuyện</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location line="+38"/>
         <source>e.g. Sam</source>
         <translation>ví dụ: Lan</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-36"/>
         <source>What Jarvis tells people</source>
         <translation>Điều Jarvis nói với mọi người</translation>
     </message>
@@ -2008,8 +2012,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message someone or a server channel. It sends only what you ask for (Discord bans accounts that act like bots).</source>
-        <translation>Jarvis đọc và gửi tin nhắn Discord cho bạn qua Vesktop, ngay trong Discord của bạn: hỏi xem có gì mới, hoặc nhờ nhắn cho ai đó hay một kênh trong máy chủ. Nó chỉ gửi những gì bạn yêu cầu (Discord cấm các tài khoản hoạt động như bot).</translation>
+        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message, reply or react in a DM or server channel. New DMs and pings show up in Jarvis&apos;s chat.</source>
+        <translation>Jarvis đọc và gửi tin nhắn Discord cho bạn qua Vesktop, ngay trong Discord của bạn: hỏi xem có gì mới, hoặc nhờ nhắn, trả lời hay thả cảm xúc trong DM hoặc kênh máy chủ. DM mới và lượt nhắc đến bạn hiện trong khung chat của Jarvis.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2037,7 +2041,27 @@
         <translation>Khởi động lại Vesktop</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+6"/>
+        <source>Answer my friends&apos; DMs (Discord may ban accounts that act like bots)</source>
+        <translation>Trả lời DM của bạn bè tôi (Discord có thể cấm các tài khoản hoạt động như bot)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Always let through (one name per line, as Discord shows it): never answered by Jarvis, always told to you out loud, even in quiet hours</source>
+        <translation>Luôn cho qua (mỗi dòng một tên, như Discord hiển thị): Jarvis không bao giờ trả lời, luôn báo bạn thành tiếng, kể cả trong giờ yên lặng</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Never answer (one name per line): Jarvis never replies, and only shows their messages in the chat</source>
+        <translation>Không bao giờ trả lời (mỗi dòng một tên): Jarvis không bao giờ trả lời, và chỉ hiện tin nhắn của họ trong khung chat</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
+        <translation>Câu trả lời dùng điều Jarvis nói với mọi người trong mục WhatsApp. Bạn cũng có thể chỉ cần nói "đừng trả lời Sam" hoặc "báo tôi khi Alex nhắn".</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Your data</source>
         <translation>Dữ liệu của bạn</translation>
     </message>

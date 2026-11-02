@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2558"/>
+        <location filename="../jarvis.py" line="+2577"/>
         <source>LISTENING</source>
         <translation>聞き取り中</translation>
     </message>
@@ -1928,21 +1928,23 @@
     </message>
     <message>
         <location line="+4"/>
+        <location line="+42"/>
         <source>Messages</source>
         <translation>メッセージ</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-40"/>
         <source>Answer my contacts</source>
         <translation>連絡先に返信する</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+42"/>
         <source>Just show them to me</source>
         <translation>表示だけする</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-41"/>
         <source>Calls</source>
         <translation>通話</translation>
     </message>
@@ -1968,21 +1970,23 @@
     </message>
     <message>
         <location line="+1"/>
+        <location line="+38"/>
         <source>e.g. Alex</source>
         <translation>例: 佐藤</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-37"/>
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
         <translation>応答しない（1行に1つの名前）: Jarvisは返信も通話への応答もせず、メッセージをチャットに表示するだけです</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location line="+38"/>
         <source>e.g. Sam</source>
         <translation>例: 鈴木</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-36"/>
         <source>What Jarvis tells people</source>
         <translation>Jarvisが相手に伝えること</translation>
     </message>
@@ -2008,8 +2012,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message someone or a server channel. It sends only what you ask for (Discord bans accounts that act like bots).</source>
-        <translation>Jarvis は Vesktop を通じて、あなた自身の Discord でメッセージを読んだり送ったりします。新着を尋ねたり、誰かやサーバーのチャンネルへの送信を頼んだりできます。送るのは頼まれたものだけです（Discord はボットのように振る舞うアカウントを禁止します）。</translation>
+        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message, reply or react in a DM or server channel. New DMs and pings show up in Jarvis&apos;s chat.</source>
+        <translation>Jarvis は Vesktop を通じて、あなた自身の Discord でメッセージを読んだり送ったりします。新着を尋ねたり、DM やサーバーのチャンネルでの送信・返信・リアクションを頼んだりできます。新しい DM とメンションは Jarvis のチャットに表示されます。</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2037,7 +2041,27 @@
         <translation>Vesktop を再起動</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+6"/>
+        <source>Answer my friends&apos; DMs (Discord may ban accounts that act like bots)</source>
+        <translation>友達の DM に返信する（Discord はボットのように振る舞うアカウントを禁止することがあります）</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Always let through (one name per line, as Discord shows it): never answered by Jarvis, always told to you out loud, even in quiet hours</source>
+        <translation>常に通知（1 行に 1 人、Discord の表示名で）：Jarvis は返信せず、静かな時間でも必ず声でお知らせします</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Never answer (one name per line): Jarvis never replies, and only shows their messages in the chat</source>
+        <translation>返信しない（1 行に 1 人）：Jarvis は返信せず、メッセージはチャットに表示するだけです</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
+        <translation>返信には WhatsApp セクションの「Jarvis が伝えること」が使われます。「Sam には返信しないで」「Alex からメッセージが来たら教えて」と話しかけるだけでも設定できます。</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Your data</source>
         <translation>あなたのデータ</translation>
     </message>

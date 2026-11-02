@@ -69,9 +69,13 @@
 - **Calendar heads-ups bring the meeting:** the reminder before an event carries its Meet, Zoom or Teams link and its
   attached files, so *"open it"* joins or opens the doc. Links are shown, never read out.
 - **Discord, through Vesktop:** *"what's new on Discord?"*, *"what did Sam say?"*, *"what's happening in the study
-  server?"*, *"tell Sam I'm on my way"*, *"post 'gg' in Gaming #general"*: Jarvis reads and sends messages inside your
-  own Vesktop, with no bot and nothing on screen; *"@name"* in a message pings them. Settings → *Discord* → *Restart Vesktop* turns it on once. It only
-  sends what you ask for, under the Discord account's mode on the Accounts page.
+  server?"*, *"tell Sam I'm on my way"*, *"post 'gg' in Gaming #general"*, *"reply to his last message"*, *"react 😂"*,
+  *"what's in the picture he sent?"*: Jarvis reads, sends, replies and reacts inside your own Vesktop, with no bot and
+  nothing on screen; *"@name"* pings. New DMs and pings show in Jarvis's chat. Settings → *Discord* → *Restart
+  Vesktop* turns it on once. Optional: Jarvis answers your friends' DMs that don't need you (off by default: Discord
+  may ban accounts that act like bots).
+- **"Don't answer Sam"**, *"tell me when Alex messages me"*: say it, and Jarvis keeps it in Settings' *Never answer* /
+  *Always let through* lists for WhatsApp, Discord or both (*"answer her again"* undoes it).
 - **WhatsApp voice messages are understood:** a voice message someone sends you is transcribed as it arrives, so
   Jarvis's auto-reply answers what they said, and the chat log, *"read my WhatsApp"* and Jarvis's history show its words
   instead of "[a voice message]".
@@ -93,8 +97,8 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
-- A message Jarvis sent by voice (WhatsApp, Discord) sometimes went twice: the voice model called the send again
-  right after it worked. The same message to the same chat now waits until you speak again.
+- A message or account change Jarvis made by voice (WhatsApp, Discord, an email...) sometimes went twice: the voice
+  model called it again right after it worked. The same change now waits until you speak again.
 - **Windows: settings and other files no longer fail to save** now and then when something else (an antivirus, the
   search indexer) had them open for a moment: the save is tried again.
 - **Bug reports keep your WhatsApp private:** *Copy a report* left in WhatsApp messages, contacts' names and phone

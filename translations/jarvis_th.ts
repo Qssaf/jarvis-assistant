@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2558"/>
+        <location filename="../jarvis.py" line="+2577"/>
         <source>LISTENING</source>
         <translation>กำลังฟัง</translation>
     </message>
@@ -1928,21 +1928,23 @@
     </message>
     <message>
         <location line="+4"/>
+        <location line="+42"/>
         <source>Messages</source>
         <translation>ข้อความ</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-40"/>
         <source>Answer my contacts</source>
         <translation>ตอบผู้ติดต่อของฉัน</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+42"/>
         <source>Just show them to me</source>
         <translation>แค่แสดงให้ฉันดู</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-41"/>
         <source>Calls</source>
         <translation>การโทร</translation>
     </message>
@@ -1968,21 +1970,23 @@
     </message>
     <message>
         <location line="+1"/>
+        <location line="+38"/>
         <source>e.g. Alex</source>
         <translation>เช่น สมชาย</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-37"/>
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
         <translation>ไม่ตอบเลย (บรรทัดละหนึ่งชื่อ): Jarvis จะไม่ตอบหรือรับสาย และแสดงข้อความของคนเหล่านี้ในแชทเท่านั้น</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location line="+38"/>
         <source>e.g. Sam</source>
         <translation>เช่น สมหญิง</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-36"/>
         <source>What Jarvis tells people</source>
         <translation>สิ่งที่ Jarvis บอกคนอื่น</translation>
     </message>
@@ -2008,8 +2012,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message someone or a server channel. It sends only what you ask for (Discord bans accounts that act like bots).</source>
-        <translation>Jarvis อ่านและส่งข้อความ Discord แทนคุณผ่าน Vesktop ใน Discord ของคุณเอง: ถามว่ามีอะไรใหม่ หรือให้ส่งข้อความถึงใครสักคนหรือช่องในเซิร์ฟเวอร์ โดยจะส่งเฉพาะสิ่งที่คุณขอ (Discord แบนบัญชีที่ทำตัวเหมือนบอท)</translation>
+        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message, reply or react in a DM or server channel. New DMs and pings show up in Jarvis&apos;s chat.</source>
+        <translation>Jarvis อ่านและส่งข้อความ Discord แทนคุณผ่าน Vesktop ใน Discord ของคุณเอง: ถามว่ามีอะไรใหม่ หรือให้ส่ง ตอบกลับ หรือแสดงความรู้สึกใน DM หรือช่องเซิร์ฟเวอร์ DM ใหม่และการกล่าวถึงจะแสดงในแชตของ Jarvis</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2037,7 +2041,27 @@
         <translation>เริ่ม Vesktop ใหม่</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+6"/>
+        <source>Answer my friends&apos; DMs (Discord may ban accounts that act like bots)</source>
+        <translation>ตอบ DM ของเพื่อนฉัน (Discord อาจแบนบัญชีที่ทำตัวเหมือนบอท)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Always let through (one name per line, as Discord shows it): never answered by Jarvis, always told to you out loud, even in quiet hours</source>
+        <translation>ให้ผ่านเสมอ (หนึ่งชื่อต่อบรรทัด ตามที่ Discord แสดง): Jarvis ไม่ตอบเลย และบอกคุณออกเสียงเสมอ แม้ในช่วงเวลาเงียบ</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Never answer (one name per line): Jarvis never replies, and only shows their messages in the chat</source>
+        <translation>ไม่ตอบเลย (หนึ่งชื่อต่อบรรทัด): Jarvis ไม่ตอบ และแสดงข้อความของพวกเขาในแชตเท่านั้น</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
+        <translation>การตอบกลับใช้สิ่งที่ Jarvis บอกผู้คนจากส่วน WhatsApp คุณยังพูดง่ายๆ ได้ว่า "ไม่ต้องตอบแซม" หรือ "บอกฉันเมื่ออเล็กซ์ส่งข้อความมา"</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Your data</source>
         <translation>ข้อมูลของคุณ</translation>
     </message>

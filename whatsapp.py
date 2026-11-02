@@ -54,7 +54,7 @@ def helper():
         raise RuntimeError(f"couldn't build the WhatsApp helper: {(r.stderr or r.stdout).strip()[-300:]}")
     return built
 
-REPLY_PROMPT = """You are Jarvis, {NAME}'s AI assistant, looking after their WhatsApp while they're busy. Below is a chat \
+REPLY_PROMPT = """You are Jarvis, {NAME}'s AI assistant, looking after their {APP} while they're busy. Below is a chat \
 between {NAME} and {WHO}; the last messages are from {WHO} and nobody has answered them yet.
 
 Decide what to do and answer with JSON only: {{"reply": "...", "tell_user": "..."}}
@@ -361,18 +361,7 @@ class WhatsApp:
         """What to answer: {"reply", "tell_user"} from the agent's models, with no tools and nothing private."""
         me = self._me()
         lines = "\n".join(f"{'Jarvis (you)' if m['id'] in self.mine else me if m['me'] else name}: {m['text'][:1000]}" for m in history)
-        langs = store.spoken(store.settings())
-        language = (f"in the language {name} writes in if it's {' or '.join(langs)}, otherwise in {langs[0]}" if len(langs) > 1
-                    else f"in {langs[0]}")
-        prompt = (REPLY_PROMPT.replace("{LANGUAGE}", language).replace("{NAME}", me).replace("{WHO}", name).replace("{CHAT}", lines)
-                  .replace("{NOTE}", self._note()).replace("{FREE}", self._free()).replace("{NOW}", time.strftime("%A %H:%M")))
-        parts = self.brain._generate([{"role": "user", "parts": [{"text": prompt}]}])
-        text = "".join(p.get("text", "") for p in parts if not p.get("thought"))
-        found = re.search(r"\{.*\}", text, re.S)
-        try:
-            return json.loads(found.group(0)) if found else {}
-        except ValueError:
-            return {}
+        return decide(self.brain, "WhatsApp", me, name, lines, self._note(), self._free())
 
     def _mine(self, id):
         self.mine.add(id)
@@ -543,10 +532,29 @@ class WhatsApp:
         return "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
 
 
-def contact_rule(name):
-    """"always" (let through), "never" (never answer) or "": the user's lists in Settings → WhatsApp, case aside."""
-    cfg, name = store.settings(), name.strip().lower()
-    return next((rule for rule in ("always", "never") if name in (n.lower() for n in cfg[f"whatsapp_{rule}"])), "")
+def contact_rule(names, app="whatsapp"):
+    """"always" (let through), "never" (never answer) or "" for a person (a name, or their names: display and username), from
+    the user's lists for that app (Settings, or the people tool), case aside."""
+    cfg = store.settings()
+    names = {n.strip().lower() for n in ([names] if isinstance(names, str) else names) if n}
+    return next((rule for rule in ("always", "never") if names & {n.lower() for n in cfg[f"{app}_{rule}"]}), "")
+
+
+def decide(brain, app, me, who, lines, note="", free=""):
+    """What to answer someone on WhatsApp or Discord: {"reply", "tell_user"} from the agent's models, with no tools and
+    nothing private. lines: the chat, one "name: text" a line."""
+    langs = store.spoken(store.settings())
+    language = (f"in the language {who} writes in if it's {' or '.join(langs)}, otherwise in {langs[0]}" if len(langs) > 1
+                else f"in {langs[0]}")
+    prompt = (REPLY_PROMPT.replace("{APP}", app).replace("{LANGUAGE}", language).replace("{NAME}", me).replace("{WHO}", who)
+              .replace("{CHAT}", lines).replace("{NOTE}", note).replace("{FREE}", free).replace("{NOW}", time.strftime("%A %H:%M")))
+    parts = brain._generate([{"role": "user", "parts": [{"text": prompt}]}])
+    text = "".join(p.get("text", "") for p in parts if not p.get("thought"))
+    found = re.search(r"\{.*\}", text, re.S)
+    try:
+        return json.loads(found.group(0)) if found else {}
+    except ValueError:
+        return {}
 
 
 def call_languages(cfg):

@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2558"/>
+        <location filename="../jarvis.py" line="+2577"/>
         <source>LISTENING</source>
         <translation>MENDENGARKAN</translation>
     </message>
@@ -1928,21 +1928,23 @@
     </message>
     <message>
         <location line="+4"/>
+        <location line="+42"/>
         <source>Messages</source>
         <translation>Pesan</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-40"/>
         <source>Answer my contacts</source>
         <translation>Jawab kontak saya</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+42"/>
         <source>Just show them to me</source>
         <translation>Cukup tampilkan ke saya</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-41"/>
         <source>Calls</source>
         <translation>Panggilan</translation>
     </message>
@@ -1968,21 +1970,23 @@
     </message>
     <message>
         <location line="+1"/>
+        <location line="+38"/>
         <source>e.g. Alex</source>
         <translation>mis. Alex</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-37"/>
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
         <translation>Jangan pernah dijawab (satu nama per baris): Jarvis tidak pernah membalas atau mengangkat, dan hanya menampilkan pesan mereka di obrolan</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location line="+38"/>
         <source>e.g. Sam</source>
         <translation>mis. Sam</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-36"/>
         <source>What Jarvis tells people</source>
         <translation>Yang Jarvis sampaikan kepada orang lain</translation>
     </message>
@@ -2008,8 +2012,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message someone or a server channel. It sends only what you ask for (Discord bans accounts that act like bots).</source>
-        <translation>Jarvis membaca dan mengirim pesan Discord untukmu lewat Vesktop, di Discord milikmu sendiri: tanyakan apa yang baru, atau minta ia mengirim pesan ke seseorang atau kanal server. Ia hanya mengirim yang kamu minta (Discord memblokir akun yang bertingkah seperti bot).</translation>
+        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message, reply or react in a DM or server channel. New DMs and pings show up in Jarvis&apos;s chat.</source>
+        <translation>Jarvis membaca dan mengirim pesan Discord untukmu lewat Vesktop, di Discord milikmu sendiri: tanyakan apa yang baru, atau minta ia mengirim, membalas, atau memberi reaksi di DM atau kanal server. DM baru dan mention muncul di obrolan Jarvis.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2037,7 +2041,27 @@
         <translation>Mulai ulang Vesktop</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+6"/>
+        <source>Answer my friends&apos; DMs (Discord may ban accounts that act like bots)</source>
+        <translation>Balas DM dari teman-temanku (Discord bisa memblokir akun yang bertingkah seperti bot)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Always let through (one name per line, as Discord shows it): never answered by Jarvis, always told to you out loud, even in quiet hours</source>
+        <translation>Selalu loloskan (satu nama per baris, seperti yang ditampilkan Discord): tak pernah dibalas Jarvis, selalu diberitahukan dengan suara, bahkan di jam tenang</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Never answer (one name per line): Jarvis never replies, and only shows their messages in the chat</source>
+        <translation>Jangan pernah membalas (satu nama per baris): Jarvis tak pernah membalas, dan hanya menampilkan pesan mereka di obrolan</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
+        <translation>Balasan memakai apa yang Jarvis sampaikan ke orang dari bagian WhatsApp. Kamu juga bisa bilang "jangan balas Sam" atau "kabari aku kalau Alex mengirim pesan".</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Your data</source>
         <translation>Data Anda</translation>
     </message>

@@ -78,6 +78,8 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
 - `Brain.ask` (brain.py) is the agent loop: `_generate` walks a chain of `(backend, model, thinking)` entries, skipping
   ones that are busy or rate-limited (`Overloaded`/`down_until`, with background probes), but re-raises `BadRequest`.
   Independent calls (accounts, plugins, `PARALLEL_TOOLS`) run in parallel; screen tools keep their order.
+- A voice call of a change (`ONCE_TOOLS`, or an account tool that isn't `is_read_action`) goes through `_send_once`: the
+  same arguments again before the user speaks are refused (the model re-calls a send right after it worked).
 - `Live` has resilience logic that's easy to break: request tracking (`inflight`), session resumption, `_recover`
   and `_relisten` after drops, the `_watch` silence watchdog, and half-duplex mic gating while the speaker plays.
   A tool reply sent with `scheduling="SILENT"` (always for `stop_listening` and `ignore`, the voice's "say nothing" for noise) gets no spoken answer, so the request
@@ -228,8 +230,13 @@ profile (`DATA/whatsapp`) is deleted on start and the user is asked to link agai
 `Runtime.evaluate` per call runs `JS` in the page, which uses Vencord's `Vencord.Webpack.Common` stores (`ChannelStore`,
 `ReadStateStore`, `RestAPI`, `MessageActions.sendMessage`): the real client, no bot, no copied token. Settings' *Restart
 Vesktop* (`system.restart_vesktop`) restarts it with `FLAG`, also written to `vesktop-flags.conf` when the launcher reads
-it (Arch). `discord_read`/`discord_send` resolve names through `brain.pick` (shared with WhatsApp's `find`); sending
-follows the `discord` account mode. No auto-replies or incoming-message events: Discord bans self-bots.
+it (Arch). `discord_read`/`discord_send`/`discord_react`/`discord_media` resolve names through `brain.pick` (shared with
+WhatsApp's `find`); changes follow the `discord` account mode. `Listener` keeps one connection with a `jarvisDiscord`
+binding; JS's `listen` subscribes to `MESSAGE_CREATE` (DMs and pings only), re-installed every 30 s (a Discord reload
+drops it; `a.v` is the JS's hash). People rules (`<app>_always`/`<app>_never`, `whatsapp.contact_rule`, the
+`people_rules` tool) are shared with WhatsApp, and so are `whatsapp.decide` and its limits for the opt-in
+`discord_replies` ("friends": friends' one-to-one DMs only). Jarvis's own replies are known by `(channel, text)` in
+`mine` (memory only).
 
 **State.** `store.py` keeps settings (unknown keys dropped, types coerced, `*_models`, `language`, `safety`... validated),
 plugins, `memory.md`, reminders (optionally repeating: `next_time`), routines, the change log and sessions under

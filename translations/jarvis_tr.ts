@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2558"/>
+        <location filename="../jarvis.py" line="+2577"/>
         <source>LISTENING</source>
         <translation>DİNLİYOR</translation>
     </message>
@@ -1928,21 +1928,23 @@
     </message>
     <message>
         <location line="+4"/>
+        <location line="+42"/>
         <source>Messages</source>
         <translation>Mesajlar</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-40"/>
         <source>Answer my contacts</source>
         <translation>Kişilerimi yanıtla</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+42"/>
         <source>Just show them to me</source>
         <translation>Yalnızca bana göster</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-41"/>
         <source>Calls</source>
         <translation>Aramalar</translation>
     </message>
@@ -1968,21 +1970,23 @@
     </message>
     <message>
         <location line="+1"/>
+        <location line="+38"/>
         <source>e.g. Alex</source>
         <translation>ör. Ayşe</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-37"/>
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
         <translation>Asla yanıtlama (her satıra bir ad): Jarvis asla yanıt vermez veya aramayı açmaz, mesajlarını yalnızca sohbette gösterir</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location line="+38"/>
         <source>e.g. Sam</source>
         <translation>ör. Mehmet</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-36"/>
         <source>What Jarvis tells people</source>
         <translation>Jarvis&apos;in insanlara söyledikleri</translation>
     </message>
@@ -2008,13 +2012,13 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message someone or a server channel. It sends only what you ask for (Discord bans accounts that act like bots).</source>
-        <translation>Jarvis, Vesktop üzerinden kendi Discord hesabında senin için Discord mesajlarını okur ve gönderir: yenilikleri sor ya da birine veya bir sunucu kanalına mesaj göndermesini iste. Yalnızca istediğini gönderir (Discord bot gibi davranan hesapları yasaklar).</translation>
+        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message, reply or react in a DM or server channel. New DMs and pings show up in Jarvis&apos;s chat.</source>
+        <translation>Jarvis, Vesktop üzerinden kendi Discord hesabında senin için Discord mesajlarını okur ve gönderir: yenilikleri sor ya da bir DM'de veya sunucu kanalında yazmasını, yanıtlamasını veya tepki vermesini iste. Yeni DM'ler ve etiketlemeler Jarvis'in sohbetinde görünür.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Connected to Vesktop</source>
-        <translation>Vesktop'a bağlı</translation>
+        <translation>Vesktop&apos;a bağlı</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2024,20 +2028,40 @@
     <message>
         <location line="+2"/>
         <source>Vesktop isn&apos;t running. Jarvis uses Discord through Vesktop (Discord with Vencord built in): install it, then sign in.</source>
-        <translation>Vesktop çalışmıyor. Jarvis, Discord'u Vesktop (Vencord yerleşik Discord) üzerinden kullanır: kur ve giriş yap.</translation>
+        <translation>Vesktop çalışmıyor. Jarvis, Discord&apos;u Vesktop (Vencord yerleşik Discord) üzerinden kullanır: kur ve giriş yap.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Vesktop needs a restart with Jarvis&apos;s connection turned on (a call in Vesktop would drop).</source>
-        <translation>Vesktop'un Jarvis bağlantısı açık olarak yeniden başlatılması gerekiyor (Vesktop'taki bir arama kesilir).</translation>
+        <translation>Vesktop&apos;un Jarvis bağlantısı açık olarak yeniden başlatılması gerekiyor (Vesktop&apos;taki bir arama kesilir).</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Restart Vesktop</source>
-        <translation>Vesktop'u yeniden başlat</translation>
+        <translation>Vesktop&apos;u yeniden başlat</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+6"/>
+        <source>Answer my friends&apos; DMs (Discord may ban accounts that act like bots)</source>
+        <translation>Arkadaşlarımın DM'lerini yanıtla (Discord bot gibi davranan hesapları yasaklayabilir)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Always let through (one name per line, as Discord shows it): never answered by Jarvis, always told to you out loud, even in quiet hours</source>
+        <translation>Her zaman geçir (her satıra bir ad, Discord'un gösterdiği gibi): Jarvis asla yanıtlamaz, sessiz saatlerde bile sana her zaman sesli söyler</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Never answer (one name per line): Jarvis never replies, and only shows their messages in the chat</source>
+        <translation>Asla yanıtlama (her satıra bir ad): Jarvis asla yanıtlamaz ve mesajlarını yalnızca sohbette gösterir</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Replies use what Jarvis tells people from the WhatsApp section. You can also just say &quot;don&apos;t answer Sam&quot; or &quot;tell me when Alex messages me&quot;.</source>
+        <translation>Yanıtlar, WhatsApp bölümündeki Jarvis'in insanlara söyleyeceklerini kullanır. Ayrıca "Sam'e cevap verme" ya da "Alex yazınca bana söyle" demen yeterli.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Your data</source>
         <translation>Verileriniz</translation>
     </message>

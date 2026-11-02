@@ -520,7 +520,7 @@ ScrollPage {
     Section {
         title: qsTr("Discord")
         description: qsTr("Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what's new, "
-                     + "or to message someone or a server channel. It sends only what you ask for (Discord bans accounts that act like bots).")
+                     + "or to message, reply or react in a DM or server channel. New DMs and pings show up in Jarvis's chat.")
         Status { visible: page.dc.state === "connected"; status: "ok"; text: qsTr("Connected to Vesktop") }
         Status { visible: page.dc.state === "starting"; status: "working"; text: qsTr("Waiting for Vesktop…") }
         Txt { kind: "small"; visible: page.dc.state === "off"; Layout.fillWidth: true
@@ -533,6 +533,17 @@ ScrollPage {
             Pill { kind: "primary"; symbol: "chats"; text: qsTr("Restart Vesktop")
                    onClicked: Api.post("/api/discord/connect", {}, d => page.dc = d, e => Backend.toast(e.error, true)) }
         }
+        Setting { label: qsTr("Messages")
+            Select { Layout.fillWidth: true; value: page.s.discord_replies || "off"; onPicked: v => page.set("discord_replies", v)
+                     model: [{ value: "off", label: qsTr("Just show them to me") },
+                             { value: "friends", label: qsTr("Answer my friends' DMs (Discord may ban accounts that act like bots)") }] } }
+        Row2 {
+            Setting { label: qsTr("Always let through (one name per line, as Discord shows it): never answered by Jarvis, always told to you out loud, even in quiet hours")
+                Area { text: (page.s.discord_always || []).join("\n"); placeholder: qsTr("e.g. Alex"); onDone: v => page.set("discord_always", v) } }
+            Setting { label: qsTr("Never answer (one name per line): Jarvis never replies, and only shows their messages in the chat")
+                Area { text: (page.s.discord_never || []).join("\n"); placeholder: qsTr("e.g. Sam"); onDone: v => page.set("discord_never", v) } }
+        }
+        Txt { kind: "small"; Layout.fillWidth: true; text: qsTr("Replies use what Jarvis tells people from the WhatsApp section. You can also just say \"don't answer Sam\" or \"tell me when Alex messages me\".") }
         Timer {
             interval: 2000; repeat: true; running: page.dc.state === "starting"
             onTriggered: Api.get("/api/discord", d => page.dc = d)
