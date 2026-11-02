@@ -23,6 +23,7 @@ ScrollPage {
     property var remote: ({})
     property var phone: ({})
     property var wa: ({})
+    property var dc: ({})
     property bool changingRelay: false
     readonly property var relaySetup: phone.setup || ({})
     function setRelay(url) {
@@ -54,6 +55,7 @@ ScrollPage {
         Api.get("/api/remote", d => remote = d)
         Api.get("/api/phone", d => phone = d)
         Api.get("/api/whatsapp", d => wa = d)
+        Api.get("/api/discord", d => dc = d)
         lookUp()
     }
     function lookUp() {
@@ -512,6 +514,28 @@ ScrollPage {
         Timer {  // while it's starting or showing a code: notice when the phone has linked
             interval: 2000; repeat: true; running: page.wa.state === "qr" || page.wa.state === "starting" || page.wa.state === "connecting" || !!page.wa.on_call
             onTriggered: Api.get("/api/whatsapp", d => page.wa = d)
+        }
+    }
+
+    Section {
+        title: qsTr("Discord")
+        description: qsTr("Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what's new, "
+                     + "or to message someone or a server channel. It sends only what you ask for (Discord bans accounts that act like bots).")
+        Status { visible: page.dc.state === "connected"; status: "ok"; text: qsTr("Connected to Vesktop") }
+        Status { visible: page.dc.state === "starting"; status: "working"; text: qsTr("Waiting for Vesktop…") }
+        Txt { kind: "small"; visible: page.dc.state === "off"; Layout.fillWidth: true
+              text: qsTr("Vesktop isn't running. Jarvis uses Discord through Vesktop (Discord with Vencord built in): install it, then sign in.") }
+        RowLayout {
+            visible: page.dc.state === "restart"
+            spacing: 14
+            Txt { kind: "small"; Layout.fillWidth: true
+                  text: qsTr("Vesktop needs a restart with Jarvis's connection turned on (a call in Vesktop would drop).") }
+            Pill { kind: "primary"; symbol: "chats"; text: qsTr("Restart Vesktop")
+                   onClicked: Api.post("/api/discord/connect", {}, d => page.dc = d, e => Backend.toast(e.error, true)) }
+        }
+        Timer {
+            interval: 2000; repeat: true; running: page.dc.state === "starting"
+            onTriggered: Api.get("/api/discord", d => page.dc = d)
         }
     }
 

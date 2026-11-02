@@ -94,6 +94,11 @@ CASES = [
     {"id": "reply_no_words", "task": "Reply to Alex on Discord.", "screen": DISCORD, "windows": ["discord: Discord"], "answer": None,
      "check": lambda c, r, a: not any(re.search(r"Return|Enter", str(s.get("keys", ""))) for s in steps(c)) and (a or "?" in r)
      and re.search(r"match|saturday|7:45", " ".join(a) + r, re.I)},
+    {"id": "discord_tool", "task": "Send 'see you at 6' to Sam Lee on Discord.", "discord": True, "windows": ["vesktop: Discord"],
+     "check": lambda c, r, a: ran(c, "discord_send", to="Sam Lee", text="see you at 6", confirmed=True) and "act" not in names(c)},
+    {"id": "discord_reply", "task": "Reply to Alex on Discord.", "discord": True, "windows": ["vesktop: Discord"], "answer": None,
+     "check": lambda c, r, a: ran(c, "discord_read", chat="Alex") and not ran(c, "discord_send", confirmed=True) and "act" not in names(c)
+     and (a or "?" in r) and re.search(r"match|saturday|7:45", " ".join(a) + r, re.I)},
     {"id": "classroom", "task": "What's due this week on Classroom?",
      "check": lambda c, r, a: "classroom_due" in names(c) and "screenshot" not in names(c)},
     {"id": "announcements", "task": "Any new announcements on Classroom?",
@@ -177,6 +182,15 @@ def simulate(case, name, args, calls, asked):
             return {"exit_code": 0, "output": ""}, None
         out = case.get("files", "") if "Downloads" in command or "~" in command else ""
         return {"exit_code": 0, "output": out}, None
+    if name in ("discord_read", "discord_send"):  # (connected only in the cases that say so; never the real Discord)
+        if not case.get("discord"):
+            return {"error": "Vesktop isn't running: start it (Jarvis uses Discord through Vesktop)"}, None
+        if name == "discord_send":
+            return ({"result": f"sent to {args.get('to')}"} if args.get("confirmed") else {"error": brain.NEEDS_YES, "to": args.get("to")}), None
+        if not args.get("chat"):
+            return {"direct_messages": [{"name": "Alex", "unread": 2}, {"name": "Sam Lee"}, {"name": "Sam Leeds"}], "server_mentions": []}, None
+        return {"chat": "Alex", "messages": [{"from": "Alex", "text": "are you coming to the match saturday?", "at": "Thu 16 Oct 18:02"},
+                                             {"from": "Alex", "text": "it starts 7:45", "at": "Thu 16 Oct 18:02"}], "note": brain.UNTRUSTED}, None
     if name == "ask_user":
         asked.append(args.get("question", ""))
         return ({"answer": case["answer"]} if case.get("answer") else

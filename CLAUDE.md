@@ -224,6 +224,13 @@ hour; a contact's voice message is transcribed on arrival (`_listen`, `HEAR_LIMI
 (`add_turn`, with a call's transcript), except rings (`keep=False`): the history is capped at 80 messages. A 2.1 browser
 profile (`DATA/whatsapp`) is deleted on start and the user is asked to link again.
 
+**Discord.** `discord.py` drives the user's running Vesktop over Chromium's debugging port (`PORT`, 127.0.0.1): one
+`Runtime.evaluate` per call runs `JS` in the page, which uses Vencord's `Vencord.Webpack.Common` stores (`ChannelStore`,
+`ReadStateStore`, `RestAPI`, `MessageActions.sendMessage`): the real client, no bot, no copied token. Settings' *Restart
+Vesktop* (`system.restart_vesktop`) restarts it with `FLAG`, also written to `vesktop-flags.conf` when the launcher reads
+it (Arch). `discord_read`/`discord_send` resolve names through `brain.pick` (shared with WhatsApp's `find`); sending
+follows the `discord` account mode. No auto-replies or incoming-message events: Discord bans self-bots.
+
 **State.** `store.py` keeps settings (unknown keys dropped, types coerced, `*_models`, `language`, `safety`... validated),
 plugins, `memory.md`, reminders (optionally repeating: `next_time`), routines, the change log and sessions under
 `system.CONFIG` / `system.DATA`. Files holding tokens are written with `private=True`. `delete_data` removes everything

@@ -325,7 +325,7 @@ brain.pointer[0] = None
 
 # the voice model can't see, so a coordinate click is refused before anything runs
 import asyncio
-live.turn_calls, live.user_spoke_at = [0.0, 0], 0.0
+live.turn_calls, live.user_spoke_at, live.typed, live.act_lock = [0.0, 0], 0.0, {}, asyncio.Lock()
 live.last_heard = live.last_said = ""
 live.working = live.task_screen = live.announcing = False
 refused = asyncio.run(live._tool(types.SimpleNamespace(name="act", args={"steps": [{"type": "hi"}, {"click": [500, 500]}]})))
@@ -2959,6 +2959,16 @@ live.user_spoke_at = time.time() + 3
 brian = types.SimpleNamespace(name="act", args={"steps": [{"keys": "ctrl+k"}, {"type": "Brian"}, {"keys": "Return"},
                                                           {"type": "hello"}, {"keys": "Return"}]})
 assert "expect" in asyncio.run(live._tool(brian, halt))["error"] and len(sent_steps) == 4
+# the same goes for the message tools: discord_send called twice in a row with the same words sent them twice
+tool_sends = []
+live.brain = types.SimpleNamespace(_run_tool=lambda name, args: (tool_sends.append(args) or {"result": f"sent to {args['to']}"}, None), app_tools={})
+live.last_said, live.user_spoke_at = "", time.time()
+roast = types.SimpleNamespace(name="discord_send", args={"to": "Club #chat", "text": "gg", "confirmed": True})
+assert asyncio.run(live._tool(roast, halt)) == {"result": "sent to Club #chat"}
+assert "NOT DONE" in asyncio.run(live._tool(roast, halt))["error"] and len(tool_sends) == 1
+assert "error" not in asyncio.run(live._tool(types.SimpleNamespace(name="whatsapp_send", args=roast.args), halt))  # (another app)
+live.user_spoke_at = time.time() + 1  # "send it again"
+assert "error" not in asyncio.run(live._tool(roast, halt)) and len(tool_sends) == 3
 live.brain = real_brain
 # something Jarvis announces is in the chat once: tell() logged it, so the spoken copy isn't added again
 logged, real_emit = [], jarvis.emit
@@ -3221,6 +3231,42 @@ chats.append({"chat": "9@g.us", "name": "Chess Club", "group": True})
 wa.ask = lambda cmd, timeout=30, **args: ([{"id": "g1", "me": False, "text": "contest at 5", "at": 0, "by": "Alex"}]
                                            if cmd == "history" else fake_page(cmd, **args))
 assert brain.TOOLS["whatsapp_read"][0]("chess club")["messages"][0]["from"] == "Alex"
+# Discord through Vesktop: a name matches one DM, friend, server or "Server #channel" (or a username); an unconfirmed or
+# server-wide message isn't sent
+import discord
+dc_targets = [{"id": "1", "name": "Sam Lee", "also": ["samlee"], "kind": "dm"}, {"id": "2", "name": "Sam", "also": ["sam_"], "kind": "friend"},
+              {"id": "3", "name": "Chess Club", "kind": "server"}, {"id": "4", "name": "Chess Club #general", "kind": "channel"}]
+dc_calls, real_dc_call = [], discord.call
+def fake_dc(cmd, **args):
+    dc_calls.append((cmd, args))
+    return {"targets": dc_targets, "server": [{"name": "Chess Club #general", "unread": True}], "send": {"ok": True},
+            "history": [{"me": False, "by": "Alex", "text": "contest at 5", "at": 0}]}.get(cmd)
+discord.call = fake_dc
+dc_sends = lambda: [a for c, a in dc_calls if c == "send"]
+assert brain.pick("SAMLEE", dc_targets)[0]["id"] == "1" and brain.pick("sam_", dc_targets)[0]["id"] == "2"
+assert set(brain.TOOLS["discord_send"][0]("Sammy", "hi")["close_matches"]) == {"Sam Lee", "Sam"} and not dc_sends()
+assert brain.TOOLS["discord_send"][0]("sam", "hi")["error"] == brain.NEEDS_YES and not dc_sends()
+assert "is a server" in brain.TOOLS["discord_send"][0]("chess club", "hi", confirmed=True)["error"] and not dc_sends()
+assert "too long" in brain.TOOLS["discord_send"][0]("sam", "x" * 2001, confirmed=True)["error"] and not dc_sends()
+assert brain.TOOLS["discord_send"][0]("Sam", "on my way", confirmed=True) == {"result": "sent to Sam"}
+assert dc_sends() == [{"id": "2", "kind": "friend", "text": "on my way"}]
+assert brain.TOOLS["discord_read"][0]("chess club #general")["messages"][0]["from"] == "Alex" and "discord_read" in brain.OUTSIDE_CONTENT
+assert brain.TOOLS["discord_read"][0]("chess club")["channels"][0]["unread"]
+discord.call = real_dc_call
+# connecting restarts Vesktop with the port, kept in vesktop-flags.conf where the launcher reads it (Arch's), once
+launcher, started = os.path.join(_home, "vesktop"), []
+with open(launcher, "w") as f:
+    f.write('_FLAGS_FILE="${XDG_CONFIG_HOME}/vesktop-flags.conf"\n')
+with open(os.path.join(_home, "config", "vesktop-flags.conf"), "w") as f:
+    f.write("--enable-wayland-ime")
+real = (system.vesktop, system.have, system.shutil.which, system.subprocess.Popen, system.IS_WINDOWS)
+system.vesktop, system.have, system.shutil.which = lambda: None, lambda n: n == "vesktop", lambda n: launcher
+system.subprocess.Popen, system.IS_WINDOWS = lambda cmd, **kw: started.append(cmd), False
+system.restart_vesktop(discord.FLAG)
+system.restart_vesktop(discord.FLAG)
+system.vesktop, system.have, system.shutil.which, system.subprocess.Popen, system.IS_WINDOWS = real
+assert started == [["vesktop", discord.FLAG]] * 2
+assert open(os.path.join(_home, "config", "vesktop-flags.conf")).read() == f"--enable-wayland-ime\n{discord.FLAG}\n"
 # a voice message is listened to (it said "can't listen to voice notes"): the bytes go to the model as audio
 heard_media, real_vision = [], brain.vision[0]
 brain.vision[0] = lambda contents: heard_media.append(contents[0]["parts"][0]["inlineData"]) or [{"text": "See you at 5."}]

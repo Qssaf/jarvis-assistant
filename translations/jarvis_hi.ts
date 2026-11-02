@@ -163,7 +163,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+193"/>
+        <location filename="../window.py" line="+195"/>
         <source>Copied</source>
         <translation>कॉपी हो गया</translation>
     </message>
@@ -867,7 +867,7 @@
 <context>
     <name>Message</name>
     <message>
-        <location filename="../qml/Message.qml" line="+69"/>
+        <location filename="../qml/Message.qml" line="+71"/>
         <source>Copy</source>
         <translation>कॉपी करें</translation>
     </message>
@@ -1074,7 +1074,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2428"/>
+        <location filename="../jarvis.py" line="+2558"/>
         <source>LISTENING</source>
         <translation>सुन रहा</translation>
     </message>
@@ -1300,7 +1300,7 @@
         <translation>बदलाव तुरंत सहेजे जाते हैं। मॉडल और API कुंजियाँ मॉडल पेज पर हैं।</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+32"/>
         <source>Checking…</source>
         <translation>जाँच हो रही है…</translation>
     </message>
@@ -1315,7 +1315,7 @@
         <translation>अपडेट नहीं हो सका: %1</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+36"/>
         <source>Passphrase saved</source>
         <translation>पासफ़्रेज़ सहेजा गया</translation>
     </message>
@@ -1542,19 +1542,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+126"/>
+        <location line="+129"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>सहेजें</translation>
     </message>
     <message>
-        <location line="-176"/>
-        <location line="+74"/>
+        <location line="-179"/>
+        <location line="+77"/>
         <source>Remove</source>
         <translation>हटाएँ</translation>
     </message>
     <message>
-        <location line="-64"/>
+        <location line="-67"/>
         <source>Push to talk</source>
         <translation>पुश टू टॉक</translation>
     </message>
@@ -2016,6 +2016,41 @@
     </message>
     <message>
         <location line="+9"/>
+        <source>Discord</source>
+        <translation>Discord</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message someone or a server channel. It sends only what you ask for (Discord bans accounts that act like bots).</source>
+        <translation>Jarvis Vesktop के ज़रिए, आपके अपने Discord में, आपके लिए Discord संदेश पढ़ता और भेजता है: पूछें कि नया क्या है, या किसी व्यक्ति या सर्वर चैनल को संदेश भेजने को कहें। यह वही भेजता है जो आप कहते हैं (Discord बॉट जैसा व्यवहार करने वाले खातों पर रोक लगाता है)।</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Connected to Vesktop</source>
+        <translation>Vesktop से जुड़ा है</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Waiting for Vesktop…</source>
+        <translation>Vesktop का इंतज़ार…</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Vesktop isn&apos;t running. Jarvis uses Discord through Vesktop (Discord with Vencord built in): install it, then sign in.</source>
+        <translation>Vesktop चल नहीं रहा है। Jarvis Discord को Vesktop (Vencord वाला Discord) के ज़रिए इस्तेमाल करता है: इसे इंस्टॉल करें, फिर साइन इन करें।</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Vesktop needs a restart with Jarvis&apos;s connection turned on (a call in Vesktop would drop).</source>
+        <translation>Vesktop को Jarvis का कनेक्शन चालू करके फिर से शुरू करना होगा (Vesktop में चल रही कॉल कट जाएगी)।</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Restart Vesktop</source>
+        <translation>Vesktop फिर से शुरू करें</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Your data</source>
         <translation>आपका डेटा</translation>
     </message>

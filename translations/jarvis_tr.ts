@@ -162,7 +162,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+193"/>
+        <location filename="../window.py" line="+195"/>
         <source>Copied</source>
         <translation>Kopyalandı</translation>
     </message>
@@ -859,7 +859,7 @@
 <context>
     <name>Message</name>
     <message>
-        <location filename="../qml/Message.qml" line="+69"/>
+        <location filename="../qml/Message.qml" line="+71"/>
         <source>Copy</source>
         <translation>Kopyala</translation>
     </message>
@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2428"/>
+        <location filename="../jarvis.py" line="+2558"/>
         <source>LISTENING</source>
         <translation>DİNLİYOR</translation>
     </message>
@@ -1287,7 +1287,7 @@
         <translation>Değişiklikler anında kaydedilir. Modeller ve API anahtarları Modeller sayfasındadır.</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+32"/>
         <source>Checking…</source>
         <translation>Kontrol ediliyor…</translation>
     </message>
@@ -1302,7 +1302,7 @@
         <translation>Güncellenemedi: %1</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+36"/>
         <source>Passphrase saved</source>
         <translation>Parola kaydedildi</translation>
     </message>
@@ -1529,19 +1529,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+126"/>
+        <location line="+129"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>Kaydet</translation>
     </message>
     <message>
-        <location line="-176"/>
-        <location line="+74"/>
+        <location line="-179"/>
+        <location line="+77"/>
         <source>Remove</source>
         <translation>Kaldır</translation>
     </message>
     <message>
-        <location line="-64"/>
+        <location line="-67"/>
         <source>Push to talk</source>
         <translation>Bas-konuş</translation>
     </message>
@@ -2003,6 +2003,41 @@
     </message>
     <message>
         <location line="+9"/>
+        <source>Discord</source>
+        <translation>Discord</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message someone or a server channel. It sends only what you ask for (Discord bans accounts that act like bots).</source>
+        <translation>Jarvis, Vesktop üzerinden kendi Discord hesabında senin için Discord mesajlarını okur ve gönderir: yenilikleri sor ya da birine veya bir sunucu kanalına mesaj göndermesini iste. Yalnızca istediğini gönderir (Discord bot gibi davranan hesapları yasaklar).</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Connected to Vesktop</source>
+        <translation>Vesktop'a bağlı</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Waiting for Vesktop…</source>
+        <translation>Vesktop bekleniyor…</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Vesktop isn&apos;t running. Jarvis uses Discord through Vesktop (Discord with Vencord built in): install it, then sign in.</source>
+        <translation>Vesktop çalışmıyor. Jarvis, Discord'u Vesktop (Vencord yerleşik Discord) üzerinden kullanır: kur ve giriş yap.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Vesktop needs a restart with Jarvis&apos;s connection turned on (a call in Vesktop would drop).</source>
+        <translation>Vesktop'un Jarvis bağlantısı açık olarak yeniden başlatılması gerekiyor (Vesktop'taki bir arama kesilir).</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Restart Vesktop</source>
+        <translation>Vesktop'u yeniden başlat</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Your data</source>
         <translation>Verileriniz</translation>
     </message>

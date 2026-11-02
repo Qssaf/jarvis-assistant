@@ -659,6 +659,52 @@ def app_running(name):
     return bool(name) and any((p.info["name"] or "").lower().removesuffix(".exe") == name for p in psutil.process_iter(["name"]))
 
 
+def vesktop():
+    """Vesktop's main process (psutil), or None."""
+    import psutil
+    for p in psutil.process_iter(["cmdline"]):
+        cmd = p.info["cmdline"] or []
+        if cmd and not any(a.startswith("--type=") for a in cmd) and (
+                os.path.basename(cmd[0]).lower() in ("vesktop", "vesktop.exe") or any(a.endswith("vesktop/app.asar") for a in cmd)):
+            return p
+    return None
+
+
+def restart_vesktop(flag):
+    """Quit Vesktop and start it again with a Chromium flag; on Linux packages whose launcher reads vesktop-flags.conf
+    (Arch's), the flag goes there too, so it's on at every later start."""
+    p = vesktop()
+    minimized = bool(p) and "--start-minimized" in p.cmdline()
+    if IS_WINDOWS:
+        exe = p.exe() if p else os.path.expandvars(r"%LOCALAPPDATA%\Programs\vesktop\Vesktop.exe")
+        command = [exe]
+    elif have("vesktop"):
+        command = ["vesktop"]
+        conf = os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "vesktop-flags.conf")
+        with open(shutil.which("vesktop"), "rb") as f:
+            reads_conf = b"vesktop-flags.conf" in f.read(200000)
+        text = open(conf).read() if os.path.exists(conf) else ""
+        if reads_conf and flag not in text.splitlines():
+            with open(conf, "w") as f:
+                f.write(text + ("\n" if text and not text.endswith("\n") else "") + flag + "\n")
+    elif have("flatpak"):
+        command = ["flatpak", "run", "dev.vencord.Vesktop"]
+    else:
+        raise RuntimeError("Vesktop isn't installed")
+    if p:
+        p.terminate()
+        try:
+            p.wait(15)
+        except Exception:
+            p.kill()
+    command += ["--start-minimized"] * minimized + [flag]
+    if IS_WINDOWS:
+        subprocess.Popen(command, creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
+                         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    else:
+        subprocess.Popen(command, start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 def close_window(name):
     if KDE and WAYLAND and have("kdotool"):
         return _kde_window(name, "windowclose")

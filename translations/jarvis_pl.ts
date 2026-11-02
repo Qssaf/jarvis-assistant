@@ -164,7 +164,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+193"/>
+        <location filename="../window.py" line="+195"/>
         <source>Copied</source>
         <translation>Skopiowano</translation>
     </message>
@@ -875,7 +875,7 @@
 <context>
     <name>Message</name>
     <message>
-        <location filename="../qml/Message.qml" line="+69"/>
+        <location filename="../qml/Message.qml" line="+71"/>
         <source>Copy</source>
         <translation>Kopiuj</translation>
     </message>
@@ -1084,7 +1084,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2428"/>
+        <location filename="../jarvis.py" line="+2558"/>
         <source>LISTENING</source>
         <translation>SŁUCHAM</translation>
     </message>
@@ -1313,7 +1313,7 @@
         <translation>Zmiany zapisują się od razu. Modele i klucze API są na stronie Modele.</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+32"/>
         <source>Checking…</source>
         <translation>Sprawdzanie…</translation>
     </message>
@@ -1328,7 +1328,7 @@
         <translation>Nie udało się zaktualizować: %1</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+36"/>
         <source>Passphrase saved</source>
         <translation>Zapisano hasło głosowe</translation>
     </message>
@@ -1555,19 +1555,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+126"/>
+        <location line="+129"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>Zapisz</translation>
     </message>
     <message>
-        <location line="-176"/>
-        <location line="+74"/>
+        <location line="-179"/>
+        <location line="+77"/>
         <source>Remove</source>
         <translation>Usuń</translation>
     </message>
     <message>
-        <location line="-64"/>
+        <location line="-67"/>
         <source>Push to talk</source>
         <translation>Naciśnij i mów</translation>
     </message>
@@ -2029,6 +2029,41 @@
     </message>
     <message>
         <location line="+9"/>
+        <source>Discord</source>
+        <translation>Discord</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message someone or a server channel. It sends only what you ask for (Discord bans accounts that act like bots).</source>
+        <translation>Jarvis czyta i wysyła za ciebie wiadomości na Discordzie przez Vesktop, na twoim własnym koncie: zapytaj, co nowego, albo poproś o wiadomość do kogoś lub na kanał serwera. Wysyła tylko to, o co poprosisz (Discord blokuje konta działające jak boty).</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Connected to Vesktop</source>
+        <translation>Połączono z Vesktop</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Waiting for Vesktop…</source>
+        <translation>Czekam na Vesktop…</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Vesktop isn&apos;t running. Jarvis uses Discord through Vesktop (Discord with Vencord built in): install it, then sign in.</source>
+        <translation>Vesktop nie działa. Jarvis korzysta z Discorda przez Vesktop (Discord z wbudowanym Vencordem): zainstaluj go i zaloguj się.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Vesktop needs a restart with Jarvis&apos;s connection turned on (a call in Vesktop would drop).</source>
+        <translation>Vesktop trzeba uruchomić ponownie z włączonym połączeniem Jarvisa (rozmowa w Vesktop zostanie przerwana).</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Restart Vesktop</source>
+        <translation>Uruchom ponownie Vesktop</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Your data</source>
         <translation>Twoje dane</translation>
     </message>

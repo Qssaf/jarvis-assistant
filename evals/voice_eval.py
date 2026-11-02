@@ -83,10 +83,10 @@ def simulated(case, name, args):
         return {"result": "not listening any more"}
     if name == "ignore":
         return {"result": "ignored"}
-    if name in ("whatsapp_send", "whatsapp_call"):  # (never the real WhatsApp: the gate as the real tool)
+    if name in ("whatsapp_send", "whatsapp_call", "discord_send"):  # (never the real WhatsApp or Discord: the gate as the real tool)
         if not args.get("confirmed"):
             return {"error": brain.NEEDS_YES, "to": args.get("to")}
-        return ({"result": f"sent to {args.get('to')}"} if name == "whatsapp_send" else
+        return ({"result": f"sent to {args.get('to')}"} if name != "whatsapp_call" else
                 {"result": f"calling {args.get('to')} now: when the call ends, Jarvis tells the user how it went (say only that you're calling)"})
     if name == "answer_task":
         return {"error": "no task is waiting for an answer: treat it as a new request"}
@@ -160,7 +160,7 @@ def simulated(case, name, args):
 
 
 REAL = {"web_search", "read_webpage", "youtube_search", "weather", "classroom_due", "classroom_announcements", "briefing", "drive_file", "recall",
-        "list_windows", "list_reminders"}
+        "list_windows", "list_reminders", "discord_read"}
 
 
 def run_tool(case, name, args):
@@ -445,7 +445,9 @@ CASES = [
     ("screen_scroll", ["Scroll down."], lambda c, s: called(c, "act") or "an act scroll"),
 
     # ---- messaging and long tasks
-    ("msg_discord", ["Send 'on my way' to Sam on Discord."], lambda c, s: ("on my way" in tasks(c) or "on my way" in acts(c)) or "sends the exact words"),
+    ("msg_discord", ["Send 'on my way' to Sam on Discord."], lambda c, s: ("on my way" in str(arg(c, "discord_send", "text", "")).lower() and arg(c, "discord_send", "confirmed", False))
+     or (called(c, "discord_read") and not called(c, "discord_send") and "?" in " ".join(s))  # (reads are real: no Sam there, it asks)
+     or "discord_send with the exact words, confirmed (or asks which Sam)"),
     ("task_form", ["Fill out the form on my screen with my details."], lambda c, s: called(c, "do_task") or "do_task"),
     ("task_flight", ["Find the cheapest flight to London next month."], lambda c, s: called(c, "do_task", "web_search") or bool(re.search(r"\b(from|departure|depart)\b", s[0], re.I)) or "search, do_task, or ask where from"),
     ("task_instagram", ["Open Instagram and go through my saved reels and tell me which ones are worth adding."],

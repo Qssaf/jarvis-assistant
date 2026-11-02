@@ -50,6 +50,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - Desktop apps: one act that launches, presses controls by their accessible names, reads the result with a look step and closes, e.g. act([{launch: "kcalc"}, {press: ["Seven", "Multiply", "Eight", "Equals"]}, {look: "What does the display show?"}, {close: "kcalc"}]).
 - Websites and chat apps (Discord, OpenCode, VS Code and other Electron apps show no controls: never ui_controls them): act with click_on naming the exact field ("the message box at the bottom", "the prompt box"), never just the app's name, and end that same act with a look step. Browser tabs: focus_window the browser, then [{keys: "ctrl+shift+a"}, {type: "tab name"}, {keys: "Return"}].
 - WhatsApp: whatsapp_read (chats and groups, or one chat's messages), whatsapp_media to listen to a voice message or see a photo someone sent, whatsapp_send (to: the chat's name), and whatsapp_call to phone someone and tell them something out loud ("call dad and tell him I want water"), never the screen. A message the user dictated to someone they named: whatsapp_send (or whatsapp_call when they said call) with confirmed: true at once.
+- Discord: discord_read (their DMs and the channels that mention them, or one chat: a person, "Server #channel", or a server to see its channels) and discord_send (to: those names), never the screen unless they say Discord isn't connected. A dictated message to someone named: discord_send with confirmed: true at once.
 - Messaging: [{click_on: "the chat named 'Sam Lee' in the left list"}, {expect: "the open conversation is with Sam Lee"}, {click_on: "the message box at the bottom"}, {type: "..."}, {keys: "Return"}, {look: "Is the message in the conversation?"}].
 - System info, files, volume, clipboard: run_command. {SYSTEM} Open apps with act launch, not run_command.
 - Pictures: make_image, show_image. Local files: read_file. Time: set_reminder (repeat for "every day/weekday/week"), list_reminders, cancel_reminder.
@@ -149,7 +150,7 @@ VOICE_ACT = ("Do a whole job on screen in one go, in order. Each step is one of:
              "{scroll: 3} (scroll under mouse: positive = down toward newer messages, negative = up toward older messages), {wait: seconds}.").replace("kcalc", system.CALC)
 SCREEN_TOOLS = {"act", "look", "show_image", "ui_controls", "list_windows", "focus_window", "close_window", "open_url", "run_command"}
 QUERY_TOOLS = {"look", "web_search", "read_webpage", "youtube_search", "read_file", "briefing", "ui_controls", "list_windows", "list_reminders",
-               "recall", "selection", "whatsapp_read", "whatsapp_media"}
+               "recall", "selection", "whatsapp_read", "whatsapp_media", "discord_read"}
 VOICE_RESULT_LIMIT = 12000  # characters of one tool result the voice model gets
 # tools the voice may call for one thing the user said: looking for an app that isn't open, it once called list_windows
 # and look over 100 times in a minute without a word to the user
@@ -158,7 +159,8 @@ VOICE_TOOL_LIMIT = 12
 LIVE_TOOLS = ["run_command", "web_search", "read_webpage", "youtube_search", "open_url", "remember", "forget", "set_reminder", "list_reminders",
               "cancel_reminder", "list_windows", "focus_window", "close_window", "act", "look", "ui_controls", "make_image",
               "show_image", "read_file", "briefing", "account_settings", "weather", "classroom_due", "classroom_announcements", "drive_file", "routine",
-              "recall", "selection", "media", "notes", "recent_changes", "watch", "checks", "whatsapp_read", "whatsapp_media", "whatsapp_send", "whatsapp_call"]
+              "recall", "selection", "media", "notes", "recent_changes", "watch", "checks", "whatsapp_read", "whatsapp_media", "whatsapp_send", "whatsapp_call",
+              "discord_read", "discord_send"]
 
 # what the user asked to be called, from what Jarvis remembers ("prefers to be called Q", "call me Sam, not sir")
 # ponytail: a pattern over remember()'s usual wording, not understanding; unmatched memory falls back to the prompt's rule
@@ -191,7 +193,7 @@ TOOL_LABELS = {"run_command": "Running a command", "web_search": "Searching the 
                "routine": "Running a routine", "recall": "Searching past conversations", "selection": "Reading your selection",
                "media": "Controlling the music", "notes": "Taking notes", "recent_changes": "Checking what changed", "watch": "Watching the screen",
                "plan": "Planning", "checks": "Updating your checks", "whatsapp_read": "Reading WhatsApp", "whatsapp_media": "Opening a WhatsApp message", "whatsapp_call": "Calling on WhatsApp",
-               "whatsapp_send": "Sending a WhatsApp message"}
+               "whatsapp_send": "Sending a WhatsApp message", "discord_read": "Reading Discord", "discord_send": "Sending a Discord message"}
 
 
 def tool_label(name):
@@ -597,6 +599,7 @@ class Live:
                    if brain_mod.whatsapp_link[0] and brain_mod.whatsapp_link[0].saved.get("linked") else
                    "- WhatsApp: not linked yet; the user can link it in Settings → WhatsApp (then you can read, send and "
                    "answer messages and calls).\n")
+                + "- The user's own Discord through Vesktop (discord_read, discord_send), when Vesktop is running.\n"
                 + (f"- {brain_mod.account_policy()}\n" if brain_mod.account_policy() else "")
                 + f"- Plugins (MCP servers): {', '.join(plugins) or 'none'}; more can be added in Jarvis's Plugins page.\n"
                 + (f"- Not working right now: {', '.join(down)}. {self.brain.accounts_down() or self.brain.sign_in_note()}\n"
@@ -907,6 +910,8 @@ class Live:
             args = {**args, "screenshot_after": False, "fast": True, "halt": halt}  # (it couldn't see that screenshot either: saves a second per act)
             if typed_text(args.get("steps")):
                 return await asyncio.shield(asyncio.ensure_future(self._type_once(fc, args)))  # (cancelled, it still finishes and records)
+        if fc.name in ("whatsapp_send", "discord_send"):
+            return await asyncio.shield(asyncio.ensure_future(self._send_once(fc, args)))
         if fc.name == "look":
             args = {**args, "fast": True}  # (the quickest vision model: the voice is waiting on it)
         if fc.name in QUERY_TOOLS:  # the same question again while it's being answered (a noisy room re-asks after each
@@ -952,6 +957,20 @@ class Live:
                 self.sent_for = self.user_spoke_at
             elif any(str(d).startswith("typed ") for d in done):
                 self.typed[text] = {"at": time.time(), "sent": False}
+            return result
+
+    async def _send_once(self, fc, args):
+        """A message tool, as _type_once: the voice model sometimes calls it again with the same words right after it
+        worked (a message went twice), so the same message to the same chat isn't sent again until the user speaks."""
+        async with self.act_lock:  # (a second call waits for the first, then sees it went)
+            key = json.dumps([fc.name, args.get("to"), args.get("text")]).lower()
+            before = self.typed.get(key)
+            if before and self.user_spoke_at < before["at"]:
+                return {"error": "NOT DONE, and not needed: this exact message was just sent there. Never send it again unless "
+                                 "the user asks for it again; tell them it's sent."}
+            result = await self._answer(fc, args)
+            if isinstance(result, dict) and str(result.get("result", "")).startswith("sent"):
+                self.typed[key] = {"at": time.time(), "sent": True}
             return result
 
     async def _answer(self, fc, args):
@@ -1874,6 +1893,9 @@ def api_get(path, brain):
         return remote_ref[0].status() if remote_ref[0] else {"token": False, "paired": "", "code": "", "error": "not running"}
     if path == "/api/phone":
         return phone_ref[0].status() if phone_ref[0] else {"relay": "", "connected": False, "error": "not running", "devices": []}
+    if path == "/api/discord":
+        import discord
+        return discord.status()
     if path == "/api/whatsapp":
         return whatsapp_ref[0].status() if whatsapp_ref[0] else {"state": "off", "linked": False, "error": "not running"}
     if path == "/api/report":
@@ -2360,6 +2382,10 @@ def api_post(path, data, live, brain):
     elif path == "/api/phone/unpair":
         phone_ref[0].unpair(str(data.get("device", "")))
         return phone_ref[0].status()
+    elif path == "/api/discord/connect":
+        import discord
+        system.restart_vesktop(discord.FLAG)
+        return {"state": "starting"}
     elif path == "/api/whatsapp/link":
         whatsapp_ref[0].link()
         return whatsapp_ref[0].status()

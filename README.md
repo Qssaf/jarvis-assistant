@@ -109,6 +109,14 @@ through* (never answered by Jarvis, always told to you out loud, even in quiet h
 in the chat). This isn't an official WhatsApp feature:
 WhatsApp may block numbers that act like bots, which is why Jarvis stays this careful.
 
+### Discord
+With [Vesktop](https://github.com/Vencord/Vesktop) (Discord with Vencord built in) open, Settings → *Discord* →
+*Restart Vesktop* once. Jarvis then reads your DMs, the server channels that mention you and any channel (*"what's new
+in the study server?"*), and sends what you ask (*"tell Sam I'm on my way"*, *"post 'gg' in Gaming #general"*), inside
+your own Discord: no bot, nothing on screen. It never writes on its own (Discord bans accounts that act like bots).
+Vesktop then listens on a local debugging port (127.0.0.1 only); anything running as you can use it, as it can already
+read Vesktop's files.
+
 ### Routines and reminders
 Say *"when I say study mode, close Discord, open my notes and set a 50-minute timer"*, then just *"study mode"*.
 Reminders can repeat: *"remind me every weekday at 8 to check Classroom"*.

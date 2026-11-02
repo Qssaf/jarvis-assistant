@@ -20,7 +20,7 @@
     </message>
     <message>
         <location line="+11"/>
-        <source>Couldn't reach your accounts: %1</source>
+        <source>Couldn&apos;t reach your accounts: %1</source>
         <translation>Không kết nối được tới tài khoản: %1</translation>
     </message>
     <message>
@@ -145,7 +145,7 @@
     </message>
     <message numerus="yes">
         <location line="+3"/>
-        <source>Averaged over the last %n replies: from the end of what you said to Jarvis's first word.</source>
+        <source>Averaged over the last %n replies: from the end of what you said to Jarvis&apos;s first word.</source>
         <translation>
             <numerusform>Trung bình của %n câu trả lời gần nhất: từ lúc bạn nói xong đến từ đầu tiên của Jarvis.</numerusform>
         </translation>
@@ -162,7 +162,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+193"/>
+        <location filename="../window.py" line="+195"/>
         <source>Copied</source>
         <translation>Đã sao chép</translation>
     </message>
@@ -408,7 +408,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Free Google AI Studio keys allow a limited number of requests per model each day. When one runs out, Jarvis uses the next model in that job's list (the Models page) until the quota resets at midnight Pacific time.</source>
+        <source>Free Google AI Studio keys allow a limited number of requests per model each day. When one runs out, Jarvis uses the next model in that job&apos;s list (the Models page) until the quota resets at midnight Pacific time.</source>
         <translation>Khóa Google AI Studio miễn phí chỉ cho một số yêu cầu giới hạn mỗi ngày cho từng mô hình. Khi một mô hình hết lượt, Jarvis dùng mô hình kế tiếp trong danh sách của tác vụ đó (trang Mô hình) cho đến khi hạn mức được đặt lại lúc nửa đêm giờ Thái Bình Dương.</translation>
     </message>
     <message numerus="yes">
@@ -459,7 +459,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Go ahead, I'm listening</source>
+        <source>Go ahead, I&apos;m listening</source>
         <translation>Bạn nói đi, tôi đang nghe</translation>
     </message>
     <message>
@@ -489,7 +489,7 @@
     </message>
     <message>
         <location line="+0"/>
-        <source>What's due this week?</source>
+        <source>What&apos;s due this week?</source>
         <translation>Tuần này có bài nào phải nộp?</translation>
     </message>
     <message>
@@ -509,7 +509,7 @@
     </message>
     <message>
         <location line="+0"/>
-        <source>What's on my screen?</source>
+        <source>What&apos;s on my screen?</source>
         <translation>Trên màn hình của tôi có gì?</translation>
     </message>
     <message>
@@ -726,7 +726,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Say a routine's name and Jarvis runs its steps.</source>
+        <source>Say a routine&apos;s name and Jarvis runs its steps.</source>
         <translation>Nói tên một quy trình và Jarvis sẽ thực hiện các bước của nó.</translation>
     </message>
     <message>
@@ -859,7 +859,7 @@
 <context>
     <name>Message</name>
     <message>
-        <location filename="../qml/Message.qml" line="+69"/>
+        <location filename="../qml/Message.qml" line="+71"/>
         <source>Copy</source>
         <translation>Sao chép</translation>
     </message>
@@ -900,12 +900,12 @@
     </message>
     <message>
         <location line="+45"/>
-        <source>Jarvis's choice</source>
+        <source>Jarvis&apos;s choice</source>
         <translation>Jarvis tự chọn</translation>
     </message>
     <message>
         <location line="+5"/>
-        <source>Use Jarvis's choice</source>
+        <source>Use Jarvis&apos;s choice</source>
         <translation>Để Jarvis tự chọn</translation>
     </message>
     <message numerus="yes">
@@ -957,7 +957,7 @@
     </message>
     <message>
         <location line="+6"/>
-        <source>Ollama isn't running</source>
+        <source>Ollama isn&apos;t running</source>
         <translation>Ollama chưa chạy</translation>
     </message>
     <message>
@@ -997,12 +997,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Sign in with Google for Gemini (and Claude) through your account's Antigravity quota, much more than a free AI Studio key.</source>
+        <source>Sign in with Google for Gemini (and Claude) through your account&apos;s Antigravity quota, much more than a free AI Studio key.</source>
         <translation>Đăng nhập bằng Google để dùng Gemini (và Claude) qua hạn mức Antigravity của tài khoản, nhiều hơn hẳn một khóa AI Studio miễn phí.</translation>
     </message>
     <message>
         <location line="+15"/>
-        <source>It signs in the way Google's Antigravity app does, which Google doesn't offer to other apps: Google may limit or suspend accounts used like this. Use an account you can afford to lose.</source>
+        <source>It signs in the way Google&apos;s Antigravity app does, which Google doesn&apos;t offer to other apps: Google may limit or suspend accounts used like this. Use an account you can afford to lose.</source>
         <translation>Cách đăng nhập này giống ứng dụng Antigravity của Google, vốn không dành cho ứng dụng khác: Google có thể hạn chế hoặc khóa tài khoản dùng theo cách này. Hãy dùng tài khoản mà bạn không ngại bị mất.</translation>
     </message>
     <message>
@@ -1022,7 +1022,7 @@
     </message>
     <message>
         <location line="+8"/>
-        <source>First install the opencode-antigravity-auth plugin (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis's env file.</source>
+        <source>First install the opencode-antigravity-auth plugin (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
         <translation>Trước tiên hãy cài plugin opencode-antigravity-auth (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis sẽ đăng nhập bằng thông tin của nó. Hoặc đặt ANTIGRAVITY_CLIENT_ID và ANTIGRAVITY_CLIENT_SECRET vào tệp env của Jarvis.</translation>
     </message>
     <message>
@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2428"/>
+        <location filename="../jarvis.py" line="+2558"/>
         <source>LISTENING</source>
         <translation>ĐANG NGHE</translation>
     </message>
@@ -1184,7 +1184,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Start from a quick pick, or fill in any MCP server. Jarvis connects to it as soon as it's added.</source>
+        <source>Start from a quick pick, or fill in any MCP server. Jarvis connects to it as soon as it&apos;s added.</source>
         <translation>Chọn nhanh một mục có sẵn, hoặc điền bất kỳ máy chủ MCP nào. Jarvis sẽ kết nối ngay khi thêm xong.</translation>
     </message>
     <message>
@@ -1255,13 +1255,13 @@
     </message>
     <message>
         <location line="+2"/>
-        <source>JSON, e.g. {"Authorization": "Bearer …"}</source>
-        <translation>JSON, ví dụ: {"Authorization": "Bearer …"}</translation>
+        <source>JSON, e.g. {&quot;Authorization&quot;: &quot;Bearer …&quot;}</source>
+        <translation>JSON, ví dụ: {&quot;Authorization&quot;: &quot;Bearer …&quot;}</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>JSON, e.g. {"API_KEY": "…"}</source>
-        <translation>JSON, ví dụ: {"API_KEY": "…"}</translation>
+        <source>JSON, e.g. {&quot;API_KEY&quot;: &quot;…&quot;}</source>
+        <translation>JSON, ví dụ: {&quot;API_KEY&quot;: &quot;…&quot;}</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1287,7 +1287,7 @@
         <translation>Thay đổi được lưu ngay. Mô hình và khóa API nằm ở trang Mô hình.</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+32"/>
         <source>Checking…</source>
         <translation>Đang kiểm tra…</translation>
     </message>
@@ -1298,11 +1298,11 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Couldn't update: %1</source>
+        <source>Couldn&apos;t update: %1</source>
         <translation>Không cập nhật được: %1</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+36"/>
         <source>Passphrase saved</source>
         <translation>Đã lưu cụm mật khẩu</translation>
     </message>
@@ -1323,7 +1323,7 @@
     </message>
     <message>
         <location line="+2"/>
-        <source>Jarvis's voice</source>
+        <source>Jarvis&apos;s voice</source>
         <translation>Giọng của Jarvis</translation>
     </message>
     <message>
@@ -1383,7 +1383,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Hear and speak with the models on the Models page instead of Gemini Live, for keys without it. Off, the backup voice only answers while Gemini Live can't be reached</source>
+        <source>Hear and speak with the models on the Models page instead of Gemini Live, for keys without it. Off, the backup voice only answers while Gemini Live can&apos;t be reached</source>
         <translation>Nghe và nói bằng các mô hình ở trang Mô hình thay cho Gemini Live, dành cho khóa không hỗ trợ Gemini Live. Khi tắt, giọng dự phòng chỉ trả lời lúc không kết nối được Gemini Live</translation>
     </message>
     <message>
@@ -1474,7 +1474,7 @@
     </message>
     <message>
         <location line="+0"/>
-        <source>Wake-ups you dismiss teach Jarvis what isn't you</source>
+        <source>Wake-ups you dismiss teach Jarvis what isn&apos;t you</source>
         <translation>Những lần đánh thức bạn bỏ qua giúp Jarvis nhận ra đâu không phải giọng bạn</translation>
     </message>
     <message>
@@ -1494,7 +1494,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Someone else saying the wake word doesn't wake Jarvis. Talk and push to talk always work</source>
+        <source>Someone else saying the wake word doesn&apos;t wake Jarvis. Talk and push to talk always work</source>
         <translation>Người khác nói từ đánh thức sẽ không đánh thức Jarvis. Nút Nói và Nhấn để nói vẫn luôn hoạt động</translation>
     </message>
     <message>
@@ -1504,12 +1504,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Keeps the PC's own sound (Jarvis, games, videos, calls) out of the mic, so it isn't heard as you, and you can talk over Jarvis (experimental on Windows: Health says if it's working; restart Jarvis to apply)</source>
+        <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (experimental on Windows: Health says if it&apos;s working; restart Jarvis to apply)</source>
         <translation>Ngăn âm thanh của chính máy tính (Jarvis, trò chơi, video, cuộc gọi) lọt vào micrô để không bị nhầm là giọng bạn, và bạn có thể nói chen khi Jarvis đang nói (thử nghiệm trên Windows: trang Tình trạng cho biết có hoạt động không; khởi động lại Jarvis để áp dụng)</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Keeps the PC's own sound (Jarvis, games, videos, calls) out of the mic, so it isn't heard as you, and you can talk over Jarvis (PipeWire; restart Jarvis to apply)</source>
+        <source>Keeps the PC&apos;s own sound (Jarvis, games, videos, calls) out of the mic, so it isn&apos;t heard as you, and you can talk over Jarvis (PipeWire; restart Jarvis to apply)</source>
         <translation>Ngăn âm thanh của chính máy tính (Jarvis, trò chơi, video, cuộc gọi) lọt vào micrô để không bị nhầm là giọng bạn, và bạn có thể nói chen khi Jarvis đang nói (PipeWire; khởi động lại Jarvis để áp dụng)</translation>
     </message>
     <message>
@@ -1529,19 +1529,19 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+126"/>
+        <location line="+129"/>
         <location line="+52"/>
         <source>Save</source>
         <translation>Lưu</translation>
     </message>
     <message>
-        <location line="-176"/>
-        <location line="+74"/>
+        <location line="-179"/>
+        <location line="+77"/>
         <source>Remove</source>
         <translation>Gỡ bỏ</translation>
     </message>
     <message>
-        <location line="-64"/>
+        <location line="-67"/>
         <source>Push to talk</source>
         <translation>Nhấn để nói</translation>
     </message>
@@ -1597,7 +1597,7 @@
     </message>
     <message>
         <location line="+0"/>
-        <source>Jarvis doesn't speak up on its own: reminders, results and messages only go to the chat, notifications and your phone. It still answers you (also in the tray menu)</source>
+        <source>Jarvis doesn&apos;t speak up on its own: reminders, results and messages only go to the chat, notifications and your phone. It still answers you (also in the tray menu)</source>
         <translation>Jarvis không tự lên tiếng: lời nhắc, kết quả và tin nhắn chỉ được gửi vào khung trò chuyện, thông báo và điện thoại của bạn. Jarvis vẫn trả lời khi bạn hỏi (cũng có trong menu khay hệ thống)</translation>
     </message>
     <message>
@@ -1617,7 +1617,7 @@
     </message>
     <message>
         <location line="+0"/>
-        <source>Reminders a day and two hours before work is due (skipped once you've turned it in)</source>
+        <source>Reminders a day and two hours before work is due (skipped once you&apos;ve turned it in)</source>
         <translation>Nhắc trước hạn nộp một ngày và hai giờ (bỏ qua nếu bạn đã nộp bài)</translation>
     </message>
     <message>
@@ -1692,12 +1692,12 @@
     </message>
     <message>
         <location line="+4"/>
-        <source>Each text shows in the first language that has it. English is the window's own, so languages under it aren't used.</source>
+        <source>Each text shows in the first language that has it. English is the window&apos;s own, so languages under it aren&apos;t used.</source>
         <translation>Mỗi đoạn chữ hiển thị bằng ngôn ngữ đầu tiên có bản dịch. Tiếng Anh là ngôn ngữ gốc của giao diện, nên các ngôn ngữ xếp dưới nó sẽ không được dùng.</translation>
     </message>
     <message>
         <location line="+4"/>
-        <source>Show Jarvis's thinking in the chat</source>
+        <source>Show Jarvis&apos;s thinking in the chat</source>
         <translation>Hiện suy nghĩ của Jarvis trong khung trò chuyện</translation>
     </message>
     <message>
@@ -1737,8 +1737,8 @@
     </message>
     <message>
         <location line="+5"/>
-        <source>In Telegram, message &lt;a href="https://t.me/BotFather"&gt;@BotFather&lt;/a&gt;, send /newbot and copy the token it gives you.</source>
-        <translation>Trong Telegram, nhắn tin cho &lt;a href="https://t.me/BotFather"&gt;@BotFather&lt;/a&gt;, gửi /newbot rồi sao chép token được cấp.</translation>
+        <source>In Telegram, message &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, send /newbot and copy the token it gives you.</source>
+        <translation>Trong Telegram, nhắn tin cho &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, gửi /newbot rồi sao chép token được cấp.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1757,7 +1757,7 @@
     </message>
     <message>
         <location line="+0"/>
-        <source>Paste your bot's token</source>
+        <source>Paste your bot&apos;s token</source>
         <translation>Dán token của bot</translation>
     </message>
     <message>
@@ -1788,7 +1788,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>The Jarvis Android app reaches this PC from anywhere through your own private relay. It's end-to-end encrypted: the relay only passes on scrambled data, and nothing on this PC is open to the internet.</source>
+        <source>The Jarvis Android app reaches this PC from anywhere through your own private relay. It&apos;s end-to-end encrypted: the relay only passes on scrambled data, and nothing on this PC is open to the internet.</source>
         <translation>Ứng dụng Jarvis cho Android kết nối tới máy tính này từ bất cứ đâu qua relay riêng của bạn. Kết nối được mã hóa đầu cuối: relay chỉ chuyển tiếp dữ liệu đã mã hóa, và máy tính này không mở cổng nào ra internet.</translation>
     </message>
     <message>
@@ -1813,7 +1813,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>In the relay folder of Jarvis's files, sign in to a free Cloudflare account:</source>
+        <source>In the relay folder of Jarvis&apos;s files, sign in to a free Cloudflare account:</source>
         <translation>Trong thư mục relay của Jarvis, đăng nhập một tài khoản Cloudflare miễn phí:</translation>
     </message>
     <message>
@@ -1828,7 +1828,7 @@
     </message>
     <message>
         <location line="+7"/>
-        <source>Your relay's address, like https://jarvis-relay.you.workers.dev</source>
+        <source>Your relay&apos;s address, like https://jarvis-relay.you.workers.dev</source>
         <translation>Địa chỉ relay của bạn, ví dụ: https://jarvis-relay.you.workers.dev</translation>
     </message>
     <message>
@@ -1878,7 +1878,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Jarvis links to your own WhatsApp like WhatsApp Web. It answers your contacts' messages that don't need you, saying it's your assistant, and picks up calls you miss to take a message. It's not an official WhatsApp feature: WhatsApp may block numbers that act like bots, so Jarvis answers only saved contacts, never groups.</source>
+        <source>Jarvis links to your own WhatsApp like WhatsApp Web. It answers your contacts&apos; messages that don&apos;t need you, saying it&apos;s your assistant, and picks up calls you miss to take a message. It&apos;s not an official WhatsApp feature: WhatsApp may block numbers that act like bots, so Jarvis answers only saved contacts, never groups.</source>
         <translation>Jarvis liên kết với WhatsApp của bạn giống như WhatsApp Web. Jarvis trả lời những tin nhắn của danh bạ không cần đến bạn, cho biết mình là trợ lý của bạn, và nghe máy khi bạn lỡ cuộc gọi để nhận lời nhắn. Đây không phải tính năng chính thức của WhatsApp: WhatsApp có thể chặn số điện thoại hoạt động như bot, nên Jarvis chỉ trả lời danh bạ đã lưu, không bao giờ trả lời trong nhóm.</translation>
     </message>
     <message>
@@ -1948,7 +1948,7 @@
     </message>
     <message>
         <location line="+2"/>
-        <source>Pick up if I don't (20 s)</source>
+        <source>Pick up if I don&apos;t (20 s)</source>
         <translation>Nghe máy nếu tôi không nghe (20 giây)</translation>
     </message>
     <message>
@@ -1988,21 +1988,56 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>e.g. I'm in class until 5, I'll answer after</source>
+        <source>e.g. I&apos;m in class until 5, I&apos;ll answer after</source>
         <translation>ví dụ: Mình đang học đến 5 giờ, xong sẽ trả lời</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Tell people when I'm busy</source>
+        <source>Tell people when I&apos;m busy</source>
         <translation>Cho mọi người biết khi nào tôi bận</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>From your Google Calendar: only the times, never what you're doing</source>
+        <source>From your Google Calendar: only the times, never what you&apos;re doing</source>
         <translation>Từ Google Lịch của bạn: chỉ giờ, không bao giờ nói bạn đang làm gì</translation>
     </message>
     <message>
         <location line="+9"/>
+        <source>Discord</source>
+        <translation>Discord</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis reads and sends Discord messages for you through Vesktop, inside your own Discord: ask it what&apos;s new, or to message someone or a server channel. It sends only what you ask for (Discord bans accounts that act like bots).</source>
+        <translation>Jarvis đọc và gửi tin nhắn Discord cho bạn qua Vesktop, ngay trong Discord của bạn: hỏi xem có gì mới, hoặc nhờ nhắn cho ai đó hay một kênh trong máy chủ. Nó chỉ gửi những gì bạn yêu cầu (Discord cấm các tài khoản hoạt động như bot).</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Connected to Vesktop</source>
+        <translation>Đã kết nối với Vesktop</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Waiting for Vesktop…</source>
+        <translation>Đang chờ Vesktop…</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Vesktop isn&apos;t running. Jarvis uses Discord through Vesktop (Discord with Vencord built in): install it, then sign in.</source>
+        <translation>Vesktop chưa chạy. Jarvis dùng Discord qua Vesktop (Discord có sẵn Vencord): hãy cài đặt rồi đăng nhập.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Vesktop needs a restart with Jarvis&apos;s connection turned on (a call in Vesktop would drop).</source>
+        <translation>Cần khởi động lại Vesktop với kết nối của Jarvis được bật (cuộc gọi trong Vesktop sẽ bị ngắt).</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Restart Vesktop</source>
+        <translation>Khởi động lại Vesktop</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Your data</source>
         <translation>Dữ liệu của bạn</translation>
     </message>
@@ -2068,7 +2103,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>One file with your settings, memory, reminders, scheduled tasks, routines, plugins, conversations and the clips Jarvis learned your voice from. Keys, account sign-ins, WhatsApp and your phone aren't in it: set those up again on the other computer.</source>
+        <source>One file with your settings, memory, reminders, scheduled tasks, routines, plugins, conversations and the clips Jarvis learned your voice from. Keys, account sign-ins, WhatsApp and your phone aren&apos;t in it: set those up again on the other computer.</source>
         <translation>Một tệp chứa cài đặt, ghi nhớ, lời nhắc, tác vụ đã lên lịch, quy trình, plugin, cuộc trò chuyện và các đoạn ghi âm Jarvis dùng để học giọng bạn. Tệp không gồm khóa, thông tin đăng nhập tài khoản, WhatsApp và điện thoại của bạn: hãy thiết lập lại chúng trên máy kia.</translation>
     </message>
     <message>
@@ -2083,7 +2118,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Bringing one in replaces what's on this computer (conversations are added), then Jarvis restarts.</source>
+        <source>Bringing one in replaces what&apos;s on this computer (conversations are added), then Jarvis restarts.</source>
         <translation>Nhập bản sao lưu sẽ thay thế dữ liệu trên máy này (cuộc trò chuyện được thêm vào), sau đó Jarvis khởi động lại.</translation>
     </message>
     <message>
@@ -2227,8 +2262,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Jarvis thinks with Google Gemini. A free key takes a minute: sign in at &lt;a href="https://aistudio.google.com/apikey"&gt;aistudio.google.com/apikey&lt;/a&gt;, press Create API key, and paste it here. It’s kept in your system keychain.</source>
-        <translation>Jarvis suy nghĩ bằng Google Gemini. Lấy khóa miễn phí chỉ mất một phút: đăng nhập tại &lt;a href="https://aistudio.google.com/apikey"&gt;aistudio.google.com/apikey&lt;/a&gt;, nhấn Create API key rồi dán khóa vào đây. Khóa được lưu trong kho khóa của hệ thống.</translation>
+        <source>Jarvis thinks with Google Gemini. A free key takes a minute: sign in at &lt;a href=&quot;https://aistudio.google.com/apikey&quot;&gt;aistudio.google.com/apikey&lt;/a&gt;, press Create API key, and paste it here. It’s kept in your system keychain.</source>
+        <translation>Jarvis suy nghĩ bằng Google Gemini. Lấy khóa miễn phí chỉ mất một phút: đăng nhập tại &lt;a href=&quot;https://aistudio.google.com/apikey&quot;&gt;aistudio.google.com/apikey&lt;/a&gt;, nhấn Create API key rồi dán khóa vào đây. Khóa được lưu trong kho khóa của hệ thống.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2526,7 +2561,7 @@
     </message>
     <message>
         <location line="+13"/>
-        <source>Running in the tray. Say "%1".</source>
+        <source>Running in the tray. Say &quot;%1&quot;.</source>
         <translation>Đang chạy trong khay hệ thống. Hãy nói “%1”.</translation>
     </message>
     <message>

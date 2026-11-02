@@ -6,7 +6,7 @@ commands, and carries call audio both ways.
 
 Not an official API: WhatsApp may ban numbers that act like bots, so Jarvis only answers saved contacts, never groups,
 waits for a burst of messages to end, and keeps to REPLY_LIMIT replies an hour."""
-import asyncio, base64, difflib, json, os, re, shutil, subprocess, sys, threading, time
+import asyncio, base64, json, os, re, shutil, subprocess, sys, threading, time
 
 import brain
 import store
@@ -416,15 +416,7 @@ class WhatsApp:
         """The one chat whose name matches (case aside), or an error listing the near ones: a misheard name never sends
         a message to the wrong person."""
         self._need()
-        chats = self.ask("chats", count=500)
-        want = name.strip().lower()
-        exact = [c for c in chats if c["name"].lower() == want]
-        if len(exact) == 1:
-            return exact[0], None
-        names = {c["name"].lower(): c["name"] for c in chats}
-        near = [names[n] for n in dict.fromkeys([n for n in names if want in n or n in want]
-                                                 + difflib.get_close_matches(want, names, n=8, cutoff=0.5))][:8]
-        return None, {"error": f"no single chat called '{name}'", "close_matches": near}
+        return brain.pick(name, self.ask("chats", count=500))
 
     def history(self, chat, count=15):
         self._need()
