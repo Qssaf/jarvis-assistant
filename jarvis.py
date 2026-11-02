@@ -1752,7 +1752,13 @@ def wake_detector(**kw):
             self.enable_cpu_mem_arena = False
     onnxruntime.SessionOptions = Options
     try:
-        return load_openwakeword().model.Model(**kw)
+        model = load_openwakeword().model.Model(**kw)
+        # it keeps 10 s of audio as Python ints (~5 MB) and copies all of it into a list every frame, to read the last
+        # ~0.1 s: 2 s is plenty
+        pre = getattr(model, "preprocessor", None)
+        if pre is not None:
+            pre.raw_data_buffer = collections.deque(pre.raw_data_buffer, maxlen=32000)
+        return model
     finally:
         onnxruntime.SessionOptions = real
         system.trim_memory()
@@ -2723,7 +2729,7 @@ STARTED = time.time()
 
 
 def show_hud():
-    """Show the app window (it's built at startup, so this is instant). Safe from any thread."""
+    """Show the app window (built on first open, 0.1 s, and freed after a while hidden: window.Window). Safe from any thread."""
     import window
     window.show()
 
@@ -2904,7 +2910,7 @@ def run_tray(live, show=False):
     app.setWindowIcon(icons["idle"])
     win = window.Window(get=lambda path: api_get(path, live.brain), post=lambda path, data: api_post(path, data, live, live.brain),
                         tool_label=tool_label, live=live, shown_state=shown_state, version=VERSION, show=show)
-    menu_shown()  # (in the window's language, now that it's loaded)
+    menu_shown()  # (in the window's language, now that its translations are in)
     tray.showMessage("J.A.R.V.I.S.", QCoreApplication.translate("Tray", 'Running in the tray. Say "%1".').replace("%1", store.wake_phrase()),
                      tray.icon(), 4000)
     clients.append(win.events)

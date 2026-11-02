@@ -262,7 +262,7 @@ secrets in one zip (no keys, logins, WhatsApp profile, phone keys or the pickled
 names are checked on import). `tidy` (daily `tidy_loop`) deletes what's older than `keep_days`, and `rotate_log` caps
 `jarvis.log` at startup.
 
-**Memory.** `main()` calls `system.lean_memory()` first (glibc `M_ARENA_MAX` 2: ~60 mostly idle threads each kept an arena of freed memory); `system.trim_memory()` runs after each agent task, voice session and hourly.
+**Memory.** `main()` calls `system.lean_memory()` first (glibc `M_ARENA_MAX` 2: ~60 mostly idle threads each kept an arena of freed memory); `system.trim_memory()` (also clears `linecache`: logged tracebacks kept every source file's lines) runs after each agent task, voice session and hourly. `wake_detector` cuts openWakeWord's 10 s `raw_data_buffer` of Python ints to 2 s. The window's QML is built on first `present()` and freed `RELEASE` ms after it's hidden; `Backend` is a `qmlRegisterSingletonType` (a registered instance stays tied to its first engine).
 
 **Background loops.** `background(fn, restart=True)` restarts a loop that dies (voice, reminders, calendar/Classroom
 reminders, the user's `checks`, the phone links), with backoff; `system.mic_frames` restarts `pw-record` itself when PipeWire restarts.

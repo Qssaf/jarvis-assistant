@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from PySide6.QtCore import Property, QByteArray, QCoreApplication, QLocale, QObject, QRectF, Qt, QTimer, QTranslator, Signal, Slot, QUrl
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QGuiApplication, QPainter, QPixmap
-from PySide6.QtQml import QQmlApplicationEngine, qmlRegisterSingletonInstance
+from PySide6.QtQml import QJSEngine, QQmlApplicationEngine, qmlRegisterSingletonType
 from PySide6.QtQuick import QQuickImageProvider
 from PySide6.QtSvg import QSvgRenderer
 
@@ -127,6 +127,7 @@ class Backend(QObject):
     changed = Signal()               # the polled values below
     toastRequested = Signal(str, bool)
     showRequested = Signal()
+    openRequested = Signal()         # (from any thread: Window.open on Qt's thread)
     rtlChanged = Signal()
 
     def __init__(self, get, post, tool_label, live, shown_state, version):
@@ -135,10 +136,15 @@ class Backend(QObject):
         self.pool = ThreadPoolExecutor(8, thread_name_prefix="ui")
         self._values = {}
         self._rtl = False
+        self.opener = lambda: None
+        self.openRequested.connect(self.build)
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self.poll)
-        self.timer.start(33)  # ~30 fps: the orb follows your voice
+        self.timer.timeout.connect(self.poll)  # ~30 fps while the window shows (watch): the orb follows your voice
         self.poll()
+
+    @Slot()
+    def build(self):
+        self.opener()
 
     def watch(self, shown):
         if shown:
@@ -220,28 +226,63 @@ class Backend(QObject):
 
 
 class Window:
-    """The app window: QML on the GPU. Needs a QApplication; QQuickWindow's alpha buffer is set before it's made (jarvis.py)."""
+    """The app window: QML on the GPU. Needs a QApplication; QQuickWindow's alpha buffer is set before it's made (jarvis.py).
+    Its QML is built the first time it's shown (0.1 s) and freed after RELEASE ms hidden (~20 MB, more on a GPU, for a
+    window that's mostly closed); the Backend, its events and the translations stay."""
+    RELEASE = 600_000
 
     def __init__(self, get, post, tool_label, live, shown_state, version, show=True):
         current[:] = [self]
         QFontDatabase.addApplicationFont(os.path.join(HERE, "assets", "InterVariable.ttf"))
         QGuiApplication.setFont(QFont("Inter Variable", 10))
         self.backend = Backend(get, post, tool_label, live, shown_state, version)
+        self.backend.opener = self.open
         self.events = self.backend  # (jarvis.clients takes anything with put())
-        qmlRegisterSingletonInstance(Backend, "Jarvis", 1, 0, "Backend", self.backend)
+        def singleton(engine):  # (each engine asks once; a registered instance would be tied to the first engine for good)
+            QJSEngine.setObjectOwnership(self.backend, QJSEngine.CppOwnership)  # (never deleted with an engine)
+            return self.backend
+        qmlRegisterSingletonType(Backend, "Jarvis", 1, 0, "Backend", singleton)
         from PySide6.QtQuickControls2 import QQuickStyle
         QQuickStyle.setStyle("Basic")  # (Windows' native style ignores the custom look of fields, menus and sliders)
+        self.engine, self.translators = None, []
+        self.release = QTimer()
+        self.release.setSingleShot(True)
+        self.release.timeout.connect(self.free)
+        self.languages(store.settings()["window_languages"])
+        if show:
+            self.open()
+
+    def open(self):
+        """Show the window, building it first if it isn't (on Qt's thread: see present)."""
+        self.release.stop()
+        if self.engine:
+            self.backend.showRequested.emit()
+            return
         self.engine = QQmlApplicationEngine()
         self.engine.addImageProvider("icon", IconProvider())
-        self.engine.setInitialProperties({"startShown": show})
-        self.translators = []
-        self.languages(store.settings()["window_languages"])
+        self.engine.setInitialProperties({"startShown": True})
         self.engine.load(QUrl.fromLocalFile(os.path.join(HERE, "qml", "Main.qml")))
         if not self.engine.rootObjects():
             raise RuntimeError("the window couldn't be loaded (see the log)")
         root = self.engine.rootObjects()[0]  # the 30 fps poll only while the window is up (hidden, it was ~1% of a core)
-        root.visibleChanged.connect(self.backend.watch)
-        self.backend.watch(root.isVisible())
+        root.visibleChanged.connect(self.shown)
+        self.shown(root.isVisible())
+
+    def shown(self, visible):
+        import shiboken6
+        if not shiboken6.isValid(self.release):  # (a dropped window's QML outlived it: docs/screens.py makes one per page)
+            return
+        self.backend.watch(visible)
+        if visible:
+            self.release.stop()
+        else:
+            self.release.start(self.RELEASE)
+
+    def free(self):
+        if self.engine and not self.engine.rootObjects()[0].isVisible():
+            import shiboken6  # (now, not deleteLater: the Backend singleton goes to a new engine only once the old one is gone)
+            engine, self.engine = self.engine, None
+            shiboken6.delete(engine)
 
     def languages(self, codes):
         """Show the window in these languages: each text in the first one that has it ("en": as written, so none after it;
@@ -262,10 +303,11 @@ class Window:
         if rtl != self.backend._rtl:
             self.backend._rtl = rtl
             self.backend.rtlChanged.emit()
-        self.engine.retranslate()
+        if self.engine:
+            self.engine.retranslate()
 
     def present(self):
-        self.backend.showRequested.emit()  # (safe from any thread)
+        self.backend.openRequested.emit()  # (safe from any thread: open runs on Qt's)
 
 
 def show():

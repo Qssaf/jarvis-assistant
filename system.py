@@ -37,7 +37,10 @@ def lean_memory():
 
 
 def trim_memory():
-    """Hand memory freed after a one-off peak (loading models) back to the OS: glibc keeps it for the process otherwise."""
+    """Hand memory freed after a one-off peak (loading models) back to the OS: glibc keeps it for the process otherwise.
+    Also drops the source lines Python keeps of every file a logged error's traceback went through (~10 MB after a day)."""
+    import linecache
+    linecache.clearcache()
     if sys.platform.startswith("linux"):
         try:
             import ctypes

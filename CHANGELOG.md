@@ -105,8 +105,9 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
-- **Lighter when idle:** the wake word's model rests while the room is quiet (it still hears a soft "Hey"), the
-  window stops updating while it's hidden, and freed memory goes back to the system after tasks and voice sessions.
+- **Lighter:** about 60 MB less memory and half the idle CPU. The wake word's model rests while the room is quiet (it
+  still hears a soft "Hey") and does a quarter less work when it runs; the window is built when you first open it and
+  freed after ten minutes closed; freed memory goes back to the system after tasks and voice sessions.
 - A message or account change Jarvis made by voice (WhatsApp, Discord, an email...) sometimes went twice: the voice
   model called it again right after it worked. The same change now waits until you speak again.
 - **Windows: settings and other files no longer fail to save** now and then when something else (an antivirus, the

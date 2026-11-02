@@ -1024,6 +1024,18 @@ for codes, word in ((["ar"], "الإعدادات"), (["ja", "de"], "設定")):
     label = next(i for i in all_items() if i.property("text") == "toast words")
     assert 0 <= label.x() and label.x() + label.width() <= label.parentItem().width()
 win.languages(["en"])
+# a window hidden for a while is freed (its poll stops at once) and built again, shown, the next time it's opened
+root.hide()
+qt.processEvents()
+assert not win.backend.timer.isActive() and win.release.isActive()
+win.free()
+qt.processEvents()
+assert win.engine is None
+win.present()
+qt.processEvents()
+assert win.engine and win.engine.rootObjects()[0].isVisible() and win.backend.timer.isActive() and not win.release.isActive()
+root = win.engine.rootObjects()[0]
+assert not warnings, ascii(warnings)[:4000]
 
 # every function a page calls on itself exists (Settings lost its set() once, and every switch on it silently did nothing)
 import glob, re
@@ -1600,6 +1612,17 @@ gate.score(f, recent, mic.sound)
 assert ran == ["model"] * (jarvis.WAKE_PRE_ROLL + 1) and fake_wake.vad_threshold == 0.5  # (the frames before, then this one)
 ran.clear()
 assert gate.score(mic(frame(2)), recent, False, force=True) == 0.0 and ran == ["model"]  # (Talk: always heard)
+# openWakeWord keeps 2 s of audio, not 10 s of Python ints copied every frame (~5 MB, a quarter of its CPU)
+real_wake = jarvis.wake_detector(wakeword_models=[jarvis.wake_model_file("hey_jarvis")], inference_framework="onnx")
+real_wake.predict(frame(2))
+assert real_wake.preprocessor.raw_data_buffer.maxlen == 32000
+real_wake.reset()
+assert real_wake.preprocessor.raw_data_buffer.maxlen == 32000
+# trimming memory also forgets the source lines kept for logged tracebacks (~10 MB after a day)
+import linecache
+linecache.getline(jarvis.__file__, 1)
+system.trim_memory()
+assert not linecache.cache
 
 # a long name with underscores is looked up by name; only when no file has it is it taken for an id
 db.connected, calls = {"googledrive"}, []
