@@ -14,6 +14,10 @@ jarvis --task "..." / --say "..."     # have it do a task (prints the reply) or 
 EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py [case ...]  # agent eval (spends model requests)
 .venv/bin/python evals/voice_eval.py [case-prefix ...]   # ~110 real-life requests to the voice model (one Live session each)
 .venv/bin/python evals/whatsapp_eval.py [case ...]       # made-up chats through WhatsApp auto-replies (REPLY_PROMPT)
+.venv/bin/python evals/proactive_eval.py [case ...]      # made-up sent messages through people.Tracker's promise prompt
+.venv/bin/python evals/wake_eval.py [max clips]          # the user's wake clips through openWakeWord, gated vs every frame (offline)
+pyside6-lupdate -no-obsolete qml/*.qml jarvis.py window.py -ts translations/jarvis_<code>.ts  # after changing texts
+#   (en: add -pluralonly), translate, then: pyside6-lrelease translations/*.ts
 (cd whatsapp-helper && go vet ./... && go test ./...)  # the WhatsApp helper (CI runs it too)
 ```
 
