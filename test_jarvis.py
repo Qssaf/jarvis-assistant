@@ -3418,6 +3418,33 @@ assert waiting["promised, no time set"] == ["Maya: call Maya back"], waiting
 assert jarvis.digest_text(waiting) == ("Waiting on your reply: Sam Lee (5 h ago) on WhatsApp; Alex (3 h ago) on Discord. "
                                        "You promised: Maya: call Maya back."), jarvis.digest_text(waiting)
 assert jarvis.digest_text({}) == ""
+# the evening list remembers: who was on the last one and still waits is said apart; "leave Sam off the list" holds
+# until Sam writes again
+assert "already on the last evening list" not in b.waiting_on_me(listing=True)
+again = b.waiting_on_me(listing=True)
+assert again["already on the last evening list"] == ["Sam Lee on WhatsApp", "Alex on Discord"], again
+assert jarvis.digest_text(again).startswith("Still waiting since the last list: Sam Lee on WhatsApp, Alex on Discord."), jarvis.digest_text(again)
+assert b.waiting_on_me(skip="sam")["result"].startswith("Sam Lee is off the list")
+assert "error" in b.waiting_on_me(skip="Zed")
+assert b.waiting_on_me(skip="maya")["result"].startswith("Maya is off")
+off = b.waiting_on_me()
+assert "waiting on whatsapp" not in off and "promised, no time set" not in off and off["waiting on discord"], off
+people.leave_off("Sam Lee", now=now - 4 * 3600)  # (as if said 4 h ago: Sam wrote 3 h ago)
+brain.whatsapp_link[0].chats = lambda n: [{"name": "Sam Lee", "group": False, "contact": True, "last": "hello??", "at": now - 3 * 3600}]
+assert b.waiting_on_me()["waiting on whatsapp"] == ["Sam Lee (3 h ago): hello??"]  # (they wrote again)
+# meetings say who comes and what Jarvis knows about them: in the briefing, tomorrow's list and the person's page
+lunch = {"summary": "Lunch", "start": {"dateTime": "2026-11-03T13:00:00+02:00"}, "attendees": [
+    {"email": "me@example.com", "self": True}, {"email": "sam.lee@example.com"}, {"email": "bo@example.com", "displayName": "Bo"},
+    {"email": "x@example.com", "responseStatus": "declined"}, {"email": "room@resource.example.com", "resource": True}]}
+assert people.meeting(lunch) == "13:00 Lunch, with Sam Lee (my cousin; exam on Monday), Bo", people.meeting(lunch)
+assert people.meeting({"summary": "Holiday", "start": {"date": "2026-11-03"}}, with_day=True) == "Tue 03 Nov all day Holiday"
+b.connected = {"googlecalendar"}
+b.app_data = lambda slug, args: {"items": [lunch, {"summary": "Gym", "start": {"dateTime": "2026-11-03T18:00:00+02:00"}},
+                                           {"summary": "Gone", "status": "cancelled"}]}
+assert b.person("Sam Lee")["meetings in the next two weeks"] == ["Tue 03 Nov 13:00 Lunch, with Sam Lee (my cousin; exam on Monday), Bo"]
+assert "meetings in the next two weeks" not in b.person("Maya")
+assert b.waiting_on_me()["tomorrow's calendar"] == ["13:00 Lunch, with Sam Lee (my cousin; exam on Monday), Bo", "18:00 Gym"]
+b.connected = set()
 brain.whatsapp_link[0], discord.call = real_wa, real_dc_call
 # what Jarvis says on its own and the user lets pass three times in a row is only shown for a while; a word back resets it
 jarvis.ATTENTION_FILE = os.path.join(_home, "attention-test.json")

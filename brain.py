@@ -2085,10 +2085,13 @@ TOOLS["person"] = (None, "Someone in the user's life (\"what's up with Sam?\", \
                     obj(name={"type": "string"}, note={"type": "string"}, until={"type": "string"}, forget={"type": "string"},
                         optional=("note", "until", "forget")))
 TOOLS["waiting_on_me"] = (None, "Who's waiting on the user (WhatsApp and Discord chats whose last message is theirs, unread emails "
-                          "from people), plus tomorrow's calendar, Classroom work and reminders, and promises with no time. hours: "
-                          "how old a message must be (default 2).", obj(hours={"type": "number"}, optional=("hours",)))
+                          "from people), plus tomorrow's calendar (with who comes), Classroom work and reminders, and promises with "
+                          "no time. hours: how old a message must be (default 2). skip: a name the user wants left off (\"leave Sam "
+                          "off the list\", \"take Maya off the evening list\"), until something new comes from them.",
+                          obj(hours={"type": "number"}, skip={"type": "string"}, optional=("hours", "skip")))
 TOOLS["briefing"] = (None, "Today's briefing in one call: weather, upcoming Classroom work, today's calendar, unread email "
-                     "count and reminders. Use it for \"good morning\" or \"what's my day like\".", obj())
+                     "count and reminders; each meeting says who comes and what Jarvis knows about them. Use it for \"good morning\", \"what's "
+                     "my day like\" or \"who am I seeing today?\".", obj())
 
 
 # ---------------------------------------------------------------- plugins: MCP servers
@@ -2803,6 +2806,14 @@ class Brain:
         waiting = [name for name, srv in self.plugins.items() if srv.signing_in]
         return f"{' and '.join(waiting)} needs a new sign-in: a sign-in page is open in the browser" if waiting else ""
 
+    def events(self, start, days=1):
+        """Calendar events from start (an aware datetime) for days, in order; None if they couldn't be read."""
+        from datetime import timedelta
+        data = self.app_data("GOOGLECALENDAR_EVENTS_LIST", {"calendarId": "primary", "timeMin": start.isoformat(),
+                                                            "timeMax": (start + timedelta(days=days)).isoformat(),
+                                                            "singleEvents": True, "orderBy": "startTime", "maxResults": 50})
+        return None if data is None else [e for e in data.get("items") or [] if e.get("status") != "cancelled"]
+
     def briefing(self):
         """Everything for a morning briefing, gathered at once. A part that couldn't be checked says so, so it's never
         taken for "nothing there"."""
@@ -2818,13 +2829,10 @@ class Brain:
         def calendar_today():
             if "googlecalendar" not in self.connected:
                 return "not connected"
+            import people
             from datetime import datetime
-            midnight = datetime.now().astimezone().replace(hour=0, minute=0, second=0, microsecond=0)
-            day, end = midnight.isoformat(), midnight.replace(hour=23, minute=59, second=59).isoformat()
-            data = self.app_data("GOOGLECALENDAR_EVENTS_LIST", {"calendarId": "primary", "timeMin": day, "timeMax": end, "singleEvents": True})
-            if data is None:
-                return None
-            return [f"{(e.get('start') or {}).get('dateTime', 'all day')[11:16] or 'all day'} {e.get('summary', '')}" for e in data.get("items") or []]
+            found = self.events(datetime.now().astimezone().replace(hour=0, minute=0, second=0, microsecond=0))
+            return None if found is None else [people.meeting(e) for e in found]
 
         def due():
             if "google_classroom" not in self.connected:
@@ -2884,35 +2892,46 @@ class Brain:
             data = self.app_data("GMAIL_FETCH_EMAILS", {"query": f'(from:"{who}" OR to:"{who}") newer_than:30d', "max_results": 3})
             return [f"{m.get('sender', '')}: {m.get('subject', '')}" for m in (data or {}).get("messages") or []] or None
 
-        got = in_parallel(whatsapp, on_discord, emails, timeout=15)
+        def meetings():
+            if "googlecalendar" not in self.connected:
+                return None
+            from datetime import datetime
+            names = {who.lower(), *(a.lower() for a in book.get(who, {}).get("aka", []))}
+            found = self.events(datetime.now().astimezone(), days=14) or []
+            return [people.meeting(e, with_day=True) for e in found if any(n.lower() in names or e_.lower() in names
+                                                                           for n, e_ in people.guests(e, book))
+                    or who.lower() in (e.get("summary") or "").lower()][:8] or None
+
+        got = in_parallel(whatsapp, on_discord, emails, meetings, timeout=15)
         out = people.page(who) or {"name": who, "note": "nothing saved about them yet"}
-        for label, part in zip(("whatsapp", "discord", "emails"), got):
+        for label, part in zip(("latest on whatsapp", "latest on discord", "recent emails", "meetings in the next two weeks"), got):
             if part:
-                out[f"latest on {label}" if label != "emails" else "recent emails"] = part
+                out[label] = part
         return out
 
-    def waiting_on_me(self, hours=2):
+    def waiting_on_me(self, hours=2, skip="", listing=False):
         """Who's waiting on the user (their message is the last one, at least `hours` old, under three days) and what's
-        due tomorrow. A part that couldn't be checked is left out."""
+        due tomorrow. A part that couldn't be checked is left out. skip: leave that person off (here and on the evening
+        list) until something newer comes from or for them. listing: this is the evening list (remembered, so the next
+        one says who was on it already)."""
         import discord, people
         from datetime import datetime, timedelta
         now, hours = time.time(), max(0.0, float(hours))
-        ago = lambda t: people._ago(t, now)
 
         def whatsapp():
             wa = whatsapp_link[0]
             if not (wa and wa.state == "connected"):
                 return None
-            return [f"{c['name']} ({ago(c['at'])}): {c['last'][:120]}" for c in wa.chats(40)
+            return [("whatsapp", c["name"], c["at"], c["last"]) for c in wa.chats(40)
                     if not c["group"] and c.get("contact") and c["last"] and not c["last"].startswith("You: ")
                     and hours * 3600 <= now - c["at"] <= 3 * 86400]
 
         def on_discord():
-            return [f"{m['name']} ({ago(m['at'])}): {m['text'][:120]}" for m in discord.call("waiting")
+            return [("discord", m["name"], m["at"], m["text"]) for m in discord.call("waiting")
                     if hours * 3600 <= now - m["at"] <= 3 * 86400]
 
         def emails():
-            if "gmail" not in self.connected:
+            if "gmail" not in self.connected or skip:
                 return None
             data = self.app_data("GMAIL_FETCH_EMAILS", {"query": "is:unread category:primary newer_than:3d", "max_results": 8})
             return None if data is None else [f"{m.get('sender', '')}: {m.get('subject', '')}"[:150] for m in data.get("messages") or []]
@@ -2921,24 +2940,38 @@ class Brain:
         start, end = midnight.timestamp(), (midnight + timedelta(days=1)).timestamp()
 
         def calendar():
-            if "googlecalendar" not in self.connected:
-                return None
-            data = self.app_data("GOOGLECALENDAR_EVENTS_LIST", {"calendarId": "primary", "timeMin": midnight.isoformat(),
-                                                                "timeMax": (midnight + timedelta(days=1)).isoformat(), "singleEvents": True,
-                                                                "orderBy": "startTime"})
-            return None if data is None else [f"{(e.get('start') or {}).get('dateTime', '')[11:16] or 'all day'} {e.get('summary', '')}"
-                                               for e in data.get("items") or [] if e.get("status") != "cancelled"]
+            found = self.events(midnight) if "googlecalendar" in self.connected and not skip else None
+            return None if found is None else [people.meeting(e) for e in found]
 
         def due():
             return [f"{x['title']} ({x['course']}) {time.strftime('%H:%M', time.localtime(x['due']))}" for x in self.classroom_work(2)
-                    if not x["done"] and start <= x["due"] < end] if "google_classroom" in self.connected else None
+                    if not x["done"] and start <= x["due"] < end] if "google_classroom" in self.connected and not skip else None
 
         wa, dc, mail, cal, work = in_parallel(whatsapp, on_discord, emails, calendar, due, timeout=25)
-        out = {"waiting on whatsapp": wa, "waiting on discord": dc, "unread emails": mail, "tomorrow's calendar": cal,
-               "classroom due tomorrow": work,
+        chats, promised = (wa or []) + (dc or []), [x for x in people.promises(now) if not x["due"]]
+        if skip:
+            names = list(dict.fromkeys([c[1] for c in chats] + [x["to"] for x in promised]))
+            found, problem = pick(skip, [{"name": n} for n in names])
+            if not found and len(problem["close_matches"]) != 1:
+                return {"error": f"nobody called '{skip}' is waiting on the user or promised something",
+                        "close_matches": problem["close_matches"] or names}
+            name = found["name"] if found else problem["close_matches"][0]
+            people.leave_off(name)
+            return {"result": f"{name} is off the list until something new comes from them"}
+        chats = [c for c in chats if not people.is_off(c[1], c[2])]
+        before = people.listed()
+        if listing:  # (an app that couldn't be checked keeps its part of the last list)
+            people.listed({f"{app}:{name}": at for app, name, at, _ in chats}
+                          | {k: v for k, v in before.items() if (wa, dc)[k.startswith("discord:")] is None})
+        line = lambda c: f"{c[1]} ({people._ago(c[2], now)}): {c[3][:120]}"
+        out = {"waiting on whatsapp": [line(c) for c in chats if c[0] == "whatsapp"] if wa is not None else None,
+               "waiting on discord": [line(c) for c in chats if c[0] == "discord"] if dc is not None else None,
+               "already on the last evening list": [f"{name} on {'WhatsApp' if app == 'whatsapp' else 'Discord'}"
+                                                    for app, name, at, _ in chats if before.get(f"{app}:{name}") == at],
+               "unread emails": mail, "tomorrow's calendar": cal, "classroom due tomorrow": work,
                "reminders tomorrow": [time.strftime("%H:%M ", time.localtime(r["at"])) + r["text"] for r in store.reminders()
                                       if start <= r["at"] < end and not r.get("off")],
-               "promised, no time set": [f"{x['to']}: {x['what']}" for x in people.promises(now) if not x["due"]]}
+               "promised, no time set": [f"{x['to']}: {x['what']}" for x in promised if not people.is_off(x["to"], x["at"])]}
         return {k: v for k, v in out.items() if v}
 
     def active_app_tools(self):

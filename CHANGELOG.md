@@ -1,5 +1,63 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **The evening list remembers:** who was on the last one and still waits on you is said apart (*"Still waiting since
+  the last list: Sam on WhatsApp"*), and *"leave Sam off the list"* keeps them off until they write again.
+- **Who you're meeting:** each meeting in the briefing and the evening list says who's coming and what Jarvis knows
+  about them (*"13:00 Lunch, with Sam (my cousin)"*), so *"who am I seeing today?"* has an answer; *"what's up with
+  Sam?"* lists your meetings with them in the next two weeks.
+- **Quiet over games and films:** while a full-screen app has focus, what Jarvis would say on its own (task results,
+  updates, the morning briefing) goes to the chat and notifications instead; your reminders still speak. Settings →
+  *Quiet over full-screen apps* (on by default; KDE Plasma on Wayland and Windows).
+- **Calendar heads-ups bring the meeting:** the reminder before an event carries its Meet, Zoom or Teams link and its
+  attached files, so *"open it"* joins or opens the doc. Links are shown, never read out.
+- **Discord, through Vesktop:** *"what's new on Discord?"*, *"what did Sam say?"*, *"what's happening in the study
+  server?"*, *"tell Sam I'm on my way"*, *"post 'gg' in Gaming #general"*, *"reply to his last message"*, *"react 😂"*,
+  *"what's in the picture he sent?"*: Jarvis reads, sends, replies and reacts inside your own Vesktop, with no bot and
+  nothing on screen; *"@name"* pings. New DMs and pings show in Jarvis's chat. Settings → *Discord* → *Restart
+  Vesktop* turns it on once. Optional: Jarvis answers your friends' DMs that don't need you (off by default: Discord
+  may ban accounts that act like bots).
+- **People pages:** *"what's up with Sam?"* brings what Jarvis knows about them (*"Sam is my cousin"*, notes that end
+  on a date), when you last wrote to each other, what you promised them, and your latest messages and emails.
+- **Promises kept:** *"I'll send it tomorrow"* in a chat or email gets a reminder (or goes on the evening list).
+- **The evening list** at 20:00 (Settings → *Your day*): who's waiting on your reply, unread emails from people, and
+  what's on tomorrow. Ask any time: *"who's waiting on me?"*
+- **Jarvis learns when to speak up:** kinds of news you keep letting pass are only shown, not said, for a while.
+- **Jarvis gets quicker at your apps:** the way a screen task worked is kept and reused, and dropped if it stops working.
+- **Screen history** (opt-in): window titles only, on your PC, for *"what was that site I had open yesterday?"*
+- **"Don't answer Sam"**, *"tell me when Alex messages me"*: say it, and Jarvis keeps it in Settings' *Never answer* /
+  *Always let through* lists for WhatsApp, Discord or both (*"answer her again"* undoes it).
+- **WhatsApp voice messages are understood:** a voice message someone sends you is transcribed as it arrives, so
+  Jarvis's auto-reply answers what they said, and the chat log, *"read my WhatsApp"* and Jarvis's history show its words
+  instead of "[a voice message]".
+- **Jarvis talks with the people who message and call you:** it holds a real back-and-forth on WhatsApp (answers
+  follow-ups, asks what they need, passes things on) instead of one "he'll get back to you", and on calls it chats,
+  answers and checks it got their message right, answering as quickly as its own voice. Limits keep anyone from using
+  up your models: 8 replies an hour to one chat (20 in all), 3 picked-up calls an hour from one person, 20 voice
+  messages transcribed an hour, and only from your contacts; it won't write essays or homework for them. Settings →
+  WhatsApp → *Tell people when I'm busy* lets it share your Google Calendar's busy times (never what they are).
+
+### Changed
+- **WhatsApp without a browser: about 1 GB less memory.** WhatsApp ran as WhatsApp Web in a hidden Chromium (~950 MB);
+  it's now a small helper, `jarvis-wa` (~30 MB, Go: whatsmeow for messages, WaCalls' code for calls), with the same
+  replies, calls, reading, sending, voice messages and photos. Link WhatsApp again once in Settings (and remove the old
+  "Chrome" device from your phone's Linked devices). Building it needs Go on Linux (Jarvis does it by itself; the
+  Windows app and the AUR package come with it). Older messages than the ones seen since linking are fetched from your
+  phone when asked for.
+- **Learning your voice no longer keeps ~200 MB:** the voice check is trained in a short-lived process, so
+  scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
+
+### Fixed
+- **Lighter:** about 60 MB less memory and half the idle CPU. The wake word's model rests while the room is quiet (it
+  still hears a soft "Hey") and does a quarter less work when it runs; the window is built when you first open it and
+  freed after ten minutes closed; freed memory goes back to the system after tasks and voice sessions.
+- A message or account change Jarvis made by voice (WhatsApp, Discord, an email...) sometimes went twice: the voice
+  model called it again right after it worked. The same change now waits until you speak again.
+- **Windows: settings and other files no longer fail to save** now and then when something else (an antivirus, the
+  search indexer) had them open for a moment: the save is tried again.
+
 ## 2.1.0 — 2026-10-29
 
 ### Added
@@ -63,55 +121,8 @@
 - **A spoken passphrase:** set one in Settings → Listening, and everything Jarvis asks your yes for out loud (sending
   messages, calls, account changes, risky commands) also needs you to say it, so someone else in the room can't. It's
   kept in your keychain, never shown or said back, and hidden in the chat. Tasks from your phone don't need it.
-- **Quiet over games and films:** while a full-screen app has focus, what Jarvis would say on its own (task results,
-  updates, the morning briefing) goes to the chat and notifications instead; your reminders still speak. Settings →
-  *Quiet over full-screen apps* (on by default; KDE Plasma on Wayland and Windows).
-- **Calendar heads-ups bring the meeting:** the reminder before an event carries its Meet, Zoom or Teams link and its
-  attached files, so *"open it"* joins or opens the doc. Links are shown, never read out.
-- **Discord, through Vesktop:** *"what's new on Discord?"*, *"what did Sam say?"*, *"what's happening in the study
-  server?"*, *"tell Sam I'm on my way"*, *"post 'gg' in Gaming #general"*, *"reply to his last message"*, *"react 😂"*,
-  *"what's in the picture he sent?"*: Jarvis reads, sends, replies and reacts inside your own Vesktop, with no bot and
-  nothing on screen; *"@name"* pings. New DMs and pings show in Jarvis's chat. Settings → *Discord* → *Restart
-  Vesktop* turns it on once. Optional: Jarvis answers your friends' DMs that don't need you (off by default: Discord
-  may ban accounts that act like bots).
-- **People pages:** *"what's up with Sam?"* brings what Jarvis knows about them (*"Sam is my cousin"*, notes that end
-  on a date), when you last wrote to each other, what you promised them, and your latest messages and emails.
-- **Promises kept:** *"I'll send it tomorrow"* in a chat or email gets a reminder (or goes on the evening list).
-- **The evening list** at 20:00 (Settings → *Your day*): who's waiting on your reply, unread emails from people, and
-  what's on tomorrow. Ask any time: *"who's waiting on me?"*
-- **Jarvis learns when to speak up:** kinds of news you keep letting pass are only shown, not said, for a while.
-- **Jarvis gets quicker at your apps:** the way a screen task worked is kept and reused, and dropped if it stops working.
-- **Screen history** (opt-in): window titles only, on your PC, for *"what was that site I had open yesterday?"*
-- **"Don't answer Sam"**, *"tell me when Alex messages me"*: say it, and Jarvis keeps it in Settings' *Never answer* /
-  *Always let through* lists for WhatsApp, Discord or both (*"answer her again"* undoes it).
-- **WhatsApp voice messages are understood:** a voice message someone sends you is transcribed as it arrives, so
-  Jarvis's auto-reply answers what they said, and the chat log, *"read my WhatsApp"* and Jarvis's history show its words
-  instead of "[a voice message]".
-- **Jarvis talks with the people who message and call you:** it holds a real back-and-forth on WhatsApp (answers
-  follow-ups, asks what they need, passes things on) instead of one "he'll get back to you", and on calls it chats,
-  answers and checks it got their message right, answering as quickly as its own voice. Limits keep anyone from using
-  up your models: 8 replies an hour to one chat (20 in all), 3 picked-up calls an hour from one person, 20 voice
-  messages transcribed an hour, and only from your contacts; it won't write essays or homework for them. Settings →
-  WhatsApp → *Tell people when I'm busy* lets it share your Google Calendar's busy times (never what they are).
-
-### Changed
-- **WhatsApp without a browser: about 1 GB less memory.** WhatsApp ran as WhatsApp Web in a hidden Chromium (~950 MB);
-  it's now a small helper, `jarvis-wa` (~30 MB, Go: whatsmeow for messages, WaCalls' code for calls), with the same
-  replies, calls, reading, sending, voice messages and photos. Link WhatsApp again once in Settings (and remove the old
-  "Chrome" device from your phone's Linked devices). Building it needs Go on Linux (Jarvis does it by itself; the
-  Windows app and the AUR package come with it). Older messages than the ones seen since linking are fetched from your
-  phone when asked for.
-- **Learning your voice no longer keeps ~200 MB:** the voice check is trained in a short-lived process, so
-  scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
-- **Lighter:** about 60 MB less memory and half the idle CPU. The wake word's model rests while the room is quiet (it
-  still hears a soft "Hey") and does a quarter less work when it runs; the window is built when you first open it and
-  freed after ten minutes closed; freed memory goes back to the system after tasks and voice sessions.
-- A message or account change Jarvis made by voice (WhatsApp, Discord, an email...) sometimes went twice: the voice
-  model called it again right after it worked. The same change now waits until you speak again.
-- **Windows: settings and other files no longer fail to save** now and then when something else (an antivirus, the
-  search indexer) had them open for a moment: the save is tried again.
 - **Bug reports keep your WhatsApp private:** *Copy a report* left in WhatsApp messages, contacts' names and phone
   numbers, tasks sent from your phone, and every line after the first of a longer reply. They're all taken out now.
 - **A signed-out Google account no longer stops everything:** when a Google sign-in (Models page) was revoked or had

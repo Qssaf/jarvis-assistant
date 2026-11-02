@@ -251,7 +251,9 @@ WhatsApp sends Jarvis made for them; Discord's come back through `Listener`), ke
 later, and after `wait` seconds asks the agent's models once per burst (`PROMPT`); a promise with a time gets a
 reminder, the rest go on the evening list. `evals/proactive_eval.py` checks the prompt. `Brain.person` and
 `Brain.waiting_on_me` are the tools (dispatched in `_run_tool`); `evening_digest` (jarvis.py) scans the day's sent
-mail, then tells `digest_text(waiting_on_me())` once a day. `Attention` (jarvis.py, `attention.json`): `announce(...,
+mail, then tells `digest_text(waiting_on_me(listing=True))` once a day; `waiting.json` remembers that list's chats
+(`listed`: said apart next time if still waiting) and `skip`'s names (`leave_off`: hidden until a newer message or
+promise). `people.meeting` writes a calendar event with its guests matched to pages (`Brain.events` reads them). `Attention` (jarvis.py, `attention.json`): `announce(...,
 kind=)` of a kind the user let pass three times in a row (no speech within `HEEDED` s) is only shown for a backoff;
 `loud` and `asked` (reminders, scheduled tasks) are never held back. Skills (`store.skills`, the `skill` tool): ways
 a screen task worked, offered in `_ask` through `matching_skills`; a task of 3+ screen steps that saved none gets one

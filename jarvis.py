@@ -52,7 +52,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - WhatsApp: whatsapp_read (chats and groups, or one chat's messages), whatsapp_media to listen to a voice message or see a photo someone sent, whatsapp_send (to: the chat's name), and whatsapp_call to phone someone and tell them something out loud ("call dad and tell him I want water"), never the screen. A message the user dictated to someone they named: whatsapp_send (or whatsapp_call when they said call) with confirmed: true at once.
 - Discord: discord_read (their DMs and the channels that mention them, or one chat: a person, "Server #channel", or a server to see its channels), discord_send (to: those names; reply_to: "last" to reply to their newest message; @name pings), discord_react (an emoji on their newest message), discord_media (a picture or voice message someone sent), never the screen unless they say Discord isn't connected. A dictated message to someone named: discord_send with confirmed: true at once.
 - "Don't answer Sam", "stop replying to him", "tell me when Alex messages me": people_rules (never / always / normal; app whatsapp, discord or both), straight away.
-- People: "what's up with Sam?", "what did I promise Maya?" → person (their page and latest messages); "Sam is my cousin", "Maya's exam is Friday" → person with note (until: the day it stops being true), not remember. "Who's waiting on me?" → waiting_on_me. "What was that site I had open yesterday?" → screen_history.
+- People: "what's up with Sam?", "what did I promise Maya?" → person (their page and latest messages); "Sam is my cousin", "Maya's exam is Friday" → person with note (until: the day it stops being true), not remember. "Who's waiting on me?" → waiting_on_me; "leave Sam off the list", "take Maya off the evening list" → waiting_on_me with skip. "Who am I seeing today?" → briefing (each meeting says who comes). "What was that site I had open yesterday?" → screen_history.
 - Messaging: [{click_on: "the chat named 'Sam Lee' in the left list"}, {expect: "the open conversation is with Sam Lee"}, {click_on: "the message box at the bottom"}, {type: "..."}, {keys: "Return"}, {look: "Is the message in the conversation?"}].
 - System info, files, volume, clipboard: run_command. {SYSTEM} Open apps with act launch, not run_command.
 - Pictures: make_image, show_image. Local files: read_file. Time: set_reminder (repeat for "every day/weekday/week"), list_reminders, cancel_reminder.
@@ -1407,10 +1407,14 @@ attention = Attention()
 def digest_text(found):
     """The evening list as a few short sentences, or "" when there's nothing (from Brain.waiting_on_me)."""
     who = lambda items: ", ".join(x.split(" (", 1)[0] + (f" ({x.split(' (', 1)[1].split(')')[0]})" if " (" in x else "") for x in items)
-    parts = []
-    if found.get("waiting on whatsapp") or found.get("waiting on discord"):
+    parts, still = [], found.get("already on the last evening list", [])
+    fresh = {k: [x for x in found.get(k, []) if f"{x.split(' (', 1)[0]} on {app}" not in still]
+             for k, app in (("waiting on whatsapp", "WhatsApp"), ("waiting on discord", "Discord"))}
+    if any(fresh.values()):
         parts.append("Waiting on your reply: " + "; ".join(
-            f"{who(found[k])} on {app}" for k, app in (("waiting on whatsapp", "WhatsApp"), ("waiting on discord", "Discord")) if found.get(k)) + ".")
+            f"{who(fresh[k])} on {app}" for k, app in (("waiting on whatsapp", "WhatsApp"), ("waiting on discord", "Discord")) if fresh[k]) + ".")
+    if still:
+        parts.append("Still waiting since the last list: " + ", ".join(still) + ".")
     if found.get("unread emails"):
         n = len(found["unread emails"])
         parts.append(f"{n} unread email{'s' if n > 1 else ''} from people.")
@@ -1436,7 +1440,7 @@ def evening_digest(live):
             store.write_json(DIGEST_STAMP, {"day": today})
             try:
                 promises_in_sent_mail(live.brain)
-                text = digest_text(live.brain.waiting_on_me())
+                text = digest_text(live.brain.waiting_on_me(listing=True))
             except Exception as e:
                 print(f"[digest] couldn't make the evening list: {e}", flush=True)
                 text = ""

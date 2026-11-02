@@ -117,7 +117,7 @@ def _open(x, now):
 def promises(now=None):
     """The user's open promises: [{"to", "what", "due"}], soonest first."""
     now = now or time.time()
-    return sorted(({"to": k, "what": x["what"], "due": x.get("due", 0)} for k, p in everyone().items()
+    return sorted(({"to": k, "what": x["what"], "due": x.get("due", 0), "at": x["at"]} for k, p in everyone().items()
                    for x in p.get("promises", []) if _open(x, now)), key=lambda x: x["due"] or 9e9)
 
 
@@ -130,6 +130,66 @@ def index(now=None, limit=40):
         if notes:
             lines.append(f"- {k}: {'; '.join(notes)}"[:200])
     return "\n".join(lines[:limit])
+
+
+def guests(e, book):
+    """Who else comes to a calendar event: [(the name of their page here, or theirs in the invite; email)]."""
+    out = []
+    for a in e.get("attendees") or []:
+        if a.get("self") or a.get("resource") or a.get("responseStatus") == "declined":
+            continue
+        email = a.get("email", "")
+        key = (_key(book, a.get("displayName", "")) or _key(book, email)
+               or _key(book, re.sub(r"[._-]+", " ", email.split("@")[0])))  # (sam.lee@... is Sam Lee)
+        out.append((key or a.get("displayName") or email, email))
+    return out
+
+
+def meeting(e, with_day=False, now=None):
+    """A calendar event as one line: when, what, and who else comes, with what Jarvis knows about them
+    ("10:00 Lunch, with Sam Lee (my cousin), maya@example.com")."""
+    now, book = now or time.time(), everyone()
+    start = (e.get("start") or {}).get("dateTime") or (e.get("start") or {}).get("date") or ""
+    when = start[11:16] or "all day"
+    if with_day and start:
+        when = time.strftime("%a %d %b ", time.strptime(start[:10], "%Y-%m-%d")) + when
+    names = []
+    for name, _ in guests(e, book):
+        notes = [n["text"] for n in book.get(name, {}).get("notes", []) if not n.get("until") or n["until"] > now]
+        names.append(name + (f" ({'; '.join(notes)[:120]})" if notes else ""))
+    more = f" and {len(names) - 6} more" if len(names) > 6 else ""
+    return f"{when} {e.get('summary') or '(no title)'}" + (f", with {', '.join(names[:6])}{more}" if names else "")
+
+
+# ---------------------------------------------------------------- the evening list's memory
+# waiting.json: {"off": {name: when the user said to leave them off}, "listed": {"app:name": when their message was, on
+# the last evening list}}
+WAITING = os.path.join(store.DATA, "waiting.json")
+
+
+def leave_off(name, now=None):
+    """Leave someone off who's-waiting and the evening list until something newer comes from or for them."""
+    now = now or time.time()
+    with _lock:
+        w = store.read_json(WAITING, {})
+        w["off"] = {k: t for k, t in w.get("off", {}).items() if now - t < 30 * 86400} | {name.lower(): now}
+        store.write_json(WAITING, w, private=True)
+
+
+def is_off(name, at):
+    """Left off since before `at` (their newest message, or the promise)."""
+    return store.read_json(WAITING, {}).get("off", {}).get(name.lower(), 0) >= at
+
+
+def listed(now_on=None):
+    """The chats on the last evening list ({"app:name": message time}); with now_on, that becomes the new last list."""
+    with _lock:
+        w = store.read_json(WAITING, {})
+        before = w.get("listed", {})
+        if now_on is not None:
+            w["listed"] = now_on
+            store.write_json(WAITING, w, private=True)
+        return before
 
 
 def tidy(now=None):

@@ -20,7 +20,8 @@ import system
 # ---------------------------------------------------------------- nothing personal or on the PC may change
 _real_write = store.write_json
 PROTECTED = [store.MEMORY_FILE, store.REMINDERS_FILE, store.ROUTINES_FILE, store.CHANGES_FILE, store.SETTINGS_FILE,
-             store.CONNECTORS_FILE, store.PLUGINS_FILE, store.SESSIONS_DIR]
+             store.CONNECTORS_FILE, store.PLUGINS_FILE, store.SESSIONS_DIR, store.SKILLS_FILE,
+             *(os.path.join(store.DATA, f) for f in ("people.json", "waiting.json", "attention.json", "digest.json", "activity"))]
 
 
 def _guarded_write(path, data, private=False):
@@ -85,6 +86,8 @@ def simulated(case, name, args):
         return {"result": "ignored"}
     if name == "person" and (args.get("note") or args.get("forget")):  # (never the real people.json)
         return {"result": f"noted about {args.get('name')}"}
+    if name == "waiting_on_me" and args.get("skip"):  # (never the real waiting.json)
+        return {"result": f"{args['skip']} is off the list until something new comes from them"}
     if name == "people_rules":  # (never the real settings)
         return {"result": f"saved: {args.get('name')} → {args.get('rule')} ({args.get('app', 'both')})"}
     if name in ("whatsapp_send", "whatsapp_call", "discord_send", "discord_react"):  # (never the real WhatsApp or Discord: the gate as the real tool)
@@ -172,7 +175,8 @@ def run_tool(case, name, args):
         return brain.tool_media("now_playing")
     if name == "list_windows" and "windows" in case:  # (the case's apps, not whatever is open on this PC now)
         return {"windows": case["windows"]}
-    if name in REAL:
+    changes = (name == "person" and (args.get("note") or args.get("forget"))) or (name == "waiting_on_me" and args.get("skip"))
+    if name in REAL and not changes:  # (a change is simulated below)
         return BRAIN._run_tool(name, args)[0]
     if name in BRAIN.app_tools:  # an account: reads for real, changes through the real gates and then simulated
         if brain.account_block(name):
@@ -462,6 +466,9 @@ CASES = [
      lambda c, s: ("cousin" in str(arg(c, "person", "note", "")).lower() and not called(c, "remember")) or "person with a note, not remember"),
     ("person_read", ["What's up with Sam?"], lambda c, s: called(c, "person") or "person"),
     ("waiting", ["Who's waiting on me?"], lambda c, s: called(c, "waiting_on_me") or "waiting_on_me"),
+    ("waiting_skip", ["Take Sam off the evening list."],
+     lambda c, s: ("sam" in str(arg(c, "waiting_on_me", "skip", "")).lower() and not called(c, "people_rules")) or "waiting_on_me skip Sam, not people_rules"),
+    ("seeing_today", ["Who am I seeing today?"], lambda c, s: called(c, "briefing", "GOOGLECALENDAR_EVENTS_LIST") or "briefing or the calendar"),
     ("screen_history", ["What was that site I had open yesterday about recipes?"],
      lambda c, s: called(c, "screen_history") or "screen_history"),
     ("discord_news", ["Anything new on Discord?"], lambda c, s: (called(c, "discord_read") and not called(c, "act", "look")) or "discord_read, not the screen"),

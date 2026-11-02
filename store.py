@@ -477,7 +477,7 @@ def delete_data():
     (they're removed on their own pages)."""
     with _lock:
         for path in (MEMORY_FILE, REMINDERS_FILE, ROUTINES_FILE, CHANGES_FILE, SKILLS_FILE, *OLD_LOGS, *(os.path.join(DATA, name) for name in (
-                "usage.json", "deadlines.json", "calendar.json", "briefing.json", "people.json", "attention.json", "digest.json"))):
+                "usage.json", "deadlines.json", "calendar.json", "briefing.json", "people.json", "attention.json", "digest.json", "waiting.json"))):
             try:
                 os.remove(path)
             except FileNotFoundError:

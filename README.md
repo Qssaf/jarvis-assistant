@@ -126,11 +126,15 @@ running as you can use it, as it can already read Vesktop's files.
 ### The people in your life
 Jarvis keeps a page per person: what you told it (*"Sam is my cousin"*, *"Maya's exam is Friday"*, which goes once it's
 past), when you last wrote to each other on WhatsApp and Discord, and what you promised them. *"What's up with Sam?"*
-brings that together with your latest messages and emails with them.
+brings that together with your latest messages and emails with them, and your meetings with them in the next two
+weeks. Meetings in the briefing and the evening list say who's coming and what Jarvis knows about them, so *"who am I
+seeing today?"* has an answer.
 - **Promises:** when you write *"I'll send it tomorrow"* (or Jarvis sends it for you), it notes the promise and sets a
   reminder for then, or puts it on the evening list when there's no time. Say *"forget that promise"* if it wasn't one.
 - **The evening list** (Settings → *Your day*, 20:00 by default): who's waiting on your reply on WhatsApp and Discord,
   unread emails from people, tomorrow's calendar, Classroom work and reminders. Ask any time: *"who's waiting on me?"*
+  Whoever was on the last list and still waits is said apart; *"leave Sam off the list"* keeps them off until they
+  write again.
 - **Learning when to speak up:** something Jarvis says on its own that you let pass three times in a row (WhatsApp
   news, check results, the evening list...) is only shown, not said, for a while (2 hours, then longer), until you
   answer one.
