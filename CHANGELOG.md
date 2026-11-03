@@ -3,6 +3,17 @@
 ## Unreleased
 
 ### Added
+- **Several things at once:** a second request no longer waits for the first. Voice, typed, phone and scheduled tasks
+  run side by side; screen work takes turns, and waits while you're using the keyboard or mouse. *"What are you working
+  on?"* lists them, *"stop the flight search"* stops one, and Stop stops them all and says what it stopped.
+- **Coding jobs:** *"fix the login bug in my jarvis project"* becomes a session in your OpenChamber (started if it
+  isn't open), working on its own in a copy of the project (a git worktree on its own branch): watch it and answer its
+  questions there. Jarvis tells you when it's done and what changed; nothing is merged until you say so. *"Also add
+  tests"* continues the same session. Without OpenChamber, Claude Code does it (only editing files while safety is on
+  "ask").
+- **News waits for you:** while you're away from the PC, finished tasks and their questions wait, and are said when
+  you're back (*"While you were away: ..."*). Long answers (research) are shown in full in the chat; the voice says the
+  gist.
 - **The evening list remembers:** who was on the last one and still waits on you is said apart (*"Still waiting since
   the last list: Sam on WhatsApp"*), and *"leave Sam off the list"* keeps them off until they write again.
 - **Who you're meeting:** each meeting in the briefing and the evening list says who's coming and what Jarvis knows

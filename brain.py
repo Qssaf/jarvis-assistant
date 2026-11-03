@@ -990,6 +990,59 @@ def tool_plan(steps):
 
 grounder = [None]  # set by Brain: answers with Google Search grounding
 asker = [None]  # set by the app: function(question, cancel event) -> the user's answer, or None if none came
+running = []  # the tasks going on now (Task), oldest first: voice, typed, phone and scheduled ones, and coding jobs
+screen_lock = threading.Lock()  # one task (or the voice) at a time works on the screen
+history_lock = threading.Lock()  # the conversation: a task copies it when it starts and joins it when it's done
+SCREEN_WORK = {"screenshot", "launch", "click", "act", "look", "ui_controls", "type_text", "press_keys", "scroll",
+               "focus_window", "close_window", "open_url", "photopea"}  # a task's first one takes the screen until it ends
+SCREEN_IDLE = 8  # seconds the user must have left the keyboard and mouse alone before a task takes the screen, if...
+SCREEN_GRACE = 3  # ...they used them since the task started (later than this: the click or Enter that asked for it)
+
+
+class Task:
+    """One task: a request to the agent, or a coding job. Tasks run side by side, each with its own history and Stop."""
+
+    def __init__(self, label="", remote=False, unattended=False):
+        self.label, self.started, self.step = " ".join(str(label).split())[:200], time.time(), ""
+        self.cancel = threading.Event()
+        self.remote, self.unattended, self.passphrase_ok = remote or unattended, unattended, False
+        self.contents, self.turn, self.screen = [], None, False  # turn: what it was asked; screen: it holds screen_lock
+        self.coding = False  # a coding job: it doesn't use the conversation, so New conversation leaves it running
+
+    def ask_user(self, question):
+        """The agent's question to the user, answered through the voice; the agent waits for it."""
+        if self.remote:
+            return {"error": "the user is away from the PC (this task came from their phone): end your reply with the question instead"}
+        if not asker[0]:
+            return {"error": "there's no way to ask the user right now: end your reply with the question instead"}
+        answer = asker[0](question, self.cancel)
+        if answer is None:
+            return {"error": "the user didn't answer (or stopped the task): end your reply with the question instead"}
+        self.passphrase_ok = self.passphrase_ok or store.said_passphrase(answer)
+        return {"answer": store.hide_passphrase(answer)}
+
+
+def tool_jobs(action="list", job=""):
+    """The tasks running now, numbered; or stop one by its number or its words (or all of them)."""
+    now = list(running)
+    if not now:
+        return {"result": "nothing is running"}
+    if action != "stop":
+        return {"tasks": [{"n": i, "task": t.label, "for": f"{int(time.time() - t.started) // 60} min", "now": t.step}
+                          for i, t in enumerate(now, 1)]}
+    job = str(job).strip().lower()
+    words = [w for w in re.findall(r"\w+", job) if len(w) > 3]
+    score = [sum(w in t.label.lower() for w in words) for t in now]  # (the words that are in each one's label)
+    hit = (now if job in ("", "all", "everything") else [now[int(job) - 1]] if job.isdigit() and 0 < int(job) <= len(now)
+           else [t for t, n in zip(now, score) if n and n == max(score)])
+    if len(hit) != 1 and not (hit and hit == now and job in ("", "all", "everything")):
+        return {"error": f"{'several tasks match' if hit else 'no task matches'} \"{job}\": say which by its number. Running: "
+                         + "; ".join(f"{i}. {t.label}" for i, t in enumerate(now, 1))}
+    for t in hit:
+        t.cancel.set()
+    return {"result": "stopped: " + "; ".join(t.label for t in hit)}
+
+
 BROWSER_UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36"
 
 
@@ -2074,6 +2127,194 @@ TOOLS["classroom_announcements"] = (None, "The newest Google Classroom announcem
 TOOLS["drive_file"] = (None, "Read a Google Drive file by its name (or part of it) or id: Docs, Slides and Sheets come back as text, "
                        "PDFs and text files are read, pictures described (answering `question`). The newest match is read; "
                        "other_matches lists the rest.", obj(name={"type": "string"}, question={"type": "string"}, optional=("question",)))
+HARNESSES = {  # coding agents run headless: name -> its command for a task (continuing a session), printing JSON lines
+    "claude": lambda task, session, full: ["claude", "-p", task, "--output-format", "stream-json", "--verbose",
+                                          "--permission-mode", "bypassPermissions" if full else "acceptEdits",
+                                          *(["--resume", session] if session else [])],
+}
+CODERS = {"openchamber": "OpenChamber", "claude": "Claude Code"}  # (OpenChamber's jobs go through its local server)
+CHAMBER_HTTP = requests.Session()
+CHAMBER_HTTP.trust_env = False  # (127.0.0.1: never through a proxy)
+code_jobs = {}  # coding job number (this run) -> {"task", "harness", "cwd", "branch", "base", "session"}
+job_done = [lambda text: print(text, flush=True)]  # set by the app: tells the user a coding job is done
+CODE_LIMIT = 3 * 3600  # seconds a coding job may take
+
+
+def harness_event(e, job):
+    """One JSON line from Claude Code (stream-json), into the job: its session, the tool it's using, its result."""
+    job["session"] = e.get("session_id") or job["session"]
+    used = [c.get("name") for c in (e.get("message") or {}).get("content") or [] if c.get("type") == "tool_use"]
+    job["step"] = used[-1] if used else job["step"]
+    if e.get("type") == "result":
+        job["said"] = str(e.get("result") or "")
+
+
+def openchamber_url(start=False):
+    """The user's OpenChamber's local server, from its own settings; "" if it isn't set up, or isn't running (start: it's
+    started first, if its launcher is installed, and waited for)."""
+    port = store.read_json(os.path.join(system.app_config("openchamber"), "settings.json"), {}).get("desktopLocalPort")
+    launcher = start and port and next((c for c in ("openchamber-desktop", "openchamber") if system.have(c)), None)
+    for i in range(30 if launcher else 1 if port else 0):
+        try:
+            if CHAMBER_HTTP.get(f"http://127.0.0.1:{port}/health", timeout=3).ok:
+                return f"http://127.0.0.1:{port}"
+        except requests.RequestException:
+            pass
+        if launcher:
+            if i == 0:
+                system.launch(launcher)
+            time.sleep(1)
+    return ""
+
+
+def _chamber(base, method, path, **kw):
+    r = CHAMBER_HTTP.request(method, f"{base}/api{path}", timeout=15, **kw)
+    r.raise_for_status()
+    return r.json().get("data") if r.content else None
+
+
+def _chamber_run(t, rec, task, job):
+    """A coding job in OpenChamber: a session of its own there (the user can watch it and answer its questions), the task
+    sent as a prompt, then polled until the session is idle again. True if it went well."""
+    base = openchamber_url(start=True)
+    if not base:
+        raise OSError("OpenChamber isn't running, and couldn't be started")
+    if not job["session"]:
+        job["session"] = _chamber(base, "POST", "/session", json={"title": f"Jarvis: {task[:60]}",
+                                                                  "location": {"directory": rec["cwd"]}})["id"]
+    sid, sent = job["session"], time.time() * 1000
+    _chamber(base, "POST", f"/session/{sid}/prompt", json={"text": task})
+    while not t.cancel.wait(3):
+        state = _chamber(base, "GET", f"/session/{sid}")
+        said = [m for m in _chamber(base, "GET", f"/session/{sid}/message") if m.get("type") == "assistant"]  # (newest first)
+        tools = [c.get("name") for c in (said[0].get("content") or []) if c.get("type") == "tool"] if said else []
+        t.step = job["step"] = tools[-1] if tools else job["step"]
+        if ((state.get("time") or {}).get("idle") or 0) > sent:  # (idle again since this prompt: done)
+            job["said"] = " ".join(c.get("text", "") for c in (said[0].get("content") or []) if c.get("type") == "text").strip() if said else ""
+            return state.get("outcome") == "succeeded"
+        if time.time() - t.started > CODE_LIMIT:
+            break
+    try:
+        _chamber(base, "POST", f"/session/{sid}/interrupt", json={})
+    except requests.RequestException:
+        pass
+    return False
+
+
+def _cli_run(t, rec, task, job):
+    """A coding job by a headless command (Claude Code), followed through the JSON lines it prints. True if it went well."""
+    def line(text):
+        try:
+            harness_event(json.loads(text), job)
+            t.step = job["step"]
+        except (ValueError, AttributeError):  # (not a JSON object: kept in case it's why it failed)
+            job["lines"] = (job["lines"] + [text])[-5:]
+    return system.run_lines(HARNESSES[rec["harness"]](task, rec["session"], store.settings()["safety"] == "full"), line,
+                            cwd=rec["cwd"], timeout=CODE_LIMIT, halt=t.cancel) == 0
+
+
+def tool_code(task, folder="", harness="", job="", confirmed=False):
+    """A programming task for a coding agent, working headless in a git worktree of the project on a branch of its own."""
+    old = code_jobs.get(str(job).strip()) if job else None
+    if job and not old:
+        return {"error": f"there's no coding job {job} (this run: {', '.join(code_jobs) or 'none'})"}
+    if old and old["busy"]:
+        return {"error": f"coding job {job} is still working: the follow-up can go once it's done (or the user stops it)"}
+    if old:
+        harness = old["harness"]
+    elif harness in ("", "openchamber") and openchamber_url(start=True):  # (the user's OpenChamber first, started if need be)
+        harness = "openchamber"
+    elif harness == "openchamber":
+        return {"error": "OpenChamber isn't running, and couldn't be started: open it, or use Claude Code"}
+    else:
+        harness = harness or next((h for h in HARNESSES if system.have(HARNESSES[h]("", "", False)[0])), "")
+    if harness not in CODERS:
+        return {"error": f"unknown coding agent {harness!r}: {', '.join(CODERS)}" if harness else
+                "no coding agent: OpenChamber isn't set up and Claude Code (claude) isn't installed"}
+    if harness in HARNESSES and not system.have(HARNESSES[harness]("", "", False)[0]):
+        return {"error": f"{CODERS[harness]} isn't installed"}
+    n = str(job).strip() if old else str(len(code_jobs) + 1)
+    note = ""
+    if not old:
+        if not str(folder).strip():
+            return {"error": "say which project folder the work is in"}
+        folder = os.path.realpath(os.path.join(os.path.expanduser("~"), os.path.expanduser(str(folder))))
+        if not os.path.isdir(folder):
+            return {"error": f"there's no folder {folder}"}
+        top = system.run(["git", "-C", folder, "rev-parse", "--show-toplevel"])
+        if os.path.isdir(top):
+            branch = f"jarvis/{time.strftime('%Y%m%d-%H%M%S')}-{n}"
+            wt = os.path.join(system.DATA, "worktrees", f"{os.path.basename(top)}-{branch[7:]}")
+            out = system.run(["git", "-C", top, "worktree", "add", "-b", branch, wt, "HEAD"], 120)
+            if not os.path.isdir(wt):
+                return {"error": f"couldn't make a copy of the project to work in: {out[-300:]}"}
+            old = {"cwd": os.path.normpath(os.path.join(wt, os.path.relpath(folder, top))), "branch": branch,
+                   "base": system.run(["git", "-C", wt, "rev-parse", "HEAD"])}
+            if system.run(["git", "-C", top, "status", "--porcelain"]):
+                note = " It starts from the project's last commit: changes not committed yet aren't in it."
+        elif not confirmed and store.settings()["safety"] == "ask":
+            return {"error": f"NOT DONE: {folder} isn't a git repository, so the changes couldn't be kept apart or undone. "
+                             "Ask the user, then call again with confirmed: true."}
+        else:
+            old = {"cwd": folder, "branch": "", "base": ""}
+        old.update(task=task, harness=harness, session="")
+    old["busy"] = True
+    code_jobs[n] = old
+    t = Task(f"coding: {task}")
+    t.coding = True
+    running.append(t)
+    threading.Thread(target=_code_run, args=(t, n, old, task), daemon=True).start()
+    return {"result": f"Started {CODERS[harness]} on it (coding job {n}) in " + (f"a copy of the project, on branch {old['branch']}"
+            if old["branch"] else old["cwd"]) + f".{note}" + (" It's a session in OpenChamber: the user can watch it and answer its "
+            "questions there." if harness == "openchamber" else "") + " It works on its own and the user is told when it's done: "
+            "don't wait for it."}
+
+
+def _code_run(t, n, rec, task):
+    """A coding job's thread: the harness runs, its steps show in the jobs tool, its work is committed on the job's branch,
+    and the user is told (unless it was stopped)."""
+    job = {"session": rec["session"], "said": "", "step": "", "lines": []}
+    try:
+        try:
+            ok = (_chamber_run if rec["harness"] == "openchamber" else _cli_run)(t, rec, task, job)
+        except (OSError, ValueError, KeyError, TypeError, requests.RequestException) as e:
+            ok, job["lines"] = False, [str(e)]
+        rec["session"] = job["session"]
+        if t.cancel.is_set():
+            return
+        changes = f"made in place in {rec['cwd']} (not a git repository)"
+        if rec["branch"]:
+            wt = system.run(["git", "-C", rec["cwd"], "rev-parse", "--show-toplevel"])
+            who = [] if system.run(["git", "-C", wt, "config", "user.email"]) else ["-c", "user.name=Jarvis", "-c", "user.email=jarvis@localhost"]
+            system.run(["git", "-C", wt, "add", "-A"], 60)
+            system.run(["git", "-C", wt, *who, "commit", "-qm", f"Jarvis: {task[:70]}"], 60)
+            changes = (f"{system.run(['git', '-C', wt, 'diff', '--shortstat', rec['base'], 'HEAD'], 60) or 'none'}, committed on "
+                       f"branch {rec['branch']} (in {rec['cwd']}); nothing is merged into the project until the user says so")
+        if not ok and not job["said"]:
+            text = f'The coding job "{task}" ({CODERS[rec["harness"]]}, coding job {n}) failed: ' + (" / ".join(job["lines"])[-500:] or "no output")
+        else:
+            text = (f'The coding job "{task}" ({CODERS[rec["harness"]]}, coding job {n}) is done after '
+                    f'{max(1, round((time.time() - t.started) / 60))} min. It says: {job["said"][:1500]}\nChanges: {changes}.')
+    finally:
+        running.remove(t)
+        rec["busy"] = False
+    job_done[0](text)
+
+
+TOOLS["code"] = (tool_code, "Hand a programming task in a project folder (fix a bug, add a feature, refactor, write tests) to a "
+                 "coding agent (the user's OpenChamber, else Claude Code) that works on its own in the background, in a copy of the project "
+                 "(a git worktree on a branch of its own). Returns at once; the user is told when it's done, with what "
+                 "changed. job: a follow-up for an earlier coding job (its number), in the same copy and session. It never "
+                 "merges: merging that branch is a separate step, only when the user asks. Use it for code instead of "
+                 "writing code yourself with run_command.",
+                 obj(task={"type": "string", "description": "the whole request, with every detail the user gave"},
+                     folder={"type": "string", "description": "the project's folder (absolute, or from the home folder)"},
+                     harness={"type": "string", "enum": list(CODERS)}, job={"type": "string"},
+                     confirmed={"type": "boolean"}, optional=("folder", "harness", "job", "confirmed")))
+TOOLS["jobs"] = (tool_jobs, "Jarvis's tasks running now, side by side (background tasks, phone requests, scheduled tasks, "
+                 "coding jobs): list them (each with its number, what it's doing and for how long), or stop one by its "
+                 "number or a word from it (\"all\" stops every one).",
+                 obj(action={"type": "string", "enum": ["list", "stop"]}, job={"type": "string"}, optional=("action", "job")))
 TOOLS["ask_user"] = (None, "Ask the user something only they can tell you, out loud, and wait for the answer (up to two "
                      "minutes), then carry on: which of two close matches they meant, the words to send, a yes before "
                      "something irreversible. Never for what you can find out yourself.", obj(question={"type": "string"}))
@@ -2558,8 +2799,7 @@ def turned_in_at(submission):
 
 
 class Brain:
-    unattended = False  # a scheduled task or background check is running: nobody is there to say yes
-    passphrase_ok = False  # the user said their spoken passphrase in an answer to this task's ask_user
+    joined = 0  # turns joined to the conversation: a task that finds none joined meanwhile keeps its whole trace
 
     def __init__(self, notify=print):
         self.backends = {}
@@ -2575,9 +2815,6 @@ class Brain:
         self.notify = notify
         self.down_until = {}  # (backend, model) -> time it may be tried again
         self.contents = []
-        self.cancel = threading.Event()
-        self.ask_lock = threading.Lock()  # one task at a time (voice, phone): they share the history and the screen
-        self.remote = False  # the running task came from the phone: the user can't answer out loud
         self.plugins = {}  # name -> McpServer
         self.tool_owner = {}  # function name the model sees -> (McpServer, real tool name)
         self.app_tools = {}  # Composio slug -> {"description", "schema"}, for connected apps
@@ -3018,18 +3255,6 @@ class Brain:
             read = tool_read_file(path, question)
         return {"file": f["name"], **read, **({"other_matches": [x["name"] for x in files[1:6]]} if len(files) > 1 else {})}
 
-    def ask_user(self, question):
-        """The agent's question to the user, answered through the voice; the agent waits for it."""
-        if self.remote:
-            return {"error": "the user is away from the PC (this task came from their phone): end your reply with the question instead"}
-        if not asker[0]:
-            return {"error": "there's no way to ask the user right now: end your reply with the question instead"}
-        answer = asker[0](question, self.cancel)
-        if answer is None:
-            return {"error": "the user didn't answer (or stopped the task): end your reply with the question instead"}
-        self.passphrase_ok = self.passphrase_ok or store.said_passphrase(answer)
-        return {"answer": store.hide_passphrase(answer)}
-
     def run_app_tool(self, slug, args):
         if account_block(slug):
             return {"error": account_block(slug)}
@@ -3125,7 +3350,7 @@ class Brain:
             prompt += f"\n\n# People in the user's life (person for more)\n{known}"
         return prompt
 
-    def _run_tool(self, name, args):
+    def _run_tool(self, name, args, task=None):
         if name == "briefing":
             out = self.briefing(), None
         elif name == "classroom_due":
@@ -3139,7 +3364,7 @@ class Brain:
         elif name == "waiting_on_me":
             out = self.waiting_on_me(**args), None
         elif name == "ask_user":
-            out = self.ask_user(**args), None
+            out = (task.ask_user(**args) if task else {"error": "only a task can ask the user"}), None
         elif name == "account_settings":
             out = self.account_settings(**args), None
         elif name in self.tool_owner and self.tool_owner[name][1] == "COMPOSIO_MULTI_EXECUTE_TOOL" and any(
@@ -3330,35 +3555,75 @@ class Brain:
         audio = next(p["inlineData"] for p in parts if "inlineData" in p)
         return base64.b64decode(audio["data"]), audio.get("mimeType", "")
 
-    def ask(self, text, on_tool=lambda name: None, on_thought=None, remote=False, unattended=False):
-        """unattended: a scheduled task or a background check, on its own history (the conversation isn't touched), where
-        changes that wait for the user's yes are refused even if the model says it has one."""
-        with self.ask_lock:
-            self.remote, self.unattended, self.passphrase_ok = remote or unattended, unattended, False
-            saved = self.contents
-            if unattended:
-                own = self.contents = []
-            try:
-                return self._ask(text, on_tool, on_thought)
-            finally:
-                system.trim_memory()  # (a task's screenshots and pages: freed, and handed back to the system)
-                self.remote = self.unattended = False
-                if unattended and self.contents is own:  # (unless New conversation reset it meanwhile)
-                    self.contents = saved
-                elif not unattended:  # (voice, typed and phone tasks alike: only voice ones were saved, so a reopened chat
-                    on_asked[0](self.contents)  # forgot what the phone had asked)
+    def ask(self, text, on_tool=lambda name: None, on_thought=None, remote=False, unattended=False, label=""):
+        """One task, side by side with any others, on a copy of the conversation that it joins when done. unattended: a
+        scheduled task or a background check, on its own history (the conversation isn't touched), where changes that
+        wait for the user's yes are refused even if the model says it has one. label: what it's doing in the user's
+        words (the jobs tool and Stop say it). A stopped task answers "Stopped."."""
+        task = Task(label or text, remote, unattended)
+        with history_lock:  # (each message's parts copied too: trim drops old screenshots from them)
+            base, seen = self.contents, self.joined
+            task.contents = [] if unattended else [dict(m, parts=list(m["parts"])) for m in base]
+        running.append(task)
+        try:
+            reply = self._ask(text, on_tool, on_thought, task)
+            if task.cancel.is_set():  # (stopped while the model was answering: that answer isn't wanted any more)
+                reply = "Stopped."
+            if not unattended:
+                self._join(task, base, seen, reply)
+            return reply
+        finally:
+            running.remove(task)
+            if task.screen:
+                screen_lock.release()
+            system.trim_memory()  # (a task's screenshots and pages: freed, and handed back to the system)
+            if not unattended:  # (voice, typed and phone tasks alike: only voice ones were saved, so a reopened chat
+                on_asked[0](self.contents)  # forgot what the phone had asked)
 
-    def _ask(self, text, on_tool, on_thought):
-        self.cancel.clear()
+    def _join(self, task, base, seen, reply):
+        """A finished task's turn into the conversation: its whole trace (tool results, the latest screenshot) when no other
+        task joined meanwhile, else what was asked and answered. Nothing after New conversation."""
+        with history_lock:
+            if self.contents is not base:
+                return
+            if self.joined == seen:
+                base[:] = task.contents
+            else:
+                base += [task.turn, {"role": "model", "parts": [{"text": reply}]}]
+                trim(base)
+            self.joined += 1
+
+    @staticmethod
+    def _take_screen(task, on_tool):
+        """A task's first screen step waits for the screen (one user of it at a time) and, if the user has used the keyboard
+        or mouse since the task started, until they've left them alone for SCREEN_IDLE seconds. False if stopped meanwhile."""
+        def user_busy():
+            idle = system.user_idle()
+            return idle is not None and idle < SCREEN_IDLE and time.time() - idle > task.started + SCREEN_GRACE
+        if task.screen:
+            return True
+        if screen_lock.locked() or user_busy():
+            on_tool("wait_screen")
+        while not screen_lock.acquire(timeout=0.5):
+            if task.cancel.is_set():
+                return False
+        task.screen = True
+        while user_busy():
+            if task.cancel.wait(0.5):
+                return False
+        return True
+
+    def _ask(self, text, on_tool, on_thought, task):
         reset_interrupt_act()
-        msgs = self.contents  # reset() swaps in a new list; this turn keeps writing to its own
+        msgs = task.contents
         start = len(msgs)
         # (the passphrase never goes in: the history is saved with the chat, and a yes needs it through ask_user anyway)
         known = store.matching_skills(text)  # ways that worked for a task like this (the agent saved them with skill)
         hint = ("\n[Saved ways that worked before for something like this (screens change: check as you go; if one doesn't work "
                 "now, call skill with action failed, or worked when it did):\n" + "\n".join(f"- {k['name']}: {k['steps']}" for k in known)
                 + "]") if known else ""
-        msgs.append({"role": "user", "parts": [{"text": f"[{time.strftime('%A %d %B %Y, %H:%M')}] {store.hide_passphrase(text)}{hint}"}]})
+        task.turn = {"role": "user", "parts": [{"text": f"[{time.strftime('%A %d %B %Y, %H:%M')}] {store.hide_passphrase(text)}{hint}"}]}
+        msgs.append(task.turn)
         try:
             nudges, later = 0, False
             screen_steps, saved_way, answer = 0, bool(known), None  # (a way offered, or saved: no nudge to save one)
@@ -3378,7 +3643,7 @@ class Brain:
                     msgs.append({"role": "user", "parts": [{"text": "Don't announce it, do it: keep using your tools until the task is done, then reply."}]})
                     continue
                 if not calls:
-                    if screen_steps >= 3 and not saved_way and not self.unattended:  # a task that took several screen steps:
+                    if screen_steps >= 3 and not saved_way and not task.unattended:  # a task that took several screen steps:
                         # ask once to keep the way it worked (the model forgets about half the time); its answer stays
                         saved_way, answer = True, said
                         msgs.append({"role": "user", "parts": [{"text": SKILL_NUDGE}]})
@@ -3390,20 +3655,22 @@ class Brain:
                 later = later or any(c["name"] in ("checks", "set_reminder", "watch") for c in calls)
                 final = said.strip() and all(c["name"] in FINISHERS for c in calls)
                 def run(call):
-                    if self.cancel.is_set():
+                    if task.cancel.is_set() or call["name"] in SCREEN_WORK and not self._take_screen(task, on_tool):
                         return {"error": "cancelled by the user"}, None
                     on_tool(call["name"])
-                    t = time.time()
+                    task.step, t = call["name"], time.time()
                     args = call.get("args") or {}
-                    if self.unattended:  # (here, not in _run_tool: the voice runs its tools there meanwhile, with real yeses)
+                    if call["name"] == "act":  # (Stop, or the jobs tool stopping this task alone, ends it between steps)
+                        args = {**args, "halt": task.cancel}
+                    if task.unattended:  # (here, not in _run_tool: the voice runs its tools there meanwhile, with real yeses)
                         args = {k: v for k, v in args.items() if k != "confirmed"}
                     # a task from the voice (or the window) with a spoken passphrase set: a yes needs it too, asked with
                     # ask_user (from the phone it can't be said, and that chat is the user's own: their yes there is enough)
-                    elif args.get("confirmed") and not (self.remote or self.passphrase_ok) and store.secret(store.PASSPHRASE):
+                    elif args.get("confirmed") and not (task.remote or task.passphrase_ok) and store.secret(store.PASSPHRASE):
                         return {"error": "NOT DONE: the user has a spoken passphrase. Ask with ask_user for their yes and "
                                          "their passphrase (you don't know it: never guess it), then call again."}, None
                     try:
-                        out = self._run_tool(call["name"], args)
+                        out = self._run_tool(call["name"], args, task)
                     except Exception as e:
                         out = {"error": str(e)[:1000]}, None
                     res = out[0] if isinstance(out, tuple) else out
@@ -3423,7 +3690,7 @@ class Brain:
                     if image:
                         images.append({"inlineData": {"mimeType": "image/jpeg", "data": base64.b64encode(image).decode()}})
                 msgs.append({"role": "user", "parts": responses + images})
-                if self.cancel.is_set():
+                if task.cancel.is_set():
                     return "Stopped."
                 if final and all("error" not in r["functionResponse"]["response"] for r in responses):
                     break  # e.g. "close it" done and the answer already written: no extra model call
@@ -3440,18 +3707,28 @@ class Brain:
     def add_turn(self, text, reply):
         """A finished unattended run that the user was told about, put in the conversation: "yes, do it" from the phone or
         by voice then has its context."""
-        with self.ask_lock:
+        with history_lock:
             self.contents += [{"role": "user", "parts": [{"text": text}]}, {"role": "model", "parts": [{"text": reply}]}]
             trim(self.contents)
+            self.joined += 1
 
-    def interrupt(self):
-        self.cancel.set()
+    @staticmethod
+    def interrupt():
+        """Stop every task (and coding job); what they were doing, to say what was stopped."""
+        stopped = [t.label for t in running if not t.cancel.is_set()]
+        for t in list(running):
+            t.cancel.set()
         interrupt_act()
+        return stopped
 
     def reset(self):
-        self.cancel.set()
+        """New conversation: the tasks using the old one stop (coding jobs don't use it: they go on)."""
+        for t in list(running):
+            if not t.coding:
+                t.cancel.set()
         interrupt_act()
-        self.contents = []
+        with history_lock:
+            self.contents = []
 
 
 def trim(msgs, keep=80):

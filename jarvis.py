@@ -72,6 +72,8 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - When the user corrects how you did something (the wrong button, the wrong chat, a habit they dislike), remember the lesson in one line starting "Lesson:", so it never happens again. A lesson is about how you act, never a fact or news (a corrected product name is just a correction). When they say you don't need to keep something, forget it.
 - You see the screen only through look, one moment at a time, so screen jobs you can't plan from one look (filling in a form, working through several pages, a quiz with several questions, an app you don't know) go to do_task: the agent sees screenshots. One or two quick steps (click play, open a chat, type what they said) you do yourself.
 - Long jobs (many pages, logins, forms) or after two acts failed: do_task with a complete instruction (goal, every detail, what you tried). Say its outcome briefly when it arrives. While it runs it may need the user: ask them its question plainly, then pass their reply with answer_task.
+- do_tasks run side by side: start each one as it's asked, never wait for another to finish. "What are you working on?" or "stop the flight search": jobs (list, or stop one by its number or words).
+- Programming in a project (a bug, a feature, tests): code {task, folder} (the folder as the user says it, like ~/Projects/name; look for it with run_command only if they didn't say). It returns at once and the user hears when it's done. A follow-up for it ("also add tests"): code with its job number. Merge its branch only when the user asks.
 - Call independent tools together in one turn.
 
 # Getting it right
@@ -118,7 +120,8 @@ User: you clicked the wrong button, never press Check answer → remember {fact:
 DO_TASK = {
     "behavior": "NON_BLOCKING",  # dispatched at once; the voice session stays free while the agent works
     "name": "do_task",
-    "description": "Have Jarvis's agent carry out a task that needs the screen, an app's interface, a website, or many steps. Returns what was done or found.",
+    "description": ("Have Jarvis's agent carry out a task that needs the screen, an app's interface, a website, or many steps. "
+                    "Several run side by side (the screen takes turns); each returns what was done or found when it's ready."),
     "parameters": {"type": "object", "properties": {"task": {"type": "string", "description": "Complete instruction with every detail the user gave; names, versions and numbers exactly as they said them."}}, "required": ["task"]},
 }
 ANSWER_TASK = {
@@ -128,6 +131,9 @@ ANSWER_TASK = {
     "parameters": {"type": "object", "properties": {"answer": {"type": "string"}}, "required": ["answer"]},
 }
 ASK_WAIT = 120  # seconds the agent waits for an answer to its question
+AWAY = 90  # seconds without the keyboard, mouse or talking: the user isn't at the PC, so tasks' news and questions wait
+LONG_RESULT = 600  # characters: a task's answer this long goes to the chat in full, and the voice says its gist
+held = []  # tasks' news kept while the user was away from the PC (presence_pass says it when they're back)
 STOP_LISTENING = {
     "name": "stop_listening",
     "description": ('Turn your microphone off until the user says the wake word again. You keep hearing everything until you call '
@@ -160,7 +166,7 @@ VOICE_RESULT_LIMIT = 12000  # characters of one tool result the voice model gets
 # and look over 100 times in a minute without a word to the user
 VOICE_TOOL_LIMIT = 12
 # tools the voice model runs itself (no screen involved); the agent handles everything else
-LIVE_TOOLS = ["run_command", "web_search", "read_webpage", "youtube_search", "open_url", "remember", "forget", "set_reminder", "list_reminders",
+LIVE_TOOLS = ["jobs", "code", "run_command", "web_search", "read_webpage", "youtube_search", "open_url", "remember", "forget", "set_reminder", "list_reminders",
               "cancel_reminder", "list_windows", "focus_window", "close_window", "act", "look", "ui_controls", "make_image",
               "show_image", "read_file", "briefing", "account_settings", "weather", "classroom_due", "classroom_announcements", "drive_file", "routine",
               "recall", "selection", "media", "notes", "recent_changes", "watch", "checks", "whatsapp_read", "whatsapp_media", "whatsapp_send", "whatsapp_call",
@@ -200,7 +206,8 @@ TOOL_LABELS = {"run_command": "Running a command", "web_search": "Searching the 
                "whatsapp_send": "Sending a WhatsApp message", "discord_read": "Reading Discord", "discord_send": "Sending a Discord message",
                "discord_react": "Reacting on Discord", "discord_media": "Opening a Discord message", "people_rules": "Updating who Jarvis answers",
                "person": "Checking on them", "waiting_on_me": "Checking who's waiting", "screen_history": "Searching your screen history",
-               "skill": "Saving how it's done"}
+               "skill": "Saving how it's done", "jobs": "Checking your tasks", "code": "Starting a coding job",
+               "wait_screen": "Waiting for the screen"}
 
 
 def tool_label(name):
@@ -211,10 +218,8 @@ def tool_label(name):
     return f"Using {app}" if app and app != "Composio" else "Working"
 
 
-ONCE_TOOLS = {"whatsapp_send", "whatsapp_call", "discord_send", "discord_react"}  # never twice for one request: _send_once
+ONCE_TOOLS = {"whatsapp_send", "whatsapp_call", "discord_send", "discord_react", "code"}  # never twice for one request: _send_once
 VOICE_SCREEN_ACTS = {"act", "focus_window", "close_window", "open_url"}
-AGENT_SCREEN_TOOLS = {"screenshot", "launch", "click", "act", "look", "ui_controls", "type_text", "press_keys", "scroll",
-                      "focus_window", "close_window", "open_url", "watch", "photopea"}
 YES = re.compile(r"\b(?:yes|yeah|yep|yup|ya|sure|ok|okay|alright|all right|go ahead|go for it|do it|send it|proceed|confirm|"
                  r"correct|right|absolutely|of course|definitely|certainly|fine|why not|perfect|oui|si|sí|ja|naam|na3am|aywa|"
                  r"tamam|yalla|نعم|ايه|إيه|اي|أكيد|اكيد|يلا|تمام)\b", re.I)
@@ -321,12 +326,11 @@ class Live:
         threading.Thread(target=self.loop.run_forever, daemon=True).start()
         self.session = self.task = self.ready = None
         self.mic = False       # forward the microphone to Gemini
-        self.working = False   # a do_task is running
+        self.working = 0       # do_task calls running (side by side)
         self.waiting = False   # sent a typed message, no reply yet
         self.muted = False     # drop the rest of a reply the user cut off
         self.quiet = False     # typed message with spoken replies turned off
         self.spoke = False     # this turn's audio has started (for the speed log)
-        self.task_lock = None  # created on the event loop
         self.tools_wait = None  # the one-time wait for the account tools at startup
         self.skip_app_tools = False  # Gemini rejected an account tool's description: connect without them
         self.stopped = False   # the user pressed Stop: don't speak late results
@@ -342,10 +346,9 @@ class Live:
         self.gemini_spoke_at = 0.0
         self.turn_spoke = False
         self.interrupted_at = 0.0
-        self.current_task = ""  # what the running do_task is doing
-        self.question = None   # the running task's question to the user: {"text", "answered" (Event), "answer"}
+        self.question = None   # a task's question being asked now: {"text", "answered" (Event), "answer"}
+        self.asking = threading.Lock()  # one task's question at a time (see ask_from_task)
         self.last_heard = self.last_said = ""  # the latest words of the user and of Jarvis: see ASKED_YES
-        self.task_screen = False  # the running do_task has used the screen: the voice keeps its hands off it meanwhile
         self.announcing = False  # saying a text the chat already shows (tell, reminders): its transcript isn't added again
         import brain as brain_mod
         brain_mod.asker[0] = self.ask_from_task
@@ -460,11 +463,15 @@ class Live:
         self.resume_handle, self.resume_next = None, False
         self.loop.call_soon_threadsafe(self._cancel_quick)  # (asyncio tasks are cancelled on their own loop)
         self.barge_in()
-        self.brain.interrupt()
+        stopped = self.brain.interrupt()
         self.backup.stop()
         self.mic = False
         if busy:
             self.close()
+        if stopped:  # (the user is told what Stop stopped: tasks, phone requests, coding jobs)
+            text = f"Stopped: {'; '.join(stopped)}."
+            emit("log", who="jarvis", text=text)
+            self.announce(text, asked=True)
 
     # ---- event loop side
     def _end_session(self):
@@ -476,7 +483,6 @@ class Live:
     async def _open(self):
         if self.backup_now():  # nothing to open: the backup voice answers instead (see _send)
             return
-        self.task_lock = self.task_lock or asyncio.Lock()
         # just after startup the account tools may still be loading: wait for them once (at most 6 s), never again
         self.tools_wait = self.tools_wait or asyncio.ensure_future(asyncio.to_thread(self.brain.tools_ready.wait, 6))
         await self.tools_wait
@@ -617,7 +623,8 @@ class Live:
                 + f"- Plugins (MCP servers): {', '.join(plugins) or 'none'}; more can be added in Jarvis's Plugins page.\n"
                 + (f"- Not working right now: {', '.join(down)}. {self.brain.accounts_down() or self.brain.sign_in_note()}\n"
                    if down else "")
-                + "- A background agent (do_task) for long jobs. You run on Google Gemini; the user built and develops you.")
+                + "- Background agents (do_task) for long jobs, several at once; coding agents (code) for programming in a "
+                "project. You run on Google Gemini; the user built and develops you.")
 
     def _config(self):
         t = self.t
@@ -869,13 +876,8 @@ class Live:
                     emit("log", who="thinking", text=f"Decided to use {fc.name}" + (f": {json.dumps(fc.args, ensure_ascii=False)[:400]}" if fc.args else ""))
             quick = [fc for fc in m.tool_call.function_calls if fc.name != "do_task"]
             for fc in m.tool_call.function_calls:
-                if fc.name == "do_task" and self.working:  # one background task at a time: never a duplicate
-                    asyncio.create_task(s.send_tool_response(function_responses=[self.t.FunctionResponse(
-                        id=fc.id, name=fc.name, response={"result": f"Not started: you're still working on \"{self.current_task}\". "
-                                                          "It reports when done; the user can ask again after that, or press Stop."})]))
-                elif fc.name == "do_task":  # runs in the background; the answer is sent when it's ready
-                    self.working = True
-                    self.current_task = (fc.args or {}).get("task", "")
+                if fc.name == "do_task":  # runs in the background, side by side with others; its answer is sent when ready
+                    self.working += 1
                     asyncio.create_task(self._task(s, fc))
             if quick:  # run them off the receive loop, so the connection keeps being serviced (keepalive pings)
                 self._cancel_quick()  # (a newer call replaces them)
@@ -920,9 +922,6 @@ class Live:
         if args.get("confirmed") and store.secret(store.PASSPHRASE) and not store.said_passphrase(self.last_heard):
             return {"error": "NOT DONE: this needs the user's spoken passphrase, and they haven't said it since you last asked. "
                              "Ask for their yes and their passphrase, then call again with confirmed: true. Never guess or say it."}
-        if fc.name in VOICE_SCREEN_ACTS and self.working and self.task_screen:
-            return {"error": "NOT DONE: your background task is using the screen right now, and two of you at once type into "
-                             "the wrong place or send things twice. Tell the user it's still on it; they can press Stop to take over."}
         if fc.name == "act":
             if any(isinstance(step.get("click"), (list, tuple)) for step in args.get("steps") or []):
                 return {"error": "nothing was done: you can't see the screen, so coordinate positions are guesses. Use click_on with a description, or {button: 'left'} to click where the mouse is."}
@@ -995,6 +994,11 @@ class Live:
 
     async def _answer(self, fc, args):
         if fc.name in LIVE_TOOLS or fc.name in self.brain.app_tools:  # quick tools (paused accounts are refused inside): run them right here
+            import brain as brain_mod
+            screen = fc.name in VOICE_SCREEN_ACTS
+            if screen and not brain_mod.screen_lock.acquire(blocking=False):
+                return {"error": "NOT DONE: a background task is using the screen right now, and two of you at once type into "
+                                 "the wrong place or send things twice. Tell the user it's still on it; they can press Stop to take over."}
             emit("tool", name=fc.name)
             t = time.time()
             try:  # never let a stuck tool freeze the conversation (images aren't usable here: look returns text)
@@ -1004,6 +1008,9 @@ class Live:
                 result = {"error": "that took over 60 seconds and was abandoned; " + (note or "check the screen or try another way")}
             except Exception as e:
                 result = {"error": str(e)[:500]}
+            finally:
+                if screen:
+                    brain_mod.screen_lock.release()
             problem = f" error: {str(result['error'])[:200]}" if isinstance(result, dict) and "error" in result else ""
             print(f"[tool] {fc.name} {time.time() - t:.1f}s (voice){problem}", flush=True)
             text = json.dumps(result, ensure_ascii=False, default=str)
@@ -1063,47 +1070,51 @@ class Live:
             self.last = time.time()
 
     async def _task(self, s, fc):
-        async with self.task_lock:  # one agent task at a time; a second one waits its turn
-            self.working = True
+        """One do_task, side by side with any others. Its answer is spoken when it's ready, unless it was stopped or the
+        user is away from the PC (then it's kept for when they're back: held)."""
+        task = (fc.args or {}).get("task", "")
+        try:
+            thoughts = (lambda t: emit("log", who="thinking", text=t)) if store.settings()["show_thinking"] else None
+            progress = asyncio.create_task(self._progress())
             try:
-                thoughts = (lambda t: emit("log", who="thinking", text=t)) if store.settings()["show_thinking"] else None
-                progress = asyncio.create_task(self._progress())
-
-                def on_tool(n):
-                    self.task_screen = self.task_screen or n in AGENT_SCREEN_TOOLS
-                    emit("tool", name=n)
-                self.task_screen = False
-                try:
-                    result = await asyncio.to_thread(self.brain.ask, (fc.args or {}).get("task", ""), on_tool, thoughts)
-                finally:
-                    progress.cancel()
-                    self.task_screen = False
-            except Exception as e:
-                result = f"The task failed: {e}"
+                result = await asyncio.to_thread(self.brain.ask, task, lambda n: emit("tool", name=n), thoughts, label=task)
             finally:
-                self.working = False
-            if "http" in result:  # links are shown on screen, not spoken
-                emit("log", who="jarvis", text=result)
-            self.last, self.waiting = time.time(), True
-            silent = self.stopped
-            scheduling = "SILENT" if silent else "WHEN_IDLE"
-            try:
-                await s.send_tool_response(function_responses=[self.t.FunctionResponse(
-                    id=fc.id, name=fc.name, response={"result": result}, scheduling=scheduling)])
-            except Exception:  # the voice session closed meanwhile: reopen it to say the result (unless stopped)
-                self.waiting = False
-                if hushed():  # (nobody's talking with Jarvis: it doesn't speak up in quiet hours)
-                    if "http" not in result:  # (else it's in the chat already)
-                        emit("log", who="jarvis", text=result)
-                    system.notify("Jarvis", result[:300])
-                elif not self.stopped:
-                    await self._send(f"(A task you started has finished. Tell the user the outcome briefly: {result})")
+                progress.cancel()
+        except Exception as e:
+            result = f"The task failed: {e}"
+        finally:
+            self.working -= 1
+        stopped = self.stopped or result == "Stopped."
+        away = not stopped and not at_pc(self)
+        shown = "http" in result or len(result) > LONG_RESULT or away  # links and long reports are shown, not read out
+        if shown:
+            emit("log", who="jarvis", text=result)
+        if away:
+            held.append(f'The task "{task}": {result}')
+            system.notify("Jarvis", result[:300])
+        self.last = time.time()
+        self.waiting = self.waiting or not away
+        reply = {"result": result, **({"note": "the whole text is in the chat: say only the gist, in a sentence or two"}
+                                      if len(result) > LONG_RESULT else {})}
+        try:
+            await s.send_tool_response(function_responses=[self.t.FunctionResponse(
+                id=fc.id, name=fc.name, response=reply, scheduling="SILENT" if stopped or away else "WHEN_IDLE")])
+        except Exception:  # the voice session closed meanwhile: reopen it to say the result (unless stopped or kept)
+            self.waiting = False
+            if stopped or away:
+                pass
+            elif hushed():  # (nobody's talking with Jarvis: it doesn't speak up in quiet hours)
+                if not shown:
+                    emit("log", who="jarvis", text=result)
+                system.notify("Jarvis", result[:300])
+            else:
+                await self._send(f"(A task you started has finished. Tell the user the outcome briefly: {result[:LONG_RESULT]})")
 
     async def _progress(self):
         """A long background task: after 40 s say once that it's still going (if nobody's talking), then keep the notch fresh."""
         await asyncio.sleep(40)
         if (self.working and not self.stopped and not self.mic and not self.question and not self.speaker.busy() and self.session
-                and not hushed()):
+                and not hushed() and at_pc(self)):
             last = next((m["text"] for m in reversed(sessions.messages) if m["who"] == "tool"), "")
             await self._send("(The background task is still running. Tell the user in a few words that you're still on it"
                              + (f"; the latest step: {tool_label(last)}" if last else "") + ".)", track=False)
@@ -1113,11 +1124,23 @@ class Live:
 
     def ask_from_task(self, question, cancel):
         """The agent's question (from its thread): said out loud with the mic left open, then wait for answer_task, for
-        Stop, or for ASK_WAIT seconds. The answer, or None."""
+        Stop, or for ASK_WAIT seconds. One task's question at a time, and only once the user is at the PC. The answer, or None."""
         if cancel.is_set():  # Stop was pressed as it was about to ask: don't reopen the mic or say it
             return None
         emit("log", who="system", text=f"The task needs you: {question}")
         system.notify("Jarvis needs you", question)
+        while not self.asking.acquire(timeout=0.5):  # (another task's question goes first)
+            if cancel.is_set():
+                return None
+        try:
+            while not at_pc(self):  # (asked once they're back, not to an empty room)
+                if cancel.wait(1):
+                    return None
+            return self._ask_now(question, cancel)
+        finally:
+            self.asking.release()
+
+    def _ask_now(self, question, cancel):
         if store.quiet_now() and not self.mic and time.time() - self.user_spoke_at > 120:
             return None  # quiet hours and the user isn't talking with Jarvis: not asked out loud (the agent ends with it instead)
         self.quiet, self.stopped = False, False
@@ -1281,7 +1304,7 @@ class Backup:
             q["answered"].set()
             return
         thoughts = (lambda t: emit("log", who="thinking", text=t)) if store.settings()["show_thinking"] else None
-        reply = live.brain.ask((HEARD_NOTE if frames is not None else "") + text, lambda n: emit("tool", name=n), thoughts)
+        reply = live.brain.ask((HEARD_NOTE if frames is not None else "") + text, lambda n: emit("tool", name=n), thoughts, label=text)
         if gen != self.gen or reply == "Stopped." or reply.strip().strip(".").upper() == "NOTHING":
             return
         emit("log", who="jarvis", text=reply)
@@ -1481,11 +1504,43 @@ def tell(live, text, event=None, transcript="", loud=False, kind=""):
             print(f"[phone] couldn't send it: {e}", flush=True)
 
 
-def run_unattended(live, text, check=False):
+def at_pc(live):
+    """The user is at the PC: keyboard or mouse used lately (not by Jarvis), talking with Jarvis, or no way to tell."""
+    idle = system.user_idle()
+    return idle is None or idle < AWAY or live.mic or time.time() - live.user_spoke_at < 120
+
+
+def job_done(live, text):
+    """A coding job's news: in the chat, the conversation and a notification, and said now if the user is at the PC
+    (else kept for when they're back)."""
+    emit("log", who="jarvis", text=text)
+    live.brain.add_turn("(How did the coding job go?)", text)
+    system.notify("Jarvis", text[:300])
+    if at_pc(live):
+        live.announce(text, asked=True)
+    else:
+        held.append(text)
+
+
+def presence_pass(live):
+    """Tasks' news kept while the user was away, said in one go once they're back at the PC (not in quiet hours)."""
+    if held and at_pc(live) and not live.question and not store.quiet_now():
+        news = held[:]
+        del held[:len(news)]
+        live.announce("While you were away: " + " Also: ".join(news), asked=True)
+
+
+def presence_loop(live):
+    while True:
+        presence_pass(live)
+        time.sleep(2)
+
+
+def run_unattended(live, text, check=False, label=""):
     """A scheduled task or a background check, run by the agent on its own history. A check that found nothing stays quiet
     (its steps aren't shown either: only the log has them)."""
     try:
-        reply = live.brain.ask(text, (lambda n: None) if check else (lambda n: emit("tool", name=n)), unattended=True)
+        reply = live.brain.ask(text, (lambda n: None) if check else (lambda n: emit("tool", name=n)), unattended=True, label=label)
     except Exception as e:
         print(f"[checks] {'the check' if check else 'a scheduled task'} failed: {e}", flush=True)
         if check:
@@ -1501,15 +1556,16 @@ def run_unattended(live, text, check=False):
 
 
 def check_loop(live):
-    """The user's standing checks, every checks_every minutes (skipped while the agent is busy: tried again a minute later)."""
+    """The user's standing checks, every checks_every minutes (side by side with any other task)."""
     live.brain.tools_ready.wait(60)
     while True:
         cfg, now = store.settings(), time.time()
         last = store.read_json(CHECKS_STAMP, {}).get("at", 0)
-        if cfg["checks"] and now - last >= cfg["checks_every"] * 60 and not live.brain.ask_lock.locked():
+        if cfg["checks"] and now - last >= cfg["checks_every"] * 60:
             store.write_json(CHECKS_STAMP, {"at": now})
             since = time.strftime("%A %H:%M", time.localtime(max(last, now - 86400)))
-            run_unattended(live, CHECK_NOTE.format(since=since) + "\n".join(f"- {c}" for c in cfg["checks"]), check=True)
+            run_unattended(live, CHECK_NOTE.format(since=since) + "\n".join(f"- {c}" for c in cfg["checks"]), check=True,
+                           label="your standing checks")
         time.sleep(60)
 
 
@@ -1536,7 +1592,7 @@ def reminder_loop(live):
         now = time.time()
         for r in store.pop_due(now):
             if r.get("task"):
-                threading.Thread(target=run_unattended, args=(live, SCHEDULED_NOTE + r["text"]), daemon=True).start()
+                threading.Thread(target=run_unattended, args=(live, SCHEDULED_NOTE + r["text"], False, r["text"]), daemon=True).start()
             elif r.get("until") and now >= r["until"]:  # (a heads-up for something that has already started or is due)
                 print(f"[reminders] dropped, too late: {r['text']}", flush=True)
             elif now - r["at"] > MISSED:
@@ -2440,7 +2496,7 @@ def api_post(path, data, live, brain):
     if path == "/api/task" and str(data.get("text", "")).strip():  # `jarvis --task` and the MCP server (`jarvis --mcp`)
         text = data["text"].strip()
         emit("log", who="system", text=f"🔌 Task from another program: {text}")
-        reply = brain.ask(EXTERNAL_NOTE + text, lambda n: emit("tool", name=n), unattended=True)
+        reply = brain.ask(EXTERNAL_NOTE + text, lambda n: emit("tool", name=n), unattended=True, label=text)
         emit("log", who="jarvis", text=reply)
         return {"reply": reply}
     elif path == "/api/say" and str(data.get("text", "")).strip():
@@ -3070,6 +3126,8 @@ def main():
     background(deadline_loop, brain, restart=True)
     background(check_loop, live, restart=True)
     background(tidy_loop, restart=True)
+    background(presence_loop, live, restart=True)
+    brain_mod.job_done[0] = lambda text: job_done(live, text)
     import remote
     chat = lambda who, text: emit("log", who=who, text=text)  # (tasks from the phone and their answers)
     remote_ref[0] = remote.Telegram(brain, notify=lambda text: emit("log", who="system", text=text), chat=chat)

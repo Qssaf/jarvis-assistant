@@ -5,7 +5,7 @@ One model request per case:
     .venv/bin/python evals/whatsapp_eval.py                 # every case, your agent models
     EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/whatsapp_eval.py essay free
 """
-import os, re, sys, threading, time
+import os, re, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
@@ -45,7 +45,7 @@ CASES = {
 if __name__ == "__main__":
     entries = [brain.entry(line) for line in os.environ["EVAL_MODELS"].split(",")] if os.environ.get("EVAL_MODELS") else brain.chain()
     b = brain.Brain.__new__(brain.Brain)
-    b.backends, b.down_until, b.contents, b.cancel, b.notify = {}, {}, [], threading.Event(), (lambda text: None)
+    b.backends, b.down_until, b.contents, b.notify = {}, {}, [], (lambda text: None)
     b.connected, b.app_data = {"googlecalendar"}, lambda slug, args: CALENDAR
     generate = b._generate
     b._generate = lambda contents, **kw: generate(contents, entries=entries)

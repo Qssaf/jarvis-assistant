@@ -5,7 +5,7 @@ moves the agent made, not its wording. It costs model requests (about 2-6 per ca
     .venv/bin/python evals/agent_eval.py                      # every case, your agent models
     EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py mark_read quiz   # some cases, one model
 """
-import json, os, re, sys, threading, time, types
+import json, os, re, sys, time, types
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
@@ -18,6 +18,7 @@ real_settings = store.settings
 store.settings = lambda: {**real_settings(), "safety": "ask", "extra_instructions": ""}  # (the defaults, whatever yours are)
 store.memory = lambda: MEMORY
 store.connector_modes = lambda: {}
+brain.system._idle_seconds = lambda: None  # (a screen step never waits for you using the PC meanwhile)
 
 
 # ---------------------------------------------------------------- screens the agent sees (text drawn as a screenshot)
@@ -145,6 +146,13 @@ CASES = [
      and not any(re.search(r"SEND|REPLY|FORWARD", x["name"]) for x in c) and not set(names(c)) & {"screenshot", "act", "look"}},
     {"id": "recall", "task": "What was that free photo editor you told me about last week?",
      "check": lambda c, r, a: "recall" in names(c) and "photopea" in r.lower()},
+    {"id": "code_job", "task": "Fix the typo in the README of my jarvis-assistant project, it's in my Projects folder.",
+     "shell": [(r"jarvis-assistant", "README.md\nbrain.py\njarvis.py\n"), (r"Projects", "jarvis-assistant\nwebsite\n")],
+     "check": lambda c, r, a: ran(c, "code", folder="jarvis-assistant") and not set(names(c)) & {"act", "screenshot", "type_text"}
+     and not any(x["name"] == "run_command" and re.search(r"sed -i|>\s*\S*README|\btee\b", x["args"]["command"]) for x in c)},
+    {"id": "jobs_stop", "task": "Stop the flight search, I booked one already.",
+     "check": lambda c, r, a: ran(c, "jobs", action="stop") and (ran(c, "jobs", job="flight") or ran(c, "jobs", job="1"))
+     and not ran(c, "jobs", job="2")},
 ]
 
 
@@ -189,6 +197,9 @@ def simulate(case, name, args, calls, asked):
             return {"error": "not run: this command changes or removes things. Tell the user in a few words what it will do, and run "
                              "it again with confirmed: true only once they say yes (or if they asked for exactly this)."}, None
         command = args.get("command", "")
+        for pattern, listing in case.get("shell", []):  # (the case's own folders, the same whatever the command)
+            if re.search(pattern, command):
+                return {"exit_code": 0, "output": listing}, None
         if re.search(r"\brm\b|-delete|gio\s+trash\s+(?!--)|trash-put", command):  # (the files it removed are gone from then on)
             gone = "tmp" if ".tmp" in command else None
             case["files"] = "".join(line + "\n" for line in case.get("files", "").split() if not (gone and line.endswith(".tmp")))
@@ -236,6 +247,14 @@ def simulate(case, name, args, calls, asked):
                                    "lines": ["you: what's a free photoshop?", "jarvis: Try Photopea, photopea.com"]}]}, None
     if name == "weather":
         return {"place": "Springfield", "now": "clear, 21°C"}, None
+    if name == "code":
+        return {"result": "Started OpenChamber on it (coding job 1) in a copy of the project, on branch jarvis/20261102-1. It works on "
+                          "its own and the user is told when it's done: don't wait for it."}, None
+    if name == "jobs":
+        if args.get("action") == "stop":
+            return {"result": "stopped: find flights to Rome next weekend"}, None
+        return {"tasks": [{"n": 1, "task": "find flights to Rome next weekend", "for": "3 min", "now": "web_search"},
+                          {"n": 2, "task": "coding: fix the login bug", "for": "12 min", "now": "Edit"}]}, None
     if name.startswith("GMAIL_") or name.startswith("COMPOSIO_"):
         return gmail(case, name, args), None
     return {"error": f"(not simulated: {name})"}, None
@@ -282,14 +301,13 @@ COMPOSIO = [types.SimpleNamespace(name=n, description=d, input_schema=s) for n, 
 
 def agent(case, entries):
     b = brain.Brain.__new__(brain.Brain)
-    b.backends, b.down_until, b.contents, b.cancel, b.notify = {}, {}, [], threading.Event(), (lambda text: None)
-    b.ask_lock, b.remote = threading.Lock(), False
+    b.backends, b.down_until, b.contents, b.notify = {}, {}, [], (lambda text: None)
     b.plugins = {"composio": types.SimpleNamespace(tools=COMPOSIO, status="ready", error="", signing_in=False)}
     b.connected = {"gmail", "google_classroom", "googledrive", "googlecalendar"}
     b.app_tools_for, b.accounts = {"gmail"}, {}
     b.app_tools = {k: {"description": f"Gmail: {k.split('_', 1)[1].lower().replace('_', ' ')}.", "schema": v} for k, v in APP_SCHEMAS.items()}
     calls, asked = [], []
-    b._run_tool = lambda name, args: simulate(case, name, dict(args), calls, asked)
+    b._run_tool = lambda name, args, task=None: simulate(case, name, {k: v for k, v in args.items() if k != "halt"}, calls, asked)
     b._generate = (lambda generate: lambda contents, entries_=None, **kw: generate(contents, entries=entries_ or entries, **kw))(b._generate)
     t = time.time()
     try:

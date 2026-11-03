@@ -94,18 +94,16 @@ class Telegram:
             print("[telegram] ignored a message from a chat that isn't paired", flush=True)
             return
         if text == "/stop":
-            self.brain.interrupt()
-            self.send(token, chat, "Stopped.")
+            stopped = self.brain.interrupt() or []
+            self.send(token, chat, "Stopped" + (f": {'; '.join(stopped)}." if stopped else "."))
             return
         self.chat("you", f"📱 {text}")  # (as notices, a conversation held only from the phone was never saved)
-        if self.brain.ask_lock.locked():
-            self.send(token, chat, "Jarvis is busy with another task; yours starts when it's done.")
         # (off the polling thread: while it runs, /stop and new messages still get read)
         threading.Thread(target=self._task, args=(token, chat, text), daemon=True).start()
 
     def _task(self, token, chat, text):
         try:
-            reply = self.brain.ask(REMOTE_NOTE + text, remote=True)
+            reply = self.brain.ask(REMOTE_NOTE + text, remote=True, label=text)
         except Exception as e:
             reply = f"The task failed: {e}"
         self.chat("jarvis", f"📱 {reply}")  # (the chat at the PC showed the question, never the answer)

@@ -13,6 +13,19 @@ brain.PLUGIN_CONSTANTS = [os.path.join(_home, "constants.js")]               # n
 brain.OPENCODE_CONFIG = os.path.join(_home, "opencode.json")
 brain.store.save_plugins({})  # (no Composio: a real Brain would connect to it, and could start a browser sign-in)
 
+# how long the user hasn't touched the keyboard or mouse; Jarvis's own typing and clicking isn't them
+measured = system._idle_seconds()
+assert measured is None or measured >= 0, measured
+system._idle_seconds = lambda: 5.0
+assert system.user_idle() == 5.0
+assert all(hasattr(getattr(system, f), "__wrapped__") for f in ("move_pointer", "click", "type_text", "press_keys", "scroll"))
+system._mine(lambda: "")()  # (what click and type_text do around their input)
+system._idle_seconds = lambda: 0.2  # the latest input was Jarvis's own: the user hasn't been seen since
+assert system.user_idle() == float("inf")
+system._own_input[:] = [0.0, 0.0]
+system._idle_seconds = lambda: None  # (no way to tell, and the rest of these checks: never waits for the user)
+assert system.user_idle() is None
+
 # click grid: Gemini's 0-1000 coordinates map onto the screen, clamped to its edges
 brain.screen_size[:] = (1600, 900)
 assert brain.to_pixels(0, 0) == (0, 0)
@@ -148,7 +161,7 @@ brain.chain = lambda: [("x", "m", "low")]
 brain.TOOLS["close_window"] = (lambda name: {"result": f"closed {name}"},) + brain.TOOLS["close_window"][1:]
 a = brain.Brain.__new__(brain.Brain)
 a.backends, a.down_until, a.notify, a.plugins, a.app_tools = {"x": OneShot()}, {}, (lambda t: None), {}, {}
-a.contents, a.cancel, a.ask_lock, a.remote = [], brain.threading.Event(), brain.threading.Lock(), False
+a.contents = []
 a._system = lambda: ""
 asked_saved = []
 brain.on_asked[0] = asked_saved.append
@@ -178,12 +191,11 @@ class SelfConfirms:
 a.backends, kept, ran, real_shell = {"x": SelfConfirms()}, list(a.contents), [], brain.system.shell
 brain.system.shell = lambda command, timeout: ran.append(command) or (0, "")
 assert a.ask("reboot at 3", unattended=True) == "It needs your yes first."
-assert ran == [] and "not run" in SelfConfirms.seen[0]["error"] and a.contents == kept and not (a.unattended or a.remote)
+assert ran == [] and "not run" in SelfConfirms.seen[0]["error"] and a.contents == kept
 assert len(asked_saved) == 2  # (a scheduled task's own history isn't saved over the conversation's)
 brain.on_asked[0] = lambda contents: None
-a.unattended = True  # ...while the voice's own tools, run meanwhile, keep the user's real yes
+# ...while the voice's own tools keep the user's real yes (what a task may do is its own, not the brain's)
 assert "error" not in a._run_tool("run_command", {"command": "sudo reboot", "confirmed": True})[0] and ran == ["sudo reboot"]
-a.unattended = False
 # with a spoken passphrase set, a task from the voice can't confirm a change until ask_user brought the passphrase back;
 # one from the phone can (it can't be said there, and that chat is the user's own)
 store.set_secret(store.PASSPHRASE, "blue bird")
@@ -197,6 +209,264 @@ store.set_secret(store.PASSPHRASE, "")
 brain.system.shell = real_shell
 a.add_turn("[check] failed payments", "Two failed: offer a free month?")
 assert a.contents[-1] == {"role": "model", "parts": [{"text": "Two failed: offer a free month?"}]} and a.contents[-2]["role"] == "user"
+import threading
+# tasks run side by side (voice, phone, scheduled): each on its own copy of the conversation, which it joins when done
+class Together:
+    both = threading.Barrier(2, timeout=5)  # (two tasks in the model at once: nothing makes one wait for the other)
+
+    def generate(self, contents, model, thinking, **kw):
+        Together.both.wait()
+        return [{"text": "ok"}]
+a.backends, a.contents = {"x": Together()}, []
+replies = []
+pair = [threading.Thread(target=lambda t=t: replies.append(a.ask(t))) for t in ("look up flights", "book a table")]
+[t.start() for t in pair]
+[t.join(10) for t in pair]
+assert replies == ["ok", "ok"] and len(a.contents) == 4 and brain.running == []
+assert all(any(t in str(m) for m in a.contents) for t in ("look up flights", "book a table"))
+# Stop stops every task and says which ones; a stopped task answers "Stopped." whatever the model came back with
+class Slow:
+    def __init__(self):
+        self.inside, self.go = threading.Event(), threading.Event()
+
+    def generate(self, contents, model, thinking, **kw):
+        self.inside.set()
+        self.go.wait(5)
+        return [{"text": "Found three flights."}]
+slow, out = Slow(), []
+a.backends = {"x": slow}
+t = threading.Thread(target=lambda: out.append(a.ask("find flights to Rome")))
+t.start()
+slow.inside.wait(5)
+assert [x.label for x in brain.running] == ["find flights to Rome"]
+assert a.interrupt() == ["find flights to Rome"]
+slow.go.set()
+t.join(5)
+assert out == ["Stopped."] and brain.running == []
+# New conversation while a task runs: the new conversation stays empty
+slow = Slow()
+a.backends = {"x": slow}
+t = threading.Thread(target=lambda: a.ask("find flights to Rome"))
+t.start()
+slow.inside.wait(5)
+a.reset()
+slow.go.set()
+t.join(5)
+assert a.contents == []
+# the jobs tool: what's running (numbered), and stopping one of them by number or by its words
+slow = Slow()
+a.backends = {"x": slow}
+pair = [threading.Thread(target=lambda t=t: a.ask(t, label=t)) for t in ("find flights to Rome", "book a table for two")]
+for t in pair:
+    t.start()
+    while len(brain.running) < pair.index(t) + 1:  # (in this order)
+        time.sleep(0.01)
+listed = brain.tool_jobs()["tasks"]
+assert [(j["n"], j["task"]) for j in listed] == [(1, "find flights to Rome"), (2, "book a table for two")], listed
+assert "book a table" in brain.tool_jobs("stop", "2")["result"] and brain.running[1].cancel.is_set() and not brain.running[0].cancel.is_set()
+assert "flights" in brain.tool_jobs("stop", "the flights")["result"] and brain.running[0].cancel.is_set()
+assert "error" in brain.tool_jobs("stop", "the laundry") and "several" in brain.tool_jobs("stop", "find book")["error"]
+assert "flights" in brain.tool_jobs("stop", "the flight search")["result"]  # (the words that are there decide)
+slow.go.set()
+[t.join(5) for t in pair]
+assert brain.tool_jobs() == {"result": "nothing is running"}
+# the screen takes turns: a second task's screen step waits until the task using it is done
+class Acts:
+    def generate(self, contents, model, thinking, **kw):
+        if "functionResponse" in contents[-1]["parts"][0]:
+            return [{"text": "done"}]
+        return [{"functionCall": {"name": "act", "args": {"steps": [{"keys": "Return"}]}}}]
+spans, real_act = [], brain.TOOLS["act"]
+
+
+def fake_act(steps, halt=None, **kw):
+    start = time.time()
+    time.sleep(0.3)
+    spans.append((start, time.time(), halt))
+    return {"result": ["pressed Return"]}
+brain.TOOLS["act"] = (fake_act,) + real_act[1:]
+a.backends = {"x": Acts()}
+pair = [threading.Thread(target=lambda: a.ask("press enter")) for _ in range(2)]
+[t.start() for t in pair]
+[t.join(10) for t in pair]
+spans.sort(key=lambda s: s[0])
+assert len(spans) == 2 and spans[0][1] <= spans[1][0] and not brain.screen_lock.locked(), spans
+assert all(isinstance(s[2], threading.Event) for s in spans)  # (each act stops with its own task)
+# ...and waits while the user is using the PC (keyboard or mouse since the task started), until they let go of it
+brain.SCREEN_GRACE, let_go, spans = 0, [], []
+system._idle_seconds = lambda: 0.0
+
+
+def leave():
+    let_go.append(time.time())
+    system._idle_seconds = lambda: 20.0
+threading.Timer(0.5, leave).start()
+assert a.ask("press enter") == "done" and spans[0][0] >= let_go[0]
+system._idle_seconds, brain.SCREEN_GRACE = (lambda: None), 3
+brain.TOOLS["act"] = real_act
+# coding jobs: Claude Code (or OpenChamber, below) works in a git worktree of the project; Jarvis watches it, commits what it
+# changed on the job's own branch and says so when it's done (nothing merged into the project)
+import subprocess
+repo = os.path.join(_home, "proj")
+os.makedirs(repo)
+git = lambda *a: subprocess.run(["git", "-C", repo, "-c", "user.name=T", "-c", "user.email=t@example.com", *a],
+                                capture_output=True, text=True).stdout.strip()
+git("init", "-q")
+open(os.path.join(repo, "README.md"), "w").write("helo\n")
+git("add", "-A")
+git("commit", "-qm", "start")
+fake = os.path.join(_home, "fake_claude.py")  # what claude -p --output-format stream-json prints, in short
+open(fake, "w").write("""import json, os, sys, time
+task, session = sys.argv[1], sys.argv[2]
+open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "seen.txt"), "a").write(session + "|" + os.getcwd() + "\\n")
+print(json.dumps({"type": "system", "subtype": "init", "session_id": "sess-1"}), flush=True)
+print(json.dumps({"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Edit", "input": {}}]}}), flush=True)
+if "slow" in task:
+    time.sleep(30)
+open("README.md", "w").write("hello\\n")
+print(json.dumps({"type": "result", "subtype": "success", "is_error": False, "result": "Fixed the typo.", "session_id": "sess-1"}))
+""")
+real_harnesses, done, real_chamber = dict(brain.HARNESSES), [], brain.openchamber_url
+brain.openchamber_url = lambda start=False: ""  # (never the user's real OpenChamber: Claude Code first here)
+brain.HARNESSES["claude"] = lambda task, session, full: [sys.executable, fake, task, session or "-"]
+brain.job_done[0] = done.append
+
+
+def finished(n=1):
+    end = time.time() + 15
+    while len(done) < n and time.time() < end:
+        time.sleep(0.05)
+    return done[n - 1]
+started = brain.tool_code("fix the typo in the readme", repo)
+assert "coding job 1" in started["result"] and brain.running and brain.running[0].label == "coding: fix the typo in the readme", started
+said = finished()
+assert "Fixed the typo." in said and "1 file changed" in said and "jarvis/" in said and "job 1" in said, said
+assert open(os.path.join(repo, "README.md")).read() == "helo\n" and git("status", "--porcelain") == ""  # (the project untouched)
+branch = brain.code_jobs["1"]["branch"]
+assert git("show", f"{branch}:README.md") == "hello" and brain.running == []
+# "also do X" continues the same session, in the same copy
+brain.tool_code("now update the changelog", repo, job="1")
+finished(2)
+seen = [[s, os.path.realpath(p)] for s, p in (line.split("|") for line in open(os.path.join(_home, "seen.txt")).read().splitlines())]
+assert seen == [[s, os.path.realpath(brain.code_jobs["1"]["cwd"])] for s in ("-", "sess-1")], seen
+# not a git repository: nothing to keep the changes apart, so it needs the user's yes (with safety on "ask")
+plain = os.path.join(_home, "plain")
+os.makedirs(plain)
+assert "confirmed" in brain.tool_code("tidy it", plain)["error"]
+assert "error" not in brain.tool_code("tidy it", plain, confirmed=True)
+assert "in place" in finished(3) and open(os.path.join(plain, "README.md")).read() == "hello\n"
+# Stop ends it (with what it started) and nothing is said about it afterwards
+brain.tool_code("a slow refactor", repo)
+while not any(t.step for t in brain.running):
+    time.sleep(0.05)
+assert "still working" in brain.tool_code("and rename it", job="3")["error"]  # (a follow-up waits until it's done)
+assert brain.Brain.interrupt() == ["coding: a slow refactor"]
+end = time.time() + 5
+while brain.running and time.time() < end:
+    time.sleep(0.05)
+time.sleep(0.3)
+assert brain.running == [] and len(done) == 3, done
+brain.reset_interrupt_act()  # (the next task clears it)
+assert "opencode" not in brain.HARNESSES  # (the user's coding agent is OpenChamber, not opencode on its own)
+brain.HARNESSES["claude"] = lambda task, session, full: ["jarvis-no-such-harness"]
+assert "isn't installed" in brain.tool_code("x", repo, harness="claude")["error"]
+assert "no coding agent" in brain.tool_code("x", repo)["error"]  # (neither OpenChamber nor Claude Code)
+brain.HARNESSES["claude"] = lambda task, session, full: [sys.executable, fake, task, session or "-"]
+assert "error" in brain.tool_code("x", os.path.join(_home, "nowhere"))
+assert "folder" in brain.tool_code("fix it")["error"]  # (never the home folder by default)
+open(os.path.join(repo, "notes.txt"), "w").write("not committed yet")  # what isn't committed isn't in the copy: it says so
+assert "last commit" in brain.tool_code("a slow change", repo)["result"]
+while not brain.running:
+    time.sleep(0.05)
+# New conversation stops the tasks that were using the conversation, not a coding job (Stop does)
+a.reset()
+time.sleep(0.6)
+assert [t.label for t in brain.running] == ["coding: a slow change"] and not brain.running[0].cancel.is_set()
+brain.Brain.interrupt()
+while brain.running:
+    time.sleep(0.05)
+brain.reset_interrupt_act()
+os.remove(os.path.join(repo, "notes.txt"))
+# OpenChamber: the job is a session in the user's own OpenChamber (they watch it and answer its questions there), run
+# through its local server: a session in the job's folder, the task as a prompt, polled until it's idle again
+import http.server, json, re
+chamber = {"sessions": {}, "prompts": [], "interrupted": []}
+
+
+class Chamber(http.server.BaseHTTPRequestHandler):
+    def log_message(self, *args):
+        pass
+
+    def answer(self, data=None, code=200):
+        body = json.dumps(data).encode() if data is not None else b""
+        self.send_response(code)
+        self.send_header("content-length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_GET(self):
+        if self.path == "/health":
+            return self.answer({"status": "ok"})
+        part = self.path.split("/")  # /api/session/<id>[/message]
+        ses = chamber["sessions"].get(part[3]) if len(part) > 3 else None
+        if not ses:
+            return self.answer({"error": "no such session"}, 404)
+        if part[4:] == ["message"]:
+            return self.answer({"data": ses["messages"]})
+        return self.answer({"data": {"id": part[3], "time": {"idle": ses.get("idle")}, "outcome": ses.get("outcome")}})
+
+    def do_POST(self):
+        body = json.loads(self.rfile.read(int(self.headers.get("content-length") or 0)) or b"{}")
+        part = self.path.split("/")
+        if self.path == "/api/session":
+            sid = f"ses_{len(chamber['sessions']) + 1}"
+            chamber["sessions"][sid] = {"dir": body["location"]["directory"], "title": body["title"], "messages": []}
+            return self.answer({"data": {"id": sid}})
+        ses = chamber["sessions"][part[3]]
+        if part[4] == "interrupt":
+            chamber["interrupted"].append(part[3])
+            return self.answer({"interrupted": True})
+        chamber["prompts"].append((part[3], body["text"]))
+
+        def work():  # (the coding agent: edits a file, then the session is idle again; a slow one never finishes)
+            if "slow" in body["text"]:
+                return
+            time.sleep(0.3)
+            open(os.path.join(ses["dir"], "README.md"), "w").write("hello\n")
+            ses["messages"][:0] = [{"type": "assistant", "content": [{"type": "tool", "name": "edit"}, {"type": "text", "text": "Fixed the typo."}]},
+                                   {"type": "idle", "outcome": "succeeded"}][::-1]
+            ses["outcome"], ses["idle"] = "succeeded", time.time() * 1000
+        threading.Thread(target=work, daemon=True).start()
+        return self.answer({"data": {"type": "user"}})
+server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Chamber)
+threading.Thread(target=server.serve_forever, daemon=True).start()
+os.makedirs(system.app_config("openchamber"))  # (found from OpenChamber's own settings: the port it listens on)
+assert real_chamber() == ""
+store.write_json(os.path.join(system.app_config("openchamber"), "settings.json"), {"desktopLocalPort": server.server_port})
+assert real_chamber() == f"http://127.0.0.1:{server.server_port}"
+brain.openchamber_url, done[:] = real_chamber, []
+out = brain.tool_code("fix the typo in the readme", repo)  # (OpenChamber running: it's the one used)
+n = re.search(r"coding job (\d+)", out["result"])[1]
+assert "OpenChamber" in out["result"], out
+said = finished()
+assert "Fixed the typo." in said and "1 file changed" in said and "OpenChamber" in said, said
+ses = chamber["sessions"]["ses_1"]
+assert os.path.realpath(ses["dir"]) == os.path.realpath(brain.code_jobs[n]["cwd"]) and chamber["prompts"] == [("ses_1", "fix the typo in the readme")]
+brain.tool_code("now update the changelog", job=n)  # (a follow-up: the same session, and only done once it's idle again)
+finished(2)
+assert list(chamber["sessions"]) == ["ses_1"] and chamber["prompts"][-1] == ("ses_1", "now update the changelog")
+brain.tool_code("a slow refactor", repo)  # Stop interrupts the session, and nothing is said about it
+while not chamber["prompts"][-1][1] == "a slow refactor":
+    time.sleep(0.05)
+brain.Brain.interrupt()
+end = time.time() + 6
+while brain.running and time.time() < end:
+    time.sleep(0.05)
+assert brain.running == [] and chamber["interrupted"] == ["ses_2"] and len(done) == 2, (chamber, done)
+brain.reset_interrupt_act()
+server.shutdown()
+brain.HARNESSES.update(real_harnesses)
+brain.job_done[0] = lambda text: None
 # page text: attribute values may contain markup, scripts are dropped, entities decoded
 assert brain.page_text('<div data-x="a<b>c</ref>">Hello&nbsp;<b>world</b></div><script>var x="<p>no</p>"</script> ok') == "Hello world ok"
 
@@ -204,10 +474,12 @@ assert brain.page_text('<div data-x="a<b>c</ref>">Hello&nbsp;<b>world</b></div><
 import collections, types
 import numpy as np
 import jarvis
+assert "code" in jarvis.ONCE_TOOLS  # (the voice re-calling it right after it worked would start the same coding job twice)
 live = jarvis.Live.__new__(jarvis.Live)
 live.mic, live.session, live.floor, live.voice_at, live.level = True, None, 100.0, 0.0, 0.0
 live.speaker, live.backlog = jarvis.Speaker(), collections.deque(maxlen=125)  # the real one: a fake hid a renamed attribute
 live.backup = jarvis.Backup(live)
+live.asking = threading.Lock()
 frame = lambda rms: (np.random.default_rng(1).normal(0, rms, 1280)).astype(np.int16)
 for _ in range(50):
     live.feed(frame(60))  # quiet room
@@ -327,7 +599,7 @@ brain.pointer[0] = None
 import asyncio
 live.turn_calls, live.user_spoke_at, live.typed, live.act_lock = [0.0, 0], 0.0, {}, asyncio.Lock()
 live.last_heard = live.last_said = ""
-live.working = live.task_screen = live.announcing = False
+live.working, live.announcing = 0, False
 refused = asyncio.run(live._tool(types.SimpleNamespace(name="act", args={"steps": [{"type": "hi"}, {"click": [500, 500]}]})))
 assert "click_on" in refused["error"]
 # after "Shall I send it?", noise ("a pretzel") isn't a yes: the confirmed send is refused, a real yes goes through
@@ -341,7 +613,6 @@ assert jarvis.said_yes("Yeah, go ahead.") and jarvis.said_yes("oui") and not jar
 assert jarvis.said_yes("Sure, no problem.") and not jarvis.said_yes("No, don't.") and not jarvis.said_yes("ok no")
 # a spoken passphrase: every confirmed: true from the voice also needs it in what the user just said (case, punctuation,
 # spacing and extra words don't matter); it's saved as a secret, never in settings, never shown back or logged
-import json
 try:
     jarvis.api_post("/api/passphrase", {"passphrase": "a b"}, live, None)
     raise AssertionError("a two-letter passphrase was taken")
@@ -373,9 +644,9 @@ assert logged_pass[0]["text"] == "yes, •••" and live.last_heard == "yes, b
 del live._answer, live._send
 assert jarvis.api_post("/api/passphrase", {"passphrase": ""}, live, None) == {"passphrase": False} and not store.secret(store.PASSPHRASE)
 # while the agent works on the screen, the voice keeps its hands off it (both once sent the same Discord message)
-live.working = live.task_screen = True
+brain.screen_lock.acquire()
 assert "background task is using the screen" in asyncio.run(live._tool(types.SimpleNamespace(name="act", args={"steps": [{"keys": "Return"}]})))["error"]
-live.working = live.task_screen = False
+brain.screen_lock.release()
 live.last_said = live.last_heard = ""
 # noise gets no answer at all ("Yes?" after every sound wore the user out), and the watchdog doesn't re-ask it
 live.inflight = {"text": None, "heard": "desde", "since": time.time(), "tool": False, "answered": False, "recovered": False}
@@ -424,15 +695,15 @@ stopped.set()
 assert live.ask_from_task("Delete 37 emails?", stopped) is None  # Stop pressed: no answer, the agent ends with its question
 brain_asker = brain.asker[0]
 brain.asker[0] = lambda q, cancel: "yes"
-assert brain.Brain.ask_user(types.SimpleNamespace(cancel=None, remote=False, passphrase_ok=False), "ok?") == {"answer": "yes"}
+assert brain.Task.ask_user(types.SimpleNamespace(cancel=None, remote=False, passphrase_ok=False), "ok?") == {"answer": "yes"}
 # with a passphrase, the agent's answer from the user carries it (hidden from the agent, which only learns it was said)
 store.set_secret(store.PASSPHRASE, "blue bird")
 brain.asker[0] = lambda q, cancel: 'yes (the user\'s exact words: "yes, blue bird")'
 asker_self = types.SimpleNamespace(cancel=None, remote=False, passphrase_ok=False)
-assert brain.Brain.ask_user(asker_self, "ok?") == {"answer": 'yes (the user\'s exact words: "yes, •••")'} and asker_self.passphrase_ok
+assert brain.Task.ask_user(asker_self, "ok?") == {"answer": 'yes (the user\'s exact words: "yes, •••")'} and asker_self.passphrase_ok
 store.set_secret(store.PASSPHRASE, "")
 brain.asker[0] = lambda q, cancel: None
-assert "end your reply" in brain.Brain.ask_user(types.SimpleNamespace(cancel=None, remote=False, passphrase_ok=False), "ok?")["error"]
+assert "end your reply" in brain.Task.ask_user(types.SimpleNamespace(cancel=None, remote=False, passphrase_ok=False), "ok?")["error"]
 brain.asker[0], system.notify = brain_asker, real_notify
 # clicking where the mouse is (button without coordinates) works in-place
 clicked = []
@@ -447,7 +718,7 @@ import threading
 opened = []
 live.brain = types.SimpleNamespace(tools_ready=threading.Event(), refresh_if_stale=lambda: None)
 live.task = live.ready = None
-live.task_lock, live.closing, live.tools_wait = None, False, None
+live.closing, live.tools_wait = False, None
 async def fake_run():
     opened.append(1)
     live.ready.set()
@@ -542,7 +813,7 @@ shutil.rmtree(jarvis.WAKE_DIR)
 assert "custom_verifier_models" not in lrn.wake_model({**store.settings(), "wake_word": lrn.word, "learn_my_voice": True})
 openwakeword.model.Model, jarvis.wake_model_file = real_model, real_file
 # the learned verifier runs in numpy, as scikit-learn would: listening never loads scikit-learn and SciPy (~120 MB)
-import pickle, subprocess
+import pickle
 from openwakeword.custom_verifier_model import train_verifier_model
 rng = np.random.default_rng(1)
 feats = np.concatenate([rng.normal(0.5, 1, (30, 16, 96)), rng.normal(-0.5, 2, (30, 16, 96))]).astype(np.float32)
@@ -768,7 +1039,6 @@ threading.Thread(target=srv.serve_forever, daemon=True).start()
 store.save_custom_provider("lmstudio", f"http://127.0.0.1:{srv.server_port}/v1")
 b = brain.Brain.__new__(brain.Brain)
 b.backends, b.down_until, b.contents, b.cancel, b.plugins, b.app_tools, b.notify = {}, {}, [], threading.Event(), {}, {}, print
-b.ask_lock, b.remote = threading.Lock(), False
 brain.chain = lambda: [("lmstudio", "tiny-model", "low")]
 assert b.ask("any reminders?") == "You have no reminders."
 assert seen[0][0] is None and any(t["function"]["name"] == "list_reminders" for t in seen[0][1]["tools"])
@@ -1134,6 +1404,108 @@ async def barge_in():
 asyncio.run(barge_in())
 assert brain.tool_act([{"wait": 0}], screenshot_after=False) == {"result": ["waited 0s"]}
 
+# do_task calls run side by side (a second one used to be refused while the first worked), each answered when it's done
+live.working, live.stopped, live.question, live.mic, live.user_spoke_at, live.waiting = 0, False, None, False, time.time(), False
+ran_tasks, release = [], threading.Event()
+
+
+def slow_ask(text, on_tool=None, on_thought=None, label="", **kw):
+    ran_tasks.append(label)
+    release.wait(5)
+    return f"done: {text}"
+live.brain.ask, live.brain.contents = slow_ask, []
+sent_responses.clear()
+task_call = lambda i, text: types.SimpleNamespace(name="do_task", id=i, args={"task": text})
+
+
+async def two_tasks():
+    await live._handle(fake_session, types.SimpleNamespace(server_content=None, session_resumption_update=None, go_away=None,
+                       tool_call=types.SimpleNamespace(function_calls=[task_call("t1", "find flights"), task_call("t2", "book a table")])))
+    for _ in range(250):
+        if len(ran_tasks) == 2:
+            break
+        await asyncio.sleep(0.02)
+    both = live.working
+    release.set()
+    for _ in range(250):
+        if not live.working and len(sent_responses) == 2:
+            break
+        await asyncio.sleep(0.02)
+    return both
+assert asyncio.run(two_tasks()) == 2 and sorted(ran_tasks) == ["book a table", "find flights"]
+got = {r.id: (r.response, r.scheduling) for batch in sent_responses for r in batch}
+assert got["t1"] == ({"result": "done: find flights"}, "WHEN_IDLE") and got["t2"][0] == {"result": "done: book a table"}, got
+# a long report goes to the chat in full; the voice says its gist
+live.working = 1
+live.brain.ask = lambda text, *a, **kw: "Report. " * 200
+asyncio.run(live._task(fake_session, task_call("t3", "compare laptops")))
+assert "gist" in sent_responses[-1][0].response["note"] and live.working == 0
+# the user away from the PC (no keyboard, mouse or talking lately): a finished task waits for them (in the chat already),
+# and is said once they're back, with whatever else came meanwhile
+system._idle_seconds, live.user_spoke_at, live.working = (lambda: 300.0), time.time() - 600, 1
+jarvis.held.clear()
+live.brain.ask = lambda text, *a, **kw: "Found three flights."
+asyncio.run(live._task(fake_session, task_call("t4", "find flights")))
+assert sent_responses[-1][0].scheduling == "SILENT" and jarvis.held == ['The task "find flights": Found three flights.']
+said_now, real_announce = [], live.announce
+live.announce = lambda text, **kw: said_now.append((text, kw))
+jarvis.job_done(live, "The coding job is done.")  # (a coding job's news too, also kept in the conversation)
+assert jarvis.held[-1] == "The coding job is done." and live.brain.contents[-1] == {"role": "model", "parts": [{"text": "The coding job is done."}]}
+jarvis.presence_pass(live)
+assert said_now == []
+system._idle_seconds = lambda: 1.0
+jarvis.presence_pass(live)
+jarvis.presence_pass(live)
+assert said_now == [('While you were away: The task "find flights": Found three flights. Also: The coding job is done.', {"asked": True})]
+assert jarvis.held == []
+jarvis.job_done(live, "Another coding job is done.")  # (at the PC: said now)
+assert said_now[-1] == ("Another coding job is done.", {"asked": True}) and jarvis.held == []
+# the agents' questions: one at a time, and only once the user is at the PC; Stop ends a wait
+asked_q, real_go = [], live._go
+live._go = lambda coro: asked_q.append(coro) or coro.close()
+system._idle_seconds, live.mic, live.last_heard = (lambda: 300.0), False, ""
+got_q = []
+first = threading.Thread(target=lambda: got_q.append(live.ask_from_task("Which Sam?", threading.Event())))
+first.start()
+time.sleep(0.3)
+assert asked_q == [] and live.question is None  # nobody at the PC: not asked yet
+second = threading.Thread(target=lambda: got_q.append(live.ask_from_task("Send it?", threading.Event())))
+second.start()
+system._idle_seconds = lambda: 1.0
+while not asked_q:
+    time.sleep(0.01)
+time.sleep(0.3)
+assert len(asked_q) == 1 and live.question["text"] == "Which Sam?"
+asyncio.run(live._tool(types.SimpleNamespace(name="answer_task", args={"answer": "Sam Lee"})))
+while len(asked_q) < 2:
+    time.sleep(0.01)
+assert live.question["text"] == "Send it?"
+asyncio.run(live._tool(types.SimpleNamespace(name="answer_task", args={"answer": "yes"})))
+first.join(2)
+second.join(2)
+assert got_q == ["Sam Lee", "yes"], got_q
+system._idle_seconds, live.mic, cancel = (lambda: 300.0), False, threading.Event()
+waiting_q = threading.Thread(target=lambda: got_q.append(live.ask_from_task("Delete it?", cancel)))
+waiting_q.start()
+time.sleep(0.2)
+cancel.set()
+waiting_q.join(3)
+assert got_q[-1] is None and not waiting_q.is_alive()
+system._idle_seconds, live._go = (lambda: None), real_go
+# Stop stops everything and says what it stopped
+said_now.clear()
+live.brain.interrupt = lambda: ["find flights to Rome", "coding: fix the login bug"]
+live.loop, live.heard = types.SimpleNamespace(call_soon_threadsafe=lambda f: f()), "stop"
+live.close = lambda: None
+live.stop()
+assert said_now == [("Stopped: find flights to Rome; coding: fix the login bug.", {"asked": True})], said_now
+live.brain.interrupt = lambda: []
+said_now.clear()
+live.stop()
+assert said_now == []
+live.announce = real_announce
+del live.close
+
 # the backup voice, when Gemini Live can't be used. What services send back becomes the Speaker's 24 kHz mono: raw samples
 # at their stated rate, or a WAV (stereo, another rate, a chunk before the sound, a size left unwritten as it streamed)
 import struct
@@ -1371,7 +1743,7 @@ assert len(tried) == 1 and len(woke) == 3
 # never read out; typed replies stay quiet when Settings says so; NOTHING (noise) gets nothing; Stop drops what's coming
 heard, replies, spoken, asks = ["What's the weather?"], [], [], []
 bl.brain = types.SimpleNamespace(hear=lambda wav: wav[:4] == b"RIFF" and heard[0],
-                                 ask=lambda text, on_tool, on_thought=None: asks.append(text) or replies[0],
+                                 ask=lambda text, on_tool, on_thought=None, label="": asks.append(text) or replies[0],
                                  speak=lambda text: spoken.append(text) or (b"\1\0" * 2400, "audio/L16;codec=pcm;rate=24000"))
 bl.question, bl.last_heard, bl.last_said = None, "", ""
 jarvis.emit = lambda kind, **kw: logged.append((kw.get("who"), kw.get("text")))
@@ -1403,13 +1775,13 @@ bk.ask("so")
 settle()
 assert not [m for m in logged[n:] if m[0] == "jarvis"] and len(spoken) == 1
 gate = threading.Event()
-bl.brain.ask = lambda text, on_tool, on_thought=None: gate.wait(2) and "Here you go."
+bl.brain.ask = lambda text, on_tool, on_thought=None, label="": gate.wait(2) and "Here you go."
 bk.ask("open my notes")
 bk.stop()  # (Stop pressed while the agent works)
 gate.set()
 settle()
 assert ("jarvis", "Here you go.") not in logged and not bl.mic and bk.frames is None
-bl.brain.ask = lambda text, on_tool, on_thought=None: asks.append(text) or replies[0]
+bl.brain.ask = lambda text, on_tool, on_thought=None, label="": asks.append(text) or replies[0]
 # the agent's question: what's said next is its answer, not a new request
 q = bl.question = {"text": "Sam Lee or Sam Leeds?", "answered": threading.Event(), "answer": None}
 heard[0], n, bl.mic = "Sam Lee", len(asks), True
@@ -1935,7 +2307,7 @@ jarvis.system.notify = lambda *a: None
 turns = []
 told_loud = []
 check_live = types.SimpleNamespace(announce=lambda text, loud=False, kind="": told.append(text) or told_loud.append(loud), brain=types.SimpleNamespace(
-    ask=lambda text, on_tool, unattended: check_asks.append((text, unattended)) or reply[0], add_turn=lambda *t: turns.append(t)))
+    ask=lambda text, on_tool, unattended, label="": check_asks.append((text, unattended)) or reply[0], add_turn=lambda *t: turns.append(t)))
 reply = ["Nothing."]
 jarvis.run_unattended(check_live, "check", check=True)
 reply = ["Stopped."]  # (Stop pressed meanwhile: nothing to tell)
@@ -1970,7 +2342,7 @@ assert told_loud[-2:] == [False, True]
 
 # other programs on this PC: `jarvis --task` runs unattended and gets the reply, `--say` speaks; the MCP server wraps both
 api_live = types.SimpleNamespace(announce=lambda text, loud=False, kind="": told.append(text))
-api_brain = types.SimpleNamespace(ask=lambda text, on_tool, unattended: check_asks.append((text, unattended)) or "3 events today.")
+api_brain = types.SimpleNamespace(ask=lambda text, on_tool, unattended, label="": check_asks.append((text, unattended)) or "3 events today.")
 assert jarvis.api_post("/api/task", {"text": "what's on my calendar?"}, api_live, api_brain) == {"reply": "3 events today."}
 assert check_asks[-1] == (jarvis.EXTERNAL_NOTE + "what's on my calendar?", True)
 jarvis.api_post("/api/say", {"text": "The build finished."}, api_live, api_brain)
@@ -2565,8 +2937,8 @@ class FakeTelegram:
     def post(self, url, json=None, timeout=None):
         self.sent.append((json["chat_id"], json["text"]))
 fake_tg, asked_remote = FakeTelegram(), []
-tb = types.SimpleNamespace(ask_lock=threading.Lock(), interrupt=lambda: asked_remote.append("stop"),
-                           ask=lambda text, remote=False: asked_remote.append((text, remote)) or "It's 21°C and sunny.")
+tb = types.SimpleNamespace(interrupt=lambda: asked_remote.append("stop"),
+                           ask=lambda text, remote=False, label="": asked_remote.append((text, remote)) or "It's 21°C and sunny.")
 tg_chat = []
 tg = remote.Telegram(tb, notify=lambda text: None, chat=lambda who, text: tg_chat.append((who, text)))
 tg.http = fake_tg
@@ -2593,7 +2965,7 @@ tg.poll("123:abc")
 assert not tg.status()["paired"]
 # a task from the phone runs on its own: /stop sent while it works gets through and stops it
 release, events_tg = threading.Event(), []
-tb.ask = lambda text, remote=False: events_tg.append("asked") or release.wait(5) and "done"
+tb.ask = lambda text, remote=False, label="": events_tg.append("asked") or release.wait(5) and "done"
 tb.interrupt = lambda: events_tg.append("stop") or release.set()
 tg.state.update(chat=42, name="Sam")
 fake_tg.updates = [msg(20, 42, "clean my downloads folder"), msg(21, 42, "/stop")]
@@ -2606,7 +2978,7 @@ for _ in range(200):
 assert fake_tg.sent[-1] == (42, "done")
 tg.unpair()
 ab.remote = True
-assert "away from the PC" in brain.Brain.ask_user(ab, "Which Sam?")["error"]
+assert "away from the PC" in brain.Task.ask_user(ab, "Which Sam?")["error"]
 ab.remote = False
 store.set_secret("telegram", "")
 
@@ -3039,8 +3411,8 @@ import phone
 phone.STATE_FILE = os.path.join(store.DATA, "phone-test.json")
 asked_phone, answer_now, phone_chat = [], threading.Event(), []  # (the reply waits for the test: it can't overtake "working")
 answer_now.set()
-link = phone.PhoneLink(types.SimpleNamespace(ask=lambda text, remote=False: answer_now.wait(5) and (asked_phone.append(text) or "done"),
-                                             ask_lock=threading.Lock(), interrupt=lambda: None), notify=lambda t: None,
+link = phone.PhoneLink(types.SimpleNamespace(ask=lambda text, remote=False, label="": answer_now.wait(5) and (asked_phone.append(text) or "done"),
+                                             interrupt=lambda: None), notify=lambda t: None,
                        chat=lambda who, text: phone_chat.append((who, text)))
 assert phone.PhoneLink(link.brain).id == link.id  # (the identity is kept)
 link.set_relay("https://relay.example.workers.dev/")
@@ -3051,6 +3423,9 @@ assert system.run_lines([sys.executable, "-c", "print('one'); print('two')"], sa
 started = time.time()  # stopped on time with what it started, though that child still holds the output open
 child = "import subprocess, sys, time; subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(8)']); time.sleep(8)"
 assert system.run_lines([sys.executable, "-c", child], said.append, timeout=1) != 0 and time.time() - started < 5
+halt, started = threading.Event(), time.time()  # ...and when Stop is pressed (a coding job)
+threading.Timer(0.5, halt.set).start()
+assert system.run_lines([sys.executable, "-c", child], said.append, halt=halt) != 0 and time.time() - started < 5
 real_run_lines, real_have, wrangler = system.run_lines, system.have, []
 WRANGLER_SAYS = {"whoami": (0, ["You are not authenticated. Please run `wrangler login`."]),
                  "login": (0, ["Attempting to login via OAuth...", "Successfully logged in."]),
@@ -3130,7 +3505,7 @@ assert "expired" in phone_says({"op": "pair", "secret": payload["p"]})[0]["error
 link.loop = asyncio.new_event_loop()  # (where replies from finished tasks are sent from)
 threading.Thread(target=link.loop.run_forever, daemon=True).start()
 answer_now.clear()
-assert phone_says({"op": "ask", "id": 1, "text": "what time is it?"})[0] == {"op": "working", "id": 1, "queued": False}
+assert phone_says({"op": "ask", "id": 1, "text": "what time is it?"})[0] == {"op": "working", "id": 1}
 answer_now.set()
 for _ in range(200):
     if len(frames) > 1:
@@ -3464,9 +3839,9 @@ assert store.matching_skills("submit the chemistry homework on Classroom")[0]["n
 assert not store.matching_skills("what's the weather in Classroom 4?")
 asked_with = []
 sb = brain.Brain.__new__(brain.Brain)
-sb.cancel, sb.contents, sb._tools, sb._system = threading.Event(), [], lambda: None, lambda: ""
+sb._tools, sb._system = lambda: None, lambda: ""
 sb._generate = lambda msgs, **kw: asked_with.append(msgs[-1]["parts"][0]["text"]) or [{"text": "Done."}]
-sb._ask("submit the chemistry homework on classroom", lambda n: None, None)
+sb._ask("submit the chemistry homework on classroom", lambda n: None, None, brain.Task())
 assert "Saved ways that worked before" in asked_with[0] and "{click_on: 'Turn in'}" in asked_with[0]
 assert brain.TOOLS["skill"][0]("failed", "submit homework on classroom")["result"].startswith("noted")
 assert "dropped" in brain.TOOLS["skill"][0]("failed", "Submit homework on Classroom")["result"] and not store.skills()
@@ -3476,8 +3851,11 @@ turns = [[{"functionCall": {"name": "act", "args": {"steps": [{"click_on": "the 
          [{"functionCall": {"name": "skill", "args": {"action": "save", "name": "send a chat message", "task": "send hi", "steps": "..."}}}, {"text": "Done."}]]
 seen_turns = []
 sb._generate = lambda msgs, **kw: seen_turns.append(msgs[-1]["parts"][0].get("text", "")) or turns[len(seen_turns) - 1]
-sb._run_tool = lambda name, args: ({"result": "saved" if name == "skill" else ["done"]}, None)
-assert sb._ask("say hi in the chat", lambda n: None, None) == "Sent it." and len(seen_turns) == 3 and "save the way with skill" in seen_turns[2]
+sb._run_tool = lambda name, args, task=None: ({"result": "saved" if name == "skill" else ["done"]}, None)
+sb_task = brain.Task()
+assert sb._ask("say hi in the chat", lambda n: None, None, sb_task) == "Sent it." and len(seen_turns) == 3 and "save the way with skill" in seen_turns[2]
+assert sb_task.screen
+brain.screen_lock.release()  # (ask() lets go of the screen when a task ends; _ask alone doesn't)
 # screen history: the focused window's title when it changes (private windows never), searched by words or read as a day
 import activity
 activity.FOLDER = os.path.join(_home, "activity")

@@ -62,6 +62,7 @@ OUTPUTS = [  # run_command: (pattern, output) for read-only commands; anything e
     (r"\bfree\b", "               total        used        free\nMem:            31Gi        14Gi        11Gi"),
     (r"\buptime\b", " 18:40:02 up 3 days,  4:12,  1 user,  load average: 1.20, 1.05, 0.98"),
     (r"\bip\b|ifconfig|nmcli", "wlan0: connected to Home-WiFi\n  inet 192.168.1.23/24"),
+    (r"Projects", "/home/user/Projects/jarvis-assistant\n/home/user/Projects/website"),
     (r"\bls\b", "report.pdf\nsetup.exe\nphoto.jpg\nold-notes.zip"),
     (r"\bdate\b", time.strftime("%a %d %b %Y %H:%M:%S")),
     (r"\bping\b", "10 packets transmitted, 9 received, 10% packet loss, time 9012ms\nrtt min/avg/max/mdev = 38.1/41.7/152.3/4.2 ms"),
@@ -82,6 +83,14 @@ def simulated(case, name, args):
         return {"result": case.get("task_result") or f"Done: {args.get('task', '')}"}
     if name == "stop_listening":
         return {"result": "not listening any more"}
+    if name == "code":  # (never a real coding agent)
+        return {"result": "Started OpenChamber on it (coding job 1) in a copy of the project, on branch jarvis/20261102-1. It works on "
+                          "its own and the user is told when it's done: don't wait for it."}
+    if name == "jobs":  # (as if two tasks were running)
+        if args.get("action") == "stop":
+            return {"result": "stopped: find flights to Rome next weekend"}
+        return {"tasks": [{"n": 1, "task": "find flights to Rome next weekend", "for": "3 min", "now": "web_search"},
+                          {"n": 2, "task": "coding: fix the login bug", "for": "12 min", "now": "Edit"}]}
     if name == "ignore":
         return {"result": "ignored"}
     if name == "person" and (args.get("note") or args.get("forget")):  # (never the real people.json)
@@ -477,6 +486,12 @@ CASES = [
     ("task_instagram", ["Open Instagram and go through my saved reels and tell me which ones are worth adding."],
      lambda c, s: (called(c, "do_task") and not re.search(r"can(no|')t (access|browse)|don't have access", " ".join(s), re.I)) or "do_task, never 'I can't access your accounts'"),
     ("task_download", ["Download the latest version of Blender."], lambda c, s: called(c, "do_task") or "do_task"),
+    ("task_code", ["Fix the typo in the README of my jarvis-assistant project, it's in my Projects folder."],
+     lambda c, s: ("jarvis-assistant" in str(arg(c, "code", "folder", "")) and not called(c, "act")) or "code with the project's folder"),
+    ("task_jobs", ["What are you working on right now?"], lambda c, s: (called(c, "jobs") and bool(re.search(r"flight", " ".join(s), re.I))) or "jobs, then says them"),
+    ("task_jobs_stop", ["Stop the flight search, I already booked one."],
+     lambda c, s: any(x[0] == "jobs" and x[1].get("action") == "stop" and not re.search(r"\b2\b|login", str(x[1].get("job", ""))) for x in c)
+     or "jobs stop, the flights one only"),
     ("make_image", ["Make a picture of a cat in a spacesuit."], lambda c, s: called(c, "make_image") or "make_image"),
 
     # ---- music, selection, notes, routines

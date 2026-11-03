@@ -58,7 +58,7 @@ pyside6-lupdate -no-obsolete qml/*.qml jarvis.py window.py -ts translations/jarv
   containing `%|` (the text after the bar is a real log line).
 - Tests should use the real objects (e.g. `jarvis.Speaker()`) rather than hand-made fakes: a fake with an old
   attribute once hid a crash that killed voice after the first wake word. Tests that build `Brain.__new__` or
-  `Live.__new__` set the attributes they need by hand (`ask_lock`, `remote`, `quick_tasks` as a dict...): a new
+  `Live.__new__` set the attributes they need by hand (`contents`, `asking`, `quick_tasks` as a dict...): a new
   attribute on those classes usually needs adding there.
 - Windows CI runs the same file: a check of a Linux-only path must force it (`system.IS_WINDOWS = False`, then restore),
   and timestamps must stay before the year 3000 (Windows can't format later ones).
@@ -94,19 +94,38 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   unless `loud` (WhatsApp's "always let through" names), and every other unprompted line (`_progress`, a result after the
   session closed, the morning briefing, which waits) checks it too; the chat, notification and phones still get it. The
   agent's question (`ask_from_task`) is then asked only if the user is talking with Jarvis (mic on, or spoke < 2 min ago).
+- Away from the PC (`at_pc`: no keyboard/mouse for `AWAY` s by `system.user_idle`, mic off, no talk for 2 min): a
+  do_task's result goes SILENT into the session and into `held`; coding jobs' news (`job_done`) too. `presence_pass`
+  says `held` in one "While you were away" line once they're back. Agents' questions wait for `at_pc` and take turns
+  (`Live.asking`). Reminders, scheduled tasks, checks and `tell` keep their own rules.
 - Languages: `language` is the main one, `languages` the others allowed (`store.spoken` names them); the voice, WhatsApp
   calls and auto-replies all follow both. An old `call_language` is read as `languages` until settings are next saved.
 - Each batch of quick tool calls has its own `halt` event (`quick_tasks`: task -> halt), passed to `tool_act`;
-  `_cancel_quick` sets it and cancels the task. Voice acts check only their halt, agent acts only the global
-  `interrupt_act` flag (Stop / New conversation), so cutting the voice off never stops the agent and a superseded
+  `_cancel_quick` sets it and cancels the task. Voice acts check only their halt, agent acts their task's `cancel`
+  (Stop, New conversation, `jobs` stop), so cutting the voice off never stops the agent and a superseded
   call's late cancel never stops the new one. Never cancel asyncio tasks from another thread: use `call_soon_threadsafe`.
   A query tool asked again with the same arguments while the first is still running (noise "interrupting" makes the
   model re-ask) shares that run's answer (`asked`); a finished one is shared for 3 s at most, never longer (a screen or
   a list may have changed). A voice act that types goes through `_type_once` (shielded, one at a time): the same text
   isn't sent again until the user speaks, and text a cancelled act left in the box isn't typed over it.
-- `Brain.ask` holds `ask_lock`: voice and phone tasks take turns over the shared history and screen.
+- Tasks run side by side (`brain.running`, each a `brain.Task`: its own `contents`, `cancel`, `remote`, `unattended`,
+  `passphrase_ok`, `label`). `Brain.ask` gives a task a copy of the conversation and `_join`s its turn back when done:
+  the whole trace if no other task joined meanwhile (`joined`), else just what was asked and answered; nothing after
+  New conversation (`contents` rebound). A stopped task always answers "Stopped." (never spoken). The screen is the one
+  shared thing: a task's first `SCREEN_WORK` tool takes `brain.screen_lock` until the task ends (`_take_screen`), and
+  waits while the user has used keyboard or mouse since the task started (+`SCREEN_GRACE`) until `SCREEN_IDLE` s idle;
+  the voice's `VOICE_SCREEN_ACTS` take it too, or are refused. `Brain.interrupt` stops every task and returns their
+  labels (Stop says them). `jobs` lists or stops them; `code` starts a coding job in a git worktree under `DATA/worktrees` on branch
+  `jarvis/<stamp>-<n>`, commits what it changed there and reports through `job_done`; never merges. `code_jobs` (job
+  number -> worktree, session) lives for the run only. The user's coding agent is OpenChamber (`_chamber_run`): its
+  local server's port is `desktopLocalPort` in its own settings.json (`system.app_config`; `openchamber_url(start=True)`
+  launches it), and its `/api` is opencode v2's without a password from localhost: `POST /session` {title, location:
+  {directory}}, `POST /session/<id>/prompt` {text} (returns at once), `GET /session/<id>` (done when `time.idle` is
+  later than the prompt; `outcome`), `GET /session/<id>/message` (newest first: `assistant` items' `content` text/tool),
+  `POST /session/<id>/interrupt`. Its permissions are OpenChamber's own settings. Without it, `HARNESSES` (`claude -p
+  --output-format stream-json`, `acceptEdits` unless safety is "full"). Tests use a fake server: never the real one.
 - Task reminders (`task: true`) and the `checks` loop run `Brain.ask(..., unattended=True)` (`run_unattended`): its own
-  history, swapped back after, and `confirmed` is dropped from every agent call (in `_ask`, not `_run_tool`: the voice
+  empty history, and `confirmed` is dropped from every agent call (in `_ask`, not `_run_tool`: the voice
   runs its tools there meanwhile), so nothing that waits for a yes runs. A
   check that answers NOTHING stays quiet; anything else is added to the conversation (`add_turn`, so "yes, do it" from the
   phone has its context) and goes through `tell` (chat, notification, voice, `push` to phones).
@@ -117,7 +136,7 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
 sources (`OUTSIDE_CONTENT`, accounts, plugins) get the `UNTRUSTED` note. To add a tool: put it in `TOOLS`, in
 `LIVE_TOOLS` if the voice model should run it directly (`QUERY_TOOLS` if its result must be spoken), and in
 `TOOL_LABELS` for the notch/chat label. brain.py never imports jarvis.py: what a tool needs from the app is a
-module-level one-item list the app fills in `main()` (`asker`, `on_image`, `on_change`, `on_plan`, `on_asked`, `notes_done`), and
+module-level one-item list the app fills in `main()` (`asker`, `on_image`, `on_change`, `on_plan`, `on_asked`, `notes_done`, `job_done`), and
 Brain fills the model ones (`vision`, `pointer`, `painter`, `grounder`, `notes`).
 
 **Safety in code, not only prompts.** With the `safety` setting on "ask" (the default), risky shell commands
@@ -165,6 +184,9 @@ available tool at call time:
 - Media: MPRIS on Linux; on Windows a long-lived PowerShell (`WIN_MEDIA`, GSMTC) answers one JSON line per request, with
   a timeout that kills it (a stalled app's media session must never block the window's thread pool).
 - Windows: kdotool on KDE Wayland, pywinctl otherwise.
+- Idle (`user_idle`): Wayland's ext-idle-notify on its own connection (`_idle_watch`, 2 s steps; KWin has no
+  `GetSessionIdleTime`), GNOME's Mutter IdleMonitor, `xprintidle`, Windows `GetLastInputInfo`; None if unknown. Input
+  Jarvis makes (`@_mine`) doesn't count as the user: inf when the latest input was its own.
 - Accessibility: AT-SPI on Linux via `atspi_helper.py` under `/usr/bin/python3` (it needs `gi`); pywinauto UIA on
   Windows. Both share the same `ask({"cmd": ...})` protocol. On Linux, Chromium and Electron apps only expose their
   page contents when started with `--force-renderer-accessibility` plus `ACCESSIBILITY_ENABLED=1`, and only at
@@ -198,7 +220,7 @@ mic, and Jarvis heard itself; check with `pw-link -l`) and `Speaker.echo_cancell
 **Phone.** `remote.py` long-polls the user's own Telegram bot (token in the keychain as `telegram`) and answers only the
 chat paired with the code shown in Settings (five wrong codes and a chat is ignored). Its tasks run `Brain.ask(...,
 remote=True)` on their own thread, so `/stop` is still read while one works; `ask_user` refuses (the user can't answer
-out loud). `Brain.ask_lock` makes voice and phone tasks take turns.
+out loud). Phone tasks run side by side with the others; `/stop` stops them all and says which.
 `phone.py` is the Android app's link (`android/`, Kotlin): the PC and the app both dial out to the user's own relay
 (`relay/worker.js`, a Cloudflare Worker with one Durable Object per PC that only forwards frames), so nothing on the PC
 listens. The PC signs its relay login with its key (the id is that key's hash); the app trusts the PC's other key from
@@ -320,3 +342,29 @@ Opt-in and warned about (Google may suspend accounts used this way). With no acc
 **Backends in code.** A gitignored `local_backends.py`, imported at the end of
 brain.py, may register more classes in `brain.BACKENDS` and prepend entries to the model lists (`LOOK_MODELS`,
 `POINT_MODELS`, `SEARCH_MODELS`, `IMAGE_MODELS`).
+
+## Skill plan
+Stack: Python 3.13 (core), Qt Quick/QML (window), Go (whatsapp-helper/), Kotlin/Compose (android/), JS Worker (relay/)
+Always: verification-before-completion, karpathy-guidelines
+Stack skills: python-patterns
+Chains: feature=brainstorming → writing-plans → test-driven-development (asserts in test_jarvis.py first) →
+verification-before-completion → requesting-code-review; bug=systematic-debugging → test-driven-development (a check
+that fails without the fix) → verification-before-completion → requesting-code-review; refactor=writing-plans →
+test-driven-development → verification-before-completion → requesting-code-review; ui=impeccable → accessibility,
+verified with docs/screens.py (one screenshot of the finished state); prompt/tool change=feature chain, verified with
+evals/agent_eval.py (and voice_eval.py for LIVE_PROMPT) before and after; decision=council →
+architecture-decision-records; big work=writing-plans → subagent-driven-development
+Sizes: every size runs the full chain; size sets depth only (tiny=brief steps, large=deep steps + subagents)
+Overlays: security-checklist (safety gates, secrets, serve_app API, phone handshake, plugin OAuth); search-first (new
+integration); claude-api only when code calls Anthropic models
+Agents: verification-before-completion→tester, requesting-code-review→code-reviewer (not installed → inline)
+Not for this project: cpp-coding-standards, cpp-testing, fastapi-patterns, react-patterns, mysql-patterns,
+motion-foundations, motion-advanced, manim-video, remotion-best-practices, minecraft-architect, web-design-guidelines,
+frontend-design
+Missing: Go, Kotlin/Compose → vault: none → find-skills if wanted
+
+## Skill notes
+- requesting-code-review inline (no reviewer agent): a full-diff pass after green tests still found 6 real bugs: always do it.
+- agent_eval: `EVAL_MODELS="aistudio gemini-3.8-flash low"` was 503/rate-limited; the default chain (no EVAL_MODELS) worked.
+- Tests and evals must stub `system._idle_seconds` (on the real Wayland session, screen steps wait for the user).
+- OpenChamber: drive it through its own local `/api` (port in its settings.json); never read its opencode server's password (blocked as credential digging, rightly).

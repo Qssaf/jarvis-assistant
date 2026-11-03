@@ -297,7 +297,7 @@ class PhoneLink:
             if not device:
                 return await self._refuse(c, phone, "This phone isn't paired with Jarvis any more: pair it again.", unpaired=True)
             phone["device"] = device
-            await self._send(c, {"op": "ready", "name": socket.gethostname(), "busy": self.brain.ask_lock.locked()})
+            await self._send(c, {"op": "ready", "name": socket.gethostname()})
             for reply in self.pending.pop(device, []):
                 await self._send(c, reply)
             return
@@ -306,7 +306,7 @@ class PhoneLink:
         if op == "ask" and str(m.get("text", "")).strip():
             text = str(m["text"]).strip()
             self.chat("you", f"📱 {text}")  # (as notices, a conversation held only from the phone was never saved)
-            await self._send(c, {"op": "working", "id": m.get("id"), "queued": self.brain.ask_lock.locked()})
+            await self._send(c, {"op": "working", "id": m.get("id")})  # (never queued: tasks run side by side)
             threading.Thread(target=self._task, args=(phone["device"], m.get("id"), text), daemon=True).start()
         elif op == "stop":
             self.brain.interrupt()
@@ -314,7 +314,7 @@ class PhoneLink:
 
     def _task(self, device, request, text):
         try:
-            reply = self.brain.ask(REMOTE_NOTE + text, remote=True)
+            reply = self.brain.ask(REMOTE_NOTE + text, remote=True, label=text)
         except Exception as e:
             reply = f"The task failed: {e}"
         self.chat("jarvis", f"📱 {reply}")  # (the chat at the PC showed the question, never the answer)

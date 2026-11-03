@@ -1,7 +1,7 @@
 """Everything that depends on the operating system, behind one small interface: where files live, the microphone and
 speaker, screenshots, mouse and keyboard, windows, apps, the shell, notifications, media and starting at login.
 Windows and Linux (X11 or Wayland; KDE Plasma gets faster paths). Each function picks the best tool that's installed."""
-import json, os, re, shutil, subprocess, sys, tempfile, threading, time
+import functools, json, os, re, shutil, socket, struct, subprocess, sys, tempfile, threading, time
 
 IS_WINDOWS = sys.platform == "win32"
 WAYLAND = not IS_WINDOWS and os.environ.get("XDG_SESSION_TYPE") == "wayland"
@@ -22,6 +22,12 @@ PICTURES = os.path.join(os.path.expanduser("~"), "Pictures", "Jarvis")
 
 def have(program):
     return shutil.which(program) is not None
+
+
+def app_config(app):
+    """Another app's own settings folder (OpenChamber's: the port its local server listens on)."""
+    return os.path.join(os.environ.get("APPDATA", "") if IS_WINDOWS else os.environ.get("XDG_CONFIG_HOME") or
+                        os.path.expanduser("~/.config"), app)
 
 
 def lean_memory():
@@ -59,9 +65,9 @@ def run(args, timeout=15, env=None):
     return (r.stdout + r.stderr).strip()
 
 
-def run_lines(args, on_line, cwd=None, timeout=600):
+def run_lines(args, on_line, cwd=None, timeout=600, halt=None):
     """A long command (npx on Windows is npx.cmd: it's found on PATH), each line it prints passed to on_line as it comes.
-    Nothing can be typed to it, and it's stopped after timeout seconds. Its exit code."""
+    Nothing can be typed to it, and it's stopped after timeout seconds, or when halt (an Event) is set. Its exit code."""
     proc = subprocess.Popen([shutil.which(args[0]) or args[0], *args[1:]], cwd=cwd, stdin=subprocess.DEVNULL,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace",
                             creationflags=subprocess.CREATE_NO_WINDOW if IS_WINDOWS else 0, start_new_session=not IS_WINDOWS)
@@ -75,14 +81,19 @@ def run_lines(args, on_line, cwd=None, timeout=600):
                 os.killpg(proc.pid, 9)
             except OSError:
                 pass
-    timer = threading.Timer(timeout, stop)
-    timer.start()
+    done, end = threading.Event(), time.time() + timeout
+
+    def watch():
+        while not done.wait(0.5):
+            if time.time() > end or halt and halt.is_set():
+                return stop()
+    threading.Thread(target=watch, daemon=True).start()
     try:
         for line in proc.stdout:
             on_line(line.rstrip())
         return proc.wait()
     finally:
-        timer.cancel()
+        done.set()
 
 
 def describe():
@@ -451,6 +462,22 @@ def _pynput_key(name):
     raise ValueError(f"unknown key '{name}'")
 
 
+_own_input = [0.0, 0.0]  # when Jarvis's latest pointer move, click, typing or scroll started and ended (see user_idle)
+
+
+def _mine(fn):
+    """Input Jarvis makes itself, noted so it isn't taken for the user at the keyboard."""
+    @functools.wraps(fn)
+    def mine(*args, **kw):
+        _own_input[:] = [time.time(), float("inf")]
+        try:
+            return fn(*args, **kw)
+        finally:
+            _own_input[1] = time.time()
+    return mine
+
+
+@_mine
 def move_pointer(px, py):
     """'' once the pointer is at (px, py) in screen pixels, else what went wrong."""
     if WAYLAND:
@@ -469,6 +496,7 @@ def move_pointer(px, py):
     return ""
 
 
+@_mine
 def click(button="left", double=False):
     if WAYLAND:
         tool = _wayland_tool()
@@ -483,6 +511,7 @@ def click(button="left", double=False):
     return ""
 
 
+@_mine
 def type_text(text):
     if WAYLAND:
         tool = _wayland_tool()
@@ -533,6 +562,7 @@ def _send_text(text):
         f"Windows took {sent} of {len(events)} key events (a window running as administrator can't be typed into)"
 
 
+@_mine
 def press_keys(keys):
     """Key chains like 'ctrl+l', 'Return', 'ctrl+a BackSpace'; '' when done, else the problem."""
     for chain in key_chains(keys):
@@ -558,6 +588,7 @@ def press_keys(keys):
     return ""
 
 
+@_mine
 def scroll(amount):
     if WAYLAND:
         return _wdo("scroll", "--", 0, int(amount), timeout=40) if _wayland_tool() == "wdotool" else "scrolling on Wayland needs wdotool"
@@ -607,6 +638,93 @@ def fullscreen():
     if KDE and WAYLAND and have("kdotool"):
         return _kdo("kwinscript", "--inline", "output_result(String(!!workspace.activeWindow && workspace.activeWindow.fullScreen))") == "true"
     return False
+
+
+_idle = {}  # Wayland: {"on": watching (False: can't), "since": when the keyboard and mouse were last left alone, or None}
+
+
+def _idle_watch():
+    """Wayland, on its own connection: the compositor says when the keyboard and mouse have been left alone for 2 s, and
+    when they're used again (ext-idle-notify; v2's input-only kind, so a playing film doesn't count as the user)."""
+    buf = b""
+    try:
+        sock = socket.socket(socket.AF_UNIX)
+        sock.connect(os.path.join(os.environ.get("XDG_RUNTIME_DIR", ""), os.environ.get("WAYLAND_DISPLAY", "wayland-0")))
+
+        def send(obj, op, *args):  # numbers, or strings (length, bytes, NUL, padded to 4)
+            body = b""
+            for a in args:
+                a = struct.pack("<I", a) if isinstance(a, int) else struct.pack("<I", len(a) + 1) + a.encode() + b"\0" * (4 - len(a) % 4)
+                body += a
+            sock.sendall(struct.pack("<II", obj, (8 + len(body)) << 16 | op) + body)
+
+        def events():
+            nonlocal buf
+            while True:
+                if len(buf) >= 8 and len(buf) >= struct.unpack_from("<I", buf, 4)[0] >> 16:
+                    obj, word = struct.unpack_from("<II", buf)
+                    body, buf = buf[8:word >> 16], buf[word >> 16:]
+                    if obj == 1 and word & 0xFFFF == 0:  # wl_display.error
+                        raise OSError(body[12:].rstrip(b"\0").decode(errors="replace"))
+                    yield obj, word & 0xFFFF, body
+                    continue
+                data = sock.recv(4096)
+                if not data:
+                    raise OSError("the compositor closed the connection")
+                buf += data
+        send(1, 1, 2)  # wl_display.get_registry -> 2
+        send(1, 0, 3)  # wl_display.sync -> 3, done once every global has been listed
+        found = {}
+        for obj, op, body in events():
+            if obj == 2 and op == 0:  # wl_registry.global: name, interface, version
+                name, n = struct.unpack_from("<II", body)
+                found[body[8:8 + n - 1].decode()] = (name, struct.unpack_from("<I", body, 8 + (n + 3) // 4 * 4)[0])
+            elif obj == 3:
+                break
+        seat, notifier = found["wl_seat"], found["ext_idle_notifier_v1"]
+        send(2, 0, seat[0], "wl_seat", 1, 4)  # wl_registry.bind -> 4
+        send(2, 0, notifier[0], "ext_idle_notifier_v1", min(notifier[1], 2), 5)
+        send(5, 2 if notifier[1] >= 2 else 1, 6, 2000, 4)  # get_input_idle_notification (v1: get_idle_notification) -> 6
+        _idle["on"] = True
+        for obj, op, body in events():
+            if obj == 6:  # idled (0) or resumed (1)
+                _idle["since"] = time.time() - 2 if op == 0 else None
+    except (OSError, KeyError, struct.error) as e:
+        print(f"[idle] can't tell when the keyboard and mouse are used: {e!r}", flush=True)
+        _idle["on"] = False
+
+
+def _idle_seconds():
+    """Seconds since the keyboard or mouse was last used (by anyone), None if this desktop can't tell."""
+    if IS_WINDOWS:
+        import ctypes
+
+        class LASTINPUTINFO(ctypes.Structure):
+            _fields_ = [("cbSize", ctypes.c_uint), ("dwTime", ctypes.c_uint)]
+        info = LASTINPUTINFO(ctypes.sizeof(LASTINPUTINFO))
+        if not ctypes.windll.user32.GetLastInputInfo(ctypes.byref(info)):
+            return None
+        return ((ctypes.windll.kernel32.GetTickCount() - info.dwTime) & 0xFFFFFFFF) / 1000
+    if WAYLAND:
+        if not _idle:
+            _idle.update(on=None, since=None)
+            threading.Thread(target=_idle_watch, daemon=True).start()
+        if _idle["on"] is not False:  # (still connecting counts as in use)
+            return 0.0 if _idle["since"] is None else time.time() - _idle["since"]
+    out = run(["gdbus", "call", "--session", "--dest", "org.gnome.Mutter.IdleMonitor", "--object-path",
+               "/org/gnome/Mutter/IdleMonitor/Core", "--method", "org.gnome.Mutter.IdleMonitor.GetIdletime"], 3) if GNOME else \
+        run(["xprintidle"], 3) if not WAYLAND and have("xprintidle") else ""
+    m = re.fullmatch(r"\(uint64 (\d+),\)|(\d+)", out)
+    return int(m[1] or m[2]) / 1000 if m else None
+
+
+def user_idle():
+    """Seconds since the user last used the keyboard or mouse; inf when the latest input was Jarvis's own (they haven't
+    been seen since), None when this desktop can't tell."""
+    idle = _idle_seconds()
+    if idle is None:
+        return None
+    return float("inf") if _own_input[0] - 1 <= time.time() - idle <= _own_input[1] + 1 else idle
 
 
 def focused():
