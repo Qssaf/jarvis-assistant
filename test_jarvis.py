@@ -25,6 +25,7 @@ assert system.user_idle() == float("inf")
 system._own_input[:] = [0.0, 0.0]
 system._idle_seconds = lambda: None  # (no way to tell, and the rest of these checks: never waits for the user)
 assert system.user_idle() is None
+system.fullscreen = lambda: False  # (the real desktop's: a full-screen game there hushed the reminder checks)
 
 # click grid: Gemini's 0-1000 coordinates map onto the screen, clamped to its edges
 brain.screen_size[:] = (1600, 900)
@@ -846,6 +847,21 @@ open(os.path.join(t, "notes.txt"), "w").write("buy milk")
 open(os.path.join(t, "blob.bin"), "wb").write(b"\0\1\2" * 100)
 assert brain.tool_read_file(os.path.join(t, "notes.txt"))["text"] == "buy milk"
 assert sorted(brain.tool_read_file(t)["folder"]) == ["blob.bin", "notes.txt"] and "error" in brain.tool_read_file(os.path.join(t, "blob.bin"))
+# the Accounts page says which account each app uses: its email, wherever that app keeps it (Calendar and Drive said
+# just "Connected", Notion its integration's name "Composio"); a name only when there's no email
+active = lambda info: {"accounts": [{"status": "active", "user_info": info}]}
+assert brain.account_names({
+    "gmail": active({"email": "me@example.com", "name": "Me"}),
+    "googlecalendar": active({"kind": "calendar#events", "summary": "me@school.example.edu",
+                              "items": [{"organizer": {"email": "teacher@school.example.edu"}}]}),
+    "googledrive": active({"user": {"displayName": "Me Too", "emailAddress": "me@school.example.edu"}}),
+    "notion": active({"name": "Composio", "owner_email": "me@example.com", "workspace_name": "Mine"}),
+    "google_classroom": active({"id": "1", "name": {"givenName": "Me", "fullName": "Me Too"}}),
+    "github": active({"login": "me-gh", "email": None, "name": None}),
+    "googletasks": active({"kind": "tasks#taskLists", "items": []}),
+    "trello": {"accounts": [{"status": "initializing", "user_info": {"email": "x@example.com"}}]},
+}) == {"gmail": "me@example.com", "googlecalendar": "me@school.example.edu", "googledrive": "me@school.example.edu",
+       "notion": "me@example.com", "google_classroom": "Me Too", "github": "me-gh", "googletasks": ""}
 # account permissions: reads vs changes, paused and read-only accounts refused before anything is sent
 assert brain.toolkit_of("GOOGLE_CLASSROOM_COURSES_LIST") == "google_classroom" and brain.toolkit_of("GMAIL_SEND_EMAIL") == "gmail"
 assert [brain.workspace_slug(a) for a in ("Google Tasks", "google_drive", "google classroom", "GitHub", "fax")] == \
@@ -2681,8 +2697,9 @@ for bad in ("25:00", "7pm", "12:60"):
 briefed, slept, quiet_left, real_quiet, real_time, real_full = [], [], [True, True], store.quiet_now, jarvis.time, system.fullscreen
 store.quiet_now = lambda *a: bool(quiet_left and quiet_left.pop())
 system.fullscreen = lambda: False  # (the real desktop's: it hung here while a game was full screen)
-jarvis.time = types.SimpleNamespace(sleep=slept.append, strftime=time.strftime, time=time.time,
-                                    localtime=lambda *a: time.localtime(at(8)))
+jarvis.time = types.SimpleNamespace(  # (only this thread's sleeps: an earlier test's loop also sleeps in jarvis)
+    sleep=lambda s: slept.append(s) if threading.current_thread() is threading.main_thread() else time.sleep(s),
+    strftime=time.strftime, time=time.time, localtime=lambda *a: time.localtime(at(8)))
 ready = threading.Event()
 ready.set()
 try:
@@ -3781,7 +3798,7 @@ assert b.person("sam", note="exam on Monday", until=time.strftime("%Y-%m-%d", ti
 assert b.person("Sam Lee")["notes"][0] == "my cousin" and "error" in b.person("Sam", note="x", until="next week")
 # who's waiting on the user: their message is the last one, old enough; groups, strangers and the user's own last word aren't
 now = time.time()
-brain.whatsapp_link[0] = types.SimpleNamespace(state="connected", chats=lambda n: [
+brain.whatsapp_link[0] = types.SimpleNamespace(state="connected", saved={}, chats=lambda n: [
     {"name": "Sam Lee", "group": False, "contact": True, "last": "are you coming?", "at": now - 5 * 3600},
     {"name": "Chess Club", "group": True, "contact": False, "last": "Alex: gg", "at": now - 5 * 3600},
     {"name": "Maya", "group": False, "contact": True, "last": "You: see you", "at": now - 5 * 3600},
@@ -3871,12 +3888,17 @@ assert activity.search("recipe")["windows"][0].endswith("firefox: Pasta recipes 
 assert len(activity.search(day=day)["windows"]) == 3 and activity.search("nothing like it")["windows"] == []
 assert activity.PRIVATE.search("Mozilla Firefox Private Browsing") and activity.PRIVATE.search("KeePassXC")
 store.update_settings({"screen_history": False})
-# connecting restarts Vesktop with the port, kept in vesktop-flags.conf where the launcher reads it (Arch's), once
+# connecting restarts Vesktop with the port, kept in vesktop-flags.conf where the launcher reads it (Arch's), once, and
+# in Vesktop's own login entry (it runs Electron directly, so the launcher's file isn't read after a reboot)
 launcher, started = os.path.join(_home, "vesktop"), []
 with open(launcher, "w") as f:
     f.write('_FLAGS_FILE="${XDG_CONFIG_HOME}/vesktop-flags.conf"\n')
 with open(os.path.join(_home, "config", "vesktop-flags.conf"), "w") as f:
     f.write("--enable-wayland-ime")
+login_entry = os.path.join(_home, "config", "autostart", "vesktop.desktop")
+os.makedirs(os.path.dirname(login_entry), exist_ok=True)
+with open(login_entry, "w") as f:
+    f.write("[Desktop Entry]\nExec=/usr/lib/electron/electron /usr/lib/vesktop/app.asar --start-minimized\nIcon=vesktop\n")
 real = (system.vesktop, system.have, system.shutil.which, system.subprocess.Popen, system.IS_WINDOWS)
 system.vesktop, system.have, system.shutil.which = lambda: None, lambda n: n == "vesktop", lambda n: launcher
 system.subprocess.Popen, system.IS_WINDOWS = lambda cmd, **kw: started.append(cmd), False
@@ -3885,6 +3907,20 @@ system.restart_vesktop(discord.FLAG)
 system.vesktop, system.have, system.shutil.which, system.subprocess.Popen, system.IS_WINDOWS = real
 assert started == [["vesktop", discord.FLAG]] * 2
 assert open(os.path.join(_home, "config", "vesktop-flags.conf")).read() == f"--enable-wayland-ime\n{discord.FLAG}\n"
+assert open(login_entry).read() == ("[Desktop Entry]\nExec=/usr/lib/electron/electron /usr/lib/vesktop/app.asar --start-minimized "
+                                    f"{discord.FLAG}\nIcon=vesktop\n"), open(login_entry).read()
+# Vesktop open without the port: the error says to restart it (it said "open Vesktop", and the voice kept launching it)
+import socket
+with socket.socket() as s:
+    s.bind(("127.0.0.1", 0))
+    real = (discord.PORT, system.vesktop)
+    discord.PORT, system.vesktop = s.getsockname()[1], lambda: object()
+try:
+    discord._page()
+    raise AssertionError("no error with nothing on the port")
+except RuntimeError as e:
+    assert "Restart Vesktop" in str(e) and "open Vesktop" not in str(e), e
+discord.PORT, system.vesktop = real
 # a voice message is listened to (it said "can't listen to voice notes"): the bytes go to the model as audio
 heard_media, real_vision = [], brain.vision[0]
 brain.vision[0] = lambda contents: heard_media.append(contents[0]["parts"][0]["inlineData"]) or [{"text": "See you at 5."}]

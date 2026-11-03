@@ -258,7 +258,7 @@ profile (`DATA/whatsapp`) is deleted on start and the user is asked to link agai
 `Runtime.evaluate` per call runs `JS` in the page, which uses Vencord's `Vencord.Webpack.Common` stores (`ChannelStore`,
 `ReadStateStore`, `RestAPI`, `MessageActions.sendMessage`): the real client, no bot, no copied token. Settings' *Restart
 Vesktop* (`system.restart_vesktop`) restarts it with `FLAG`, also written to `vesktop-flags.conf` when the launcher reads
-it (Arch). `discord_read`/`discord_send`/`discord_react`/`discord_media` resolve names through `brain.pick` (shared with
+it (Arch) and to Vesktop's own `autostart/vesktop.desktop` (it runs Electron directly, skipping the launcher). `discord_read`/`discord_send`/`discord_react`/`discord_media` resolve names through `brain.pick` (shared with
 WhatsApp's `find`); changes follow the `discord` account mode. `Listener` keeps one connection with a `jarvisDiscord`
 binding; JS's `listen` subscribes to `MESSAGE_CREATE` (DMs and pings only), re-installed every 30 s (a Discord reload
 drops it; `a.v` is the JS's hash). People rules (`<app>_always`/`<app>_never`, `whatsapp.contact_rule`, the
@@ -366,5 +366,6 @@ Missing: Go, Kotlin/Compose → vault: none → find-skills if wanted
 ## Skill notes
 - requesting-code-review inline (no reviewer agent): a full-diff pass after green tests still found 6 real bugs: always do it.
 - agent_eval: `EVAL_MODELS="aistudio gemini-3.8-flash low"` was 503/rate-limited; the default chain (no EVAL_MODELS) worked.
-- Tests and evals must stub `system._idle_seconds` (on the real Wayland session, screen steps wait for the user).
+- Tests and evals must stub the real desktop (`system._idle_seconds`, `system.fullscreen`): a full-screen game failed the suite.
+- Evals: clock times relative to now (a fixed 14:00 / "6 pm" failed every evening run); `EVAL_OUT` is a file path, not a folder.
 - OpenChamber: drive it through its own local `/api` (port in its settings.json); never read its opencode server's password (blocked as credential digging, rightly).

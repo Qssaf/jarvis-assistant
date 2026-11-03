@@ -140,7 +140,8 @@ def _page():
     try:
         pages = json.load(urllib.request.urlopen(f"http://127.0.0.1:{PORT}/json/list", timeout=3))
     except OSError:
-        raise RuntimeError("Discord isn't connected: open Vesktop, or connect it in Settings → Discord" if system.vesktop()
+        raise RuntimeError("Discord isn't connected: Vesktop is open without the setting Jarvis needs. Tell the user to press "
+                           "Restart Vesktop in Settings → Discord (opening Vesktop on screen won't help)" if system.vesktop()
                            else "Vesktop isn't running: start it (Jarvis uses Discord through Vesktop)") from None
     for p in pages:
         if p["type"] == "page" and "discord.com/" in p["url"] and "/popout" not in p["url"]:

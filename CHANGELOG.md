@@ -61,6 +61,10 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
+- The Accounts page says which account each app is connected to: Google Calendar and Drive showed only "Connected",
+  and Notion "Composio", instead of the email.
+- Discord stopped working after every reboot when Vesktop starts with the system: its login entry skipped the setting
+  Jarvis needs. *Restart Vesktop* (Settings → Discord) now adds it there too, once.
 - **Lighter:** about 60 MB less memory and half the idle CPU. The wake word's model rests while the room is quiet (it
   still hears a soft "Hey") and does a quarter less work when it runs; the window is built when you first open it and
   freed after ten minutes closed; freed memory goes back to the system after tasks and voice sessions.

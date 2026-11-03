@@ -9,7 +9,7 @@ It costs one voice session per case (the AI Studio key) and the agent's models f
     .venv/bin/python evals/voice_eval.py                  # every case
     .venv/bin/python evals/voice_eval.py weather email_   # cases whose name starts with these
 """
-import asyncio, datetime, json, os, re, sys, time, traceback
+import asyncio, datetime, json, os, re, sys, time, traceback, types
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
@@ -47,6 +47,7 @@ for fn in ("move_pointer", "click", "type_text", "press_keys", "scroll", "focus_
 
 import brain  # noqa: E402  (after the guards: nothing it starts can write)
 import jarvis  # noqa: E402
+import whatsapp  # noqa: E402
 from google import genai  # noqa: E402
 
 brain.changed = lambda what: None
@@ -312,6 +313,7 @@ SCREEN = "A YouTube video, 'Learn Python in one hour', paused at 12:03, in Brave
 ROUTINES = {"movie night": "turn the volume up to 70%, open netflix.com"}
 
 # each: name, turns, ok (calls, said -> True or a reason), optional screen/selection/routines
+LATER = datetime.datetime.now() + datetime.timedelta(hours=3)  # (a clock time still ahead whenever this runs)
 CASES = [
     # ---- conversation and knowledge: no tools, short answers
     ("chat_hello", ["Hey, how's it going?"], lambda c, s: not c or "no tools needed"),
@@ -362,7 +364,7 @@ CASES = [
     ("remind_cancel", ["Remind me in 20 minutes to stretch.", "Actually, cancel that reminder."], lambda c, s: called(c, "cancel_reminder") or "cancel_reminder"),
     ("remind_task", ["Every weekday at 8, check my inbox and tell me what's important."],
      lambda c, s: (arg(c, "set_reminder", "task") is True and arg(c, "set_reminder", "repeat") == "weekdays") or "a weekday task reminder"),
-    ("remind_task_once", ["At 6 pm, check the weather and tell me if I need an umbrella."],
+    ("remind_task_once", [f"At {LATER.hour % 12 or 12} {'pm' if LATER.hour >= 12 else 'am'}, check the weather and tell me if I need an umbrella."],
      lambda c, s: (arg(c, "set_reminder", "task") is True and not called(c, "weather")) or "a task reminder, not the weather now"),
     ("remind_not_task", ["Remind me in 15 minutes to call my mum."], lambda c, s: (called(c, "set_reminder") and not arg(c, "set_reminder", "task")) or "a plain reminder"),
     ("checks_add", ["Keep an eye on my email and tell me if my professor writes to me."],
@@ -541,6 +543,9 @@ def main():
     cases = [c for c in CASES if not wanted or any(c[0].startswith(w) for w in wanted)]
     BRAIN = brain.Brain(notify=lambda text: print(f"[notice] {text}", flush=True))
     BRAIN.tools_ready.wait(60)
+    if store.read_json(whatsapp.STATE_FILE, {}).get("linked"):  # (the prompt says what the user has; the real link is Jarvis's)
+        brain.whatsapp_link[0] = types.SimpleNamespace(saved={"linked": True}, state="connected", find=lambda who: (None, []),
+                                                       chats=lambda n: [], history=lambda chat, n: [])
     print(f"accounts: {', '.join(sorted(BRAIN.connected)) or 'none'}; direct tools: {len(BRAIN.app_tools)}", flush=True)
     client = genai.Client(api_key=brain.api_key())
     passed, results = 0, []

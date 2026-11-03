@@ -831,15 +831,23 @@ def vesktop():
 
 def restart_vesktop(flag):
     """Quit Vesktop and start it again with a Chromium flag; on Linux packages whose launcher reads vesktop-flags.conf
-    (Arch's), the flag goes there too, so it's on at every later start."""
+    (Arch's), the flag goes there too, so it's on at every later start, and into Vesktop's own login entry (it runs
+    Electron directly, so after a reboot the launcher's file isn't read)."""
     p = vesktop()
     minimized = bool(p) and "--start-minimized" in p.cmdline()
+    config = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
+    entry = os.path.join(config, "autostart", "vesktop.desktop")
+    if not IS_WINDOWS and os.path.exists(entry):
+        lines = open(entry).read().splitlines()
+        if not any(line.startswith("Exec=") and flag in line.split() for line in lines):
+            with open(entry, "w") as f:
+                f.write("".join((line + " " + flag if line.startswith("Exec=") else line) + "\n" for line in lines))
     if IS_WINDOWS:
         exe = p.exe() if p else os.path.expandvars(r"%LOCALAPPDATA%\Programs\vesktop\Vesktop.exe")
         command = [exe]
     elif have("vesktop"):
         command = ["vesktop"]
-        conf = os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "vesktop-flags.conf")
+        conf = os.path.join(config, "vesktop-flags.conf")
         with open(shutil.which("vesktop"), "rb") as f:
             reads_conf = b"vesktop-flags.conf" in f.read(200000)
         text = open(conf).read() if os.path.exists(conf) else ""

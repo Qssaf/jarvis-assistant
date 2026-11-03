@@ -2611,13 +2611,18 @@ class McpServer:
 
 
 def account_names(results):
-    """{toolkit: its account's name or email} for the connected ones in a COMPOSIO_MANAGE_CONNECTIONS "list" result."""
+    """{toolkit: its account's email, else name} for the connected ones in a COMPOSIO_MANAGE_CONNECTIONS "list" result.
+    Each app keeps the email elsewhere (Gmail `email`, Notion `owner_email`: its `name` is the integration's, Drive
+    `user.emailAddress`, Calendar its main calendar's `summary`), so it's the first email-like value near the top (lists,
+    like Calendar's events, hold other people's)."""
     out = {}
     for slug, r in results.items():
         accounts = [a for a in r.get("accounts") or [] if a.get("status") == "active"]
         if accounts:
             info = accounts[0].get("user_info") or {}
-            name = info.get("email") or info.get("name") or info.get("login") or ""
+            near = [*info.values(), *(v for d in info.values() if isinstance(d, dict) for v in d.values())]
+            name = next((v for v in near if isinstance(v, str) and re.fullmatch(r"[^@\s]+@[^@\s]+\.\w+", v)), "") \
+                or info.get("name") or info.get("login") or ""
             if isinstance(name, dict):  # e.g. Classroom: {"givenName": ..., "fullName": ...}
                 name = name.get("fullName") or " ".join(map(str, name.values()))
             out[slug] = str(name)

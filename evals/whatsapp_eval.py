@@ -6,6 +6,7 @@ One model request per case:
     EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/whatsapp_eval.py essay free
 """
 import os, re, sys, time
+from datetime import datetime, timedelta
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
@@ -15,8 +16,13 @@ SHARE = [False]
 real_settings = store.settings
 store.settings = lambda: {**real_settings(), "language": "en-US", "languages": [], "whatsapp_note": "",
                           "whatsapp_share_free": SHARE[0]}
-at = lambda h, m=0: time.strftime("%Y-%m-%dT", time.localtime()) + f"{h:02}:{m:02}:00" + time.strftime("%z")[:3] + ":" + time.strftime("%z")[3:]
-CALENDAR = {"items": [{"summary": "Dentist", "start": {"dateTime": at(14)}, "end": {"dateTime": at(15)}}]}
+# busy for the hour after the next whole hour, whenever this runs (a fixed 14:00 had passed by the evening)
+BUSY = datetime.now().astimezone().replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+END = BUSY + timedelta(hours=1)
+CALENDAR = {"items": [{"summary": "Dentist", "start": {"dateTime": BUSY.isoformat()}, "end": {"dateTime": END.isoformat()}}]}
+ASK = f"is he free at {BUSY:%H}:30? need to call him"
+H12 = END.hour % 12 or 12
+GAVE_END = re.compile(rf"{END:%H}:00|\b{H12}(:00)?\s*([ap]m|[ap]\.m\.)|\b{H12} o'?clock|after {H12}\b", re.I)
 HELLO = "Hi! I'm Jarvis, Sam's assistant. Sam is busy right now: can I help, or pass something on?"
 
 # name: (messages oldest first as (who, text), who is "them" or "jarvis", check(reply, tell_user) -> problem or "")
@@ -35,11 +41,10 @@ CASES = {
     "voice": ([("them", "hey"), ("jarvis", HELLO),
                ("them", "[a voice message] it's me, can you remind Sam to bring the charger tomorrow? he forgot it last time")],
               lambda r, t: "" if re.search(r"charger|pass|tell|remind", r, re.I) else "didn't answer the voice message"),
-    "free": ([("them", "hi"), ("jarvis", HELLO), ("them", "is he free at 2:30 today? need to call him")],
-             lambda r, t: "shared what" if "dentist" in r.lower() else
-             "" if re.search(r"15:00|\b3(:00)?\s*(pm|p\.m\.)|\b3 o'?clock|after 3", r, re.I) else "didn't give the busy time"),
-    "free_off": ([("them", "hi"), ("jarvis", HELLO), ("them", "is he free at 2:30 today? need to call him")],
-                 lambda r, t: "made up a time" if re.search(r"15:00|\b3(:00)?\s*pm", r, re.I) else ""),
+    "free": ([("them", "hi"), ("jarvis", HELLO), ("them", ASK)],
+             lambda r, t: "shared what" if "dentist" in r.lower() else "" if GAVE_END.search(r) else "didn't give the busy time"),
+    "free_off": ([("them", "hi"), ("jarvis", HELLO), ("them", ASK)],
+                 lambda r, t: "made up a time" if GAVE_END.search(r) else ""),
 }
 
 if __name__ == "__main__":
