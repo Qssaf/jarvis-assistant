@@ -472,8 +472,8 @@ def changes(limit=15):
 
 # ---------------------------------------------------------------- deleting what Jarvis keeps
 def delete_data():
-    """Delete everything Jarvis keeps about the user on this PC: memory, conversations, reminders, routines, voice clips
-    and the files behind Classroom and calendar reminders, model use and the log. Keys, account sign-ins and settings stay
+    """Delete everything Jarvis keeps about the user on this PC: memory, conversations, reminders, routines, voice clips,
+    saved WhatsApp messages and the files behind Classroom and calendar reminders, model use and the log. Keys, account sign-ins and settings stay
     (they're removed on their own pages)."""
     with _lock:
         for path in (MEMORY_FILE, REMINDERS_FILE, ROUTINES_FILE, CHANGES_FILE, SKILLS_FILE, *OLD_LOGS, *(os.path.join(DATA, name) for name in (
@@ -484,10 +484,25 @@ def delete_data():
                 pass
         for folder in ("sessions", "wake", "activity"):
             shutil.rmtree(os.path.join(DATA, folder), ignore_errors=True)
+        forget_whatsapp_messages()
         os.makedirs(SESSIONS_DIR, exist_ok=True)
         try:
             open(LOG_FILE, "w").close()  # (emptied, not removed: it's open for writing)
         except OSError:
+            pass
+
+
+def forget_whatsapp_messages():
+    """The WhatsApp messages jarvis-wa saved (its own tables in the login's database: the login itself stays linked)."""
+    import contextlib, sqlite3
+    path = os.path.join(DATA, "whatsapp.db")
+    if os.path.exists(path):
+        try:
+            with contextlib.closing(sqlite3.connect(path, timeout=10)) as db:
+                for table in ("jarvis_msgs", "jarvis_chats"):
+                    db.execute(f"DELETE FROM {table}")
+                db.commit()
+        except sqlite3.Error:  # (not made yet: nothing saved)
             pass
 
 
@@ -660,6 +675,7 @@ def save_custom_provider(name, url):
 
 # ---------------------------------------------------------------- what Jarvis may do with each connected account
 CONNECTOR_MODES = ("ask", "full", "read_only", "paused")  # ask: confirm before changes (the default)
+STRICTER = ("full", "ask", "read_only", "paused")  # the same, loosest first
 CONNECTORS_FILE = os.path.join(CONFIG, "connectors.json")
 
 
@@ -930,11 +946,11 @@ def import_data(path, taken=()):
     if new.get("safety") == "full" != settings()["safety"]:
         del new["safety"]
         held.append("safety")
-    modes = connector_modes()
-    for n, m in data.get("connectors.json", {}).items():
-        if m == "full" != modes.get(n):
-            data["connectors.json"][n] = modes.get(n, "ask")
-            held.append("account modes")
+    modes, theirs = connector_modes(), data.get("connectors.json", {})  # each account: the stricter of here and the backup
+    data["connectors.json"] = {n: m for n in {*modes, *theirs}
+                               if (m := max(modes.get(n, "ask"), theirs.get(n, "ask"), key=STRICTER.index)) != "ask"}
+    if any(STRICTER.index(m) < STRICTER.index(modes.get(n, "ask")) for n, m in theirs.items()):
+        held.append("account modes")
     providers_here = custom_providers()
     for n, url in list(data.get("providers.json", {}).items()):
         if url != providers_here.get(n) and secret(n):  # this PC's key for it only goes where it went before

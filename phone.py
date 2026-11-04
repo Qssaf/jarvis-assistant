@@ -297,6 +297,8 @@ class PhoneLink:
             if not device:
                 return await self._refuse(c, phone, "This phone isn't paired with Jarvis any more: pair it again.", unpaired=True)
             phone["device"] = device
+            for old in [o for o, p in self.phones.items() if o != c and p["device"] == device]:
+                await self._drop(old)  # (the same app on a new network: the old connection is dead, and replies went into it)
             await self._send(c, {"op": "ready", "name": socket.gethostname()})
             for reply in self.pending.pop(device, []):
                 await self._send(c, reply)

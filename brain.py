@@ -1,7 +1,7 @@
 """Jarvis's brain: a Gemini agent with PC tools, web search, Photopea and plugins (MCP servers, e.g. Composio).
 Models come from your Google AI Studio API key (GEMINI_API_KEY, in the environment or the env file in Jarvis's config
 folder). An optional local_backends.py can add more backends (see the README). The "agent_models" setting decides the order."""
-import asyncio, base64, difflib, hashlib, ipaddress, json, logging, os, re, select, shutil, socket, subprocess, sys, tempfile, threading, time, uuid
+import asyncio, base64, difflib, hashlib, ipaddress, itertools, json, logging, os, re, select, shutil, socket, subprocess, sys, tempfile, threading, time, uuid
 from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 from urllib.parse import parse_qs, quote, urlencode, urlparse
 
@@ -872,6 +872,10 @@ def locate(what, strong=False):
 
 def tool_launch(command, wait=8, screenshot=True):
     """Start a GUI app, wait until its window actually appears (not a fixed sleep), and look at it."""
+    risky = risky_command(command)  # (it runs in a shell too: "rm -rf ~/x" went round run_command's yes)
+    if risky and store.settings()["safety"] == "ask":
+        return {"error": "not started: launch only opens apps, and this command changes or removes things. Use run_command "
+                         "(it asks the user first)"}
     words = [w for w in command.split() if w not in ("setsid", "-f", "nohup", "env", "exec") and "=" not in w]
     if words and not system.program_exists(command):  # wrong name: say so now, not after waiting for a window
         similar = system.similar_programs(words[0])
@@ -885,6 +889,8 @@ def tool_launch(command, wait=8, screenshot=True):
         command = re.sub(rf"(?:^|\s){re.escape(words[0])}(?=\s|$)", lambda m: m[0] + " --force-renderer-accessibility", command, count=1)
     # accessibility on for this app only, so its controls can be pressed by name
     system.launch(command, env=dict(os.environ, QT_LINUX_ACCESSIBILITY_ALWAYS_ON="1", QT_ACCESSIBILITY="1", ACCESSIBILITY_ENABLED="1"))
+    if risky:
+        changed(f"launched: {command}")
     last_app[:] = [os.path.basename(words[0]) if words else "", time.time()]
     end, appeared, new = time.time() + min(max(float(wait), 0.5), 15), False, set()
     if not before and not focused:  # this desktop doesn't let apps see windows: give it a moment instead
@@ -933,9 +939,12 @@ def tool_close_window(name):
 RISKY_COMMAND = re.compile(
     r"(?:^|[;&|(`$]\s*|\b(?:sudo|doas|xargs|exec)\s+)(?:rm|rmdir|shred|unlink|dd|mkfs\S*|fdisk|parted|wipefs|mv|cp|truncate|chmod|"
     r"chown|kill|pkill|killall|shutdown|reboot|poweroff|halt|systemctl|loginctl|pacman|paru|yay|apt|apt-get|dnf|yum|zypper|"
-    r"flatpak|snap|pip|pip3|npm|crontab|sudo|doas|su|trash-put|gio\s+trash(?!\s+--list)|git\s+(?:push|reset|clean|checkout|rebase)|Remove-Item|Move-Item|"
-    r"Stop-Process|Stop-Computer|Restart-Computer|Format-Volume|Clear-Content|Set-Content|del|rd|erase|format)\b"
-    r"|(?<![0-9&<>])>(?![&>]?\s*/dev/null)|\|\s*(?:ba|z)?sh\b|\s-delete\b", re.I | re.M)
+    r"flatpak|snap|pip|pip3|npm|crontab|sudo|doas|su|trash-put|gio\s+trash(?!\s+--list)|tee|ln|rsync|"
+    r"git\s+(?:push|reset|clean|checkout|rebase|restore|rm|branch\s+(?:-[dD]|--delete)|stash\s+(?:drop|clear|pop))|"
+    r"(?:sed|perl)\s(?:[^;&|\n]*\s)?(?:-[a-zA-Z]*i[\w.]*|--in-place)|tar\s+(?:-?[a-zA-Z]*x\w*|(?:[^;&|\n]*\s)?(?:-[a-zA-Z]*x\w*|--extract))|"
+    r"(?:docker|podman)\s+(?:(?:container|image|volume|network|system)\s+)?(?:rm|rmi|prune|kill|stop)|kubectl\s+(?:delete|apply|replace|drain)|"
+    r"Remove-Item|Move-Item|Stop-Process|Stop-Computer|Restart-Computer|Format-Volume|Clear-Content|Set-Content|del|rd|erase|format)\b"
+    r"|(?<![0-9&<>])>(?![&>]?\s*/dev/null)|\|\s*(?:sudo\s+)?(?:(?:ba|z|da|k)?sh|python[\d.]*|perl|ruby|node|php)\b|\s-delete\b", re.I | re.M)
 
 
 def risky_command(command):
@@ -1002,8 +1011,10 @@ SCREEN_GRACE = 3  # ...they used them since the task started (later than this: t
 class Task:
     """One task: a request to the agent, or a coding job. Tasks run side by side, each with its own history and Stop."""
 
+    numbers = itertools.count(1)  # (a task keeps its number: positions shifted when one ended, and "stop 2" hit another)
+
     def __init__(self, label="", remote=False, unattended=False):
-        self.label, self.started, self.step = " ".join(str(label).split())[:200], time.time(), ""
+        self.label, self.started, self.step, self.n = " ".join(str(label).split())[:200], time.time(), "", next(Task.numbers)
         self.cancel = threading.Event()
         self.remote, self.unattended, self.passphrase_ok = remote or unattended, unattended, False
         self.contents, self.turn, self.screen = [], None, False  # turn: what it was asked; screen: it holds screen_lock
@@ -1015,6 +1026,9 @@ class Task:
             return {"error": "the user is away from the PC (this task came from their phone): end your reply with the question instead"}
         if not asker[0]:
             return {"error": "there's no way to ask the user right now: end your reply with the question instead"}
+        if self.screen:  # (the answer may wait hours for the user to come back: the screen isn't held meanwhile; the next
+            self.screen = False  # screen step takes it again)
+            screen_lock.release()
         answer = asker[0](question, self.cancel)
         if answer is None:
             return {"error": "the user didn't answer (or stopped the task): end your reply with the question instead"}
@@ -1022,22 +1036,25 @@ class Task:
         return {"answer": store.hide_passphrase(answer)}
 
 
-def tool_jobs(action="list", job=""):
-    """The tasks running now, numbered; or stop one by its number or its words (or all of them)."""
-    now = list(running)
+def tool_jobs(action="list", job="", caller=None):
+    """The tasks running now, each with its number; or stop one by its number or its words (or "all"). The task asking
+    (caller) is left out: its label is the request itself, so "stop the flight search" matched it best."""
+    now = [t for t in running if t is not caller]
     if not now:
         return {"result": "nothing is running"}
-    if action != "stop":
-        return {"tasks": [{"n": i, "task": t.label, "for": f"{int(time.time() - t.started) // 60} min", "now": t.step}
-                          for i, t in enumerate(now, 1)]}
     job = str(job).strip().lower()
+    if action != "stop":
+        return {"tasks": [{"n": t.n, "task": t.label, "for": f"{int(time.time() - t.started) // 60} min", "now": t.step}
+                          for t in now]}
+    if not job:  # (no job named isn't "all": it stopped every task)
+        return {"error": "say which to stop (its number, or all). Running: " + "; ".join(f"{t.n}. {t.label}" for t in now)}
     words = [w for w in re.findall(r"\w+", job) if len(w) > 3]
     score = [sum(w in t.label.lower() for w in words) for t in now]  # (the words that are in each one's label)
-    hit = (now if job in ("", "all", "everything") else [now[int(job) - 1]] if job.isdigit() and 0 < int(job) <= len(now)
+    hit = (now if job in ("all", "everything") else [t for t in now if t.n == int(job)] if job.isdigit()
            else [t for t, n in zip(now, score) if n and n == max(score)])
-    if len(hit) != 1 and not (hit and hit == now and job in ("", "all", "everything")):
+    if len(hit) != 1 and not (hit and job in ("all", "everything")):
         return {"error": f"{'several tasks match' if hit else 'no task matches'} \"{job}\": say which by its number. Running: "
-                         + "; ".join(f"{i}. {t.label}" for i, t in enumerate(now, 1))}
+                         + "; ".join(f"{t.n}. {t.label}" for t in now)}
     for t in hit:
         t.cancel.set()
     return {"result": "stopped: " + "; ".join(t.label for t in hit)}
@@ -1677,7 +1694,12 @@ def pick(name, chats):
 whatsapp_link = [None]  # set by the app: the user's own WhatsApp, linked like WhatsApp Web (whatsapp.WhatsApp)
 
 
+WA_READ, DC_READ = "WHATSAPP_READ_MESSAGES", "DISCORD_READ_MESSAGES"  # (for account_block: a paused app isn't read either)
+
+
 def tool_whatsapp_read(chat="", count=10):
+    if account_block(WA_READ):
+        return {"error": account_block(WA_READ)}
     wa = whatsapp_link[0]
     if not wa:
         return {"error": "WhatsApp isn't running"}
@@ -1700,6 +1722,8 @@ def media_text(m, ask):
 
 
 def tool_whatsapp_media(chat, id="", question=""):
+    if account_block(WA_READ):
+        return {"error": account_block(WA_READ)}
     wa = whatsapp_link[0]
     if not wa:
         return {"error": "WhatsApp isn't running"}
@@ -1756,6 +1780,8 @@ def tool_whatsapp_call(to, message, confirmed=False):
 
 
 def tool_discord_read(chat="", count=15):
+    if account_block(DC_READ):
+        return {"error": account_block(DC_READ)}
     import discord
     if not chat:
         return discord.chats(count)
@@ -1801,6 +1827,8 @@ def tool_discord_react(chat, emoji, message="", confirmed=False):
 
 
 def tool_discord_media(chat, id="", question=""):
+    if account_block(DC_READ):
+        return {"error": account_block(DC_READ)}
     import discord
     found, problem = discord.find(chat)
     if problem or found["kind"] == "server":
@@ -2067,11 +2095,14 @@ def tool_show_image(source, caption=""):
         path = os.path.abspath(os.path.expanduser(source))
         if not os.path.isfile(path):
             return {"error": f"no such file: {source}"}
+        if os.path.splitext(path)[1].lower() not in CHAT_PICTURES:  # (clicked in the chat, it's opened: never a program)
+            return {"error": f"{os.path.basename(path)} isn't a picture"}
     on_image[0](path, caption)
     return {"result": "shown in the chat"}
 
 
 IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif", ".bmp": "image/bmp"}
+CHAT_PICTURES = {*IMAGE_TYPES, ".svg"}  # what the chat shows (and opens when clicked): window.open_image
 
 
 def tool_read_file(path, question=""):
@@ -2127,8 +2158,8 @@ TOOLS["classroom_announcements"] = (None, "The newest Google Classroom announcem
 TOOLS["drive_file"] = (None, "Read a Google Drive file by its name (or part of it) or id: Docs, Slides and Sheets come back as text, "
                        "PDFs and text files are read, pictures described (answering `question`). The newest match is read; "
                        "other_matches lists the rest.", obj(name={"type": "string"}, question={"type": "string"}, optional=("question",)))
-HARNESSES = {  # coding agents run headless: name -> its command for a task (continuing a session), printing JSON lines
-    "claude": lambda task, session, full: ["claude", "-p", task, "--output-format", "stream-json", "--verbose",
+HARNESSES = {  # coding agents run headless: name -> its command (continuing a session; the task comes on its stdin),
+    "claude": lambda session, full: ["claude", "-p", "--output-format", "stream-json", "--verbose",  # printing JSON lines
                                           "--permission-mode", "bypassPermissions" if full else "acceptEdits",
                                           *(["--resume", session] if session else [])],
 }
@@ -2138,6 +2169,8 @@ CHAMBER_HTTP.trust_env = False  # (127.0.0.1: never through a proxy)
 code_jobs = {}  # coding job number (this run) -> {"task", "harness", "cwd", "branch", "base", "session"}
 job_done = [lambda text: print(text, flush=True)]  # set by the app: tells the user a coding job is done
 CODE_LIMIT = 3 * 3600  # seconds a coding job may take
+CHAMBER_POLL = 3  # seconds between looks at an OpenChamber job
+code_lock = threading.Lock()  # (a job's number is taken and kept at once, and a follow-up's busy check too)
 
 
 def harness_event(e, job):
@@ -2153,7 +2186,7 @@ def openchamber_url(start=False):
     """The user's OpenChamber's local server, from its own settings; "" if it isn't set up, or isn't running (start: it's
     started first, if its launcher is installed, and waited for)."""
     port = store.read_json(os.path.join(system.app_config("openchamber"), "settings.json"), {}).get("desktopLocalPort")
-    launcher = start and port and next((c for c in ("openchamber-desktop", "openchamber") if system.have(c)), None)
+    launcher = start and chamber_launcher()
     for i in range(30 if launcher else 1 if port else 0):
         try:
             if CHAMBER_HTTP.get(f"http://127.0.0.1:{port}/health", timeout=3).ok:
@@ -2165,6 +2198,12 @@ def openchamber_url(start=False):
                 system.launch(launcher)
             time.sleep(1)
     return ""
+
+
+def chamber_launcher():
+    """The command that starts OpenChamber, when it's set up here (its port in its own settings); None otherwise."""
+    port = store.read_json(os.path.join(system.app_config("openchamber"), "settings.json"), {}).get("desktopLocalPort")
+    return next((c for c in ("openchamber-desktop", "openchamber") if system.have(c)), None) if port else None
 
 
 def _chamber(base, method, path, **kw):
@@ -2182,14 +2221,22 @@ def _chamber_run(t, rec, task, job):
     if not job["session"]:
         job["session"] = _chamber(base, "POST", "/session", json={"title": f"Jarvis: {task[:60]}",
                                                                   "location": {"directory": rec["cwd"]}})["id"]
-    sid, sent = job["session"], time.time() * 1000
+    sid, sent, failing = job["session"], time.time() * 1000, 0.0
     _chamber(base, "POST", f"/session/{sid}/prompt", json={"text": task})
-    while not t.cancel.wait(3):
-        state = _chamber(base, "GET", f"/session/{sid}")
-        said = [m for m in _chamber(base, "GET", f"/session/{sid}/message") if m.get("type") == "assistant"]  # (newest first)
-        tools = [c.get("name") for c in (said[0].get("content") or []) if c.get("type") == "tool"] if said else []
+    while not t.cancel.wait(CHAMBER_POLL):
+        try:
+            state = _chamber(base, "GET", f"/session/{sid}")
+            said = [m for m in _chamber(base, "GET", f"/session/{sid}/message") if m.get("type") == "assistant"]  # (newest first)
+            idle = (state.get("time") or {}).get("idle") or 0
+            tools = [c.get("name") for c in (said[0].get("content") or []) if c.get("type") == "tool"] if said else []
+        except (requests.RequestException, ValueError, TypeError, AttributeError):  # (a slow moment: an error, or an empty
+            failing = failing or time.time()  # answer; the job goes on there: it said "failed", or died and said nothing)
+            if time.time() - failing > 120:
+                break
+            continue
+        failing = 0.0
         t.step = job["step"] = tools[-1] if tools else job["step"]
-        if ((state.get("time") or {}).get("idle") or 0) > sent:  # (idle again since this prompt: done)
+        if idle > sent:  # (idle again since this prompt: done)
             job["said"] = " ".join(c.get("text", "") for c in (said[0].get("content") or []) if c.get("type") == "text").strip() if said else ""
             return state.get("outcome") == "succeeded"
         if time.time() - t.started > CODE_LIMIT:
@@ -2209,32 +2256,31 @@ def _cli_run(t, rec, task, job):
             t.step = job["step"]
         except (ValueError, AttributeError):  # (not a JSON object: kept in case it's why it failed)
             job["lines"] = (job["lines"] + [text])[-5:]
-    return system.run_lines(HARNESSES[rec["harness"]](task, rec["session"], store.settings()["safety"] == "full"), line,
-                            cwd=rec["cwd"], timeout=CODE_LIMIT, halt=t.cancel) == 0
+    return system.run_lines(HARNESSES[rec["harness"]](rec["session"], store.settings()["safety"] == "full"), line,
+                            cwd=rec["cwd"], timeout=CODE_LIMIT, halt=t.cancel, stdin_text=task) == 0
 
 
 def tool_code(task, folder="", harness="", job="", confirmed=False):
-    """A programming task for a coding agent, working headless in a git worktree of the project on a branch of its own."""
+    """A programming task for a coding agent, working headless in a git worktree of the project on a branch of its own.
+    It answers at once: the copy, and starting OpenChamber, happen in the job's thread (they took past the voice's 60 s,
+    and its retry started the same job twice)."""
     old = code_jobs.get(str(job).strip()) if job else None
     if job and not old:
         return {"error": f"there's no coding job {job} (this run: {', '.join(code_jobs) or 'none'})"}
-    if old and old["busy"]:
-        return {"error": f"coding job {job} is still working: the follow-up can go once it's done (or the user stops it)"}
     if old:
         harness = old["harness"]
-    elif harness in ("", "openchamber") and openchamber_url(start=True):  # (the user's OpenChamber first, started if need be)
+    elif harness in ("", "openchamber") and (openchamber_url() or chamber_launcher()):  # (the user's OpenChamber first)
         harness = "openchamber"
     elif harness == "openchamber":
         return {"error": "OpenChamber isn't running, and couldn't be started: open it, or use Claude Code"}
     else:
-        harness = harness or next((h for h in HARNESSES if system.have(HARNESSES[h]("", "", False)[0])), "")
+        harness = harness or next((h for h in HARNESSES if system.have(HARNESSES[h]("", False)[0])), "")
     if harness not in CODERS:
         return {"error": f"unknown coding agent {harness!r}: {', '.join(CODERS)}" if harness else
                 "no coding agent: OpenChamber isn't set up and Claude Code (claude) isn't installed"}
-    if harness in HARNESSES and not system.have(HARNESSES[harness]("", "", False)[0]):
+    if harness in HARNESSES and not system.have(HARNESSES[harness]("", False)[0]):
         return {"error": f"{CODERS[harness]} isn't installed"}
-    n = str(job).strip() if old else str(len(code_jobs) + 1)
-    note = ""
+    note, top = "", ""
     if not old:
         if not str(folder).strip():
             return {"error": "say which project folder the work is in"}
@@ -2243,23 +2289,28 @@ def tool_code(task, folder="", harness="", job="", confirmed=False):
             return {"error": f"there's no folder {folder}"}
         top = system.run(["git", "-C", folder, "rev-parse", "--show-toplevel"])
         if os.path.isdir(top):
-            branch = f"jarvis/{time.strftime('%Y%m%d-%H%M%S')}-{n}"
-            wt = os.path.join(system.DATA, "worktrees", f"{os.path.basename(top)}-{branch[7:]}")
-            out = system.run(["git", "-C", top, "worktree", "add", "-b", branch, wt, "HEAD"], 120)
-            if not os.path.isdir(wt):
-                return {"error": f"couldn't make a copy of the project to work in: {out[-300:]}"}
-            old = {"cwd": os.path.normpath(os.path.join(wt, os.path.relpath(folder, top))), "branch": branch,
-                   "base": system.run(["git", "-C", wt, "rev-parse", "HEAD"])}
             if system.run(["git", "-C", top, "status", "--porcelain"]):
                 note = " It starts from the project's last commit: changes not committed yet aren't in it."
         elif not confirmed and store.settings()["safety"] == "ask":
             return {"error": f"NOT DONE: {folder} isn't a git repository, so the changes couldn't be kept apart or undone. "
                              "Ask the user, then call again with confirmed: true."}
         else:
+            top = ""
+    with code_lock:
+        if old and old["busy"]:
+            return {"error": f"coding job {job} is still working: the follow-up can go once it's done (or the user stops it)"}
+        n = str(job).strip() if old else str(len(code_jobs) + 1)
+        if not old and top:  # (its copy is made in the job's thread)
+            branch = f"jarvis/{time.strftime('%Y%m%d-%H%M%S')}-{n}"
+            wt = os.path.join(system.DATA, "worktrees", f"{os.path.basename(top)}-{branch[7:]}")
+            old = {"cwd": os.path.normpath(os.path.join(wt, os.path.relpath(folder, top))), "branch": branch, "base": "",
+                   "copy": (top, wt)}
+        elif not old:
             old = {"cwd": folder, "branch": "", "base": ""}
-        old.update(task=task, harness=harness, session="")
-    old["busy"] = True
-    code_jobs[n] = old
+        if "task" not in old:
+            old.update(task=task, harness=harness, session="")
+        old["busy"] = True
+        code_jobs[n] = old
     t = Task(f"coding: {task}")
     t.coding = True
     running.append(t)
@@ -2276,14 +2327,20 @@ def _code_run(t, n, rec, task):
     job = {"session": rec["session"], "said": "", "step": "", "lines": []}
     try:
         try:
-            ok = (_chamber_run if rec["harness"] == "openchamber" else _cli_run)(t, rec, task, job)
-        except (OSError, ValueError, KeyError, TypeError, requests.RequestException) as e:
-            ok, job["lines"] = False, [str(e)]
+            if rec.get("copy"):  # (a new job's copy of the project: a big one takes a while)
+                top, wt = rec.pop("copy")
+                out = system.run(["git", "-C", top, "worktree", "add", "-b", rec["branch"], wt, "HEAD"], 120)
+                if not os.path.isdir(wt):
+                    raise OSError(f"couldn't make a copy of the project to work in: {out[-300:]}")
+                rec["base"] = system.run(["git", "-C", wt, "rev-parse", "HEAD"])
+            ok = not t.cancel.is_set() and (_chamber_run if rec["harness"] == "openchamber" else _cli_run)(t, rec, task, job)
+        except Exception as e:  # (any failure is told: one that slipped through left the user with no news at all)
+            ok, job["lines"] = False, [describe(e)]
         rec["session"] = job["session"]
         if t.cancel.is_set():
             return
         changes = f"made in place in {rec['cwd']} (not a git repository)"
-        if rec["branch"]:
+        if rec["branch"] and rec["base"]:
             wt = system.run(["git", "-C", rec["cwd"], "rev-parse", "--show-toplevel"])
             who = [] if system.run(["git", "-C", wt, "config", "user.email"]) else ["-c", "user.name=Jarvis", "-c", "user.email=jarvis@localhost"]
             system.run(["git", "-C", wt, "add", "-A"], 60)
@@ -3115,7 +3172,7 @@ class Brain:
 
         def whatsapp():
             wa = whatsapp_link[0]
-            if not (wa and wa.saved.get("linked")):
+            if not (wa and wa.saved.get("linked")) or account_block(WA_READ):
                 return None
             found, _ = wa.find(who)
             if not found or found.get("group"):
@@ -3123,6 +3180,8 @@ class Brain:
             return [f"{'the user' if m['me'] else found['name']}: {m['text'][:200]}" for m in wa.history(found["chat"], 6)]
 
         def on_discord():
+            if account_block(DC_READ):
+                return None
             found, _ = discord.find(who)
             if not found or found["kind"] not in ("dm", "friend"):
                 return None
@@ -3162,13 +3221,15 @@ class Brain:
 
         def whatsapp():
             wa = whatsapp_link[0]
-            if not (wa and wa.state == "connected"):
+            if not (wa and wa.state == "connected") or account_block(WA_READ):
                 return None
             return [("whatsapp", c["name"], c["at"], c["last"]) for c in wa.chats(40)
                     if not c["group"] and c.get("contact") and c["last"] and not c["last"].startswith("You: ")
                     and hours * 3600 <= now - c["at"] <= 3 * 86400]
 
         def on_discord():
+            if account_block(DC_READ):
+                return None
             return [("discord", m["name"], m["at"], m["text"]) for m in discord.call("waiting")
                     if hours * 3600 <= now - m["at"] <= 3 * 86400]
 
@@ -3372,6 +3433,13 @@ class Brain:
             out = (task.ask_user(**args) if task else {"error": "only a task can ask the user"}), None
         elif name == "account_settings":
             out = self.account_settings(**args), None
+        elif name == "jobs":
+            out = tool_jobs(**args, caller=task), None
+        elif name in self.tool_owner and self.tool_owner[name][1] == "COMPOSIO_MANAGE_CONNECTIONS" and any(
+                a not in (None, "list", "add") for a in [t.get("action") for t in args.get("toolkits") or [] if isinstance(t, dict)]
+                + [args.get("action")]):  # (as account_settings: an email or a page mustn't talk the agent into disconnecting)
+            return {"error": "NOT DONE: removing or changing an account's connection is only for Jarvis's Accounts page: tell the "
+                             "user to do it there"}, None
         elif name in self.tool_owner and self.tool_owner[name][1] == "COMPOSIO_MULTI_EXECUTE_TOOL" and any(
                 account_block(t.get("tool_slug", "")) for t in args.get("tools") or []):
             return {"error": next(account_block(t.get("tool_slug", "")) for t in args["tools"] if account_block(t.get("tool_slug", "")))}, None

@@ -115,15 +115,21 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   shared thing: a task's first `SCREEN_WORK` tool takes `brain.screen_lock` until the task ends (`_take_screen`), and
   waits while the user has used keyboard or mouse since the task started (+`SCREEN_GRACE`) until `SCREEN_IDLE` s idle;
   the voice's `VOICE_SCREEN_ACTS` take it too, or are refused. `Brain.interrupt` stops every task and returns their
-  labels (Stop says them). `jobs` lists or stops them; `code` starts a coding job in a git worktree under `DATA/worktrees` on branch
-  `jarvis/<stamp>-<n>`, commits what it changed there and reports through `job_done`; never merges. `code_jobs` (job
-  number -> worktree, session) lives for the run only. The user's coding agent is OpenChamber (`_chamber_run`): its
+  labels (Stop says them). `jobs` lists or stops them by `Task.n` (a number kept for the task's life), never the task
+  calling it (`caller`: its label is the request itself), and only "all" stops every one. A task's `ask_user` lets go of
+  the screen while it waits. The voice doesn't start a `do_task` identical to one running (`Live.doing`, `task_key`).
+  `code` starts a coding job in a git worktree under `DATA/worktrees` on branch
+  `jarvis/<stamp>-<n>`, commits what it changed there and reports through `job_done`; never merges. It answers at once:
+  the number is taken under `code_lock`, and the worktree copy and starting OpenChamber happen in `_code_run` (the voice
+  gives up after 60 s). `code_jobs` (job number -> worktree, session) lives for the run only. The user's coding agent is OpenChamber (`_chamber_run`): its
   local server's port is `desktopLocalPort` in its own settings.json (`system.app_config`; `openchamber_url(start=True)`
   launches it), and its `/api` is opencode v2's without a password from localhost: `POST /session` {title, location:
   {directory}}, `POST /session/<id>/prompt` {text} (returns at once), `GET /session/<id>` (done when `time.idle` is
   later than the prompt; `outcome`), `GET /session/<id>/message` (newest first: `assistant` items' `content` text/tool),
-  `POST /session/<id>/interrupt`. Its permissions are OpenChamber's own settings. Without it, `HARNESSES` (`claude -p
-  --output-format stream-json`, `acceptEdits` unless safety is "full"). Tests use a fake server: never the real one.
+  `POST /session/<id>/interrupt`. Its permissions are OpenChamber's own settings; a failed or empty poll is retried for
+  2 min (`CHAMBER_POLL`). Without it, `HARNESSES` (`claude -p --output-format stream-json`, `acceptEdits` unless safety
+  is "full"), with the task on stdin (`run_lines(stdin_text=)`: npm's `claude.cmd` goes through cmd.exe, which splits
+  free text at quotes, `&` or a new line). Tests use a fake server: never the real one.
 - Task reminders (`task: true`) and the `checks` loop run `Brain.ask(..., unattended=True)` (`run_unattended`): its own
   empty history, and `confirmed` is dropped from every agent call (in `_ask`, not `_run_tool`: the voice
   runs its tools there meanwhile), so nothing that waits for a yes runs. A
@@ -142,7 +148,8 @@ Brain fills the model ones (`vision`, `pointer`, `painter`, `grounder`, `notes`)
 **Safety in code, not only prompts.** With the `safety` setting on "ask" (the default), risky shell commands
 (`RISKY_COMMAND`) and account changes in "ask" mode (`needs_yes`: not `is_read_action`) are refused until the model
 passes `confirmed: true` (`with_confirmed` adds it to those schemas; it's stripped before Composio sees it). A plain
-`rm` is rewritten to `gio trash` unless `permanent: true`. Every change that runs is logged (`brain.changed` →
+`rm` is rewritten to `gio trash` unless `permanent: true`. `launch` (and `act`'s launch step) runs in a shell too, so it
+refuses risky commands in "ask" mode (use `run_command`). Every change that runs is logged (`brain.changed` →
 `store.log_change`) for `recent_changes` / "undo that".
 With a spoken passphrase set (`store.PASSPHRASE`, a secret), a voice `confirmed: true` also needs it in `last_heard`
 (`Live._tool`; typed text counts), and an agent task's needs an `ask_user` answer that carried it (`passphrase_ok`;
@@ -186,7 +193,8 @@ available tool at call time:
 - Windows: kdotool on KDE Wayland, pywinctl otherwise.
 - Idle (`user_idle`): Wayland's ext-idle-notify on its own connection (`_idle_watch`, 2 s steps; KWin has no
   `GetSessionIdleTime`), GNOME's Mutter IdleMonitor, `xprintidle`, Windows `GetLastInputInfo`; None if unknown. Input
-  Jarvis makes (`@_mine`) doesn't count as the user: inf when the latest input was its own.
+  Jarvis makes (`@_mine`) doesn't count as the user (`_was_mine`, with Wayland's 2 s step): when the latest input was
+  its own, it's the user's seen just before it (`_user_input`), inf if none.
 - Accessibility: AT-SPI on Linux via `atspi_helper.py` under `/usr/bin/python3` (it needs `gi`); pywinauto UIA on
   Windows. Both share the same `ask({"cmd": ...})` protocol. On Linux, Chromium and Electron apps only expose their
   page contents when started with `--force-renderer-accessibility` plus `ACCESSIBILITY_ENABLED=1`, and only at
@@ -227,8 +235,8 @@ listens. The PC signs its relay login with its key (the id is that key's hash); 
 the pairing QR and runs the handshake in `phone.py`'s docstring (P-256 ECDH, HKDF, AES-GCM with counter nonces). The app's UI is
 Jetpack Compose (`Screens.kt` takes plain state, so `ScreensTest`'s Paparazzi renders it with made-up data:
 `./gradlew recordPaparazziDebug`). The Python and Kotlin sides must stay byte-compatible: `android/app/src/test/resources/handshake.json` is checked by both
-`test_jarvis.py` and the app's `HandshakeTest` (`./gradlew testDebugUnitTest`). Build the APK with the SDK in
-`~/.bubblewrap` (`ANDROID_HOME=~/.bubblewrap/android_sdk JAVA_HOME=~/.bubblewrap/jdk ./gradlew assembleDebug`); test
+`test_jarvis.py` and the app's `HandshakeTest` (`./gradlew testDebugUnitTest`: tests.yml's android job runs the app's
+unit tests, as this PC has no Android SDK now; `Pairing.parse` refuses links the app couldn't connect with). Test
 the relay locally with `npx wrangler dev` in `relay/`.
 
 **WhatsApp.** `whatsapp.py` drives `jarvis-wa` (`whatsapp-helper/`, Go, ~30 MB; it replaced WhatsApp Web in a headless
@@ -300,7 +308,7 @@ reminders, the user's `checks`, the phone links), with backoff; `system.mic_fram
 data)`, which map to `api_get`/`api_post` in jarvis.py, and events from `emit()` reach it because `Backend` sits in `clients` (it has
 `put()`). Polled values (state, mic level) refresh at 30 fps, only while the window is shown (`Backend.watch`); the notch ticks at 30 fps only while it shows. The look ("glass": tokens in `Theme.qml`, shared pieces
 like `Glass`, `Section`, `Chip`, `StatusDot`, the arc reactor in `Orb.qml`) is shared with the phone app's `Theme.kt`.
-QML gotchas: `AbstractButton` has a FINAL `icon` (ours is `symbol`); local
+QML gotchas: file paths become URLs through `Backend.fileUrl`/`localPath` (`"file://" + path` broke on Windows); `AbstractButton` has a FINAL `icon` (ours is `symbol`); local
 `Label.qml`/`Page.qml` get shadowed by QtQuick.Controls (ours are `Txt`, `ScrollPage`); `#AARRGGBB` colours; font sizes go
 through `Theme.px(n)` (the text-size setting, rounded to whole pixels); QtSvg only reads `#rrggbb`; `window.py` forces the
 Basic style (Windows' native one ignores custom backgrounds). The first-run `SetupWizard` covers the window until
@@ -326,7 +334,9 @@ it cuts requests at a pause, `Brain.hear` writes them down, `Brain.ask` answers,
 says it. `hear`/`speak` are `MODEL_JOBS` whose failures all move on to the next model (`_speech`, no probes).
 
 **Account modes.** `store.connector_modes()` (connectors.json) holds ask/full/read_only/paused per Composio toolkit.
-`account_block` enforces paused and read-only in `run_app_tool` and on `COMPOSIO_MULTI_EXECUTE_TOOL` calls;
+`account_block` enforces paused and read-only in `run_app_tool`, on `COMPOSIO_MULTI_EXECUTE_TOOL` calls and on WhatsApp
+and Discord reads (`WA_READ`, `DC_READ`); `COMPOSIO_MANAGE_CONNECTIONS` may only list or add (disconnecting is the
+Accounts page's); a backup's import keeps each account's stricter mode;
 `is_read_action` is a verb heuristic on the slug, and unknown verbs count as changes. `account_policy()` feeds both
 prompts.
 
@@ -364,7 +374,7 @@ frontend-design
 Missing: Go, Kotlin/Compose → vault: none → find-skills if wanted
 
 ## Skill notes
-- requesting-code-review inline (no reviewer agent): a full-diff pass after green tests still found 6 real bugs: always do it.
+- requesting-code-review inline (no reviewer agent, never a Workflow: it burned the user's usage): a full-diff pass after green tests still found 6 real bugs; a whole-codebase pass, area by area with a scratch notes file, found 16.
 - agent_eval: `EVAL_MODELS="aistudio gemini-3.8-flash low"` was 503/rate-limited; the default chain (no EVAL_MODELS) worked.
 - Tests and evals must stub the real desktop (`system._idle_seconds`, `system.fullscreen`): a full-screen game failed the suite.
 - Evals: clock times relative to now (a fixed 14:00 / "6 pm" failed every evening run); `EVAL_OUT` is a file path, not a folder.

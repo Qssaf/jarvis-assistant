@@ -117,6 +117,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showState(state: State, detail: String) {
+        if (dropWaiting(state, waiting)) say("Your PC went offline before answering. If no reply comes once it's back, ask again.", Who.NOTE)
         if (state == State.ONLINE && detail.isNotBlank()) prefs.edit().putString("pc_name", detail).apply()
         refresh(if (state == State.ONLINE) "" else detail)
         if (state != State.CONNECTING) held.toList().also { held.clear() }.forEach { (text, spoken) -> send(text, spoken) }
@@ -199,4 +200,13 @@ class MainActivity : ComponentActivity() {
     private fun say(text: String, who: Who) {
         messages.add(Msg(nextMsg++, who, text))
     }
+}
+
+/** The PC went offline: what it was asked may never be answered (a restart loses its tasks and the replies it kept), so
+ *  "Working on it…" goes (it stayed up for good, with only Stop, which stops every task on the PC, to clear it). A reply
+ *  that still comes is shown all the same. True if any were waiting. */
+internal fun dropWaiting(state: State, waiting: MutableMap<Int, Boolean>): Boolean {
+    if (state != State.PC_OFFLINE || waiting.isEmpty()) return false
+    waiting.clear()
+    return true
 }

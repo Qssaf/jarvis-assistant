@@ -150,9 +150,12 @@ def meeting(e, with_day=False, now=None):
     ("10:00 Lunch, with Sam Lee (my cousin), maya@example.com")."""
     now, book = now or time.time(), everyone()
     start = (e.get("start") or {}).get("dateTime") or (e.get("start") or {}).get("date") or ""
-    when = start[11:16] or "all day"
-    if with_day and start:
-        when = time.strftime("%a %d %b ", time.strptime(start[:10], "%Y-%m-%d")) + when
+    if len(start) > 10:  # (in the user's time zone: the event's own may be another, its maker's)
+        from datetime import datetime
+        local = datetime.fromisoformat(start.replace("Z", "+00:00")).astimezone()
+        when = local.strftime("%a %d %b %H:%M" if with_day else "%H:%M")
+    else:
+        when = (time.strftime("%a %d %b ", time.strptime(start, "%Y-%m-%d")) if with_day and start else "") + "all day"
     names = []
     for name, _ in guests(e, book):
         notes = [n["text"] for n in book.get(name, {}).get("notes", []) if not n.get("until") or n["until"] > now]

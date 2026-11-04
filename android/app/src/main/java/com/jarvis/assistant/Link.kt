@@ -4,7 +4,7 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Base64
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -21,6 +21,7 @@ import java.security.interfaces.ECPublicKey
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.ECPoint
 import java.security.spec.ECPublicKeySpec
+import java.util.Base64
 import java.util.concurrent.TimeUnit
 import javax.crypto.Cipher
 import javax.crypto.KeyAgreement
@@ -89,12 +90,18 @@ class Channel(private val sendKey: ByteArray, private val receiveKey: ByteArray)
 data class Pairing(val relay: String, val pc: String, val key: String, val secret: String) {
     companion object {
         fun parse(link: String): Pairing? = try {
-            val j = JSONObject(String(Base64.decode(link.trim().substringAfter("#"), Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)))
-            Pairing(j.getString("r"), j.getString("s"), j.getString("k"), j.getString("p"))
+            val j = JSONObject(String(Base64.getUrlDecoder().decode(link.trim().substringAfter("#"))))
+            Pairing(j.getString("r"), j.getString("s"), j.getString("k"), j.getString("p")).takeIf { it.sound() }
         } catch (e: Exception) {
             null
         }
     }
+
+    /** Any web page can open a jarvis://pair link: one with a relay address OkHttp can't use or a key that isn't a P-256
+     *  point was saved, and the app crashed connecting to it at every start. */
+    private fun sound(): Boolean = relay.startsWith("ws") && relay.replaceFirst("ws", "http").toHttpUrlOrNull() != null &&
+        Regex("[\\w-]{43}").matches(pc) && secret.isNotBlank() &&
+        runCatching { Base64.getUrlDecoder().decode(key) }.getOrNull()?.let { it.size == 65 && it[0] == 4.toByte() } == true
 }
 
 enum class State { UNPAIRED, CONNECTING, ONLINE, PC_OFFLINE, NO_RELAY }
@@ -157,7 +164,12 @@ class Link(private val prefs: SharedPreferences, private val onState: (State, St
         if (!paired) return set(State.UNPAIRED, "")
         set(State.CONNECTING, "")
         val url = "${prefs.getString("relay", "")}/phone?id=${prefs.getString("pc", "")}"
-        ws = http.newWebSocket(Request.Builder().url(url).build(), object : WebSocketListener() {
+        val request = try {
+            Request.Builder().url(url).build()
+        } catch (e: IllegalArgumentException) {  // (a pairing saved before they were checked: say so, don't crash)
+            return set(State.NO_RELAY, "The relay's address isn't right: unpair and pair again.")
+        }
+        ws = http.newWebSocket(request, object : WebSocketListener() {
             override fun onMessage(webSocket: WebSocket, text: String) {
                 main.post { if (webSocket == ws) relayNote(JSONObject(text)) }
             }
@@ -187,7 +199,8 @@ class Link(private val prefs: SharedPreferences, private val onState: (State, St
         channel = null
         if (!m.optBoolean("up")) return set(State.PC_OFFLINE, "")
         val own = Crypto.fresh()
-        val pcKey = Base64.decode(prefs.getString("key", ""), Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+        val pcKey = runCatching { Base64.getUrlDecoder().decode(prefs.getString("key", "") ?: "") }.getOrNull()
+            ?: return set(State.NO_RELAY, "The pairing is damaged: unpair and pair again.")
         finish = { welcome -> Crypto.finish(own, pcKey, welcome) }
         ws?.send((byteArrayOf(Crypto.HELLO) + Crypto.raw(own.public as ECPublicKey)).toByteString())
     }

@@ -50,13 +50,13 @@ Item {
     DropArea {
         id: drop
         anchors.fill: parent
-        onDropped: drop => { home.attachments = home.attachments.concat(drop.urls.map(u => decodeURIComponent(String(u).replace("file://", "")))) }
+        onDropped: drop => { home.attachments = home.attachments.concat(drop.urls.map(u => Backend.localPath(String(u)))) }
     }
     FileDialog {
         id: picker
         fileMode: FileDialog.OpenFiles
         title: qsTr("Attach files for Jarvis")
-        onAccepted: home.attachments = home.attachments.concat(selectedFiles.map(u => decodeURIComponent(String(u).replace("file://", ""))))
+        onAccepted: home.attachments = home.attachments.concat(selectedFiles.map(u => Backend.localPath(String(u))))
     }
 
     // ---- the conversation

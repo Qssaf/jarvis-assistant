@@ -65,10 +65,13 @@ def run(args, timeout=15, env=None):
     return (r.stdout + r.stderr).strip()
 
 
-def run_lines(args, on_line, cwd=None, timeout=600, halt=None):
+def run_lines(args, on_line, cwd=None, timeout=600, halt=None, stdin_text=None):
     """A long command (npx on Windows is npx.cmd: it's found on PATH), each line it prints passed to on_line as it comes.
-    Nothing can be typed to it, and it's stopped after timeout seconds, or when halt (an Event) is set. Its exit code."""
-    proc = subprocess.Popen([shutil.which(args[0]) or args[0], *args[1:]], cwd=cwd, stdin=subprocess.DEVNULL,
+    Only stdin_text is typed to it (free text goes there, never in args: a .cmd's arguments go through cmd.exe, which
+    splits them at quotes, & or a new line), and it's stopped after timeout seconds, or when halt (an Event) is set.
+    Its exit code."""
+    proc = subprocess.Popen([shutil.which(args[0]) or args[0], *args[1:]], cwd=cwd,
+                            stdin=subprocess.DEVNULL if stdin_text is None else subprocess.PIPE,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace",
                             creationflags=subprocess.CREATE_NO_WINDOW if IS_WINDOWS else 0, start_new_session=not IS_WINDOWS)
 
@@ -88,6 +91,14 @@ def run_lines(args, on_line, cwd=None, timeout=600, halt=None):
             if time.time() > end or halt and halt.is_set():
                 return stop()
     threading.Thread(target=watch, daemon=True).start()
+    if stdin_text is not None:
+        def feed():  # (its own thread: a big text mustn't block reading what it prints)
+            try:
+                with proc.stdin:
+                    proc.stdin.write(stdin_text)
+            except OSError:  # (it ended without reading it all)
+                pass
+        threading.Thread(target=feed, daemon=True).start()
     try:
         for line in proc.stdout:
             on_line(line.rstrip())
@@ -463,12 +474,21 @@ def _pynput_key(name):
 
 
 _own_input = [0.0, 0.0]  # when Jarvis's latest pointer move, click, typing or scroll started and ended (see user_idle)
+_user_input = [0.0]  # when the user's own latest input was, seen just before Jarvis's (which hides it from the desktop)
+
+
+def _was_mine(idle):
+    """Whether the latest input, idle seconds ago, was Jarvis's own (Wayland says "in use" for 2 s after any input)."""
+    return _own_input[0] - 1 <= time.time() - idle <= _own_input[1] + 2.5
 
 
 def _mine(fn):
     """Input Jarvis makes itself, noted so it isn't taken for the user at the keyboard."""
     @functools.wraps(fn)
     def mine(*args, **kw):
+        idle = _idle_seconds()
+        if idle is not None and not _was_mine(idle):
+            _user_input[0] = time.time() - idle
         _own_input[:] = [time.time(), float("inf")]
         try:
             return fn(*args, **kw)
@@ -719,12 +739,14 @@ def _idle_seconds():
 
 
 def user_idle():
-    """Seconds since the user last used the keyboard or mouse; inf when the latest input was Jarvis's own (they haven't
-    been seen since), None when this desktop can't tell."""
+    """Seconds since the user last used the keyboard or mouse, None when this desktop can't tell. When the latest input
+    was Jarvis's own, it's the user's from just before it (inf if none was seen: they haven't been seen since)."""
     idle = _idle_seconds()
     if idle is None:
         return None
-    return float("inf") if _own_input[0] - 1 <= time.time() - idle <= _own_input[1] + 1 else idle
+    if _was_mine(idle):
+        return time.time() - _user_input[0] if _user_input[0] else float("inf")
+    return idle
 
 
 def focused():

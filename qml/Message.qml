@@ -129,7 +129,7 @@ Item {
                     Image {
                         id: img
                         anchors.fill: parent
-                        source: "file://" + m.text
+                        source: Backend.fileUrl(m.text)
                         fillMode: Image.PreserveAspectFit
                         asynchronous: true
                         sourceSize.width: 840
@@ -138,7 +138,7 @@ Item {
                     }
                     Rectangle { id: mask; anchors.fill: parent; radius: 16; visible: false; layer.enabled: true }
                     Rectangle { anchors.fill: parent; radius: 16; color: "transparent"; border.width: 1; border.color: Theme.stroke }
-                    TapHandler { onTapped: Backend.open(m.text) }
+                    TapHandler { onTapped: Backend.openImage(m.text) }
                     HoverHandler { cursorShape: Qt.PointingHandCursor }
                 }
                 Txt { kind: "small"; text: m.caption; visible: m.caption !== ""; width: 420 }

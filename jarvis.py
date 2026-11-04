@@ -327,6 +327,7 @@ class Live:
         self.session = self.task = self.ready = None
         self.mic = False       # forward the microphone to Gemini
         self.working = 0       # do_task calls running (side by side)
+        self.doing = set()     # ...and what they were asked (task_key): the same one again isn't started twice
         self.waiting = False   # sent a typed message, no reply yet
         self.muted = False     # drop the rest of a reply the user cut off
         self.quiet = False     # typed message with spoken replies turned off
@@ -876,7 +877,12 @@ class Live:
                     emit("log", who="thinking", text=f"Decided to use {fc.name}" + (f": {json.dumps(fc.args, ensure_ascii=False)[:400]}" if fc.args else ""))
             quick = [fc for fc in m.tool_call.function_calls if fc.name != "do_task"]
             for fc in m.tool_call.function_calls:
-                if fc.name == "do_task":  # runs in the background, side by side with others; its answer is sent when ready
+                # (the same task again while it runs isn't started twice: the voice re-calls a tool right after it worked)
+                if fc.name == "do_task" and task_key(fc) in self.doing:
+                    asyncio.create_task(s.send_tool_response(function_responses=[self.t.FunctionResponse(
+                        id=fc.id, name=fc.name, response={"result": "Already working on exactly that: it reports when done."})]))
+                elif fc.name == "do_task":  # runs in the background, side by side with others; its answer is sent when ready
+                    self.doing.add(task_key(fc))
                     self.working += 1
                     asyncio.create_task(self._task(s, fc))
             if quick:  # run them off the receive loop, so the connection keeps being serviced (keepalive pings)
@@ -1084,6 +1090,7 @@ class Live:
             result = f"The task failed: {e}"
         finally:
             self.working -= 1
+            self.doing.discard(task_key(fc))
         stopped = self.stopped or result == "Stopped."
         away = not stopped and not at_pc(self)
         shown = "http" in result or len(result) > LONG_RESULT or away  # links and long reports are shown, not read out
@@ -1502,6 +1509,11 @@ def tell(live, text, event=None, transcript="", loud=False, kind=""):
             link and link.push(text)
         except Exception as e:
             print(f"[phone] couldn't send it: {e}", flush=True)
+
+
+def task_key(fc):
+    """A do_task call's request, as compared with the ones running: case and spacing aside."""
+    return " ".join(str((fc.args or {}).get("task", "")).lower().split())
 
 
 def at_pc(live):
@@ -2273,16 +2285,22 @@ def diagnostics(brain):
         if hiding:
             line = (tagged[0] if tagged else line.split(" ", 1)[0]) + " (removed)"
         line = re.sub(r"(tool call: \w+) .*", r"\1 (arguments removed)", line)
+        line = re.sub(r"(\[tool\] .*? error:) .*", r"\1 (removed)", line)  # (names: "no single chat called 'Mom'")
+        line = re.sub(r"bot\d+:[\w-]+", "bot(removed)", line)  # (a Telegram URL: the bot's token)
         line = re.sub(r"[\w.+-]+@[\w-]+\.[\w.-]+", "(email)", line)
         line = re.sub(r"(https?://[^\s?]+)\?\S*", r"\1?(removed)", line)
         clean.append(line)
-    settings = {k: v for k, v in store.settings().items() if k not in ("extra_instructions", "home_city", "whatsapp_always", "whatsapp_never", "discord_always", "discord_never")}  # (personal)
-    return "\n".join([
+    settings = {k: v for k, v in store.settings().items() if k not in (  # (personal)
+        "extra_instructions", "home_city", "whatsapp_always", "whatsapp_never", "discord_always", "discord_never", "checks",
+        "checks_paused", "whatsapp_note")}
+    text = "\n".join([
         f"Jarvis {VERSION} on {platform.system()} {platform.release()} ({os.environ.get('XDG_CURRENT_DESKTOP', '')} "
         f"{'Wayland' if system.WAYLAND else ''}), Python {platform.python_version()}",
         "", "## Health", *[f"- [{'ok' if c['ok'] else 'PROBLEM' if c['ok'] is False else 'n/a'}] {c['name']}: {c['detail']}" for c in checks],
         "", "## Settings", json.dumps(settings, indent=1),
         "", "## Log (last 300 lines; what was said and tool arguments removed)", *clean])
+    home = os.path.expanduser("~")  # (the user's name is in it)
+    return text.replace(home, "~") if len(home) > 3 else text
 
 
 REPO = "Qssaf/jarvis-assistant"

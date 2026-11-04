@@ -61,6 +61,28 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
+- **Safety:** opening an app could run any command, so *"rm -rf ~/Documents"* through *launch* skipped the yes that
+  run_command asks for; it no longer does. More commands that change things wait for a yes (`sed -i`, `tee`, `rsync`,
+  `ln`, `git branch -D`, `docker rm`, piping into Python...). The agent can no longer disconnect your accounts through
+  Composio (only the Accounts page does), and a paused WhatsApp or Discord isn't read either.
+- **Backups:** importing one no longer resets paused or read-only accounts to "ask" (each keeps the stricter mode).
+- **Privacy:** a Telegram reply that couldn't be sent offline put your bot's token in the log and in bug reports; the
+  bug report also leaves out your checks, what WhatsApp tells people, names in errors and your home folder now.
+  "Delete my data" and unlinking WhatsApp also delete the WhatsApp messages Jarvis saved.
+- **Windows:** pictures in the chat never showed, and dropped or attached files had broken paths. A click on a picture
+  only ever opens a picture.
+- **Phone app:** a broken pairing link no longer makes the app crash at every start; replies are no longer lost after
+  the phone changes networks; and *"Working on it…"* goes away when the PC goes offline instead of staying for good.
+- A WhatsApp call that comes in while Jarvis is calling someone is left to ring (their audio crossed); meetings are said
+  in your time zone, not the one they were made in.
+- Stopping tasks: *"stop"* without saying which no longer stops all of them, *"stop the flight search"* sent from the
+  phone no longer stops itself, and *"stop number 2"* still means the same task after another one has finished.
+- A request the voice repeats while it's being worked on isn't done twice (a message could go twice).
+- A task waiting for your answer while you're away no longer keeps the screen from other tasks.
+- Coding jobs: starting one by voice answers at once (a slow start was taken for a failure and the job started twice),
+  two at once get their own numbers, a moment when OpenChamber is slow to answer no longer ends the job as "failed"
+  (or with no news at all), and on Windows a task with quotes, `&` or several lines reaches Claude Code whole.
+- Using the mouse while Jarvis works on the screen no longer counts as being away (its news was held back).
 - The Accounts page says which account each app is connected to: Google Calendar and Drive showed only "Connected",
   and Notion "Composio", instead of the email.
 - Discord stopped working after every reboot when Vesktop starts with the system: its login entry skipped the setting

@@ -145,6 +145,11 @@ class WhatsApp:
         self.linking = False
         self._save(linked=False, name="")
         self._stop()
+        for path in (DB, DB + "-wal", DB + "-shm"):  # (the messages it saved go with the login)
+            try:
+                os.remove(path)
+            except OSError:  # (not there, or Windows still has it open: the next link starts from scratch anyway)
+                pass
 
     def _save(self, **changes):
         self.saved.update(changes)
@@ -453,7 +458,7 @@ class WhatsApp:
         if rule == "never":
             self.notify(f"📞 WhatsApp {kind} from {c['name']}")
             return
-        if self.call:
+        if self.call or self.dialing:  # (two calls at once: Jarvis's voice went into both)
             self.notify(f"📞 WhatsApp {kind} from {c['name']} (Jarvis is on another call)")
             return
         self.answered = [a for a in self.answered if a[0] > time.time() - 3600]

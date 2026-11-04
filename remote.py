@@ -32,7 +32,10 @@ class Telegram:
     def set_token(self, token):
         token = token.strip()
         if token:
-            me = self.http.get(API.format(token, "getMe"), timeout=10).json()
+            try:
+                me = self.http.get(API.format(token, "getMe"), timeout=10).json()
+            except requests.RequestException as e:  # (never its text: the URL holds the token)
+                raise ValueError(f"can't reach Telegram ({type(e).__name__}): try again in a moment") from None
             if not me.get("ok"):
                 raise ValueError("Telegram didn't accept that token: copy it again from @BotFather")
         store.set_secret("telegram", token)
@@ -109,7 +112,7 @@ class Telegram:
         self.chat("jarvis", f"📱 {reply}")  # (the chat at the PC showed the question, never the answer)
         try:
             self.send(token, chat, reply)
-        except requests.RequestException as e:
+        except OSError as e:
             print(f"[telegram] couldn't send the reply: {e}", flush=True)
 
     def push(self, text):
@@ -119,5 +122,9 @@ class Telegram:
             self.send(token, self.state["chat"], text)
 
     def send(self, token, chat, text):
+        """Raises ConnectionError (its text never holds the token, which is in the URL: it ended up in the log) if it can't."""
         for i in range(0, max(len(text), 1), LIMIT):
-            self.http.post(API.format(token, "sendMessage"), json={"chat_id": chat, "text": text[i:i + LIMIT] or "Done."}, timeout=20)
+            try:
+                self.http.post(API.format(token, "sendMessage"), json={"chat_id": chat, "text": text[i:i + LIMIT] or "Done."}, timeout=20)
+            except requests.RequestException as e:
+                raise ConnectionError(f"can't reach Telegram ({type(e).__name__})") from None

@@ -121,6 +121,23 @@ class IconProvider(QQuickImageProvider):
 
 
 
+def file_url(path):
+    """A local file as a URL QML can load ("file://" + a Windows path isn't one: C: became the host)."""
+    return QUrl.fromLocalFile(path).toString(QUrl.FullyEncoded)
+
+
+def local_path(url):
+    """A file:// URL from a drop or a file dialog as this system's path ("/C:/..." on Windows otherwise)."""
+    return os.path.normpath(QUrl(url).toLocalFile()) if url.startswith("file:") else url
+
+
+def open_image(path):
+    """A picture in the chat, clicked: opened with the system's viewer, and only if it's a picture (never a program)."""
+    import brain, system
+    if os.path.splitext(path)[1].lower() in brain.CHAT_PICTURES and os.path.isfile(path):
+        system.open_target(path)
+
+
 class Backend(QObject):
     reply = Signal(str, str, bool)   # request id, JSON, ok
     event = Signal(str)              # an app event as JSON
@@ -208,9 +225,16 @@ class Backend(QObject):
         self.toast(QCoreApplication.translate("Backend", "Copied"), False)
 
     @Slot(str)
-    def open(self, target):
-        import system
-        system.open_target(target)
+    def openImage(self, path):
+        open_image(path)
+
+    @Slot(str, result=str)
+    def fileUrl(self, path):
+        return file_url(path)
+
+    @Slot(str, result=str)
+    def localPath(self, url):
+        return local_path(url)
 
     @Slot(str, bool)
     def toast(self, text, bad):
