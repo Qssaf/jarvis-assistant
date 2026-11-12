@@ -181,6 +181,13 @@ class Actions(
     val stopJob: (Int) -> Unit = {},
 )
 
+/** What an empty list on the Today or PC page says: there's nothing, or the PC hasn't answered (yet). */
+internal fun emptyNote(ui: Ui, none: String) = when {
+    ui.loaded -> none
+    ui.state == State.ONLINE || ui.state == State.CONNECTING -> "Asking your PC…"
+    else -> "Your PC is out of reach."
+}
+
 @Composable
 fun JarvisApp(ui: Ui, act: Actions, sheetOpen: Boolean = false, tab: Tab = Tab.TALK, level: () -> Float = { 0f }) {
     var sheet by remember { mutableStateOf(sheetOpen) }
@@ -611,7 +618,7 @@ private fun Today(ui: Ui, ask: (String) -> Unit) {
         OutOfReach(ui, "Today")
         Heading("Coming up")
         Card {
-            if (ui.reminders.isEmpty()) Text(if (ui.loaded || ui.state != State.ONLINE) "No reminders set." else "Asking your PC…", J.body.copy(color = J.text2), Modifier.padding(vertical = 6.dp))
+            if (ui.reminders.isEmpty()) Text(emptyNote(ui, "No reminders set."), J.body.copy(color = J.text2), Modifier.padding(vertical = 6.dp))
             ui.reminders.forEachIndexed { i, r ->
                 if (i > 0) Divider()
                 Column(Modifier.padding(vertical = 10.dp)) {
@@ -665,7 +672,7 @@ private fun PcPage(ui: Ui, act: Actions, ask: (String) -> Unit) {
         Heading("Playing")
         Card {
             val p = ui.playing
-            if (p == null) Text("Nothing is playing.", J.body.copy(color = J.text2), Modifier.padding(vertical = 6.dp))
+            if (p == null) Text(emptyNote(ui, "Nothing is playing."), J.body.copy(color = J.text2), Modifier.padding(vertical = 6.dp))
             else {
                 Text(p.title, J.heading.copy(fontSize = 15.sp), maxLines = 2)
                 Spacer(Modifier.height(2.dp))

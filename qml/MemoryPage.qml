@@ -17,7 +17,7 @@ ScrollPage {
     property string editing: ""  // the row whose editor is open ("reminder <id>", "routine new"...)
 
     function load() {
-        Api.get("/api/memory", d => { notes.text = d.memory; saved = d.memory })
+        Api.get("/api/memory", d => { if (notes.text === saved) notes.text = d.memory; saved = d.memory })  // (unsaved edits stay)
         lists()
     }
     function lists() {  // (not the notes: they may have unsaved edits)

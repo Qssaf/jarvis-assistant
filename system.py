@@ -1162,6 +1162,38 @@ while ($null -ne ($action = [Console]::In.ReadLine())) {
 _media_shell, _media_lock = [None], threading.Lock()  # (kept running: starting one each time the Today page asks costs a second of CPU)
 _media_last, MEDIA_WAIT = [{}], 6  # the last answer about what's playing; seconds an answer may take
 _art = [""]  # the cover art file now_playing wrote last
+_web_cover = ["", ""]  # a player's cover on the web (Spotify's): its address, and the file it was saved as ("": none)
+
+
+def _art_file(data):
+    """The cover as a file the window can show, kept until the next one."""
+    import hashlib, pathlib
+    path = os.path.join(tempfile.gettempdir(), f"jarvis-art-{hashlib.sha1(data).hexdigest()[:12]}")
+    if path != _art[0]:
+        with open(path, "wb") as f:
+            f.write(data)
+        try:
+            _art[0] and os.remove(_art[0])
+        except OSError:  # (gone already, or the window still reading it)
+            pass
+        _art[0] = path
+    return pathlib.Path(path).as_uri()
+
+
+def _web_art(url):
+    """A cover on the web, fetched once into a file: the window loads local files only (see window.LocalOnly)."""
+    if url != _web_cover[0]:
+        import requests
+        art = ""
+        try:
+            with requests.get(url, timeout=5, stream=True) as r:
+                data = r.raw.read(5_000_000, decode_content=True)
+                if r.ok and r.headers.get("content-type", "").startswith("image/") and data:
+                    art = _art_file(data)
+        except (requests.RequestException, OSError, ValueError):
+            pass
+        _web_cover[:] = [url, art]
+    return _web_cover[1]
 
 
 def _win_media(action=""):
@@ -1204,20 +1236,8 @@ def _windows_playing():
     if not info.get("player"):
         return {}
     app = re.sub(r"\.exe$", "", info["player"].split("!")[-1], flags=re.I).split(".")[-1]  # Spotify.exe, ...!Microsoft.ZuneMusic
-    art = ""
-    if info.get("art"):  # the cover as a file the window can show, kept until the next one
-        import base64, hashlib, pathlib
-        data = base64.b64decode(info["art"])
-        path = os.path.join(tempfile.gettempdir(), f"jarvis-art-{hashlib.sha1(data).hexdigest()[:12]}")
-        if path != _art[0]:
-            with open(path, "wb") as f:
-                f.write(data)
-            try:
-                _art[0] and os.remove(_art[0])
-            except OSError:  # (gone already, or the window still reading it)
-                pass
-            _art[0] = path
-        art = pathlib.Path(path).as_uri()
+    import base64
+    art = _art_file(base64.b64decode(info["art"])) if info.get("art") else ""
     return {"player": info["player"], "app": app[:1].upper() + app[1:], "status": info.get("status") or "",
             "title": info.get("title") or "", "artist": info.get("artist") or "", "art": art, "length": info.get("length") or 0}
 
@@ -1251,6 +1271,8 @@ def now_playing():
             best = info
         if status == "Playing":
             break
+    if re.match(r"https?://", best.get("art", ""), re.I):
+        best["art"] = _web_art(best["art"])
     return best
 
 

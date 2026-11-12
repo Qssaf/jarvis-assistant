@@ -1325,6 +1325,44 @@ jarvis.shown_state[1] = False
 win.backend.poll()
 assert not warnings, ascii(warnings)[:4000]
 
+# the window loads local files only: a picture in a reply's Markdown, in rich text (a song's title, a message) or an
+# Image from the web is never fetched (an image link carrying data out would need no tool call or safety check)
+import http.server
+from PySide6.QtCore import QUrl
+from PySide6.QtQml import QQmlComponent
+import shiboken6
+web_hits = []
+class Web(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        web_hits.append(self.path)
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html" if self.path == "/page" else "image/jpeg")
+        self.end_headers()
+        self.wfile.write(b"a cover")
+    def log_message(self, *a):
+        pass
+web_server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Web)
+threading.Thread(target=web_server.serve_forever, daemon=True).start()
+web = f"http://127.0.0.1:{web_server.server_port}"
+leak_qml = QQmlComponent(win.engine)
+leak_qml.setData(f'''import QtQuick
+Window {{ visible: true; width: 300; height: 200
+    Column {{
+        Text {{ textFormat: Text.MarkdownText; text: "Done ![x]({web}/markdown?secret=1)" }}
+        Text {{ text: "<b>Song</b><img src=\\"{web}/rich\\">" }}
+        Image {{ source: "{web}/image" }}
+    }}
+}}'''.encode(), QUrl())
+leak = leak_qml.create()
+end = time.time() + 1.5
+while time.time() < end:
+    qt.processEvents()
+    time.sleep(0.02)
+shiboken6.delete(leak)
+qt.processEvents()
+assert web_hits == [], web_hits
+warnings.clear()  # (the refused loads are logged)
+
 # the window's languages: each text in the first that has it, none after "en" (the English it's written in); with Arabic
 # first it reads right to left; languages without a .qm leave it in English, and switching takes no restart
 import shutil, subprocess, PySide6
@@ -1401,6 +1439,22 @@ qt.processEvents()
 assert win.engine and win.engine.rootObjects()[0].isVisible() and win.backend.timer.isActive() and not win.release.isActive()
 root = win.engine.rootObjects()[0]
 assert not warnings, ascii(warnings)[:4000]
+# the Memory page keeps notes typed but not saved when you come back to it (going back reloaded them over the edit)
+def settle(seconds=0.6):
+    end = time.time() + seconds
+    while time.time() < end:
+        qt.processEvents()
+        time.sleep(0.02)
+root.setProperty("page", "memory")
+settle()
+notes = next(i for i in all_items() if i.property("placeholderText") == "- Prefers to be called …\n- Studies …")
+notes.setProperty("text", "- an edit not saved yet")
+root.setProperty("page", "home")
+settle(0.2)
+root.setProperty("page", "memory")
+settle()
+assert notes.property("text") == "- an edit not saved yet", notes.property("text")
+root.setProperty("page", "home")
 
 # every function a page calls on itself exists (Settings lost its set() once, and every switch on it silently did nothing)
 import glob, re
@@ -1412,6 +1466,17 @@ for qml in glob.glob(os.path.join(os.path.dirname(os.path.abspath(jarvis.__file_
                    "requestActivate", "close", "forceActiveFocus"}  # (Qt's own, on Window and Item)
         for name in set(re.findall(rf"\b{root_id[1]}\.(\w+)\(", src)) - builtin:
             assert re.search(rf"(?:function|signal) {name}\b", src), f"{os.path.basename(qml)} calls {root_id[1]}.{name}() but has no {name}"
+# every text the window shows goes through qsTr (a hint stayed English in every language), and every shipped translation
+# is finished (an unfinished text shows in English)
+for qml in glob.glob(os.path.join(os.path.dirname(os.path.abspath(jarvis.__file__)), "qml", "*.qml")):
+    for n, line in enumerate(open(qml, encoding="utf-8"), 1):
+        line = re.sub(r'qsTr\("(?:[^"\\]|\\.)*"(?:\s*,\s*"(?:[^"\\]|\\.)*")?', "qsTr(", line)
+        for m in re.finditer(r"\b(?:placeholderText|placeholder|text|tip|hint|title|label|description|lead|detail)\s*:([^;\n]*)", line):
+            for s in re.findall(r'"((?:[^"\\]|\\.)*)"', m[1]):  # (words with spaces between: not a name, an address, a command or a date format)
+                assert (" " not in s or len(re.findall(r"[A-Za-z]{3,}", s)) < 2 or s.startswith("npx ")
+                        or re.fullmatch(r"[dMyHhmsAaptz\W]+", s)), f"{os.path.basename(qml)}:{n} shows {s!r} untranslated"
+for ts in glob.glob(os.path.join(os.path.dirname(os.path.abspath(jarvis.__file__)), "translations", "*.ts")):
+    assert 'type="unfinished"' not in open(ts, encoding="utf-8").read(), f"{ts} has texts left to translate"
 
 # quick tools: silent responses to prevent duplicate replies, interruptions, and superseded turns
 sent_responses = []
@@ -2767,6 +2832,27 @@ system._media_shell[0], system.subprocess.Popen = None, no_powershell
 assert system.now_playing() == {}
 system.subprocess, system.IS_WINDOWS, system.press_keys = real_sub, real_windows, real_keys
 system._media_shell[0], system._art[0], system._media_last[0] = None, "", {}
+
+# Linux: a player's cover on the web (Spotify's) is fetched once into a file the window can show (it loads local files
+# only); a page that isn't a picture gives no cover
+cover_url = [f"{web}/cover"]
+def fake_busctl(args, timeout=None):
+    if "ListNames" in args:
+        return json.dumps({"data": [["org.mpris.MediaPlayer2.spotify"]]})
+    return json.dumps({"data": "Playing" if args[-1] == "PlaybackStatus" else
+                       {"xesam:title": {"data": "Song"}, "mpris:artUrl": {"data": cover_url[0]}}})
+real_run, real_have = system.run, system.have
+system.IS_WINDOWS, system.run, system.have = False, fake_busctl, lambda name: True
+web_hits.clear()
+art = system.now_playing()["art"]
+assert art.startswith("file:") and open(system._art[0], "rb").read() == b"a cover" and web_hits == ["/cover"], (art, web_hits)
+assert system.now_playing()["art"] == art and web_hits == ["/cover"]
+cover_url[0] = f"{web}/page"
+assert system.now_playing()["art"] == "" and web_hits == ["/cover", "/page"]
+os.remove(system._art[0])
+system.IS_WINDOWS, system.run, system.have = real_windows, real_run, real_have
+system._art[0], system._web_cover[:] = "", ["", ""]
+web_server.shutdown()
 
 # calendar heads-up: ten minutes before each timed event; a moved event's reminder moves, a cancelled one's goes
 for r in store.reminders():
@@ -4771,5 +4857,43 @@ if not system.IS_WINDOWS:
     with open(said_file) as f:
         argv = json.load(f)
     assert argv[argv.index("--") + 1:] == ["Jarvis", "- Flight one at 9"], argv
+
+# the evals touch nothing of the user's: voice_eval simulates downloading a Drive file and a new account sign-in (they ran
+# for real: a file in the user's folders, a sign-in started at Composio), and agent_eval sends stand-ins, never the user's
+# own notes about people or the ways they saved
+probe = r"""
+import os, sys, types
+sys.path.insert(0, "evals")
+import voice_eval as v
+def real(*a, **k):
+    raise AssertionError(f"ran for real: {a} {k}")
+v.BRAIN = types.SimpleNamespace(app_tools={}, _run_tool=real, account_settings=real)
+assert "saved" in v.run_tool({}, "drive_file", {"name": "notes", "save_to": "~/Desktop/Physics"})
+assert "sign-in" in v.run_tool({}, "account_settings", {"app": "gmail", "action": "reconnect"})["result"]
+import people, store
+people.everyone = lambda: {"Maya": {"notes": [{"text": "a real note", "at": 1}]}}
+store.skills = lambda: {"x": {"name": "send on discord", "task": "send see you at 6 to Sam Lee on Discord", "steps": "...", "at": 0}}
+import agent_eval
+assert people.index() == "- Sam Lee: my cousin", people.index()
+assert store.matching_skills("send see you at 6 to Sam Lee on Discord") == []
+print("evals ok")
+"""
+evals_ran = subprocess.run([sys.executable, "-c", probe], capture_output=True, text=True, timeout=120,
+                           cwd=os.path.dirname(os.path.abspath(__file__)))
+assert "evals ok" in evals_ran.stdout, (evals_ran.stdout + evals_ran.stderr)[-1500:]
+# the AUR package's .SRCINFO (what AUR helpers read to install what the build needs) says what PKGBUILD says: it lacked Go,
+# so building the package failed wherever Go wasn't installed yet
+pkg_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "packaging", "aur")
+with open(os.path.join(pkg_dir, "PKGBUILD"), encoding="utf-8") as f:
+    pkgbuild = f.read()
+with open(os.path.join(pkg_dir, ".SRCINFO"), encoding="utf-8") as f:
+    srcinfo = [line.strip() for line in f]
+for field in ("depends", "makedepends", "optdepends", "source"):
+    listed = re.search(rf"^{field}=\((.*?)\)[ \t]*$", pkgbuild, re.M | re.S)  # (to the ")" ending a line: items hold their own)
+    want = re.findall(r"""['"]([^'"]+)['"]""", listed[1]) if listed else []
+    want = [w.split("::", 1)[0].replace("$pkgname", "jarvis-assistant").replace("$pkgver", re.search(r"^pkgver=(.+)$", pkgbuild, re.M)[1])
+            if field == "source" else w for w in want]
+    have = [line.split(" = ", 1)[1].split("::", 1)[0] for line in srcinfo if line.startswith(f"{field} = ")]
+    assert have == want, (field, have, want)
 
 print("ok")

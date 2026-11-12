@@ -200,7 +200,7 @@ ScrollPage {
             visible: page.custom
             spacing: 12
             Field { id: pname; Layout.preferredWidth: 180; placeholderText: qsTr("name") }
-            Field { id: purl; Layout.fillWidth: true; placeholderText: "https://host/v1 (any OpenAI-compatible service)" }
+            Field { id: purl; Layout.fillWidth: true; placeholderText: qsTr("https://host/v1 (any OpenAI-compatible service)") }
             Pill { text: qsTr("Add"); symbol: "plus"; implicitHeight: 44; enabled: pname.text && purl.text; kind: enabled ? "primary" : ""
                    onClicked: Api.post("/api/providers", { name: pname.text, url: purl.text }, d => { page.info = d; pname.text = purl.text = ""; page.custom = false; page.lookUp() }) }
         }

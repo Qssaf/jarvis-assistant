@@ -162,7 +162,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+226"/>
+        <location filename="../window.py" line="+242"/>
         <source>Copied</source>
         <translation>已复制</translation>
     </message>
@@ -986,7 +986,12 @@
         <translation>名称</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
+        <source>https://host/v1 (any OpenAI-compatible service)</source>
+        <translation>https://host/v1（任何兼容 OpenAI 的服务）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Add</source>
         <translation>添加</translation>
     </message>
@@ -1064,7 +1069,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2915"/>
+        <location filename="../jarvis.py" line="+2925"/>
         <source>LISTENING</source>
         <translation>聆听中</translation>
     </message>

@@ -1,6 +1,7 @@
 """How smart is the agent? Real tasks, run by the real Brain.ask on your configured models, against simulated tools:
-nothing on this PC or in your accounts is touched, and your memory isn't sent (a stand-in is). Each case checks the
-moves the agent made, not its wording. It costs model requests (about 2-6 per case), so it's run by hand:
+nothing on this PC or in your accounts is touched, and your memory, notes about people and saved ways aren't sent
+(stand-ins are). Each case checks the moves the agent made, not its wording. It costs model requests (about 2-6 per
+case), so it's run by hand:
 
     .venv/bin/python evals/agent_eval.py                      # every case, your agent models
     EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py mark_read quiz   # some cases, one model
@@ -17,6 +18,9 @@ MEMORY = "- The user prefers to be called Sam."
 real_settings = store.settings
 store.settings = lambda: {**real_settings(), "safety": "ask", "extra_instructions": ""}  # (the defaults, whatever yours are)
 store.memory = lambda: MEMORY
+store.matching_skills = lambda task, limit=2: []  # (no saved ways of yours either: the same run for everyone)
+import people  # noqa: E402
+people.index = lambda now=None, limit=40: "- Sam Lee: my cousin"  # (a stand-in for your notes about people)
 store.connector_modes = lambda: {}
 brain.system._idle_seconds = lambda: None  # (a screen step never waits for you using the PC meanwhile)
 

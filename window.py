@@ -5,7 +5,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 from PySide6.QtCore import Property, QByteArray, QCoreApplication, QLocale, QObject, QRectF, Qt, QTimer, QTranslator, Signal, Slot, QUrl
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QGuiApplication, QPainter, QPixmap
-from PySide6.QtQml import QJSEngine, QQmlApplicationEngine, qmlRegisterSingletonType
+from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
+from PySide6.QtQml import QJSEngine, QQmlApplicationEngine, QQmlNetworkAccessManagerFactory, qmlRegisterSingletonType
 from PySide6.QtQuick import QQuickImageProvider
 from PySide6.QtSvg import QSvgRenderer
 
@@ -119,6 +120,21 @@ class IconProvider(QQuickImageProvider):
         return icon_pixmap(name, QColor("#" + color), px)
 
 
+class LocalOnly(QNetworkAccessManager):
+    """The window's network: local files only. Text from anywhere (a reply, a message, a song's title) is drawn as
+    Markdown or rich text, and Qt fetches the pictures in it by itself: an image link carrying data out would leave with
+    no tool call, safety check or Guard on the way. Covers on the web are fetched by system.now_playing instead."""
+    LOCAL = ("file", "qrc", "data")
+
+    def createRequest(self, op, request, data=None):
+        if request.url().scheme().lower() not in self.LOCAL:
+            request = QNetworkRequest(QUrl("blocked:"))  # (an unknown scheme fails at once, offline)
+        return super().createRequest(op, request, data)
+
+
+class LocalOnlyFactory(QQmlNetworkAccessManagerFactory):
+    def create(self, parent):  # (asked from QML's loader threads too)
+        return LocalOnly(parent)
 
 
 def file_url(path):
@@ -270,6 +286,7 @@ class Window:
         from PySide6.QtQuickControls2 import QQuickStyle
         QQuickStyle.setStyle("Basic")  # (Windows' native style ignores the custom look of fields, menus and sliders)
         self.engine, self.translators = None, []
+        self.network = LocalOnlyFactory()  # (kept: the engine doesn't own it)
         self.release = QTimer()
         self.release.setSingleShot(True)
         self.release.timeout.connect(self.free)
@@ -284,6 +301,7 @@ class Window:
             self.backend.showRequested.emit()
             return
         self.engine = QQmlApplicationEngine()
+        self.engine.setNetworkAccessManagerFactory(self.network)
         self.engine.addImageProvider("icon", IconProvider())
         self.engine.setInitialProperties({"startShown": True})
         self.engine.load(QUrl.fromLocalFile(os.path.join(HERE, "qml", "Main.qml")))

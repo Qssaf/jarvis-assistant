@@ -99,6 +99,15 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
+- **Privacy:** the window fetched any web picture written into the text it shows (a reply, a message, a song's title)
+  by itself, so a page or email that tricked the model into writing an image link with your data in it could send that
+  data out with no tool call or safety check. The window now only loads files from this PC; a player's cover on the
+  web (Spotify's) is saved by Jarvis first, so Home still shows it.
+- Notes you'd typed on the Memory page but not saved were wiped when you went to another page and came back.
+- The Models page's hint for another service's address is translated now.
+- **Phone app:** with the PC out of reach, Today said *"No reminders set."* and the PC page *"Nothing is playing."*
+  without having asked; they say the PC can't be reached.
+- **Arch package:** building it needed Go, which the AUR package didn't list (AUR helpers stopped at the build).
 - **Safety (Windows):** a picture Jarvis showed from a web address was saved under a name the website chose, which on
   Windows could put a file anywhere, the Startup folder included. It's always a picture file in Pictures/Jarvis now.
 - **Safety:** commands that change things wait for your yes however they're written: by their path (`/bin/rm`), inside

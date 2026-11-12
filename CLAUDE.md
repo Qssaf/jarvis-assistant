@@ -336,7 +336,8 @@ reminders, the user's `checks`, the phone links), with backoff; `system.mic_fram
 data)`, which map to `api_get`/`api_post` in jarvis.py, and events from `emit()` reach it because `Backend` sits in `clients` (it has
 `put()`). Polled values (state, mic level) refresh at 30 fps, only while the window is shown (`Backend.watch`); the notch ticks at 30 fps only while it shows. The look ("glass": tokens in `Theme.qml`, shared pieces
 like `Glass`, `Section`, `Chip`, `StatusDot`, the arc reactor in `Orb.qml`) is shared with the phone app's `Theme.kt`.
-QML gotchas: file paths become URLs through `Backend.fileUrl`/`localPath` (`"file://" + path` broke on Windows); `AbstractButton` has a FINAL `icon` (ours is `symbol`); local
+QML gotchas: the engine loads local files only (`window.LocalOnly`): Qt fetches the pictures in rich text and Markdown by
+itself, so a reply's image link could carry data out; a web picture is saved first (`system._web_art` for covers). File paths become URLs through `Backend.fileUrl`/`localPath` (`"file://" + path` broke on Windows); `AbstractButton` has a FINAL `icon` (ours is `symbol`); local
 `Label.qml`/`Page.qml` get shadowed by QtQuick.Controls (ours are `Txt`, `ScrollPage`); `#AARRGGBB` colours; font sizes go
 through `Theme.px(n)` (the text-size setting, rounded to whole pixels); QtSvg only reads `#rrggbb`; `window.py` forces the
 Basic style (Windows' native one ignores custom backgrounds). The first-run `SetupWizard` covers the window until
@@ -406,7 +407,7 @@ frontend-design
 Missing: Go, Kotlin/Compose → vault: none → find-skills if wanted
 
 ## Skill notes
-- requesting-code-review inline (no reviewer agent, never a Workflow: it burned the user's usage): a full-diff pass after green tests still found 6 real bugs; a whole-codebase pass, area by area with a scratch notes file, found 16; a second full read (every file, a repro or failing check per suspect before any fix) found 13 more: re-reading reviewed code still pays.
+- requesting-code-review inline (no reviewer agent, never a Workflow: it burned the user's usage): a full-diff pass after green tests still found 6 real bugs; a whole-codebase pass, area by area with a scratch notes file, found 16; a second full read (every file, a repro or failing check per suspect before any fix) found 13 more; the parts never read before (QML pages, evals, packaging) gave 6 more, one a privacy leak a local HTTP server proved: re-reading pays, and so does probing Qt's own behaviour.
 - Tests and evals must stub the real desktop (`system._idle_seconds`, `system.fullscreen`): a full-screen game failed the suite.
 - Evals: the default chain (no EVAL_MODELS) worked when one model was 503; `EVAL_OUT` is a file path; a new change tool must be simulated in voice_eval first (it runs real tools); Live closes with 1006 once the key's daily quota is gone.
 - OpenChamber: drive it through its own local `/api` (port in its settings.json); never read its opencode server's password (blocked as credential digging, rightly).

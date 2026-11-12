@@ -169,7 +169,11 @@ def simulated(case, name, args):
     if name == "recent_changes":
         return {"changes": case.get("changes", [{"when": "Wed 15 Oct 18:02", "what": "ran: gio trash -- ~/Downloads/old-notes.zip"}]),
                 "undo": "reverse the one meant: restore trashed files with gio trash --restore trash:///<name>"}
+    if name == "drive_file":  # (with save_to: a download into the user's own folders)
+        return {"file": args.get("name"), "saved": f"{str(args.get('save_to')).rstrip('/')}/{args.get('name')}.pdf"}
     if name == "account_settings":
+        if args.get("action") == "reconnect":  # (a real one starts a new sign-in at Composio)
+            return {"result": f"opened the {args.get('app')} sign-in page in the browser"}
         real = store.set_connector_mode
         store.set_connector_mode = lambda app, mode: None
         try:
@@ -188,7 +192,8 @@ def run_tool(case, name, args):
         return brain.tool_media("now_playing")
     if name == "list_windows" and "windows" in case:  # (the case's apps, not whatever is open on this PC now)
         return {"windows": case["windows"]}
-    changes = (name == "person" and (args.get("note") or args.get("forget"))) or (name == "waiting_on_me" and args.get("skip"))
+    changes = ((name == "person" and (args.get("note") or args.get("forget"))) or (name == "waiting_on_me" and args.get("skip"))
+               or (name == "drive_file" and args.get("save_to")))
     if name in REAL and not changes:  # (a change is simulated below)
         return BRAIN._run_tool(name, args)[0]
     if name in BRAIN.app_tools:  # an account: reads for real, changes through the real gates and then simulated
