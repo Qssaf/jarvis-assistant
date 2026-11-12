@@ -63,6 +63,7 @@ DEFAULT_SETTINGS = {
     "discord_never": [],           # Discord names Jarvis never answers or speaks about: only shown in the chat
     "track_promises": True,        # promises in what you send ("I'll send it tomorrow") get a reminder or go on the evening list
     "evening_digest": "20:00",     # who's waiting on you and what's due tomorrow, said once a day at this time; empty = off
+    "phone_direct": True,          # paired phones on the same Wi-Fi or VPN connect straight to this PC (phone.PORT), without the relay
     "screen_history": False,       # a private timeline of the windows you had open (titles only, on this PC), for "what was that site?"
     "echo_cancel": False,          # echo cancelling (PipeWire on Linux, WebRTC + a speaker loopback on Windows): talk over Jarvis on speakers (experimental)
     "learn_my_voice": True,        # learn from real wake-ups to ignore things that aren't you saying the wake word

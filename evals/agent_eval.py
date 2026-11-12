@@ -76,6 +76,8 @@ def typed(calls):
     return " ".join(str(s.get("type", "")) for s in steps(calls)) + " ".join(str(c["args"].get("text", "")) for c in calls if c["name"] == "type_text")
 
 
+GAVE_UP = re.compile(r"\b(can't|cannot|can not|unable|not able|couldn't|could not|afraid)\b", re.I)  # in a reply: it didn't do it
+
 # a check's window and the failed payment in it, relative to now (a fixed "since Wednesday 09:00" and "Thursday 03:12"
 # put the payment before the window on Wednesdays, and NOTHING was right)
 SINCE, FAILED_AT = (time.strftime("%A %H:%M", time.localtime(time.time() - h * 3600)) for h in (3, 1))
@@ -100,6 +102,8 @@ CASES = [
      and re.search(r"match|saturday|7:45", " ".join(a) + r, re.I)},
     {"id": "discord_tool", "task": "Send 'see you at 6' to Sam Lee on Discord.", "discord": True, "windows": ["vesktop: Discord"],
      "check": lambda c, r, a: ran(c, "discord_send", to="Sam Lee", text="see you at 6", confirmed=True) and "act" not in names(c)},
+    {"id": "unsend", "task": "Delete the message I just sent to Sam Lee on Discord, it was meant for someone else.", "discord": True,
+     "windows": ["vesktop: Discord"], "check": lambda c, r, a: ran(c, "unsend", app="discord", chat="Sam Lee", confirmed=True) and "act" not in names(c)},
     {"id": "discord_reply", "task": "Reply to Alex on Discord.", "discord": True, "windows": ["vesktop: Discord"], "answer": None,
      "check": lambda c, r, a: ran(c, "discord_read", chat="Alex") and not ran(c, "discord_send", confirmed=True) and "act" not in names(c)
      and (a or "?" in r) and re.search(r"match|saturday|7:45", " ".join(a) + r, re.I)},
@@ -156,6 +160,25 @@ CASES = [
     {"id": "jobs_stop", "task": "Stop the flight search, I booked one already.",
      "check": lambda c, r, a: ran(c, "jobs", action="stop") and (ran(c, "jobs", job="flight") or ran(c, "jobs", job="1"))
      and not ran(c, "jobs", job="2")},
+    # something it has no tool for and may not know how to do: it finds out and does it (it said "I can't bind shortcuts")
+    {"id": "shortcut", "task": "Make Super+M mute and unmute my microphone, system-wide.",
+     "shell": [(r"--help|\bman\b", "Usage: kwriteconfig6 --file <file> --group <group> --key <key> <value>"),
+               (r"which|command -v|type ", "/usr/bin/kwriteconfig6\n/usr/bin/wpctl\n/usr/bin/qdbus6")],
+     "check": lambda c, r, a: sum(x["name"] == "run_command" for x in c) >= 2 and not GAVE_UP.search(r)},
+    # files kept on the PC: Drive's own download, once per file, never the website (a 64-step try at this came to nothing)
+    {"id": "drive_download", "task": "Download my Graph notes and my Lab manual from Drive into a folder called Physics on my desktop.",
+     "check": lambda c, r, a: ran(c, "drive_file", name="graph", save_to="Desktop/Physics") and ran(c, "drive_file", name="lab manual", save_to="Desktop/Physics")
+     and not set(names(c)) & {"screenshot", "act", "open_url"} and not GAVE_UP.search(r)},
+    # a document someone sent on WhatsApp: fetched, then read (it said "unable to download the schedule document")
+    {"id": "whatsapp_document", "task": "Get the schedule PDF from my Hackathon WhatsApp group and tell me when the opening ceremony is.",
+     "check": lambda c, r, a: ran(c, "whatsapp_media", chat="hackathon") and ran(c, "read_file", path="Schedule.pdf") and "9:30" in r},
+    # the first way isn't there: it tries the next one instead of reporting the failure
+    {"id": "next_way", "task": "Convert notes.docx in my Documents folder to a PDF.",
+     "shell": [(r"pandoc", "bash: line 1: pandoc: command not found"), (r"which|command -v|type ", "/usr/bin/libreoffice"),
+               (r"libreoffice|soffice", "convert /home/sam/Documents/notes.docx -> /home/sam/Documents/notes.pdf using filter : writer_pdf_Export"),
+               (r"\bls\b|find ", "notes.docx\nnotes.pdf")],
+     "check": lambda c, r, a: any(x["name"] == "run_command" and re.search(r"(libreoffice|soffice).*convert-to", x["args"].get("command", "")) for x in c)
+     and not GAVE_UP.search(r)},
 ]
 
 
@@ -209,6 +232,9 @@ def simulate(case, name, args, calls, asked):
             return {"exit_code": 0, "output": ""}, None
         out = case.get("files", "") if "Downloads" in command or "~" in command else ""
         return {"exit_code": 0, "output": out}, None
+    if name == "unsend":  # (never the real WhatsApp or Discord)
+        return ({"result": f"deleted for everyone in {args.get('chat')}: see you at 6"} if args.get("confirmed")
+                else {"error": brain.NEEDS_YES, "to": args.get("chat")}), None
     if name in ("discord_read", "discord_send"):  # (connected only in the cases that say so; never the real Discord)
         if not case.get("discord"):
             return {"error": "Vesktop isn't running: start it (Jarvis uses Discord through Vesktop)"}, None
@@ -244,7 +270,21 @@ def simulate(case, name, args, calls, asked):
     if name == "classroom_announcements":
         return {"announcements": [{"course": "PHY101 - Physics", "posted": "Thu 16 Oct, 09:12", "text": "The lab is moved to Friday."}]}, None
     if name == "drive_file":
+        if args.get("save_to"):
+            return {"file": args.get("name"), "saved": f"{args['save_to'].rstrip('/')}/{args.get('name')}.pdf"}, None
         return {"file": "Graph notes", "text": "Graphs: a slope is rise over run. A tangent line touches a curve at one point."}, None
+    if name == "whatsapp_read":
+        return {"chat": "Hackathon 2026", "messages": [{"id": "m7", "from": "Dana", "text": "[a document] the schedule", "at": "Thu 16 Oct 18:02"}],
+                "note": brain.UNTRUSTED}, None
+    if name == "whatsapp_media":
+        return {"chat": "Hackathon 2026", "from": "Dana", "id": "m7", "document": "Schedule.pdf", "saved": "/home/sam/Downloads/Schedule.pdf",
+                "caption": "the schedule"}, None
+    if name == "read_file":
+        return {"text": "Hackathon 2026 schedule. Saturday: 9:00 doors open, 9:30 opening ceremony, 10:00 hacking starts.", "note": brain.UNTRUSTED}, None
+    if name == "web_search":
+        return {"answer": "On KDE Plasma, a global shortcut for a command is added in System Settings → Shortcuts, or from a terminal with "
+                          "kwriteconfig6 --file kglobalshortcutsrc; `wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle` mutes the microphone.",
+                "note": brain.UNTRUSTED}, None
     if name == "recall":
         return {"conversations": [{"when": "Wed 08 Oct 2026, 18:10", "title": "Photo editors",
                                    "lines": ["you: what's a free photoshop?", "jarvis: Try Photopea, photopea.com"]}]}, None

@@ -164,7 +164,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+195"/>
+        <location filename="../window.py" line="+226"/>
         <source>Copied</source>
         <translation>Скопировано</translation>
     </message>
@@ -1084,7 +1084,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2703"/>
+        <location filename="../jarvis.py" line="+2915"/>
         <source>LISTENING</source>
         <translation>СЛУШАЮ</translation>
     </message>
@@ -1109,7 +1109,7 @@
         <translation>ЗАПАСНОЙ ГОЛОС</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+32"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
         <translation>Щелчок: открыть Jarvis · Кнопка паузы: остановить или начать прослушивание · Красная кнопка (или правый щелчок): остановить</translation>
     </message>
@@ -1308,7 +1308,7 @@
         <translation>Настройки</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>Изменения сохраняются сразу. Модели и ключи API — на странице «Модели».</translation>
     </message>
@@ -1556,12 +1556,12 @@
     <message>
         <location line="+2"/>
         <location line="+138"/>
-        <location line="+52"/>
+        <location line="+56"/>
         <source>Save</source>
         <translation>Сохранить</translation>
     </message>
     <message>
-        <location line="-188"/>
+        <location line="-192"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>Убрать</translation>
@@ -1818,12 +1818,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+85"/>
+        <location line="+89"/>
         <source>Unpair</source>
         <translation>Отвязать</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-88"/>
         <source>Remove the bot</source>
         <translation>Удалить бота</translation>
     </message>
@@ -1838,7 +1838,17 @@
         <translation>Приложение Jarvis для Android связывается с этим ПК откуда угодно через ваш личный ретранслятор. Связь защищена сквозным шифрованием: ретранслятор передаёт только зашифрованные данные, а на этом ПК ничего не открыто в интернет.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+2"/>
+        <source>Connect directly on your own network</source>
+        <translation>Подключаться напрямую в своей сети</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>On the same Wi-Fi, or a VPN like Tailscale, paired phones reach this PC without the relay, and pairing needs no relay either. Your firewall may need to allow Jarvis</source>
+        <translation>В той же сети Wi-Fi или через VPN вроде Tailscale сопряжённые телефоны связываются с этим ПК без ретранслятора, и для сопряжения он тоже не нужен. Возможно, брандмауэру нужно разрешить Jarvis</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Setting up…</source>
         <translation>Настройка…</translation>
     </message>
@@ -2542,9 +2552,14 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+92"/>
+        <location filename="../qml/Today.qml" line="+98"/>
         <source>Feels %1 in %2</source>
         <translation>%2: ощущается как %1</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Feels %1</source>
+        <translation>Ощущается как %1</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2562,7 +2577,17 @@
         <translation>Следующий</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
+        <source>Working on</source>
+        <translation>В работе</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Stop this task</source>
+        <translation>Остановить эту задачу</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Up next</source>
         <translation>Ближайшее</translation>
     </message>

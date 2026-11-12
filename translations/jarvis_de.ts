@@ -163,7 +163,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+195"/>
+        <location filename="../window.py" line="+226"/>
         <source>Copied</source>
         <translation>Kopiert</translation>
     </message>
@@ -1074,7 +1074,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2703"/>
+        <location filename="../jarvis.py" line="+2915"/>
         <source>LISTENING</source>
         <translation>HÖRT ZU</translation>
     </message>
@@ -1099,7 +1099,7 @@
         <translation>ERSATZSTIMME</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+32"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
         <translation>Klick: Jarvis öffnen · Pause-Schaltfläche: Zuhören an/aus · Rote Schaltfläche (oder Rechtsklick): stoppen</translation>
     </message>
@@ -1295,7 +1295,7 @@
         <translation>Einstellungen</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>Änderungen werden sofort gespeichert. Modelle und API-Schlüssel finden Sie auf der Seite „Modelle“.</translation>
     </message>
@@ -1543,12 +1543,12 @@
     <message>
         <location line="+2"/>
         <location line="+138"/>
-        <location line="+52"/>
+        <location line="+56"/>
         <source>Save</source>
         <translation>Speichern</translation>
     </message>
     <message>
-        <location line="-188"/>
+        <location line="-192"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>Entfernen</translation>
@@ -1651,7 +1651,7 @@
     <message>
         <location line="+0"/>
         <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
-        <translation>Wenn du auf WhatsApp, Discord oder per E-Mail "ich schick's dir morgen" schreibst, stellt Jarvis eine Erinnerung oder setzt es auf die Abendliste</translation>
+        <translation>Wenn du auf WhatsApp, Discord oder per E-Mail &quot;ich schick&apos;s dir morgen&quot; schreibst, stellt Jarvis eine Erinnerung oder setzt es auf die Abendliste</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1805,12 +1805,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+85"/>
+        <location line="+89"/>
         <source>Unpair</source>
         <translation>Entkoppeln</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-88"/>
         <source>Remove the bot</source>
         <translation>Bot entfernen</translation>
     </message>
@@ -1825,7 +1825,17 @@
         <translation>Die Jarvis-App für Android erreicht diesen PC von überall über Ihr eigenes privates Relay. Die Verbindung ist Ende-zu-Ende-verschlüsselt: Das Relay leitet nur verschlüsselte Daten weiter, und auf diesem PC ist nichts aus dem Internet erreichbar.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+2"/>
+        <source>Connect directly on your own network</source>
+        <translation>Direkt im eigenen Netzwerk verbinden</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>On the same Wi-Fi, or a VPN like Tailscale, paired phones reach this PC without the relay, and pairing needs no relay either. Your firewall may need to allow Jarvis</source>
+        <translation>Im selben WLAN oder über ein VPN wie Tailscale erreichen gekoppelte Telefone diesen PC ohne das Relay, und auch das Koppeln braucht dann kein Relay. Eventuell muss deine Firewall Jarvis zulassen</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Setting up…</source>
         <translation>Wird eingerichtet…</translation>
     </message>
@@ -2111,7 +2121,7 @@
     <message>
         <location line="+0"/>
         <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
-        <translation>Jarvis notiert, welches Fenster vorne ist (nur den Titel, nie den Inhalt, auf diesem PC), damit du fragen kannst: "Welche Seite hatte ich gestern offen?". Privates Surfen und Passwortmanager werden übersprungen; höchstens zwei Wochen gespeichert</translation>
+        <translation>Jarvis notiert, welches Fenster vorne ist (nur den Titel, nie den Inhalt, auf diesem PC), damit du fragen kannst: &quot;Welche Seite hatte ich gestern offen?&quot;. Privates Surfen und Passwortmanager werden übersprungen; höchstens zwei Wochen gespeichert</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2529,9 +2539,14 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+92"/>
+        <location filename="../qml/Today.qml" line="+98"/>
         <source>Feels %1 in %2</source>
         <translation>Gefühlt %1 in %2</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Feels %1</source>
+        <translation>Gefühlt %1</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2549,7 +2564,17 @@
         <translation>Nächster Titel</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
+        <source>Working on</source>
+        <translation>In Arbeit</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Stop this task</source>
+        <translation>Diese Aufgabe stoppen</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Up next</source>
         <translation>Als Nächstes</translation>
     </message>

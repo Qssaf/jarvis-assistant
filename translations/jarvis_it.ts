@@ -163,7 +163,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+195"/>
+        <location filename="../window.py" line="+226"/>
         <source>Copied</source>
         <translation>Copiato</translation>
     </message>
@@ -1074,7 +1074,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2703"/>
+        <location filename="../jarvis.py" line="+2915"/>
         <source>LISTENING</source>
         <translation>IN ASCOLTO</translation>
     </message>
@@ -1099,7 +1099,7 @@
         <translation>VOCE DI RISERVA</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+32"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
         <translation>Clic: apri Jarvis · Pulsante pausa: avvia o ferma l&apos;ascolto · Pulsante rosso (o clic destro): ferma</translation>
     </message>
@@ -1295,7 +1295,7 @@
         <translation>Impostazioni</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>Le modifiche vengono salvate subito. Modelli e chiavi API sono nella pagina Modelli.</translation>
     </message>
@@ -1543,12 +1543,12 @@
     <message>
         <location line="+2"/>
         <location line="+138"/>
-        <location line="+52"/>
+        <location line="+56"/>
         <source>Save</source>
         <translation>Salva</translation>
     </message>
     <message>
-        <location line="-188"/>
+        <location line="-192"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>Rimuovi</translation>
@@ -1651,7 +1651,7 @@
     <message>
         <location line="+0"/>
         <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
-        <translation>Quando scrivi "te lo mando domani" su WhatsApp, Discord o email, Jarvis imposta un promemoria o lo mette nella lista della sera</translation>
+        <translation>Quando scrivi &quot;te lo mando domani&quot; su WhatsApp, Discord o email, Jarvis imposta un promemoria o lo mette nella lista della sera</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1805,12 +1805,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+85"/>
+        <location line="+89"/>
         <source>Unpair</source>
         <translation>Dissocia</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-88"/>
         <source>Remove the bot</source>
         <translation>Rimuovi il bot</translation>
     </message>
@@ -1825,7 +1825,17 @@
         <translation>L&apos;app Jarvis per Android raggiunge questo PC da ovunque tramite il tuo relay privato. È crittografata end-to-end: il relay inoltra solo dati cifrati e niente su questo PC è esposto a internet.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+2"/>
+        <source>Connect directly on your own network</source>
+        <translation>Connetti direttamente sulla tua rete</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>On the same Wi-Fi, or a VPN like Tailscale, paired phones reach this PC without the relay, and pairing needs no relay either. Your firewall may need to allow Jarvis</source>
+        <translation>Sulla stessa Wi-Fi, o con una VPN come Tailscale, i telefoni associati raggiungono questo PC senza il relay, e nemmeno l&apos;associazione ne ha bisogno. Il firewall potrebbe dover consentire Jarvis</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Setting up…</source>
         <translation>Configurazione…</translation>
     </message>
@@ -2101,7 +2111,7 @@
     <message>
         <location line="+1"/>
         <source>On this PC Jarvis keeps what it remembers about you, your conversations, reminders and routines, short clips of your wake word (to learn your voice) and a log. What you say after the wake word, and screenshots when a task needs the screen, go to Google Gemini; account actions go through Composio.</source>
-        <translation>Su questo PC Jarvis conserva ciò che ricorda di te, le conversazioni, i promemoria e le routine, brevi clip della parola di attivazione (per imparare la tua voce) e un registro. Ciò che dici dopo la parola di attivazione, e gli screenshot quando un'attività ha bisogno dello schermo, vanno a Google Gemini; le azioni sugli account passano da Composio.</translation>
+        <translation>Su questo PC Jarvis conserva ciò che ricorda di te, le conversazioni, i promemoria e le routine, brevi clip della parola di attivazione (per imparare la tua voce) e un registro. Ciò che dici dopo la parola di attivazione, e gli screenshot quando un&apos;attività ha bisogno dello schermo, vanno a Google Gemini; le azioni sugli account passano da Composio.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2111,7 +2121,7 @@
     <message>
         <location line="+0"/>
         <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
-        <translation>Jarvis annota quale finestra hai davanti (solo il titolo, mai il contenuto, su questo PC) così puoi chiedere "che sito avevo aperto ieri?". La navigazione privata e i gestori di password vengono saltati; conservata al massimo due settimane</translation>
+        <translation>Jarvis annota quale finestra hai davanti (solo il titolo, mai il contenuto, su questo PC) così puoi chiedere &quot;che sito avevo aperto ieri?&quot;. La navigazione privata e i gestori di password vengono saltati; conservata al massimo due settimane</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2529,9 +2539,14 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+92"/>
+        <location filename="../qml/Today.qml" line="+98"/>
         <source>Feels %1 in %2</source>
         <translation>Percepiti %1 a %2</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Feels %1</source>
+        <translation>Percepiti %1</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2549,7 +2564,17 @@
         <translation>Successivo</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
+        <source>Working on</source>
+        <translation>In corso</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Stop this task</source>
+        <translation>Interrompi questa attività</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Up next</source>
         <translation>Prossimi impegni</translation>
     </message>

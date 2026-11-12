@@ -162,7 +162,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+195"/>
+        <location filename="../window.py" line="+226"/>
         <source>Copied</source>
         <translation>Disalin</translation>
     </message>
@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2703"/>
+        <location filename="../jarvis.py" line="+2915"/>
         <source>LISTENING</source>
         <translation>MENDENGARKAN</translation>
     </message>
@@ -1089,7 +1089,7 @@
         <translation>SUARA CADANGAN</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+32"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
         <translation>Klik: buka Jarvis · Tombol jeda: mulai atau hentikan mendengarkan · Tombol merah (atau klik kanan): hentikan</translation>
     </message>
@@ -1282,7 +1282,7 @@
         <translation>Pengaturan</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>Perubahan langsung disimpan. Model dan kunci API ada di halaman Model.</translation>
     </message>
@@ -1530,12 +1530,12 @@
     <message>
         <location line="+2"/>
         <location line="+138"/>
-        <location line="+52"/>
+        <location line="+56"/>
         <source>Save</source>
         <translation>Simpan</translation>
     </message>
     <message>
-        <location line="-188"/>
+        <location line="-192"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>Hapus</translation>
@@ -1638,7 +1638,7 @@
     <message>
         <location line="+0"/>
         <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
-        <translation>Saat kamu menulis "besok kukirim" di WhatsApp, Discord, atau email, Jarvis memasang pengingat atau memasukkannya ke daftar malam</translation>
+        <translation>Saat kamu menulis &quot;besok kukirim&quot; di WhatsApp, Discord, atau email, Jarvis memasang pengingat atau memasukkannya ke daftar malam</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1792,12 +1792,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+85"/>
+        <location line="+89"/>
         <source>Unpair</source>
         <translation>Putuskan</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-88"/>
         <source>Remove the bot</source>
         <translation>Hapus bot</translation>
     </message>
@@ -1812,7 +1812,17 @@
         <translation>Aplikasi Jarvis untuk Android menjangkau PC ini dari mana saja melalui relay pribadi Anda sendiri. Terenkripsi end-to-end: relay hanya meneruskan data acak, dan tidak ada apa pun di PC ini yang terbuka ke internet.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+2"/>
+        <source>Connect directly on your own network</source>
+        <translation>Sambungkan langsung di jaringan Anda sendiri</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>On the same Wi-Fi, or a VPN like Tailscale, paired phones reach this PC without the relay, and pairing needs no relay either. Your firewall may need to allow Jarvis</source>
+        <translation>Di Wi-Fi yang sama, atau lewat VPN seperti Tailscale, ponsel yang dipasangkan menjangkau PC ini tanpa relay, dan pemasangan pun tidak memerlukan relay. Firewall Anda mungkin perlu mengizinkan Jarvis</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Setting up…</source>
         <translation>Menyiapkan…</translation>
     </message>
@@ -2098,7 +2108,7 @@
     <message>
         <location line="+0"/>
         <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
-        <translation>Jarvis mencatat jendela mana yang ada di depanmu (judulnya saja, tak pernah isinya, di PC ini) supaya kamu bisa bertanya "situs apa yang kubuka kemarin?". Penjelajahan pribadi dan pengelola kata sandi dilewati; disimpan paling lama dua minggu</translation>
+        <translation>Jarvis mencatat jendela mana yang ada di depanmu (judulnya saja, tak pernah isinya, di PC ini) supaya kamu bisa bertanya &quot;situs apa yang kubuka kemarin?&quot;. Penjelajahan pribadi dan pengelola kata sandi dilewati; disimpan paling lama dua minggu</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2516,9 +2526,14 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+92"/>
+        <location filename="../qml/Today.qml" line="+98"/>
         <source>Feels %1 in %2</source>
         <translation>Terasa %1 di %2</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Feels %1</source>
+        <translation>Terasa %1</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2536,7 +2551,17 @@
         <translation>Berikutnya</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
+        <source>Working on</source>
+        <translation>Sedang dikerjakan</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Stop this task</source>
+        <translation>Hentikan tugas ini</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Up next</source>
         <translation>Mendatang</translation>
     </message>

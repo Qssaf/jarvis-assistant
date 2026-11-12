@@ -94,6 +94,13 @@ JS = r"""async (cmd, a) => {
     await C.RestAPI.put({url: `/channels/${id}/messages/${m.id}/reactions/${encodeURIComponent(a.emoji)}/@me`});
     return {to: who(m.author), text: text(m)};
   }
+  if (cmd === "unsend") {  // the user's own newest message there (or the newest holding these words), deleted for everyone
+    const id = chan(), want = (a.text || "").toLowerCase();
+    const m = id && (await recent(id)).find(m => m.author.id === me && (m.content || "").toLowerCase().includes(want));
+    if (!m) return null;
+    await (C.RestAPI.del || C.RestAPI.delete).call(C.RestAPI, {url: `/channels/${id}/messages/${m.id}`});
+    return {text: text(m)};
+  }
   if (cmd === "waiting") {  // one-to-one DMs whose last message (in the last three days) isn't the user's
     const made = id => Number((BigInt(id) >> 22n) + 1420070400000n), recentEnough = id => made(id) > Date.now() - 3 * 86400e3;
     const chats = C.PrivateChannelSortStore.getPrivateChannelIds().slice(0, 30).map(id => C.ChannelStore.getChannel(id))
@@ -200,6 +207,11 @@ def send(target, text, reply=""):
 
 def react(target, emoji, msg=""):
     return call("react", id=target["id"], kind=target["kind"], emoji=emoji, msg=msg)
+
+
+def unsend(target, text=""):
+    """Delete the user's newest message in a chat (or the newest holding these words): its text, or None if there's none."""
+    return (call("unsend", id=target["id"], kind=target["kind"], text=text) or {}).get("text")
 
 
 def media(target, msg=""):

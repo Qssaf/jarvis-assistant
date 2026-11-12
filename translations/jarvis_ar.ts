@@ -167,7 +167,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+195"/>
+        <location filename="../window.py" line="+226"/>
         <source>Copied</source>
         <translation>تم النسخ</translation>
     </message>
@@ -1114,7 +1114,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2703"/>
+        <location filename="../jarvis.py" line="+2915"/>
         <source>LISTENING</source>
         <translation>يستمع</translation>
     </message>
@@ -1139,7 +1139,7 @@
         <translation>صوت احتياطي</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+32"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
         <translation>انقر: فتح Jarvis · زر الإيقاف المؤقت: إيقاف الاستماع أو بدؤه · الزر الأحمر (أو النقر بالزر الأيمن): إيقاف</translation>
     </message>
@@ -1347,7 +1347,7 @@
         <translation>الإعدادات</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>تُحفظ التغييرات فورًا. النماذج ومفاتيح API في صفحة النماذج.</translation>
     </message>
@@ -1595,12 +1595,12 @@
     <message>
         <location line="+2"/>
         <location line="+138"/>
-        <location line="+52"/>
+        <location line="+56"/>
         <source>Save</source>
         <translation>حفظ</translation>
     </message>
     <message>
-        <location line="-188"/>
+        <location line="-192"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>إزالة</translation>
@@ -1703,7 +1703,7 @@
     <message>
         <location line="+0"/>
         <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
-        <translation>عندما تكتب "سأرسله غدًا" على WhatsApp أو Discord أو البريد، يضبط Jarvis تذكيرًا أو يضعه في قائمة المساء</translation>
+        <translation>عندما تكتب &quot;سأرسله غدًا&quot; على WhatsApp أو Discord أو البريد، يضبط Jarvis تذكيرًا أو يضعه في قائمة المساء</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1857,12 +1857,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+85"/>
+        <location line="+89"/>
         <source>Unpair</source>
         <translation>إلغاء الاقتران</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-88"/>
         <source>Remove the bot</source>
         <translation>إزالة البوت</translation>
     </message>
@@ -1877,7 +1877,17 @@
         <translation>يصل تطبيق Jarvis لنظام Android إلى هذا الحاسوب من أي مكان عبر خادم الترحيل الخاص بك. الاتصال مشفّر من طرف إلى طرف: لا يمرّر خادم الترحيل سوى بيانات مشوّشة، ولا شيء على هذا الحاسوب مكشوف للإنترنت.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+2"/>
+        <source>Connect directly on your own network</source>
+        <translation>الاتصال مباشرة عبر شبكتك</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>On the same Wi-Fi, or a VPN like Tailscale, paired phones reach this PC without the relay, and pairing needs no relay either. Your firewall may need to allow Jarvis</source>
+        <translation>على نفس شبكة Wi-Fi، أو عبر VPN مثل Tailscale، تصل الهواتف المقترنة إلى هذا الحاسوب دون المرحِّل، ولا يحتاج الاقتران إلى مرحِّل أيضًا. قد يلزم السماح لـ Jarvis في جدار الحماية</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Setting up…</source>
         <translation>جارٍ الإعداد…</translation>
     </message>
@@ -2163,7 +2173,7 @@
     <message>
         <location line="+0"/>
         <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
-        <translation>يسجّل Jarvis النافذة التي أمامك (عنوانها فقط، لا محتواها، على هذا الحاسوب) لتسأل "ما ذلك الموقع الذي فتحته أمس؟". يتجاوز التصفح الخاص ومديري كلمات المرور؛ ويُحفظ أسبوعين على الأكثر</translation>
+        <translation>يسجّل Jarvis النافذة التي أمامك (عنوانها فقط، لا محتواها، على هذا الحاسوب) لتسأل &quot;ما ذلك الموقع الذي فتحته أمس؟&quot;. يتجاوز التصفح الخاص ومديري كلمات المرور؛ ويُحفظ أسبوعين على الأكثر</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2581,9 +2591,14 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+92"/>
+        <location filename="../qml/Today.qml" line="+98"/>
         <source>Feels %1 in %2</source>
         <translation>الحرارة المحسوسة %1 في %2</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Feels %1</source>
+        <translation>الحرارة المحسوسة %1</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2601,7 +2616,17 @@
         <translation>التالي</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
+        <source>Working on</source>
+        <translation>قيد العمل</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Stop this task</source>
+        <translation>إيقاف هذه المهمة</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Up next</source>
         <translation>القادم</translation>
     </message>

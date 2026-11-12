@@ -9,6 +9,7 @@ import Jarvis
 ScrollPage {
     id: page
     title: qsTr("Settings")
+    index: true
     hint: qsTr("Changes are saved at once. Models and API keys are on the Models page.")
     property var s: ({})
     property var voices: []
@@ -344,6 +345,10 @@ ScrollPage {
         title: qsTr("The Jarvis app")
         description: qsTr("The Jarvis Android app reaches this PC from anywhere through your own private relay. It's end-to-end encrypted: "
                      + "the relay only passes on scrambled data, and nothing on this PC is open to the internet.")
+        Toggle { Layout.fillWidth: true; text: qsTr("Connect directly on your own network")
+                 hint: qsTr("On the same Wi-Fi, or a VPN like Tailscale, paired phones reach this PC without the relay, and pairing needs no relay either. Your firewall may need to allow Jarvis")
+                 checked: !!page.s.phone_direct; onToggled: page.set("phone_direct", checked) }
+        Line {}
         RowLayout {  // setting the relay up, until there is one: Jarvis runs wrangler itself...
             Layout.fillWidth: true
             visible: !page.phone.relay || page.changingRelay
@@ -426,7 +431,7 @@ ScrollPage {
             }
             Line {}
         }
-        Pill { visible: !!page.phone.relay && !page.phone.pairing; symbol: "phone"
+        Pill { visible: (!!page.phone.relay || !!page.s.phone_direct) && !page.phone.pairing; symbol: "phone"
                kind: (page.phone.devices || []).length ? "" : "primary"
                text: (page.phone.devices || []).length ? qsTr("Pair another phone") : qsTr("Pair a phone")
                onClicked: Api.post("/api/phone/pair", {}, d => page.phone = d, e => Backend.toast(e.error, true)) }

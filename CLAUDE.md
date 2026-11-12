@@ -12,13 +12,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 jarvis --listen                       # tell a running instance to start listening (--region: ask about a dragged area)
 jarvis --task "..." / --say "..."     # have it do a task (prints the reply) or say something; jarvis --mcp: the same as an MCP server
 EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py [case ...]  # agent eval (spends model requests)
-.venv/bin/python evals/voice_eval.py [case-prefix ...]   # ~110 real-life requests to the voice model (one Live session each)
+.venv/bin/python evals/voice_eval.py [case-prefix ...]   # ~150 real-life requests to the voice model (one Live session each)
 .venv/bin/python evals/whatsapp_eval.py [case ...]       # made-up chats through WhatsApp auto-replies (REPLY_PROMPT)
 .venv/bin/python evals/proactive_eval.py [case ...]      # made-up sent messages through people.Tracker's promise prompt
 .venv/bin/python evals/wake_eval.py [max clips]          # the user's wake clips through openWakeWord, gated vs every frame (offline)
+.venv/bin/python evals/wake_vector.py                    # rewrites the app's WakeTest vector (wake.json) from openWakeWord
+(cd android && WAKE_MODELS=$PWD/../.venv/lib/python3.13/site-packages/openwakeword/resources/models ./gradlew testDebugUnitTest)
+#   the app's tests (the SDK is in ~/Android/Sdk, named by the gitignored android/local.properties); assembleDebug builds the APK;
+#   one class: add --tests '*WakeTest*'; on a phone: ~/Android/Sdk/platform-tools/adb install -r app/build/outputs/apk/debug/app-debug.apk
 pyside6-lupdate -no-obsolete qml/*.qml jarvis.py window.py -ts translations/jarvis_<code>.ts  # after changing texts
 #   (en: add -pluralonly), translate, then: pyside6-lrelease translations/*.ts
-(cd whatsapp-helper && go vet ./... && go test ./...)  # the WhatsApp helper (CI runs it too)
+(cd whatsapp-helper && go vet ./... && go test ./...)  # the WhatsApp helper (CI runs it too); one test: go test -run TestRang .
 ```
 
 - CI (`.github/workflows/tests.yml`) runs lint and tests on Linux and Windows. `release.yml` builds `Jarvis.exe` with
@@ -38,7 +42,8 @@ pyside6-lupdate -no-obsolete qml/*.qml jarvis.py window.py -ts translations/jarv
 
 - There's no test framework: `test_jarvis.py` is one script of plain `assert`s run top to bottom, so "one test" means
   running the relevant snippet in `python -c`. It points `XDG_CONFIG_HOME`/`XDG_DATA_HOME`/`APPDATA` at a temp dir
-  before importing anything; keep that first so tests never touch real settings, memory or reminders.
+  before importing anything; keep that first so tests never touch real settings, memory or reminders. A run takes
+  about 50 s; when it hangs, `timeout -s ABRT 120 .venv/bin/python -X faulthandler test_jarvis.py` prints where.
 - `openwakeword` is installed with `--no-deps` (its tflite dependency has no current wheels); don't add it to
   `requirements.txt`.
 - Finding the running Jarvis: never `pgrep -f`/`pkill -f` with "jarvis.py" in the pattern (it matches the shell running
@@ -81,6 +86,11 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   account tools) and hands long jobs to the agent through the non-blocking `do_task` tool.
 - `Brain.ask` (brain.py) is the agent loop: `_generate` walks a chain of `(backend, model, thinking)` entries, skipping
   ones that are busy or rate-limited (`Overloaded`/`down_until`, with background probes), but re-raises `BadRequest`.
+  Each model is asked on its own thread: one that hasn't answered after `HEDGE[thinking]` s ("minimal", "low" only) gets
+  the next one asked beside it and the first answer wins; the slow one's late failure still marks it down. A test that
+  stubs `threading.Thread` must let those through (only `probe` is stubbed).
+  When none answers it raises `NoModel`; a task's step (`_think`) then waits and asks again (`PATIENCE`) while that's
+  `transient`, and at `MAX_STEPS` the model is asked once, without tools, for what's done and what's left.
   Independent calls (accounts, plugins, `PARALLEL_TOOLS`) run in parallel; screen tools keep their order.
 - A voice call of a change (`ONCE_TOOLS`, or an account tool that isn't `is_read_action`) goes through `_send_once`: the
   same arguments again before the user speaks are refused (the model re-calls a send right after it worked).
@@ -136,7 +146,9 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   check that answers NOTHING stays quiet; anything else is added to the conversation (`add_turn`, so "yes, do it" from the
   phone has its context) and goes through `tell` (chat, notification, voice, `push` to phones).
 
-**Tools.** `brain.TOOLS` maps a name to `(function, description, JSON schema)`. A function returns a dict, or
+**Tools.** Files a tool fetches for the user (`drive_file` with `save_to`, a WhatsApp document) go through `save_file`:
+only into `own_folder`s (the home folder, nothing hidden), under a `safe_name`, never over another file.
+`brain.TOOLS` maps a name to `(function, description, JSON schema)`. A function returns a dict, or
 `(dict, jpeg_bytes)` to attach a screenshot. `briefing`, `classroom_due`, `classroom_announcements`, `drive_file`, `ask_user` and
 `account_settings` (entries with `None`) are Brain methods dispatched in `Brain._run_tool`. Results from outside
 sources (`OUTSIDE_CONTENT`, accounts, plugins) get the `UNTRUSTED` note. To add a tool: put it in `TOOLS`, in
@@ -229,14 +241,27 @@ mic, and Jarvis heard itself; check with `pw-link -l`) and `Speaker.echo_cancell
 chat paired with the code shown in Settings (five wrong codes and a chat is ignored). Its tasks run `Brain.ask(...,
 remote=True)` on their own thread, so `/stop` is still read while one works; `ask_user` refuses (the user can't answer
 out loud). Phone tasks run side by side with the others; `/stop` stops them all and says which.
-`phone.py` is the Android app's link (`android/`, Kotlin): the PC and the app both dial out to the user's own relay
-(`relay/worker.js`, a Cloudflare Worker with one Durable Object per PC that only forwards frames), so nothing on the PC
-listens. The PC signs its relay login with its key (the id is that key's hash); the app trusts the PC's other key from
+`phone.py` is the Android app's link (`android/`, Kotlin), two ways with one handshake: the PC and the app both dial out to
+the user's own relay (`relay/worker.js`, a Cloudflare Worker with one Durable Object per PC that only forwards frames),
+and with `phone_direct` the PC also listens on `phone.PORT` (only while a phone is paired or a pairing code shows) for
+phones on its own network or VPN: the pairing code and every `ready` carry `system.local_addresses()`, and the app
+races them against the relay (`Link.kt`: direct wins). `phones[c]` holds each connection's `send`/`close`, whichever way
+it came. Inside the channel: `ask`/`stop`; `get`/`post` for `PHONE_GET`/`PHONE_POST` only (never settings, keys or
+data); `event` mirrors every `emit` log line and state (`PhoneLink.put` sits in `clients`); `voice`/`audio`/`barge` make
+the phone the microphone and speaker of the PC's one `Live` session (`jarvis.PhoneVoice`: `Speaker.remote` gets the
+voice, `voice_loop` stops feeding the PC's mic, half-duplex always; the PC's own wake word takes the floor back, and a
+wake-word start is refused while the PC is listening; `_watch_floor` tells the phone when `PhoneVoice.over`); `wake`
+sends openWakeWord's three ONNX models in `CHUNK`s. `Live.phone_at` keeps talk from the phone from counting as `at_pc`.
+In the app, `App.kt`'s `Jarvis` object owns the link, microphone (`Mic`), voice (`Player`) and state for both the
+activity and `JarvisService` (a foreground service: `microphone` type only when started with the app on screen, so
+after a reboot the wake word waits for the app to be opened); `Wake.kt` is a port of openWakeWord's streaming features
+(`WakeTest` checks it number for number against `evals/wake_vector.py`'s vector, given `WAKE_MODELS`); `Gemini.kt` is
+the phone alone with the user's key (Gemini Live over a raw WebSocket) when the PC can't be reached. The PC signs its relay login with its key (the id is that key's hash); the app trusts the PC's other key from
 the pairing QR and runs the handshake in `phone.py`'s docstring (P-256 ECDH, HKDF, AES-GCM with counter nonces). The app's UI is
 Jetpack Compose (`Screens.kt` takes plain state, so `ScreensTest`'s Paparazzi renders it with made-up data:
 `./gradlew recordPaparazziDebug`). The Python and Kotlin sides must stay byte-compatible: `android/app/src/test/resources/handshake.json` is checked by both
-`test_jarvis.py` and the app's `HandshakeTest` (`./gradlew testDebugUnitTest`: tests.yml's android job runs the app's
-unit tests, as this PC has no Android SDK now; `Pairing.parse` refuses links the app couldn't connect with). Test
+`test_jarvis.py` and the app's `HandshakeTest` (`./gradlew testDebugUnitTest`: tests.yml's android job runs them too; `Pairing.parse` refuses links the app couldn't
+connect with). Test
 the relay locally with `npx wrangler dev` in `relay/`.
 
 **WhatsApp.** `whatsapp.py` drives `jarvis-wa` (`whatsapp-helper/`, Go, ~30 MB; it replaced WhatsApp Web in a headless
@@ -246,7 +271,8 @@ time). They talk JSON lines (`main.go`'s top comment): `WhatsApp.ask(cmd, ...)` 
 `tell_call` (`speak`, `hush`, `hangup`) gets no answer, and events (`msg`, `call`, `callstate`, `audio`, `state`, `qr`,
 `error`) go to `event` (events carry ids too: only a line without `ev` is an answer). Its stderr goes into Jarvis's
 log as `[whatsapp] helper:` (warnings only; `JARVIS_WA_LOG=info` or `debug` for calls or every stanza). whatsmeow
-keeps no history, so the helper saves messages in its own tables of the login's SQLite file (`DATA/whatsapp.db`,
+keeps no history, so the helper saves messages (and incoming calls, `rang`: a number that only rang is a chat) in its
+own tables of the login's SQLite file (`DATA/whatsapp.db`,
 owner-only, never in backups) and asks the phone for earlier ones (`BuildHistorySyncRequest`) when a chat has fewer
 than asked for. Chats are keyed by phone-number JID when the LID's is known. "contact" means the name is in
 the phone's address book (`FullName`, from app state). Call audio is 16 kHz PCM both ways; Gemini's 24 kHz voice is
@@ -271,7 +297,9 @@ WhatsApp's `find`); changes follow the `discord` account mode. `Listener` keeps 
 binding; JS's `listen` subscribes to `MESSAGE_CREATE` (DMs and pings only), re-installed every 30 s (a Discord reload
 drops it; `a.v` is the JS's hash). People rules (`<app>_always`/`<app>_never`, `whatsapp.contact_rule`, the
 `people_rules` tool) are shared with WhatsApp, and so are `whatsapp.decide` and its limits for the opt-in
-`discord_replies` ("friends": friends' one-to-one DMs only). Jarvis's own replies are known by `(channel, text)` in
+`discord_replies` ("friends": friends' one-to-one DMs only). `unsend` (one tool for both apps: the helper's `unsend`
+sends whatsmeow's `BuildRevoke`, Discord's JS deletes through `RestAPI`) only takes back the user's own message, the
+newest in the chat or the one holding `text`, and is in `ONCE_TOOLS`: a second call would delete the one before it. Jarvis's own replies are known by `(channel, text)` in
 `mine` (memory only).
 
 **People, promises, attention.** `people.py`: `people.json` holds a page per person (notes with an optional `until`,
@@ -312,7 +340,9 @@ QML gotchas: file paths become URLs through `Backend.fileUrl`/`localPath` (`"fil
 `Label.qml`/`Page.qml` get shadowed by QtQuick.Controls (ours are `Txt`, `ScrollPage`); `#AARRGGBB` colours; font sizes go
 through `Theme.px(n)` (the text-size setting, rounded to whole pixels); QtSvg only reads `#rrggbb`; `window.py` forces the
 Basic style (Windows' native one ignores custom backgrounds). The first-run `SetupWizard` covers the window until
-`setup_done`. Every user-visible QML text goes through `qsTr()` (`.arg()` for values, `%n` plurals; Python's tray/notch
+`setup_done`. `ScrollPage`'s `index: true` (Settings) lists the page's `Section`s beside it (hidden in a narrow window) and
+jumps to one; Home's "Working on" (`Today.qml`) polls `/api/jobs` (`brain.running`) and stops one task with
+`/api/jobs/<n>/stop`. Every user-visible QML text goes through `qsTr()` (`.arg()` for values, `%n` plurals; Python's tray/notch
 texts through `QCoreApplication.translate`); `window_languages` (priority list, `store.WINDOW_LANGUAGES`) installs
 `translations/jarvis_<code>.qm` up to the first `en` (`Window.languages`, live `retranslate`). After changing texts run
 the lupdate/lrelease commands in window.py's `TRANSLATIONS` comment: the tests check each `.qm` matches its `.ts`. Arabic
@@ -354,7 +384,8 @@ brain.py, may register more classes in `brain.BACKENDS` and prepend entries to t
 `POINT_MODELS`, `SEARCH_MODELS`, `IMAGE_MODELS`).
 
 ## Skill plan
-Stack: Python 3.13 (core), Qt Quick/QML (window), Go (whatsapp-helper/), Kotlin/Compose (android/), JS Worker (relay/)
+Stack: Python 3.13 (core), Qt Quick/QML (window), Go (whatsapp-helper/), Kotlin/Compose (android/), JS Worker (relay/),
+Remotion/TSX + Manim (video/: the trailer, see video/README.md)
 Always: verification-before-completion, karpathy-guidelines
 Stack skills: python-patterns
 Chains: feature=brainstorming → writing-plans → test-driven-development (asserts in test_jarvis.py first) →
@@ -362,20 +393,21 @@ verification-before-completion → requesting-code-review; bug=systematic-debugg
 that fails without the fix) → verification-before-completion → requesting-code-review; refactor=writing-plans →
 test-driven-development → verification-before-completion → requesting-code-review; ui=impeccable → accessibility,
 verified with docs/screens.py (one screenshot of the finished state); prompt/tool change=feature chain, verified with
-evals/agent_eval.py (and voice_eval.py for LIVE_PROMPT) before and after; decision=council →
+evals/agent_eval.py (and voice_eval.py for LIVE_PROMPT) before and after; video=remotion-best-practices → manim-video → emil-design-eng,
+verified with rendered frames (one contact sheet); decision=council →
 architecture-decision-records; big work=writing-plans → subagent-driven-development
 Sizes: every size runs the full chain; size sets depth only (tiny=brief steps, large=deep steps + subagents)
 Overlays: security-checklist (safety gates, secrets, serve_app API, phone handshake, plugin OAuth); search-first (new
 integration); claude-api only when code calls Anthropic models
 Agents: verification-before-completion→tester, requesting-code-review→code-reviewer (not installed → inline)
 Not for this project: cpp-coding-standards, cpp-testing, fastapi-patterns, react-patterns, mysql-patterns,
-motion-foundations, motion-advanced, manim-video, remotion-best-practices, minecraft-architect, web-design-guidelines,
+motion-foundations, motion-advanced, minecraft-architect, web-design-guidelines,
 frontend-design
 Missing: Go, Kotlin/Compose → vault: none → find-skills if wanted
 
 ## Skill notes
-- requesting-code-review inline (no reviewer agent, never a Workflow: it burned the user's usage): a full-diff pass after green tests still found 6 real bugs; a whole-codebase pass, area by area with a scratch notes file, found 16.
-- agent_eval: `EVAL_MODELS="aistudio gemini-3.8-flash low"` was 503/rate-limited; the default chain (no EVAL_MODELS) worked.
+- requesting-code-review inline (no reviewer agent, never a Workflow: it burned the user's usage): a full-diff pass after green tests still found 6 real bugs; a whole-codebase pass, area by area with a scratch notes file, found 16; reading uncommitted work file by file, then one repro script for every suspect before any fix, confirmed 6 more.
 - Tests and evals must stub the real desktop (`system._idle_seconds`, `system.fullscreen`): a full-screen game failed the suite.
-- Evals: clock times relative to now (a fixed 14:00 / "6 pm" failed every evening run); `EVAL_OUT` is a file path, not a folder.
+- Evals: the default chain (no EVAL_MODELS) worked when one model was 503; `EVAL_OUT` is a file path; a new change tool must be simulated in voice_eval first (it runs real tools); Live closes with 1006 once the key's daily quota is gone.
 - OpenChamber: drive it through its own local `/api` (port in its settings.json); never read its opencode server's password (blocked as credential digging, rightly).
+- "Gives up / can't do X" reports: read `jarvis.log` for the request, its tools and errors first; the causes were code (a model outage killing the task, a tool missing a capability) more than the prompt.

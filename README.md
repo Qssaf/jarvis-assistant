@@ -85,13 +85,20 @@ app with a notch at the top of the screen and a native dashboard window.
   its tools.
 
 ### On your phone
-- **The Jarvis app** (Android, in `android/`): reaches your PC from anywhere through your own private relay, a tiny
-  Cloudflare Worker in `relay/` on your free Cloudflare account. Press Settings → *The Jarvis app* → *Set up my relay*
-  (it needs [Node.js](https://nodejs.org)): it signs you in to Cloudflare in your browser, deploys the relay and saves
-  its address. (By hand: `npx wrangler login`, then `npx wrangler deploy` in that folder.) The PC and the phone both dial out to it, so nothing on the PC is open to the internet, and everything
-  between them is end-to-end encrypted: the relay only passes on ciphertext. Paste the relay's address in Settings →
-  *The Jarvis app*, tap *Pair a phone* and scan the code with the app. Type or speak tasks; replies that finish while
-  the app is closed arrive when you open it. With your own Gemini key in the app, it still answers when the PC is off.
+- **The Jarvis app** (Android, in `android/`): a voice remote for the Jarvis on your PC. Say *"Hey Jarvis"* to the
+  phone (the wake word is recognised on the phone itself, with the app closed), tap the orb, or use Android's assistant
+  gesture, and you're talking with your PC's Jarvis in its own voice, with every tool it has. The app shows the PC's
+  chat as it happens, brings reminders and finished tasks as notifications, has a Today page and a PC page (what
+  Jarvis is working on with a Stop for each task, what's playing, a look at the screen, lock, mute, stop), and takes text and links shared from other apps. With your own
+  Gemini key in it, it still talks and answers when the PC is off.
+  - **Pairing:** in Settings → *The Jarvis app*, tap *Pair a phone* and scan the code with the app. On the same Wi-Fi,
+    or a VPN like Tailscale, the app connects straight to the PC (port 47800: your firewall may need to allow it), and
+    that's all it takes.
+  - **From anywhere:** your own private relay, a tiny Cloudflare Worker in `relay/` on your free Cloudflare account.
+    Press *Set up my relay* (it needs [Node.js](https://nodejs.org)): it signs you in to Cloudflare in your browser,
+    deploys the relay and saves its address. (By hand: `npx wrangler login`, then `npx wrangler deploy` in that
+    folder.) The PC and the phone both dial out to it, so nothing on the PC is open to the internet.
+  - Either way everything between the phone and the PC is end-to-end encrypted: the relay only passes on ciphertext.
   Get the app from the `.apk` attached to each [release](https://github.com/Qssaf/jarvis-assistant/releases) (open it on
   the phone and allow installing it).
 - **Telegram**: Settings → *Jarvis on Telegram*: make a bot with @BotFather, paste its token, send it the pairing code,

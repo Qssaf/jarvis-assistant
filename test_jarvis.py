@@ -76,7 +76,9 @@ brain.chain = lambda: [("a", "m1", "low"), ("b", "m2", "low"), ("c", "m3", "low"
 b = brain.Brain.__new__(brain.Brain)
 b.backends, b.down_until, b.notify = {"a": Fake("limited"), "b": Fake("broken"), "c": Fake("ok")}, {}, lambda t: None
 probes = []
-real_thread, brain.threading.Thread = brain.threading.Thread, lambda target, daemon, args=(): probes.append(args) or type("T", (), {"start": lambda self: None})()  # no real probes
+real_thread = brain.threading.Thread
+brain.threading.Thread = lambda target, daemon, args=(): (probes.append(args) or type("T", (), {"start": lambda self: None})()) \
+    if target.__name__ == "probe" else real_thread(target=target, daemon=daemon, args=args)  # no real probes (models are still asked)
 assert b._generate([])[0]["text"] == "from m3"
 assert b._generate([])[0]["text"] == "from m3"
 assert Fake.calls == ["m1", "m2", "m3", "m3"]  # m1 cooling down, m2 waiting for its probe
@@ -1212,6 +1214,27 @@ brain.fetch = lambda url, **k: types.SimpleNamespace(ok=True, status_code=200, c
 got = db.drive_file("graph notes")
 assert got["file"] == "Graph notes" and "rise over run" in got["text"] and got["other_matches"] == ["Graph notes v2.pdf"], got
 assert calls[1] == ("GOOGLEDRIVE_DOWNLOAD_FILE", {"fileId": "b", "mime_type": "text/plain"}), calls
+# "download my lectures into a folder": save_to keeps the file itself (a PDF, slides: anything), never over another one
+# and only where the user's own files are (it said "that's a binary file", and a 64-step download came to nothing)
+brain.fetch = lambda url, **k: types.SimpleNamespace(ok=True, status_code=200, content=b"%PDF-1.7 \x00\x01 lecture")
+real_user_home, brain.HOME = brain.HOME, _home
+lectures = os.path.join(_home, "Desktop", "Math lectures")
+for expected in ("Graph notes.pdf", "Graph notes (2).pdf"):
+    got = db.drive_file("graph notes", save_to=lectures)
+    assert got == {"file": "Graph notes", "saved": os.path.join(lectures, expected), "other_matches": ["Graph notes v2.pdf"]}, got
+    with open(got["saved"], "rb") as f:
+        assert f.read().startswith(b"%PDF")
+assert calls[-1] == ("GOOGLEDRIVE_DOWNLOAD_FILE", {"fileId": "b", "mime_type": "application/pdf"}), calls[-1]  # (a Doc: as a PDF)
+assert "your own folders" in db.drive_file("graph notes", save_to="/etc/jarvis-test")["error"]
+db.app_data = lambda slug, args: ({"files": [{"id": "z", "name": "../../.bashrc", "mimeType": "text/plain"}]}
+                                  if slug == "GOOGLEDRIVE_FIND_FILE" else {"downloaded_file_content": {"s3url": "https://files.example.com/x"}})
+assert db.drive_file("bashrc", save_to=lectures)["saved"] == os.path.join(lectures, "bashrc")  # (a file's name is never a path, nor hidden)
+for hidden in ("~/.config/autostart", os.path.join(_home, ".ssh"), os.path.join(_home, "Desktop", "..", ".."),
+               # (Windows hides its settings folder without a dot: a file saved in Startup there runs at every sign-in)
+               os.path.join(_home, "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup")):
+    assert "your own folders" in db.drive_file("graph notes", save_to=hidden)["error"], hidden
+brain.HOME = real_user_home
+assert "save_to" in brain.TOOLS["drive_file"][2]["properties"]
 brain.fetch = real_fetch
 db.connected = set()
 assert "isn't connected" in db.drive_file("x")["error"]
@@ -1439,6 +1462,26 @@ assert sent_responses[0][0].scheduling == "SILENT"
 live.inflight = {"text": None, "heard": "that's all", "since": time.time(), "tool": True, "answered": False, "recovered": False}
 asyncio.run(type(live)._tool(live, types.SimpleNamespace(name="stop_listening", id="5", args={})))
 assert live.inflight is None and not live.mic
+# 6. one call that fails (an act step that isn't an object: step.get) doesn't take the others' answers with it: every call
+# gets its response (none was sent, and the voice waited 12 s for the watchdog to reconnect)
+async def act_fails(fc, halt=None):
+    if fc.name == "act":
+        raise AttributeError("'str' object has no attribute 'get'")
+    return {"result": "ok"}
+live._tool = act_fails
+sent_responses.clear()
+asyncio.run(live._quick(fake_session, [types.SimpleNamespace(name="act", id="6", args={"steps": ["Return"]}),
+                                        types.SimpleNamespace(name="look", id="7", args={})], gen=1, spoke_before=False))
+assert [r.id for r in sent_responses[0]] == ["6", "7"] and "error" in sent_responses[0][0].response, sent_responses
+live._tool = lambda fc, halt=None: asyncio.sleep(0.001, result={"result": "ok"})
+# a voice act that runs past its time is given up on and stopped too (it went on clicking, with the screen let go)
+real_brain, real_seconds, finished = live.brain, jarvis.VOICE_TOOL_SECONDS, threading.Event()
+live.brain, jarvis.VOICE_TOOL_SECONDS = types.SimpleNamespace(app_tools={}, sign_in_note=lambda: "", _run_tool=lambda name, args: (
+    args["halt"].wait(5), finished.set(), ({"result": "stopped"}, None))[2]), 0.2
+act_halt = threading.Event()
+slow = asyncio.run(type(live)._answer(live, types.SimpleNamespace(name="act"), {"steps": [{"wait": 9}], "halt": act_halt}))
+assert "abandoned" in slow["error"] and act_halt.is_set() and finished.wait(2) and not brain.screen_lock.locked()
+live.brain, jarvis.VOICE_TOOL_SECONDS = real_brain, real_seconds
 
 # 6. act immediately aborts when interrupted
 brain.interrupt_act()
@@ -2119,6 +2162,19 @@ gb.backends["fake"].generate = lambda contents, model, thinking, **k: tried.appe
 gb.down_until, tried[:] = {("fake", "m1", None): float("inf")}, []  # one is up: the down one is skipped, as before
 assert gb._generate([], entries=[("fake", "m1", None), ("fake", "m2", None)]) == [{"text": "m2"}] and tried == ["m2"]
 
+# what failed says whether waiting could help: models that were busy or out of reach may answer in a moment, a missing
+# key never will
+try:
+    gb._generate([], entries=[("fake", "m1", None)])
+except brain.NoModel as e:
+    assert e.transient
+gb.backend = lambda name: (None, "no key")
+try:
+    gb._generate([], entries=[("fake", "m1", None)])
+    raise AssertionError("answered without a backend")
+except brain.NoModel as e:
+    assert not e.transient and "no key" in str(e)
+del gb.backend
 # ...but a rate limit is kept even then: those models aren't hammered
 gb.down_until, tried[:] = {("fake", "m1", None): time.time() + 60, ("fake", "m2", None): float("inf")}, []
 assert gb._generate([], entries=[("fake", "m1", None), ("fake", "m2", None)]) == [{"text": "m2"}] and tried == ["m2"]
@@ -2128,6 +2184,57 @@ try:
     raise AssertionError("a rate-limited model was tried")
 except RuntimeError:
     pass
+
+# a model that's slow to answer doesn't hold the request for its whole timeout: after HEDGE seconds the next one is asked
+# too and the first answer wins; when the slow one fails later it's still marked down (not waited for on every request)
+real_hedge, brain.HEDGE, slow = brain.HEDGE, {"minimal": 0.05}, threading.Event()
+def slow_first(contents, model, thinking, **k):
+    tried.append(model)
+    if model == "m1":
+        slow.wait(5)
+        raise TimeoutError("timed out")
+    return [{"text": model}]
+gb.backends["fake"].generate, gb.down_until, tried[:] = slow_first, {}, []
+started = time.time()
+assert gb._generate([], entries=[("fake", "m1", "minimal"), ("fake", "m2", "minimal")]) == [{"text": "m2"}]
+assert tried == ["m1", "m2"] and time.time() - started < 2, tried
+slow.set()
+for _ in range(100):
+    if gb.down_until.get(("fake", "m1", "minimal")):
+        break
+    time.sleep(0.02)
+assert gb.down_until.get(("fake", "m1", "minimal")), "the slow model's late failure wasn't noted"
+gb.backends["fake"].generate = lambda contents, model, thinking, **k: tried.append(model) or [{"text": model}]
+gb.down_until, tried[:] = {}, []  # one that answers in time is the only one asked
+assert gb._generate([], entries=[("fake", "m1", "minimal"), ("fake", "m2", "minimal")]) == [{"text": "m1"}] and tried == ["m1"]
+brain.HEDGE = real_hedge
+
+# where wttr.in can't name the town it gives coordinates: never shown as the place (the window and the phone said "in
+# 33.833300"); its condition comes with a trailing space
+real_get = jarvis.requests.get
+jarvis.requests.get = lambda url, **k: types.SimpleNamespace(ok=True, text="33.833300,35.833300|☀️|Clear |+7°C|+5°C")
+jarvis._weather[:] = ["", 0, None]
+assert jarvis.weather() == {"place": "", "icon": "☀️", "condition": "Clear", "temp": "7°C", "feels": "5°C"}, jarvis.weather()
+jarvis.requests.get = lambda url, **k: types.SimpleNamespace(ok=True, text="Rome, Italy|⛅️|Partly cloudy|+18°C|+17°C")
+jarvis._weather[:] = ["", 0, None]
+assert jarvis.weather()["place"] == "Rome"
+jarvis.requests.get, jarvis._weather[:] = real_get, ["", 0, None]
+
+# the window's "Working on": the tasks running now with what each is doing, and Stop for one of them only
+job_a, job_b = brain.Task("book the flights"), brain.Task("tidy the downloads folder")
+job_a.step = "web_search"
+brain.running[:0] = [job_a, job_b]
+assert jarvis.api_get("/api/jobs", None)[:2] == [
+    {"n": job_a.n, "label": "book the flights", "since": job_a.started, "now": "web_search", "coding": False},
+    {"n": job_b.n, "label": "tidy the downloads folder", "since": job_b.started, "now": "", "coding": False}]
+# ...and the phone app's: the same tasks in words (what each is doing as the chat says it, how long it has run), one object
+job_a.started -= 125
+assert jarvis.phone_get("/api/jobs", None) == {"jobs": [
+    {"n": job_a.n, "label": "book the flights", "now": "Searching the web", "minutes": 2},
+    {"n": job_b.n, "label": "tidy the downloads folder", "now": "", "minutes": 0}]}
+jarvis.api_post(f"/api/jobs/{job_b.n}/stop", {}, None, None)
+assert job_b.cancel.is_set() and not job_a.cancel.is_set()
+brain.running.remove(job_a), brain.running.remove(job_b)
 
 # a reminder after Stop is a new turn: Stop doesn't silence it or switch off its recovery
 live._go = lambda coro: coro.close()
@@ -2590,6 +2697,7 @@ system.selected_text = lambda: ("", "\ufffdPNG\r\n")
 assert "nothing is selected" in brain.tool_selection()["error"]
 system.selected_text = real_sel
 assert os.path.expanduser("~") in system.describe()
+assert f"process {os.getpid()}" in system.describe()  # (Jarvis can measure its own memory: it once said it "runs remotely")
 
 # an app hidden in the tray has no window to focus: the agent is told to open it again (it tried shell commands instead)
 real_focus = system.focus_window
@@ -3520,16 +3628,25 @@ halt, started = threading.Event(), time.time()  # ...and when Stop is pressed (a
 threading.Timer(0.5, halt.set).start()
 assert system.run_lines([sys.executable, "-c", child], said.append, halt=halt) != 0 and time.time() - started < 5
 real_run_lines, real_have, wrangler = system.run_lines, system.have, []
-WRANGLER_SAYS = {"whoami": (0, ["You are not authenticated. Please run `wrangler login`."]),
+SIGNED_IN = json.dumps({"loggedIn": True, "email": "sam@example.com", "accounts": [{"id": "a" * 32, "name": "sam@example.com's Account"}]})
+WRANGLER_SAYS = {"whoami": (1, ['{"loggedIn": false}']),
                  "login": (0, ["Attempting to login via OAuth...", "Successfully logged in."]),
                  "deploy": (0, ["\x1b[33mUploaded jarvis-relay (2.1 sec)\x1b[0m", "Deployed jarvis-relay triggers (1.9 sec)",
                                 "  https://jarvis-relay.someone.workers.dev", "Current Version ID: 1234"])}
 
 
+relay_toml = []
+
+
 def fake_wrangler(args, on_line, cwd=None, timeout=600):
     assert args[:3] == ["npx", "--yes", "wrangler"] and os.path.exists(os.path.join(cwd, "worker.js"))
     wrangler.append(args[3])
-    code, lines = WRANGLER_SAYS[args[3]]
+    if args[3] == "login":  # (signed in from now on)
+        WRANGLER_SAYS["whoami"] = (0, [SIGNED_IN])
+    if args[3] == "deploy":
+        relay_toml.append(open(os.path.join(cwd, "wrangler.toml")).read())
+    said = WRANGLER_SAYS[args[3]]
+    code, lines = said.pop(0) if isinstance(said, list) else said
     for line in lines:
         on_line(line)
     return code
@@ -3545,11 +3662,26 @@ def set_up_relay():
 
 system.run_lines, system.have = fake_wrangler, lambda program: program == "npx"
 setup = set_up_relay()
-assert wrangler == ["whoami", "login", "deploy"] and not setup["error"], (wrangler, setup)
+assert wrangler == ["whoami", "login", "whoami", "deploy"] and not setup["error"], (wrangler, setup)
+assert "account_id" not in relay_toml[-1]  # (one account: wrangler picks it itself)
 assert link.state["relay"] == "wss://jarvis-relay.someone.workers.dev" and "Uploaded jarvis-relay (2.1 sec)" in setup["log"]
 assert setup["log"][-1].endswith("https://jarvis-relay.someone.workers.dev") and len(setup["log"]) <= 6
+assert "sam@example.com" not in json.dumps(setup)  # (the account's name is the person's email: never shown)
+# several accounts on one login: wrangler can't ask which without a terminal ("More than one account available"), so the
+# signed-in person's own account is written into the relay's settings; and a deploy that couldn't reach Cloudflare (a
+# network blip) is tried once more
+wrangler.clear()
+WRANGLER_SAYS["whoami"] = (0, ["▲ [WARNING] a newer wrangler is out", json.dumps({"loggedIn": True, "email": "sam@example.com", "accounts": [
+    {"id": "b" * 32, "name": "Team Rocket"}, {"id": "c" * 32, "name": "Sam@Example.com's Account"}]})])
+deploy_ok = WRANGLER_SAYS["deploy"]
+WRANGLER_SAYS["deploy"] = [(1, ["✘ [ERROR] fetch failed"]), deploy_ok]
+setup = set_up_relay()
+assert wrangler == ["whoami", "deploy", "deploy"] and not setup["error"], (wrangler, setup)
+assert relay_toml[-1].startswith(f'account_id = "{"c" * 32}"\n') and "[[durable_objects.bindings]]" in relay_toml[-1]
+assert "sam@example.com" not in json.dumps(setup)
+WRANGLER_SAYS["deploy"] = deploy_ok
 wrangler.clear()  # signed in already, and Cloudflare refuses: its error is shown, the relay stays as it was
-WRANGLER_SAYS["whoami"] = (0, ["You are logged in with an OAuth Token."])
+WRANGLER_SAYS["whoami"] = (0, [SIGNED_IN])
 WRANGLER_SAYS["deploy"] = (1, ["✘ [ERROR] Could not automatically register \"relay\" as your workers.dev subdomain."])
 link.set_relay("https://relay.example.workers.dev/")
 setup = set_up_relay()
@@ -3558,7 +3690,7 @@ assert link.state["relay"] == "wss://relay.example.workers.dev"
 wrangler.clear()  # whoami failed (no network, a slow first download): it signs in rather than deploy signed out
 WRANGLER_SAYS["whoami"] = (1, [])
 setup = set_up_relay()
-assert wrangler == ["whoami", "login", "deploy"]
+assert wrangler == ["whoami", "login", "whoami", "deploy"], wrangler
 system.have = lambda program: False  # no Node: how to get it
 link.set_up_relay()
 assert "nodejs.org" in link.status()["setup"]["error"] and not link.setup["running"]
@@ -3590,6 +3722,7 @@ assert phone_says({"op": "ask", "text": "hi"})[0]["unpaired"] and not asked_phon
 assert "expired" in phone_says({"op": "pair", "secret": "guess"})[0]["error"]
 link.start_pairing()
 assert link.status()["pairing"]["qr"].startswith("data:image/png;base64,")
+assert "expired" in phone_says({"op": "pair", "secret": "é"})[0]["error"] and link.pairing  # (it raised: compare_digest takes ASCII only)
 payload = json.loads(phone.base64.urlsafe_b64decode(link.pair_link().split("#")[1] + "=="))
 assert payload["s"] == link.id and payload["r"] == "wss://relay.example.workers.dev"
 reply = phone_says({"op": "pair", "secret": payload["p"], "name": "Test phone"})[0]
@@ -3625,8 +3758,215 @@ frames.clear()
 asyncio.run(link._frame(c_new.encode() + chan_new.seal({"op": "hello", "token": reply["token"]})))
 assert json.dumps({"t": "close", "c": c}) in frames and c not in link.phones and link.phones[c_new]["device"], frames
 assert phone_says(raw=b"\x03forged")[0] == json.dumps({"t": "close", "c": c})  # tampered: the connection is cut
+# a message that isn't one (anyone who once saw a pairing code can do the handshake) cuts that connection off too: it
+# raised out of the relay's loop, which dropped every phone and reconnected
+c_odd = "e" * 36
+hello, finish = phone.connect(phone.raw(link.enc_key.public_key()))
+asyncio.run(link._frame(c_odd.encode() + hello))
+odd = finish(frames[-1][36:])
+frames.clear()
+asyncio.run(link._frame(c_odd.encode() + odd.seal(["not", "a", "message"])))
+assert frames == [json.dumps({"t": "close", "c": c_odd})] and c_odd not in link.phones and c_new in link.phones
+# the app reads a few of the window's pages (Today, what's playing, the screen) and nothing else of its API: settings,
+# keys, accounts and data stay the PC's
+link.api = {"get": lambda path: {"read": path}, "post": lambda path, data: {"did": path, **data}}
+
+
+def phone_asks(message, n=1, then=lambda: None):
+    """What the paired phone gets back (n frames awaited; then() runs after the message is handled)."""
+    frames.clear()
+
+    async def go():
+        await link._frame(c_new.encode() + chan_new.seal(message))
+        then()
+        for _ in range(300):
+            if len(frames) >= n:
+                break
+            await asyncio.sleep(0.01)
+    asyncio.run(go())
+    return [f if isinstance(f, str) else chan_new.open(f[36:]) for f in frames]
+
+
+def phone_back():
+    """The app connects again on c_new: a new handshake, then its token. What the PC answers first."""
+    global chan_new
+    hello, finish = phone.connect(phone.raw(link.enc_key.public_key()))
+    asyncio.run(link._frame(c_new.encode() + hello))
+    chan_new = finish(frames[-1][36:])
+    return phone_asks({"op": "hello", "token": reply["token"]})[0]
+
+
+assert phone_back()["v"] == 2
+assert phone_asks({"op": "get", "id": 7, "path": "/api/today"}) == [{"op": "got", "id": 7, "data": {"read": "/api/today"}}]
+assert phone_asks({"op": "post", "id": 8, "path": "/api/media/Next", "data": {"a": 1}})[0]["data"] == {"did": "/api/media/Next", "a": 1}
+# its PC page lists the tasks running and stops one of them (the app could only stop them all)
+assert phone_asks({"op": "get", "id": 7, "path": "/api/jobs"})[0]["data"] == {"read": "/api/jobs"}
+assert phone_asks({"op": "post", "id": 8, "path": "/api/jobs/12/stop"})[0]["data"] == {"did": "/api/jobs/12/stop"}
+assert "can't" in phone_asks({"op": "post", "id": 9, "path": "/api/jobs/all/stop"})[0]["error"]
+for op, path in (("get", "/api/settings"), ("get", "/api/memory"), ("get", "/api/today/../settings"), ("post", "/api/settings"),
+                 ("post", "/api/data/delete"), ("post", "/api/phone/unpair"), ("post", "/api/media/Next/../../settings")):
+    assert "can't" in phone_asks({"op": op, "id": 9, "path": path, "data": {"safety": "full"}})[0]["error"], path
+link.api["get"] = lambda path: 1 / 0  # a page that fails says so, and the link lives on
+assert "division" in phone_asks({"op": "get", "id": 1, "path": "/api/media"})[0]["error"]
+# the chat's lines and Jarvis's state reach the phone as they happen (nothing else of what the app emits)
+frames.clear()
+link.put({"kind": "log", "who": "jarvis", "text": "On it."})
+link.put({"kind": "latency", "ms": 300})
+link.put({"kind": "state", "state": "thinking"})
+link.label = lambda name: {"look": "Reading your screen"}[name]
+link.put({"kind": "log", "who": "tool", "text": "look"})
+for _ in range(200):
+    if len(frames) >= 3:
+        break
+    time.sleep(0.01)
+time.sleep(0.05)
+assert [chan_new.open(f[36:]) for f in frames] == [{"op": "event", "kind": "log", "who": "jarvis", "text": "On it."},
+                                                  {"op": "event", "kind": "state", "state": "thinking"},
+                                                  {"op": "event", "kind": "log", "who": "tool", "text": "Reading your screen"}]
+# talking with Jarvis from the phone: its microphone goes into the PC's voice session and Jarvis's voice comes back to
+# it, the PC's speakers staying silent (the real Speaker and PhoneVoice; no Gemini session here)
+pl = jarvis.Live.__new__(jarvis.Live)
+pl.mic, pl.session, pl.floor, pl.voice_at, pl.level, pl.waiting, pl.spoke, pl.muted = False, None, 100.0, 0.0, 0.0, False, False, False
+pl.backlog, pl.user_spoke_at, at_speakers = collections.deque(maxlen=125), 0.0, []
+pl.speaker = jarvis.Speaker()
+pl.speaker.out = types.SimpleNamespace(write=at_speakers.append, stop=lambda: None)
+pl.backup = jarvis.Backup(pl)
+pl.wake = lambda: setattr(pl, "mic", True)
+link.voice = jarvis.PhoneVoice(pl)
+assert phone_asks({"op": "voice", "on": True, "how": "wake"}) == [{"op": "voice", "on": True}] and pl.mic and link.floor == c_new
+speech = (np.random.default_rng(1).normal(0, 3000, 1280)).astype(np.int16).tobytes()
+phone_asks({"op": "audio", "d": base64.b64encode(speech).decode()}, n=0)
+assert len(pl.backlog) == 1 and pl.voice_at > 0  # heard (kept while the session connects)
+got = phone_asks({"op": "barge"}, n=1, then=lambda: pl.speaker.play(b"\x01\x00" * 2400))
+assert got == [{"op": "audio", "d": base64.b64encode(b"\x01\x00" * 2400).decode()}] and pl.speaker.q.empty() and not at_speakers
+phone_asks({"op": "audio", "d": base64.b64encode(speech).decode()}, n=0)
+assert len(pl.backlog) == 1  # while Jarvis talks the phone's microphone isn't heard: its speaker is right next to it
+assert phone_asks({"op": "barge"}) == [{"op": "hush"}] and not pl.speaker.busy()  # tapped to interrupt: it stops playing
+
+
+def stops_listening():
+    pl.mic = False
+
+
+# Jarvis stops listening (stop_listening, a long silence): the phone is told, and the speakers are the PC's again
+assert phone_asks({"op": "voice", "on": False}) == [{"op": "voice", "on": False}] and not pl.mic and link.floor is None  # the orb, tapped off
+assert phone_asks({"op": "voice", "on": True}, n=2, then=stops_listening)[-1] == {"op": "voice", "on": False}
+assert link.floor is None and pl.speaker.remote is None and pl.phone_at > 0
+pl.speaker.play(b"\x01\x00" * 240)
+assert not pl.speaker.q.empty() or at_speakers
+pl.speaker.until = 0.0
+# what was said from the phone doesn't make the user "at the PC": a task's answer waits for them, or goes to the phone
+system._idle_seconds, pl.user_spoke_at, pl.phone_at = (lambda: 300.0), time.time() - 20, time.time() - 10
+assert not jarvis.at_pc(pl)
+pl.user_spoke_at = time.time()
+assert jarvis.at_pc(pl)
+system._idle_seconds = lambda: None
+# "Hey Jarvis" heard by the phone and the PC at once (the phone lies next to it): the PC keeps the conversation, but a
+# tap on the app's orb takes it
+pl.mic = True
+refused = phone_asks({"op": "voice", "on": True, "how": "wake"})[0]
+assert refused["on"] is False and "PC" in refused["why"] and pl.speaker.remote is None
+assert phone_asks({"op": "voice", "on": True, "how": "tap"}) == [{"op": "voice", "on": True}] and pl.speaker.remote
+# the phone goes out of reach mid-sentence: the PC's own microphone and speakers are Jarvis's again
+asyncio.run(link._frame(json.dumps({"t": "close", "c": c_new})))
+assert link.floor is None and pl.speaker.remote is None and not pl.mic
+# the wake word's models go to the app in pieces that fit a frame
+big = os.path.join(store.DATA, "wake-test.onnx")
+with open(big, "wb") as f:
+    f.write(os.urandom(phone.CHUNK * 2 + 5))
+link.voice.wake_files = lambda: ("Hey Jarvis", [big])
+assert phone_back()["wake"] == "Hey Jarvis"
+parts = phone_asks({"op": "wake"}, n=4)
+assert [p["op"] for p in parts] == ["file"] * 3 + ["wake"] and parts[-1] == {"op": "wake", "phrase": "Hey Jarvis", "files": ["wake-test.onnx"]}
+with open(big, "rb") as f:
+    assert b"".join(base64.b64decode(p["d"]) for p in parts[:3]) == f.read() and [p["i"] for p in parts[:3]] == [0, 1, 2]
+os.remove(big)
+# the direct way in (the same Wi-Fi, a VPN): the same handshake on a port of this PC, open only while a phone is paired
+# and the setting is on; a stranger there gets nothing
+import websockets.sync.client
+phone.PORT = 0  # (any free port: an installed Jarvis may be listening on the real one)
+link.api["get"] = lambda path: {"read": path}
+asyncio.run_coroutine_threadsafe(link._sync_direct(), link.loop).result(5)
+assert link.port and link.status()["direct"] == [f"{ip}:{link.port}" for ip in system.local_addresses()]
+with websockets.sync.client.connect(f"ws://127.0.0.1:{link.port}") as ws:
+    hello, finish = phone.connect(phone.raw(link.enc_key.public_key()))
+    ws.send(hello)
+    direct = finish(ws.recv(5))
+    ws.send(direct.seal({"op": "hello", "token": reply["token"]}))
+    ready = direct.open(ws.recv(5))
+    assert ready["op"] == "ready" and ready["direct"] == link.direct_addresses() and c_new not in link.phones
+    ws.send(direct.seal({"op": "get", "id": 3, "path": "/api/system"}))
+    assert direct.open(ws.recv(5)) == {"op": "got", "id": 3, "data": {"read": "/api/system"}}
+    assert link.status()["devices"][0]["online"]
+for junk in (b"\x03not a frame", "text", b"\x01short"):  # no handshake: cut off, nothing kept
+    with websockets.sync.client.connect(f"ws://127.0.0.1:{link.port}") as ws:
+        ws.send(junk)
+        try:
+            ws.recv(5)
+            assert False, junk
+        except websockets.exceptions.ConnectionClosed:
+            pass
+phone.STRANGER = 0.3  # a handshake and then nothing (not paired, not pairing): it doesn't keep a place for long
+with websockets.sync.client.connect(f"ws://127.0.0.1:{link.port}") as ws:
+    hello, finish = phone.connect(phone.raw(link.enc_key.public_key()))
+    ws.send(hello)
+    finish(ws.recv(5))
+    try:
+        ws.recv(5)
+        assert False, "an unpaired connection was kept"
+    except websockets.exceptions.ConnectionClosed:
+        pass
+for _ in range(100):
+    if not link.phones:
+        break
+    time.sleep(0.01)
+assert not link.phones and not link.status()["devices"][0]["online"]
+# a phone connecting or leaving (the link's own thread) while a chat line is sent out or Settings asks who's online
+# (other threads): "dictionary changed size during iteration" came out of emit(), into whatever was speaking or working
+
+
+class Arriving(dict):  # (another phone connects while this one's entry is read)
+    def __getitem__(self, key):
+        link.phones.setdefault("just-connected", {"device": None, "channel": None, "relay": True})
+        return dict.__getitem__(self, key)
+
+
+for during in (lambda: link.put({"kind": "log", "who": "jarvis", "text": "hi"}), link.status):
+    link.phones.clear()
+    link.phones["first"] = Arriving(device=None, channel=None, relay=True)
+    during()
+    assert "just-connected" in link.phones
+link.phones.clear()
+real_call, link._call = link._call, lambda coro: coro.close() or link.state["devices"].setdefault("pairing-now", {"name": "x", "hash": ""})
+link.push("The download finished.")  # ...and a phone being paired while news goes out to the paired ones
+link._call = real_call
+del link.state["devices"]["pairing-now"]
+# a network card Windows calls "Local Area Connection" is one a phone can reach (its name starts like "lo": skipped as loopback)
+import psutil
+real_cards = psutil.net_if_stats, psutil.net_if_addrs
+psutil.net_if_stats = lambda: {name: types.SimpleNamespace(isup=True) for name in ("lo", "Local Area Connection")}
+psutil.net_if_addrs = lambda: {"lo": [types.SimpleNamespace(family=phone.socket.AF_INET, address="127.0.0.1")],
+                               "Local Area Connection": [types.SimpleNamespace(family=phone.socket.AF_INET, address="192.168.1.5")]}
+assert system.local_addresses() == ["192.168.1.5"]
+psutil.net_if_stats, psutil.net_if_addrs = real_cards
+link.state["relay"] = ""  # pairing needs no relay then: the code carries where this PC is
+link.start_pairing()
+payload = json.loads(phone.base64.urlsafe_b64decode(link.pair_link().split("#")[1] + "=="))
+assert payload["r"] == "" and payload["d"] == link.direct_addresses()
+link.pairing = None
+store.update_settings({"phone_direct": False})  # switched off: nothing listens
+asyncio.run_coroutine_threadsafe(link._sync_direct(), link.loop).result(5)
+assert not link.port and link.direct_addresses() == []
+try:
+    link.start_pairing()  # (no relay, no direct way: nothing a phone could reach)
+    assert False
+except ValueError as e:
+    assert "relay" in str(e) and link.pairing is None
+store.update_settings({"phone_direct": True})
 link.unpair(link.status()["devices"][0]["id"])
 assert link.status()["devices"] == []
+time.sleep(0.1)
+assert not link.server  # (the last phone unpaired: it stops listening)
 link.loop.call_soon_threadsafe(link.loop.stop)
 os.remove(phone.STATE_FILE)
 # the app's test vector (android/.../handshake.json, checked by the app's HandshakeTest) still matches phone.py
@@ -3789,6 +4129,29 @@ assert dc_sends() == [{"id": "2", "kind": "friend", "text": "yes!", "reply": "la
 discord.call = lambda cmd, **args: dc_calls.append((cmd, args)) or ({"to": "Sam", "text": "gg"} if cmd == "react" else fake_dc(cmd, **args))
 assert brain.TOOLS["discord_react"][0]("Sam", "😂")["error"] == brain.NEEDS_YES and dc_calls[-1][0] == "targets"
 assert "reacted 😂 to Sam" in brain.TOOLS["discord_react"][0]("Sam", "😂", confirmed=True)["result"] and dc_calls[-1][0] == "react"
+# "delete that": the user's own newest message in a chat (or the one with those words) is deleted for everyone, after a
+# yes; never someone else's, and not one too old for WhatsApp to take back
+unsent, earlier_ask = [], wa.ask
+wa.ask = lambda cmd, timeout=30, **args: (
+    [{"id": "m0", "me": True, "text": "last week's plan", "at": time.time() - 7 * 86400, "by": None},
+     {"id": "m1", "me": True, "text": "see you at 5", "at": time.time() - 60, "by": None},
+     {"id": "m2", "me": False, "text": "ok then", "at": time.time() - 50, "by": None},
+     {"id": "m3", "me": True, "text": "wrong chat, sorry", "at": time.time() - 40, "by": None}]
+    if cmd == "history" else unsent.append(args) if cmd == "unsend" else fake_page(cmd, **args))
+assert brain.TOOLS["unsend"][0]("whatsapp", "Maya")["error"] == brain.NEEDS_YES and not unsent
+assert "wrong chat" in brain.TOOLS["unsend"][0]("whatsapp", "Maya", confirmed=True)["result"] and unsent[-1]["msg"] == "m3"
+assert "see you at 5" in brain.TOOLS["unsend"][0]("whatsapp", "Maya", text="AT 5", confirmed=True)["result"] and unsent[-1]["msg"] == "m1"
+assert "error" in brain.TOOLS["unsend"][0]("whatsapp", "Maya", text="ok then", confirmed=True) and len(unsent) == 2
+assert "two days" in brain.TOOLS["unsend"][0]("whatsapp", "Maya", text="last week", confirmed=True)["error"] and len(unsent) == 2
+assert "nothing deleted" in brain.TOOLS["unsend"][0]("whatsapp", "Sammy", confirmed=True)["result"]
+wa.ask = earlier_ask
+discord.call = lambda cmd, **args: dc_calls.append((cmd, args)) or ({"text": "on my way"} if cmd == "unsend" and not args["text"] else fake_dc(cmd, **args))
+assert brain.TOOLS["unsend"][0]("discord", "Sam")["error"] == brain.NEEDS_YES and dc_calls[-1][0] == "targets"
+assert "on my way" in brain.TOOLS["unsend"][0]("discord", "Sam", confirmed=True)["result"] and dc_calls[-1] == ("unsend", {"id": "2", "kind": "friend", "text": ""})
+assert "error" in brain.TOOLS["unsend"][0]("discord", "Sam", text="never said", confirmed=True)
+assert "error" in brain.TOOLS["unsend"][0]("telegram", "Sam", confirmed=True)
+assert "is a server" in brain.TOOLS["unsend"][0]("discord", "chess club", confirmed=True)["error"] and dc_calls[-1][0] == "targets"
+assert "unsend" in jarvis.ONCE_TOOLS and "unsend" in jarvis.LIVE_TOOLS  # (the voice re-calls a change that just worked: a second one would delete the message before it)
 # a picture someone sent goes to the "look" models
 real_media, real_vision = discord.media, brain.vision[0]
 discord.media = lambda target, msg="": {"type": "image", "mime": "image/png", "data": "iVBO", "id": "9", "me": False, "by": "Sam",
@@ -3960,6 +4323,57 @@ sb_task = brain.Task()
 assert sb._ask("say hi in the chat", lambda n: None, None, sb_task) == "Sent it." and len(seen_turns) == 3 and "save the way with skill" in seen_turns[2]
 assert sb_task.screen
 brain.screen_lock.release()  # (ask() lets go of the screen when a task ends; _ask alone doesn't)
+# a task doesn't die because every model was busy for one moment (64 steps into a download, a single "no model could
+# answer" ended it and threw the lot away): the step is asked again after a wait. Not when nothing could ever answer
+# (no key), not once it's stopped, and not for ever
+real_patience, brain.PATIENCE = brain.PATIENCE, (0.01, 0.01)
+busy = [brain.NoModel("no model could answer (x: busy)", True), brain.NoModel("no model could answer (x: timed out)", True)]
+
+
+def flaky(msgs, **kw):
+    if busy:
+        raise busy.pop(0)
+    return [{"text": "Done."}]
+
+
+sb._generate = flaky
+assert sb._ask("download my lectures", lambda n: None, None, brain.Task()) == "Done." and not busy
+for failures, left, stopped in (([brain.NoModel("no model could answer (x: busy)", True)] * 4, 1, False),
+                                ([brain.NoModel("no model could answer (aistudio: no key)", False)] * 2, 1, False),
+                                ([brain.NoModel("no model could answer (x: busy)", True)] * 2, 1, True)):
+    busy[:], t = failures, brain.Task()
+    if stopped:
+        t.cancel.set()
+    try:
+        sb._ask("download my lectures", lambda n: None, None, t)
+        raise AssertionError("answered with no model")
+    except brain.NoModel:
+        assert len(busy) == left and len(t.contents) == 0, (len(busy), left)  # (and no half-finished turn left behind)
+brain.PATIENCE = real_patience
+# a long job that reaches the step limit says what it did and what's left (it said "that's taking more steps than I'd
+# like" and nothing else), and its work stays in the conversation, so "continue" carries on from there
+real_steps, brain.MAX_STEPS, asked_tools = brain.MAX_STEPS, 3, []
+sb._generate = lambda msgs, **kw: asked_tools.append("tools" in kw) or (
+    [{"functionCall": {"name": "run_command", "args": {"command": "true"}}}] if "tools" in kw
+    else [{"text": "Two of the five files are saved; say continue for the rest."}])
+sb._run_tool = lambda name, args, task=None: ({"result": "ok"}, None)
+long_task = brain.Task()
+assert sb._ask("download five files", lambda n: None, None, long_task) == "Two of the five files are saved; say continue for the rest."
+assert asked_tools == [True, True, True, False] and "step limit" in long_task.contents[-2]["parts"][0]["text"] and len(long_task.contents) == 9
+# ...and when that last answer can't be had (no model just then, a provider refusing tool calls in the history without
+# the tools), the work isn't thrown away with it: it raised, and the whole task was dropped from the conversation
+
+
+def no_summary(msgs, **kw):
+    if "tools" in kw:
+        return [{"functionCall": {"name": "run_command", "args": {"command": "true"}}}]
+    raise brain.BadRequest("tool calls in the history but no tools")
+
+
+sb._generate, cut_short = no_summary, brain.Task()
+assert "say continue" in sb._ask("download five files", lambda n: None, None, cut_short) and len(cut_short.contents) == 9
+brain.MAX_STEPS = real_steps
+assert brain.MAX_STEPS >= 60
 # screen history: the focused window's title when it changes (private windows never), searched by words or read as a day
 import activity
 activity.FOLDER = os.path.join(_home, "activity")
@@ -4008,6 +4422,15 @@ try:
 except RuntimeError as e:
     assert "Restart Vesktop" in str(e) and "open Vesktop" not in str(e), e
 discord.PORT, system.vesktop = real
+# no model could answer just then: the message isn't answered, but the user is still shown it (the thread died with a
+# traceback, and the message was never mentioned)
+def no_model(contents, **kw):
+    raise brain.NoModel("no model could answer (x: busy)")
+assert whatsapp.decide(types.SimpleNamespace(_generate=no_model), "WhatsApp", "Sam", "Maya", "Maya: are you coming?") == {}
+# a model that answers null (or a number) for the reply: nothing is sent, and the message is still shown (.strip() on None
+# killed the reply's thread before the user was told)
+said_null = lambda contents, **kw: [{"text": '{"reply": null, "tell_user": 0}'}]
+assert whatsapp.decide(types.SimpleNamespace(_generate=said_null), "WhatsApp", "Sam", "Maya", "Maya: ok") == {"reply": "", "tell_user": ""}
 # a voice message is listened to (it said "can't listen to voice notes"): the bytes go to the model as audio
 heard_media, real_vision = [], brain.vision[0]
 brain.vision[0] = lambda contents: heard_media.append(contents[0]["parts"][0]["inlineData"]) or [{"text": "See you at 5."}]
@@ -4017,6 +4440,18 @@ got = brain.TOOLS["whatsapp_media"][0]("maya")
 assert got["voice message"] == "See you at 5." and got["from"] == "Maya" and heard_media == [{"mimeType": "audio/ogg", "data": "T2dnUw=="}], got
 wa.ask = lambda cmd, timeout=30, **args: None if cmd == "media" else fake_page(cmd, **args)
 assert "no voice message" in brain.TOOLS["whatsapp_media"][0]("maya")["error"]
+# a document someone sent (a schedule, a PDF) is saved to Downloads, to read or move ("unable to download the schedule
+# document"): under its own name, never as a path, never over another file
+real_downloads, brain.DOWNLOADS = brain.DOWNLOADS, os.path.join(_home, "Downloads")
+wa.ask = lambda cmd, timeout=30, **args: ({"id": "d1", "type": "document", "mime": "application/pdf", "at": 0, "caption": "the schedule",
+                                            "by": None, "me": False, "name": "../Schedule 2026.pdf", "data": base64.b64encode(b"%PDF-1.7").decode()}
+                                           if cmd == "media" else fake_page(cmd, **args))
+for expected in ("Schedule 2026.pdf", "Schedule 2026 (2).pdf"):
+    got = brain.TOOLS["whatsapp_media"][0]("maya")
+    assert got["document"] == "Schedule 2026.pdf" and got["saved"] == os.path.join(brain.DOWNLOADS, expected) and got["caption"] == "the schedule", got
+    with open(got["saved"], "rb") as f:
+        assert f.read() == b"%PDF-1.7"
+brain.DOWNLOADS = real_downloads
 # a voice message someone sends is heard as it arrives: the reply, the chat log and jarvis-wa's history get its words
 # (they were all "[a voice message]", so Jarvis answered one without knowing what it said)
 kept = ["[a voice message]"]
@@ -4137,18 +4572,6 @@ assert "talk to you in French or Arabic, answer in that" in whatsapp.call_langua
 wa.ask = fake_page
 chats.pop()
 brain.whatsapp_link[0] = None
-if not system.IS_WINDOWS:  # the DevTools pipe: commands on fd 3, replies on fd 4, each JSON ending in a NUL
-    fake_browser = os.path.join(tempfile.mkdtemp(), "browser")
-    with open(fake_browser, "w") as f:
-        f.write(f"#!{sys.executable}\nimport json, os\nbuf = b''\nwhile True:\n    c = os.read(3, 65536)\n    if not c: break\n"
-                "    buf += c\n    while b'\\0' in buf:\n        m, buf = buf.split(b'\\0', 1)\n"
-                "        os.write(4, json.dumps({'id': json.loads(m)['id'], 'result': {'ok': 1}}).encode() + b'\\0')\n")
-    os.chmod(fake_browser, 0o755)
-    dt = system.Devtools(fake_browser, tempfile.mkdtemp(), [])
-    dt.send({"id": 7, "method": "Browser.getVersion"})
-    assert dt.recv() == {"id": 7, "result": {"ok": 1}}
-    dt.close()
-
 # start at login runs install.sh's launcher, or else a package's `jarvis` (the AUR one is /usr/bin/jarvis)
 real_set, real_windows, real_env = system.set_autostart, system.IS_WINDOWS, dict(os.environ)
 started = []
@@ -4190,6 +4613,13 @@ for cmd in ("sed -i s/a/b/ f.txt", "echo x | tee f.txt", "perl -pi -e s/a/b/ f",
             "git branch -D old", "git stash drop", "docker rm web", "kubectl delete pod x", "curl -s x | python3", "tar -xzf a.tgz -C /"):
     assert brain.risky_command(cmd), cmd
 for cmd in ("sed -n 1,5p f", "grep -i error log", "git branch", "git stash list", "docker ps", "tar -tzf a.tgz", "python3 -c 'print(1)'"):
+    assert not brain.risky_command(cmd), cmd
+# ...however the command is written: by its path, through a shell's -c or eval, or behind env, nice, timeout...
+for cmd in ("/bin/rm -rf ~/x", "ls; /usr/bin/rm x", "bash -c 'rm -rf ~/x'", 'sh -lc "rm x"', "env FOO=1 rm x", "command rm x",
+            "nice -n 10 rm x", "timeout 5 rm -rf x", "nohup rm x", "eval 'rm x'", "setsid -f rm x"):
+    assert brain.risky_command(cmd), cmd
+for cmd in ("which rm", "ls /usr/bin/rm", "man rm", "echo 'rm is a command'", "git log --grep rm", "bash -c 'ls ~'", "time ls",
+            "env"):
     assert not brain.risky_command(cmd), cmd
 # the agent can't disconnect accounts through Composio's own tool: only the Accounts page does that
 managed, composio = [], brain.McpServer("composio", {"url": "https://connect.composio.dev/mcp"}, None, print)
@@ -4287,6 +4717,12 @@ from datetime import datetime as dt
 here = dt.fromisoformat(meet["start"]["dateTime"]).astimezone()
 assert people.meeting(meet) == here.strftime("%H:%M") + " Standup", people.meeting(meet)
 assert people.meeting(meet, with_day=True) == here.strftime("%a %d %b %H:%M") + " Standup"
+# at exit Qt drops the window's timer before the window says it's hidden: no traceback in the log then
+import shiboken6
+gone = window.Backend(lambda path: {}, lambda path, data: {}, str, win.backend.live, win.backend.shown, "0")
+shiboken6.delete(gone.timer)
+gone.watch(False)
+
 # the chat's pictures: proper file URLs (Windows paths broke "file://" + path), only pictures are shown, and only
 # pictures open when one is clicked
 import window
@@ -4306,5 +4742,34 @@ window.open_image(picture)
 system.open_target = real_open
 assert opened == [picture], opened
 assert "picture" in brain.tool_show_image(sys.executable).get("error", "")
+# a picture from the web is saved under a picture's extension, in Jarvis's pictures folder only: the server's type said
+# what the file was called ("image/x\\..\\..\\Startup\\run.bat" is a path on Windows), and any type was kept
+real_fetch, real_dir, real_on_image, shown = brain.fetch, brain.IMAGE_DIR, brain.on_image[0], []
+brain.IMAGE_DIR, brain.on_image[0] = tempfile.mkdtemp(), lambda path, caption: shown.append(path)
+for kind, ok in (("image/png", True), ("image/jpeg; charset=binary", True), ("image/SVG+xml", True),
+                 ("image/png\\..\\..\\Startup\\run.bat", False), ("image/x-msdownload", False), ("image/bat", False)):
+    shown.clear()
+    brain.fetch = lambda url, **k: types.SimpleNamespace(ok=True, status_code=200, content=b"\x89PNG", headers={"Content-Type": kind})
+    out = brain.tool_show_image("https://pictures.example/x")
+    assert ("error" not in out) == ok and len(shown) == ok, (kind, out)
+    assert not ok or (os.path.dirname(shown[0]) == brain.IMAGE_DIR and os.path.splitext(shown[0])[1] in brain.CHAT_PICTURES), shown
+brain.fetch, brain.IMAGE_DIR, brain.on_image[0] = real_fetch, real_dir, real_on_image
+# a notification that starts with a dash (a task's bulleted answer) still shows: notify-send took it for an option
+if not system.IS_WINDOWS:
+    bin_dir, said_file = tempfile.mkdtemp(), os.path.join(tempfile.mkdtemp(), "said.json")
+    with open(os.path.join(bin_dir, "notify-send"), "w") as f:
+        f.write(f"#!{sys.executable}\nimport json, sys\njson.dump(sys.argv[1:], open({said_file!r}, 'w'))\n")
+    os.chmod(os.path.join(bin_dir, "notify-send"), 0o755)
+    real_path = os.environ["PATH"]
+    os.environ["PATH"] = bin_dir + os.pathsep + real_path
+    system.notify("Jarvis", "- Flight one at 9")
+    os.environ["PATH"] = real_path
+    for _ in range(300):
+        if os.path.getsize(said_file) if os.path.exists(said_file) else 0:
+            break
+        time.sleep(0.01)
+    with open(said_file) as f:
+        argv = json.load(f)
+    assert argv[argv.index("--") + 1:] == ["Jarvis", "- Flight one at 9"], argv
 
 print("ok")

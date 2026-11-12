@@ -15,6 +15,7 @@ AbstractButton {
     implicitHeight: size
     hoverEnabled: true
     focusPolicy: Qt.NoFocus
+    Accessible.name: tip  // (a button with only a picture: screen readers say what it does)
     Tip { text: b.tip; visible: b.tip !== "" && b.hovered }
     background: Rectangle {
         radius: width / 2

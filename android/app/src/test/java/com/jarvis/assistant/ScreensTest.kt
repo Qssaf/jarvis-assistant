@@ -38,5 +38,31 @@ class ScreensTest {
         )), Actions())
     }
 
-    @Test fun settings() = paparazzi.snapshot { JarvisApp(online.copy(messages = chat.take(2), key = "fake-key-for-the-picture"), Actions(), sheetOpen = true) }
+    @Test fun settings() = paparazzi.snapshot {
+        JarvisApp(online.copy(messages = chat.take(2), key = "fake-key-for-the-picture", direct = true, wake = true), Actions(), sheetOpen = true)
+    }
+
+    @Test fun listening() = paparazzi.snapshot { JarvisApp(online.copy(voice = Voice.LISTENING, wake = true), Actions(), level = { 0.6f }) }
+
+    @Test fun speaking() = paparazzi.snapshot {
+        JarvisApp(online.copy(messages = chat.take(5), voice = Voice.LISTENING, speaking = true), Actions())
+    }
+
+    @Test fun today() = paparazzi.snapshot {
+        JarvisApp(online.copy(loaded = true, weather = Weather("Lisbon", "", "19°C", "Partly cloudy"), reminders = listOf(
+            Reminder("Start the Calculus problem set", "Wed 11 Nov, 18:00"), Reminder("Call the dentist", "Thu 12 Nov, 09:30"),
+            Reminder("Water the plants", "Sat 14 Nov, 10:00 · weekly"))), Actions(), tab = Tab.TODAY)
+    }
+
+    @Test fun pc() = paparazzi.snapshot {
+        JarvisApp(online.copy(loaded = true, direct = true, playing = Playing("Midnight City", "M83", "Spotify", true),
+            stats = Pc(cpu = 12, memory = 46, disk = 91, uptime = "3 days"), jobs = listOf(
+                Job(3, "Find flights to Lisbon for the first week of June", "Searching the web", 3), Job(4, "Fix the failing date test", "", 24))),
+            Actions(), tab = Tab.PC)
+    }
+
+    @Test fun outOfReach() = paparazzi.snapshot {
+        JarvisApp(online.copy(state = State.PC_OFFLINE, relay = "", note = "Your PC isn't on this network. Set up the relay in its Settings to reach it from anywhere."),
+            Actions(), tab = Tab.PC)
+    }
 }

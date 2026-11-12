@@ -164,10 +164,11 @@ class Backend(QObject):
         self.opener()
 
     def watch(self, shown):
+        import shiboken6
         if shown:
             self.poll()
             self.timer.start(33)
-        else:
+        elif shiboken6.isValid(self.timer):  # (at exit Qt drops the timer before the window says it's hidden)
             self.timer.stop()
 
     def put(self, event):  # (the app's event queues call this: see jarvis.emit)

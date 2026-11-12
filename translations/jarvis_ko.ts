@@ -162,7 +162,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+195"/>
+        <location filename="../window.py" line="+226"/>
         <source>Copied</source>
         <translation>복사됨</translation>
     </message>
@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2703"/>
+        <location filename="../jarvis.py" line="+2915"/>
         <source>LISTENING</source>
         <translation>듣는 중</translation>
     </message>
@@ -1089,7 +1089,7 @@
         <translation>백업 음성</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+32"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
         <translation>클릭: Jarvis 열기 · 일시 중지 버튼: 듣기 중지/시작 · 빨간 버튼(또는 오른쪽 클릭): 중지</translation>
     </message>
@@ -1282,7 +1282,7 @@
         <translation>설정</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>변경 사항은 바로 저장돼요. 모델과 API 키는 모델 페이지에 있어요.</translation>
     </message>
@@ -1530,12 +1530,12 @@
     <message>
         <location line="+2"/>
         <location line="+138"/>
-        <location line="+52"/>
+        <location line="+56"/>
         <source>Save</source>
         <translation>저장</translation>
     </message>
     <message>
-        <location line="-188"/>
+        <location line="-192"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>제거</translation>
@@ -1638,7 +1638,7 @@
     <message>
         <location line="+0"/>
         <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
-        <translation>WhatsApp, Discord, 이메일에 "내일 보낼게"라고 쓰면 Jarvis가 알림을 설정하거나 저녁 목록에 넣습니다</translation>
+        <translation>WhatsApp, Discord, 이메일에 &quot;내일 보낼게&quot;라고 쓰면 Jarvis가 알림을 설정하거나 저녁 목록에 넣습니다</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1792,12 +1792,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+85"/>
+        <location line="+89"/>
         <source>Unpair</source>
         <translation>페어링 해제</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-88"/>
         <source>Remove the bot</source>
         <translation>봇 제거</translation>
     </message>
@@ -1812,7 +1812,17 @@
         <translation>Jarvis Android 앱은 나만의 비공개 릴레이를 거쳐 어디서든 이 PC에 연결해요. 종단 간 암호화되어 릴레이는 알아볼 수 없는 데이터만 전달하고, 이 PC는 인터넷에 열려 있지 않아요.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+2"/>
+        <source>Connect directly on your own network</source>
+        <translation>내 네트워크에서 직접 연결</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>On the same Wi-Fi, or a VPN like Tailscale, paired phones reach this PC without the relay, and pairing needs no relay either. Your firewall may need to allow Jarvis</source>
+        <translation>같은 Wi-Fi나 Tailscale 같은 VPN에서는 페어링된 휴대폰이 릴레이 없이 이 PC에 연결되며, 페어링에도 릴레이가 필요 없습니다. 방화벽에서 Jarvis를 허용해야 할 수도 있습니다</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Setting up…</source>
         <translation>설정 중…</translation>
     </message>
@@ -2098,7 +2108,7 @@
     <message>
         <location line="+0"/>
         <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
-        <translation>Jarvis가 앞에 있는 창을 기록합니다(제목만, 내용은 절대 아님, 이 PC에만). "어제 열었던 그 사이트 뭐였지?"라고 물을 수 있게요. 사생활 보호 모드와 비밀번호 관리자는 건너뛰며, 최대 2주간 보관합니다</translation>
+        <translation>Jarvis가 앞에 있는 창을 기록합니다(제목만, 내용은 절대 아님, 이 PC에만). &quot;어제 열었던 그 사이트 뭐였지?&quot;라고 물을 수 있게요. 사생활 보호 모드와 비밀번호 관리자는 건너뛰며, 최대 2주간 보관합니다</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2516,9 +2526,14 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+92"/>
+        <location filename="../qml/Today.qml" line="+98"/>
         <source>Feels %1 in %2</source>
         <translation>%2 체감 %1</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Feels %1</source>
+        <translation>체감 %1</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2536,7 +2551,17 @@
         <translation>다음 곡</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
+        <source>Working on</source>
+        <translation>작업 중</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Stop this task</source>
+        <translation>이 작업 중지</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Up next</source>
         <translation>다음 일정</translation>
     </message>

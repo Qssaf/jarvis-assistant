@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """J.A.R.V.I.S. - tray app. Say "Hey Jarvis" and Gemini Live listens and answers in real time;
 anything that needs the computer or your accounts goes to the agent in brain.py."""
-import argparse, asyncio, collections, json, mimetypes, os, queue, re, secrets, signal, subprocess, sys, tempfile, threading, time
+import argparse, asyncio, base64, collections, json, mimetypes, os, queue, re, secrets, signal, subprocess, sys, tempfile, threading, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
@@ -51,6 +51,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - Websites and chat apps (Discord, OpenCode, VS Code and other Electron apps show no controls: never ui_controls them): act with click_on naming the exact field ("the message box at the bottom", "the prompt box"), never just the app's name, and end that same act with a look step. Browser tabs: focus_window the browser, then [{keys: "ctrl+shift+a"}, {type: "tab name"}, {keys: "Return"}].
 - WhatsApp: whatsapp_read (chats and groups, or one chat's messages), whatsapp_media to listen to a voice message or see a photo someone sent, whatsapp_send (to: the chat's name), and whatsapp_call to phone someone and tell them something out loud ("call dad and tell him I want water"), never the screen. A message the user dictated to someone they named: whatsapp_send (or whatsapp_call when they said call) with confirmed: true at once.
 - Discord: discord_read (their DMs and the channels that mention them, or one chat: a person, "Server #channel", or a server to see its channels), discord_send (to: those names; reply_to: "last" to reply to their newest message; @name pings), discord_react (an emoji on their newest message), discord_media (a picture or voice message someone sent), never the screen unless they say Discord isn't connected. A dictated message to someone named: discord_send with confirmed: true at once.
+- "Delete that message", "unsend what I sent Sam": unsend (app, chat; text: a few of its words when it isn't their newest there), with confirmed: true when they said which message. Only their own messages can be deleted.
 - "Don't answer Sam", "stop replying to him", "tell me when Alex messages me": people_rules (never / always / normal; app whatsapp, discord or both), straight away.
 - People: "what's up with Sam?", "what did I promise Maya?" → person (their page and latest messages); "Sam is my cousin", "Maya's exam is Friday" → person with note (until: the day it stops being true), not remember. "Who's waiting on me?" → waiting_on_me; "leave Sam off the list", "take Maya off the evening list" → waiting_on_me with skip. "Who am I seeing today?" → briefing (each meeting says who comes). "What was that site I had open yesterday?" → screen_history.
 - Messaging: [{click_on: "the chat named 'Sam Lee' in the left list"}, {expect: "the open conversation is with Sam Lee"}, {click_on: "the message box at the bottom"}, {type: "..."}, {keys: "Return"}, {look: "Is the message in the conversation?"}].
@@ -80,7 +81,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - Never say something is or isn't there, or that you did something, unless a tool just showed it. Tools that type or click only report that they acted: end with a look and say what it saw. A tool that returned an error did nothing: never say it was sent, set or changed.
 - Each look sees one moment. To keep an eye on the screen until something shows up ("tell me when it finishes", "watch for an enemy plane"), use watch: it looks every few seconds and speaks up when it sees it.
 - Never solve an on-screen question from a description, and never call an answer right unless a careful look said so.
-- Never deny a capability you have. If you lack a direct tool for something a connected account or the PC can do, hand it to do_task instead of saying you can't. The user's browser is signed in to their own sites, so going through their Instagram saves, YouTube history or any site of theirs is a do_task, never "I can't access private accounts".
+- Never deny a capability you have. If you lack a direct tool for something a connected account or the PC can do, hand it to do_task instead of saying you can't. Changing how the PC itself is set up (a keyboard shortcut, a default app, a system setting, installing something) is a do_task too: the agent has a shell and finds out how. The user's browser is signed in to their own sites, so going through their Instagram saves, YouTube history or any site of theirs is a do_task, never "I can't access private accounts".
 - Quizzes, forms and homework sites: only fill in or select the answer. Never press Return, Submit, Check, Next or Save there unless the user asks: that hands it in.
 - "This guy", "him", "her", "here", "this" with nothing else just discussed mean what's on screen: look (or list_windows) first, never ask "who?".
 - "Reply to him" or "type a reply" without the words: read their newest messages, then tell the user in a sentence what they wrote and the reply you'd send ("He asked if you're free Saturday. Send 'yeah, I'm in'?"), and send it once they agree. If they said to write whatever you like, send your reply straight away.
@@ -165,12 +166,13 @@ VOICE_RESULT_LIMIT = 12000  # characters of one tool result the voice model gets
 # tools the voice may call for one thing the user said: looking for an app that isn't open, it once called list_windows
 # and look over 100 times in a minute without a word to the user
 VOICE_TOOL_LIMIT = 12
+VOICE_TOOL_SECONDS = 60  # a voice tool call taking longer is given up on (and an act stopped): the conversation goes on
 # tools the voice model runs itself (no screen involved); the agent handles everything else
 LIVE_TOOLS = ["jobs", "code", "run_command", "web_search", "read_webpage", "youtube_search", "open_url", "remember", "forget", "set_reminder", "list_reminders",
               "cancel_reminder", "list_windows", "focus_window", "close_window", "act", "look", "ui_controls", "make_image",
               "show_image", "read_file", "briefing", "account_settings", "weather", "classroom_due", "classroom_announcements", "drive_file", "routine",
               "recall", "selection", "media", "notes", "recent_changes", "watch", "checks", "whatsapp_read", "whatsapp_media", "whatsapp_send", "whatsapp_call",
-              "discord_read", "discord_send", "discord_react", "discord_media", "people_rules", "person", "waiting_on_me", "screen_history"]
+              "discord_read", "discord_send", "discord_react", "discord_media", "unsend", "people_rules", "person", "waiting_on_me", "screen_history"]
 
 # what the user asked to be called, from what Jarvis remembers ("prefers to be called Q", "call me Sam, not sir")
 # ponytail: a pattern over remember()'s usual wording, not understanding; unmatched memory falls back to the prompt's rule
@@ -204,7 +206,7 @@ TOOL_LABELS = {"run_command": "Running a command", "web_search": "Searching the 
                "media": "Controlling the music", "notes": "Taking notes", "recent_changes": "Checking what changed", "watch": "Watching the screen",
                "plan": "Planning", "checks": "Updating your checks", "whatsapp_read": "Reading WhatsApp", "whatsapp_media": "Opening a WhatsApp message", "whatsapp_call": "Calling on WhatsApp",
                "whatsapp_send": "Sending a WhatsApp message", "discord_read": "Reading Discord", "discord_send": "Sending a Discord message",
-               "discord_react": "Reacting on Discord", "discord_media": "Opening a Discord message", "people_rules": "Updating who Jarvis answers",
+               "discord_react": "Reacting on Discord", "unsend": "Deleting a message", "discord_media": "Opening a Discord message", "people_rules": "Updating who Jarvis answers",
                "person": "Checking on them", "waiting_on_me": "Checking who's waiting", "screen_history": "Searching your screen history",
                "skill": "Saving how it's done", "jobs": "Checking your tasks", "code": "Starting a coding job",
                "wait_screen": "Waiting for the screen"}
@@ -218,7 +220,7 @@ def tool_label(name):
     return f"Using {app}" if app and app != "Composio" else "Working"
 
 
-ONCE_TOOLS = {"whatsapp_send", "whatsapp_call", "discord_send", "discord_react", "code"}  # never twice for one request: _send_once
+ONCE_TOOLS = {"whatsapp_send", "whatsapp_call", "discord_send", "discord_react", "unsend", "code"}  # never twice for one request: _send_once
 VOICE_SCREEN_ACTS = {"act", "focus_window", "close_window", "open_url"}
 YES = re.compile(r"\b(?:yes|yeah|yep|yup|ya|sure|ok|okay|alright|all right|go ahead|go for it|do it|send it|proceed|confirm|"
                  r"correct|right|absolutely|of course|definitely|certainly|fine|why not|perfect|oui|si|sí|ja|naam|na3am|aywa|"
@@ -277,6 +279,7 @@ class Speaker:
         self.q = queue.Queue()
         self.out = system.AudioOut()
         self.echo_cancelled = False  # the mic has the PC's own sound taken out: it can stay open while Jarvis talks
+        self.remote = None  # a phone is talking with Jarvis (PhoneVoice): its play(pcm) gets the voice, the speakers stay silent
         self.until = 0.0
         self.since = 0.0  # when the current burst reaches the speakers
         threading.Thread(target=self._run, daemon=True).start()
@@ -286,7 +289,8 @@ class Speaker:
         if now >= self.until:
             self.since = now + 0.25  # a fresh burst takes ~0.25 s to reach the speakers
         self.until = max(self.until, self.since) + len(pcm) / 48000  # 24 kHz * 2 bytes
-        self.q.put(pcm)
+        remote = self.remote
+        remote(pcm) if remote else self.q.put(pcm)
 
     def busy(self):
         return time.time() < self.until
@@ -296,6 +300,9 @@ class Speaker:
             self.q.queue.clear()
         self.until = 0.0
         self.out.stop()
+        remote = self.remote
+        if remote:
+            remote(None)  # (the phone stops playing what it already has)
 
     def _run(self):
         while True:
@@ -316,6 +323,7 @@ class Live:
     NUDGE = ("(The connection dropped before you finished answering. Answer the user's last request now. Tools that "
              "already ran have their results above: use them, and don't repeat actions that change things.{request})")
     down_until = 0.0  # Gemini Live couldn't be opened: the backup voice answers until then (see _fall_back)
+    phone_at = 0.0  # when a phone last finished talking with Jarvis: what was said before then wasn't said at the PC
 
     def __init__(self, brain, speaker):
         from google import genai
@@ -413,7 +421,8 @@ class Live:
                             f'"{quoted}")', announce=text))
 
     def feed(self, frame):
-        if not self.mic or (not self.speaker.echo_cancelled and time.time() <= self.speaker.until + 0.5):  # half-duplex without echo cancelling
+        # half-duplex without echo cancelling (a phone's speaker is next to its microphone: always)
+        if not self.mic or ((self.speaker.remote or not self.speaker.echo_cancelled) and time.time() <= self.speaker.until + 0.5):
             self.level *= 0.6
             return
         level = float(np.sqrt(np.mean(frame.astype(np.float32) ** 2)))
@@ -1008,10 +1017,12 @@ class Live:
             emit("tool", name=fc.name)
             t = time.time()
             try:  # never let a stuck tool freeze the conversation (images aren't usable here: look returns text)
-                result = (await asyncio.wait_for(asyncio.to_thread(self.brain._run_tool, fc.name, args), 60))[0]
+                result = (await asyncio.wait_for(asyncio.to_thread(self.brain._run_tool, fc.name, args), VOICE_TOOL_SECONDS))[0]
             except TimeoutError:
+                if args.get("halt"):  # (an act stops at its next step: it went on clicking with the screen let go)
+                    args["halt"].set()
                 note = self.brain.sign_in_note()
-                result = {"error": "that took over 60 seconds and was abandoned; " + (note or "check the screen or try another way")}
+                result = {"error": f"that took over {VOICE_TOOL_SECONDS} seconds and was abandoned; " + (note or "check the screen or try another way")}
             except Exception as e:
                 result = {"error": str(e)[:500]}
             finally:
@@ -1030,11 +1041,18 @@ class Live:
         self.running += 1
         started = time.time()
         try:
+            async def answer(fc):  # (a call that fails says so: it took every answer with it, and the voice hung)
+                try:
+                    return await self._tool(fc, halt)
+                except Exception as e:
+                    print(f"[voice] {fc.name} failed: {e!r}"[:300], flush=True)
+                    return {"error": f"NOT DONE: that call failed ({str(e)[:200] or type(e).__name__})"}
+
             async def in_order(fcs):  # screen work keeps its order (focus the window, then type); everything else at once
-                return [await self._tool(fc, halt) for fc in fcs]
+                return [await answer(fc) for fc in fcs]
             screen = [fc for fc in calls if fc.name in SCREEN_TOOLS]
             rest = [fc for fc in calls if fc.name not in SCREEN_TOOLS]
-            done = await asyncio.gather(in_order(screen), *(self._tool(fc, halt) for fc in rest))
+            done = await asyncio.gather(in_order(screen), *(answer(fc) for fc in rest))
             results = dict(zip(map(id, screen), done[0])) | dict(zip(map(id, rest), done[1:]))
 
             user_spoke = self.user_spoke_at > started + 0.3
@@ -1099,6 +1117,7 @@ class Live:
         if away:
             held.append(f'The task "{task}": {result}')
             system.notify("Jarvis", result[:300])
+            push_phones(result)
         self.last = time.time()
         self.waiting = self.waiting or not away
         reply = {"result": result, **({"note": "the whole text is in the chat: say only the gist, in a sentence or two"}
@@ -1504,11 +1523,84 @@ def tell(live, text, event=None, transcript="", loud=False, kind=""):
         threading.Thread(target=live.brain.add_turn, args=(asked, text), daemon=True).start()
     system.notify("Jarvis", text[:300])
     live.announce(text, loud=loud, kind=kind)
+    push_phones(text)
+
+
+def push_phones(text):
+    """To the user's phones (Telegram, the Jarvis app): a notification there, kept for the app if it's closed."""
     for link in (remote_ref[0], phone_ref[0]):
         try:
             link and link.push(text)
         except Exception as e:
             print(f"[phone] couldn't send it: {e}", flush=True)
+
+
+class PhoneVoice:
+    """A paired phone as Jarvis's ears and voice for a while (the app's wake word, or its orb): its microphone goes into
+    the one voice session and Speaker sends Jarvis's voice there, so tools, tasks and safety are the PC's own. Whoever
+    woke Jarvis last has the floor; said at both at once (the phone lying next to the PC), the PC keeps it."""
+
+    def __init__(self, live):
+        self.live, self.level, self.play = live, MicLevel(), None
+        self.since = 0.0  # when Jarvis was last listening or speaking in this conversation
+
+    def phrase(self):
+        return store.wake_phrase()
+
+    def start(self, play, tapped=False):
+        """play(pcm or None) takes Jarvis's 24 kHz voice (None: stop playing). Returns why not, or None when it started."""
+        live = self.live
+        if not tapped and live.mic and not live.speaker.remote:
+            return "Jarvis is already listening at your PC."
+        live.barge_in()
+        self.level, self.play, self.since = MicLevel(), play, time.time()
+        live.speaker.remote = play
+        live.wake()
+        print("[voice] listening from the phone", flush=True)
+
+    def feed(self, pcm):
+        """16 kHz PCM from the phone's microphone."""
+        live = self.live
+        if self.play and live.speaker.remote is self.play and len(pcm) >= 2:
+            frame = np.frombuffer(pcm[:len(pcm) // 2 * 2], np.int16)
+            live.feed(self.level(frame, own_voice=time.time() <= live.speaker.until + 0.5))
+
+    def barge(self):
+        self.live.barge_in()
+
+    def over(self):
+        """The PC took the floor back, or the conversation ended (Jarvis stopped listening and has said its last words)."""
+        live = self.live
+        if live.speaker.remote is not self.play:
+            return True
+        if live.mic or live.speaker.busy():
+            self.since = time.time()
+        return time.time() - self.since > 1.5  # (a goodbye comes a moment after it stops listening)
+
+    def stop(self):
+        live = self.live
+        if self.play and live.speaker.remote is self.play:
+            live.speaker.remote, live.mic = None, False  # (like Pause: a running task goes on)
+        live.phone_at, self.play = time.time(), None
+
+    def wake_files(self):
+        """(what to say, [the melspectrogram, embedding and wake word models]): what this PC listens for."""
+        cfg = store.settings()
+        folder = os.path.join(os.path.dirname(load_openwakeword().__file__), "resources", "models")
+        return store.wake_phrase(cfg), [os.path.join(folder, "melspectrogram.onnx"), os.path.join(folder, "embedding_model.onnx"),
+                                        wake_model_file(cfg["wake_word"])]
+
+
+def phone_get(path, brain):
+    """The window's pages a paired phone may read (phone.PHONE_GET), cut to what fits a frame."""
+    if path == "/api/screen":
+        return {"jpeg": base64.b64encode(system.small_jpeg(system.screenshot())).decode()}
+    if path == "/api/conversation":
+        return {"messages": [{"who": m["who"], "text": m["text"][:4000]} for m in sessions.messages[-80:]]}
+    if path == "/api/jobs":  # (in words: what each is doing as the chat says it, and for how long)
+        return {"jobs": [{"n": j["n"], "label": j["label"], "now": tool_label(j["now"]) if j["now"] else "",
+                          "minutes": int(time.time() - j["since"]) // 60} for j in api_get(path, brain)]}
+    return api_get(path, brain)
 
 
 def task_key(fc):
@@ -1519,7 +1611,8 @@ def task_key(fc):
 def at_pc(live):
     """The user is at the PC: keyboard or mouse used lately (not by Jarvis), talking with Jarvis, or no way to tell."""
     idle = system.user_idle()
-    return idle is None or idle < AWAY or live.mic or time.time() - live.user_spoke_at < 120
+    return (idle is None or idle < AWAY or live.mic  # (talking from the phone: that's where it's said)
+            or (time.time() - live.user_spoke_at < 120 and live.user_spoke_at > live.phone_at))
 
 
 def job_done(live, text):
@@ -2071,7 +2164,8 @@ def voice_loop(live, mic_target=None):
         if (score >= need and time.time() - last_wake > 2) or listen_now.is_set():
             last_wake = time.time()
             wake.reset()
-            if live.mic and not live.speaker.busy() and not listen_now.is_set():
+            phone, live.speaker.remote = live.speaker.remote, None  # said at the PC: the PC answers (a phone is told)
+            if live.mic and not live.speaker.busy() and not listen_now.is_set() and not phone:
                 print(f"[voice] wake word ({score:.2f}): already listening", flush=True)
                 live.feed(f)  # same conversation, same session: nothing to restart
                 continue
@@ -2084,7 +2178,8 @@ def voice_loop(live, mic_target=None):
             system.chime()  # short; not muted, so no words are lost
             live.wake()
             continue
-        live.feed(f)
+        if not live.speaker.remote:  # (a phone is talking with Jarvis: its microphone is the one heard)
+            live.feed(f)
 
 
 # ---------------------------------------------------------------- the app's local API
@@ -2154,6 +2249,9 @@ def api_get(path, brain):
             return {"ok": True, "detail": f"{len(brain_mod.AIStudio().models())} models available"}
         except Exception as e:
             return {"ok": False, "detail": brain_mod.describe(e)[:200]}
+    if path == "/api/jobs":  # the tasks running now, oldest first (Home's "Working on")
+        import brain as brain_mod
+        return [{"n": t.n, "label": t.label, "since": t.started, "now": t.step, "coding": t.coding} for t in list(brain_mod.running)]
     if path == "/api/today":
         import brain as brain_mod
         return {"weather": weather(), "wake": store.wake_phrase(), "reminders": api_get("/api/reminders", brain)[:4],
@@ -2454,7 +2552,8 @@ def weather():
         try:
             r = requests.get(f"https://wttr.in/{requests.utils.quote(city)}", params={"format": "%l|%c|%C|%t|%f"}, timeout=5)
             place, icon, cond, temp, feels = (r.text.strip().split("|") + [""] * 5)[:5]
-            _weather[:] = [{"place": place.split(",")[0], "icon": icon.strip(), "condition": cond, "temp": temp.lstrip("+"),
+            place = "" if re.fullmatch(r"[-\d., ]+", place) else place.split(",")[0]  # (coordinates when it can't name the town)
+            _weather[:] = [{"place": place, "icon": icon.strip(), "condition": cond.strip(), "temp": temp.lstrip("+"),
                             "feels": feels.lstrip("+")} if r.ok and "|" in r.text else "", time.time(), city]
         except requests.RequestException:
             _weather[1] = time.time() - 540  # try again in a minute
@@ -2525,6 +2624,9 @@ def api_post(path, data, live, brain):
         live.type(data["text"].strip())
     elif path == "/api/stop":
         live.stop()
+    elif m := re.fullmatch(r"/api/jobs/(\d+)/stop", path):  # one task only: the others carry on
+        import brain as brain_mod
+        brain_mod.tool_jobs("stop", m[1])
     elif path == "/api/pause":
         live.toggle_pause()
     elif m := re.fullmatch(r"/api/media/(PlayPause|Next|Previous)", path):
@@ -2803,9 +2905,6 @@ def serve_mcp():
 
 
 # ---------------------------------------------------------------- window + tray
-STARTED = time.time()
-
-
 def show_hud():
     """Show the app window (built on first open, 0.1 s, and freed after a while hidden: window.Window). Safe from any thread."""
     import window
@@ -3151,7 +3250,11 @@ def main():
     remote_ref[0] = remote.Telegram(brain, notify=lambda text: emit("log", who="system", text=text), chat=chat)
     background(remote_ref[0].run, restart=True)
     import phone
-    phone_ref[0] = phone.PhoneLink(brain, notify=lambda text: emit("log", who="system", text=text), chat=chat)
+    phone_ref[0] = phone.PhoneLink(brain, notify=lambda text: emit("log", who="system", text=text), chat=chat,
+                                   api={"get": lambda path: phone_get(path, brain),
+                                        "post": lambda path, data: api_post(path, data, live, brain)}, voice=PhoneVoice(live),
+                                   label=tool_label)
+    clients.append(phone_ref[0])  # (the chat's lines and Jarvis's state, as they happen)
     background(phone_ref[0].run, restart=True)
     import whatsapp
     whatsapp_ref[0] = brain_mod.whatsapp_link[0] = whatsapp.WhatsApp(

@@ -83,10 +83,7 @@ func main() {
 	}
 	db, err = sql.Open("sqlite", "file:"+*path+"?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)")
 	if err == nil {
-		_, err = db.Exec(`CREATE TABLE IF NOT EXISTS jarvis_msgs (chat TEXT, id TEXT, me INTEGER, sender TEXT, at INTEGER,
-			text TEXT, kind TEXT, raw BLOB, PRIMARY KEY (chat, id));
-			CREATE INDEX IF NOT EXISTS jarvis_msgs_at ON jarvis_msgs (chat, at);
-			CREATE TABLE IF NOT EXISTS jarvis_chats (chat TEXT PRIMARY KEY, name TEXT, at INTEGER, unread INTEGER)`)
+		_, err = db.Exec(schema)
 	}
 	container := sqlstore.NewWithDB(db, "sqlite3", waLogger.Sub("db"))
 	if err == nil {
@@ -280,10 +277,31 @@ func describe(m *waE2E.Message) (string, string) {
 	return "", ""
 }
 
+// kept: the kinds of message whose media can be fetched later (mediaOf): their keys are saved with them
+const schema = `CREATE TABLE IF NOT EXISTS jarvis_msgs (chat TEXT, id TEXT, me INTEGER, sender TEXT, at INTEGER,
+	text TEXT, kind TEXT, raw BLOB, PRIMARY KEY (chat, id));
+	CREATE INDEX IF NOT EXISTS jarvis_msgs_at ON jarvis_msgs (chat, at);
+	CREATE TABLE IF NOT EXISTS jarvis_chats (chat TEXT PRIMARY KEY, name TEXT, at INTEGER, unread INTEGER)`
+
+// rang keeps an incoming call in its chat's history: a number that only rang is a chat that can be read and answered
+func rang(peer types.JID, id string, video bool) {
+	text, at := "[a WhatsApp call]", time.Now().Unix()
+	if video {
+		text = "[a WhatsApp video call]"
+	}
+	db.Exec(`INSERT OR IGNORE INTO jarvis_msgs VALUES (?, ?, 0, '', ?, ?, 'call', NULL)`, peer.String(), id, at, text)
+	db.Exec(`INSERT INTO jarvis_chats VALUES (?, '', ?, 0) ON CONFLICT (chat) DO UPDATE SET at = max(at, excluded.at)`,
+		peer.String(), at)
+}
+
+func kept(kind string) bool {
+	return kind == "image" || kind == "audio" || kind == "ptt" || kind == "document"
+}
+
 func save(chat types.JID, e *events.Message) {
 	text, kind := describe(e.Message)
 	var raw []byte
-	if kind == "image" || kind == "audio" || kind == "ptt" { // (kept to download later)
+	if kept(kind) { // (to download later)
 		raw, _ = proto.Marshal(e.Message)
 	}
 	sender := ""
@@ -380,6 +398,8 @@ func run(c map[string]any) {
 		_, err = db.Exec(`UPDATE jarvis_msgs SET text = ? WHERE chat = ? AND id = ?`, str("text"), str("chat"), str("msg"))
 	case "send":
 		out, err = send(ctx, str("chat"), str("text"))
+	case "unsend": // delete for everyone: only a message the user sent
+		err = unsend(ctx, str("chat"), str("msg"))
 	case "dial":
 		out, err = dial(ctx, str("chat"))
 	case "accept":
@@ -525,9 +545,9 @@ func earlier(ctx context.Context, chat string, oldest map[string]any) {
 	}
 }
 
-// mediaOf: the newest (or that) voice message, audio or photo in a chat, decrypted, as base64; nil if there's none
+// mediaOf: the newest (or that) voice message, audio, photo or document in a chat, decrypted, as base64; nil if there's none
 func mediaOf(ctx context.Context, chat, id string) (map[string]any, error) {
-	q := `SELECT id, me, sender, at, kind, raw FROM jarvis_msgs WHERE chat = ? AND kind IN ('image', 'audio', 'ptt')`
+	q := `SELECT id, me, sender, at, kind, raw FROM jarvis_msgs WHERE chat = ? AND kind IN ('image', 'audio', 'ptt', 'document') AND raw IS NOT NULL`
 	args := []any{chat}
 	if id != "" {
 		q += ` AND id = ?`
@@ -548,14 +568,21 @@ func mediaOf(ctx context.Context, chat, id string) (map[string]any, error) {
 		return nil, err
 	}
 	var size uint64
-	var mime, caption string
+	var mime, caption, name string
+	limit := uint64(15e6)
 	switch {
+	case m.GetDocumentMessage() != nil:
+		d := m.GetDocumentMessage()
+		size, mime, caption, name, limit = d.GetFileLength(), d.GetMimetype(), d.GetCaption(), d.GetFileName(), 40e6
+		if name == "" {
+			name = d.GetTitle()
+		}
 	case m.GetImageMessage() != nil:
 		size, mime, caption = m.GetImageMessage().GetFileLength(), m.GetImageMessage().GetMimetype(), m.GetImageMessage().GetCaption()
 	case m.GetAudioMessage() != nil:
 		size, mime = m.GetAudioMessage().GetFileLength(), m.GetAudioMessage().GetMimetype()
 	}
-	if size > 15e6 {
+	if size > limit {
 		return map[string]any{"error": "too big"}, nil
 	}
 	data, err := cli.DownloadAny(ctx, m)
@@ -570,7 +597,7 @@ func mediaOf(ctx context.Context, chat, id string) (map[string]any, error) {
 		}
 	}
 	return map[string]any{"id": id, "type": kind, "mime": strings.Split(mime, ";")[0], "at": at, "caption": caption,
-		"by": by, "me": me, "data": base64.StdEncoding.EncodeToString(data)}, nil
+		"by": by, "me": me, "name": name, "data": base64.StdEncoding.EncodeToString(data)}, nil
 }
 
 func send(ctx context.Context, chat, text string) (string, error) {
@@ -587,6 +614,22 @@ func send(ctx context.Context, chat, text string) (string, error) {
 		ID: r.ID, Timestamp: r.Timestamp}
 	save(j, &events.Message{Info: info, Message: msg})
 	return r.ID, nil
+}
+
+func unsend(ctx context.Context, chat, id string) error {
+	j, err := types.ParseJID(chat)
+	if err != nil {
+		return err
+	}
+	var me bool
+	if db.QueryRow(`SELECT me FROM jarvis_msgs WHERE chat = ? AND id = ?`, chat, id).Scan(&me) != nil || !me {
+		return errors.New("that isn't a message the user sent")
+	}
+	if _, err = cli.SendMessage(ctx, j, cli.BuildRevoke(j, types.EmptyJID, id)); err != nil {
+		return err
+	}
+	_, err = db.Exec(`DELETE FROM jarvis_msgs WHERE chat = ? AND id = ?`, chat, id)
+	return err
 }
 
 // ---- calls
@@ -633,6 +676,7 @@ func onOffer(e *events.CallOffer) {
 	peer := chatOf(e.From)
 	emit(map[string]any{"ev": "call", "id": e.CallID, "peer": peer.String(), "name": nameOf(peer), "contact": saved(peer),
 		"video": c.MediaType == core.CallMediaTypeVideo, "group": false, "outgoing": false})
+	rang(peer, e.CallID, c.MediaType == core.CallMediaTypeVideo)
 }
 
 func onCall(id string, fn func(*call.CallManager, *call.CallInfo)) {

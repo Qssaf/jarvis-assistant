@@ -111,14 +111,17 @@ def describe():
     """A few lines for the models: what this computer is and how to do common things on it."""
     # (the home folder said outright: a model guessed /home/<user name>, and the two differed)
     home = f"The user's home folder is {os.path.expanduser('~')}. "
+    # (asked how much memory it uses, the voice said it "runs remotely": it's a program here, and can measure itself)
+    mine = (f" Jarvis itself is a program on this PC (process {os.getpid()}): its own memory or CPU use is measured with run_command "
+            + (f"(Get-Process -Id {os.getpid()})" if IS_WINDOWS else f"(ps -o rss=,pcpu= -p {os.getpid()})") + ", never guessed.")
     if IS_WINDOWS:
         return (home + "The computer runs Windows. run_command runs PowerShell (e.g. Get-ChildItem $HOME\\Downloads, Get-Clipboard, "
                 "Set-Clipboard 'text'). Open apps with act launch (notepad, calc, explorer, msedge, spotify...); "
-                "media keys: act([{keys: \"XF86AudioPlay\"}]).")
+                "media keys: act([{keys: \"XF86AudioPlay\"}])." + mine)
     desktop = os.environ.get("XDG_CURRENT_DESKTOP", "Linux")
     return (home + f"The computer runs Linux ({desktop}, {'Wayland' if WAYLAND else 'X11'}). run_command runs bash (e.g. ls ~/Downloads; "
             "volume: wpctl set-volume @DEFAULT_AUDIO_SINK@ 50% or pactl; clipboard: wl-paste / xclip). Open apps with act "
-            "launch (firefox, dolphin, nautilus, kcalc...); media keys: act([{keys: \"XF86AudioPlay\"}]).")
+            "launch (firefox, dolphin, nautilus, kcalc...); media keys: act([{keys: \"XF86AudioPlay\"}])." + mine)
 
 
 # ---------------------------------------------------------------- microphone and speaker
@@ -349,6 +352,41 @@ def _jpeg(raw, w, h, stride, fmt):
     buf.open(QIODevice.WriteOnly)
     QImage(raw, w, h, stride, fmt).save(buf, "JPG", 85)
     return bytes(out)
+
+
+def small_jpeg(data, width=1280, quality=60):
+    """A JPEG scaled down to at most this wide (the phone app's look at the screen: ~150 KB instead of 1 MB)."""
+    from PySide6.QtCore import QBuffer, QByteArray, QIODevice, Qt
+    from PySide6.QtGui import QImage
+    img = QImage.fromData(data)
+    if img.isNull():
+        return data
+    if img.width() > width:
+        img = img.scaledToWidth(width, Qt.SmoothTransformation)
+    out = QByteArray()
+    buf = QBuffer(out)
+    buf.open(QIODevice.WriteOnly)
+    img.save(buf, "JPG", quality)
+    return bytes(out)
+
+
+def local_addresses():
+    """This PC's IPv4 addresses a phone could reach (Wi-Fi, Ethernet, a VPN like Tailscale), the default route's first:
+    not loopback, link-local, or the bridges of containers and virtual machines."""
+    import psutil
+    import socket
+    up = {name for name, s in psutil.net_if_stats().items() if s.isup}
+    found = [a.address for name, addrs in psutil.net_if_addrs().items()
+             if name in up and not name.lower().startswith(("docker", "br-", "veth", "virbr", "vmnet", "vethernet"))
+             for a in addrs if a.family == socket.AF_INET and not a.address.startswith(("127.", "169.254."))]
+    main = ""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("192.0.2.1", 9))  # (nothing is sent: it only asks which address would be used)
+            main = s.getsockname()[0]
+    except OSError:
+        pass
+    return sorted(dict.fromkeys(found), key=lambda a: a != main)[:4]
 
 
 def _from_file(args, suffix=".png", timeout=10):
@@ -1040,90 +1078,14 @@ def headless_browser():
     return None
 
 
-class Devtools:
-    """A headless Chromium driven over the DevTools protocol (Jarvis's WhatsApp): JSON messages, one per send()/recv().
-    On Linux through a pipe, so nothing listens; Windows can't hand the browser a pipe, so a port on 127.0.0.1."""
-
-    def __init__(self, browser, profile, args):
-        cmd = [browser, f"--user-data-dir={profile}", "--headless=new", "--no-first-run", "--no-default-browser-check", *args]
-        self.ws = None
-        if not IS_WINDOWS:  # a browser still running on this profile (left by a crash) would get this one's page as a tab
-            try:
-                stale = int(os.readlink(os.path.join(profile, "SingletonLock")).rsplit("-", 1)[1])
-                if profile in open(f"/proc/{stale}/cmdline").read():
-                    os.kill(stale, 15)
-                    for _ in range(50):
-                        if not os.path.exists(f"/proc/{stale}"):
-                            break
-                        time.sleep(0.1)
-            except (OSError, ValueError, IndexError):
-                pass
-        import atexit
-        atexit.register(self.close)  # (Jarvis quitting closes it too)
-        if IS_WINDOWS:
-            port_file = os.path.join(profile, "DevToolsActivePort")
-            if os.path.exists(port_file):
-                os.remove(port_file)
-            self.proc = subprocess.Popen(cmd + ["--remote-debugging-port=0", "about:blank"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            for _ in range(100):
-                if os.path.exists(port_file) and len(open(port_file).read().split()) == 2:
-                    break
-                time.sleep(0.1)
-            port, path = open(port_file).read().split()
-            from websockets.sync.client import connect
-            self.ws = connect(f"ws://127.0.0.1:{port}{path}", max_size=None)
-            return
-        import fcntl
-        to_browser, self.out = os.pipe()
-        self.inp, from_browser = os.pipe()
-
-        def fds():  # the browser reads commands on fd 3 and writes replies to fd 4
-            a, b = fcntl.fcntl(to_browser, fcntl.F_DUPFD, 10), fcntl.fcntl(from_browser, fcntl.F_DUPFD, 10)
-            os.dup2(a, 3)
-            os.dup2(b, 4)
-        self.proc = subprocess.Popen(cmd + ["--remote-debugging-pipe", "about:blank"], preexec_fn=fds, close_fds=False,
-                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        os.close(to_browser)
-        os.close(from_browser)
-        self.buf = b""
-
-    def send(self, msg):
-        data = json.dumps(msg)
-        if self.ws:
-            self.ws.send(data)
-        else:
-            os.write(self.out, data.encode() + b"\0")
-
-    def recv(self):
-        """The next message; raises EOFError when the browser is gone."""
-        if self.ws:
-            try:
-                return json.loads(self.ws.recv())
-            except Exception as e:
-                raise EOFError(str(e))
-        while b"\0" not in self.buf:
-            chunk = os.read(self.inp, 1 << 20)
-            if not chunk:
-                raise EOFError("the browser closed")
-            self.buf += chunk
-        msg, self.buf = self.buf.split(b"\0", 1)
-        return json.loads(msg)
-
-    def close(self):
-        try:
-            self.proc.terminate()
-            self.proc.wait(5)
-        except Exception:
-            self.proc.kill()
-
-
 # ---------------------------------------------------------------- notifications, media, stats, login
 notifier = [None]  # set by the tray app: shows a balloon from the tray icon
 
 
 def notify(title, text):
     if not IS_WINDOWS and have("notify-send"):
-        subprocess.Popen(["notify-send", "-a", "Jarvis", "-i", os.path.join(HERE, "icon.svg"), title, text], stderr=subprocess.DEVNULL)
+        # ("--": a text starting with a dash, like a task's bulleted answer, was taken for an option and never shown)
+        subprocess.Popen(["notify-send", "-a", "Jarvis", "-i", os.path.join(HERE, "icon.svg"), "--", title, text], stderr=subprocess.DEVNULL)
     elif notifier[0]:
         notifier[0](title, text)
 

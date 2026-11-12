@@ -163,7 +163,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+195"/>
+        <location filename="../window.py" line="+226"/>
         <source>Copied</source>
         <translation>कॉपी हो गया</translation>
     </message>
@@ -1074,7 +1074,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2703"/>
+        <location filename="../jarvis.py" line="+2915"/>
         <source>LISTENING</source>
         <translation>सुन रहा</translation>
     </message>
@@ -1099,7 +1099,7 @@
         <translation>बैकअप आवाज़</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+32"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
         <translation>क्लिक: Jarvis खोलें · पॉज़ बटन: सुनना रोकें या शुरू करें · लाल बटन (या राइट-क्लिक): रोकें</translation>
     </message>
@@ -1295,7 +1295,7 @@
         <translation>सेटिंग्स</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>बदलाव तुरंत सहेजे जाते हैं। मॉडल और API कुंजियाँ मॉडल पेज पर हैं।</translation>
     </message>
@@ -1543,12 +1543,12 @@
     <message>
         <location line="+2"/>
         <location line="+138"/>
-        <location line="+52"/>
+        <location line="+56"/>
         <source>Save</source>
         <translation>सहेजें</translation>
     </message>
     <message>
-        <location line="-188"/>
+        <location line="-192"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>हटाएँ</translation>
@@ -1651,7 +1651,7 @@
     <message>
         <location line="+0"/>
         <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
-        <translation>जब आप WhatsApp, Discord या ईमेल पर "कल भेज दूँगा" लिखते हैं, Jarvis रिमाइंडर लगा देता है या उसे शाम की सूची में डाल देता है</translation>
+        <translation>जब आप WhatsApp, Discord या ईमेल पर &quot;कल भेज दूँगा&quot; लिखते हैं, Jarvis रिमाइंडर लगा देता है या उसे शाम की सूची में डाल देता है</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1805,12 +1805,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+85"/>
+        <location line="+89"/>
         <source>Unpair</source>
         <translation>अलग करें</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-88"/>
         <source>Remove the bot</source>
         <translation>बॉट हटाएँ</translation>
     </message>
@@ -1825,7 +1825,17 @@
         <translation>Jarvis Android ऐप आपके अपने निजी रिले के ज़रिए कहीं से भी इस PC तक पहुँचता है। यह एंड-टू-एंड एन्क्रिप्टेड है: रिले सिर्फ़ ऐसा डेटा आगे भेजता है जिसे वह पढ़ नहीं सकता, और इस PC पर कुछ भी इंटरनेट के लिए खुला नहीं है।</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+2"/>
+        <source>Connect directly on your own network</source>
+        <translation>अपने नेटवर्क पर सीधे कनेक्ट करें</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>On the same Wi-Fi, or a VPN like Tailscale, paired phones reach this PC without the relay, and pairing needs no relay either. Your firewall may need to allow Jarvis</source>
+        <translation>एक ही Wi-Fi पर, या Tailscale जैसे VPN से, जोड़े गए फ़ोन रिले के बिना इस PC तक पहुँचते हैं, और जोड़ने के लिए भी रिले नहीं चाहिए। हो सकता है आपके फ़ायरवॉल में Jarvis को अनुमति देनी पड़े</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Setting up…</source>
         <translation>सेट अप हो रहा है…</translation>
     </message>
@@ -2111,7 +2121,7 @@
     <message>
         <location line="+0"/>
         <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
-        <translation>Jarvis नोट करता है कि आपके सामने कौन-सी विंडो है (सिर्फ़ उसका शीर्षक, अंदर की चीज़ें कभी नहीं, इसी PC पर), ताकि आप पूछ सकें "कल वह कौन-सी साइट खुली थी?"। प्राइवेट ब्राउज़िंग और पासवर्ड मैनेजर छोड़ दिए जाते हैं; ज़्यादा से ज़्यादा दो हफ़्ते रखा जाता है</translation>
+        <translation>Jarvis नोट करता है कि आपके सामने कौन-सी विंडो है (सिर्फ़ उसका शीर्षक, अंदर की चीज़ें कभी नहीं, इसी PC पर), ताकि आप पूछ सकें &quot;कल वह कौन-सी साइट खुली थी?&quot;। प्राइवेट ब्राउज़िंग और पासवर्ड मैनेजर छोड़ दिए जाते हैं; ज़्यादा से ज़्यादा दो हफ़्ते रखा जाता है</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2529,9 +2539,14 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+92"/>
+        <location filename="../qml/Today.qml" line="+98"/>
         <source>Feels %1 in %2</source>
         <translation>%2 में %1 जैसा लगता है</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Feels %1</source>
+        <translation>%1 जैसा लगता है</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2549,7 +2564,17 @@
         <translation>अगला</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
+        <source>Working on</source>
+        <translation>चल रहे काम</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Stop this task</source>
+        <translation>यह काम रोकें</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Up next</source>
         <translation>आगे क्या है</translation>
     </message>

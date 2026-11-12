@@ -162,7 +162,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+195"/>
+        <location filename="../window.py" line="+226"/>
         <source>Copied</source>
         <translation>已复制</translation>
     </message>
@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2703"/>
+        <location filename="../jarvis.py" line="+2915"/>
         <source>LISTENING</source>
         <translation>聆听中</translation>
     </message>
@@ -1089,7 +1089,7 @@
         <translation>备用语音</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+32"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
         <translation>点击：打开 Jarvis · 暂停按钮：停止或开始聆听 · 红色按钮（或右键）：停止</translation>
     </message>
@@ -1282,7 +1282,7 @@
         <translation>设置</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>更改会立即保存。模型和 API 密钥在“模型”页面中设置。</translation>
     </message>
@@ -1530,12 +1530,12 @@
     <message>
         <location line="+2"/>
         <location line="+138"/>
-        <location line="+52"/>
+        <location line="+56"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location line="-188"/>
+        <location line="-192"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>移除</translation>
@@ -1792,12 +1792,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+85"/>
+        <location line="+89"/>
         <source>Unpair</source>
         <translation>取消配对</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-88"/>
         <source>Remove the bot</source>
         <translation>移除机器人</translation>
     </message>
@@ -1812,7 +1812,17 @@
         <translation>Jarvis Android 应用可通过你自己的私有中继随时随地连接到这台电脑。连接采用端到端加密：中继只转发加密后的数据，这台电脑不会对互联网开放任何端口。</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+2"/>
+        <source>Connect directly on your own network</source>
+        <translation>在自己的网络中直接连接</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>On the same Wi-Fi, or a VPN like Tailscale, paired phones reach this PC without the relay, and pairing needs no relay either. Your firewall may need to allow Jarvis</source>
+        <translation>在同一 Wi-Fi 下，或通过 Tailscale 这类 VPN，已配对的手机无需中继即可连接这台电脑，配对也不需要中继。防火墙可能需要放行 Jarvis</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Setting up…</source>
         <translation>正在设置…</translation>
     </message>
@@ -2516,9 +2526,14 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+92"/>
+        <location filename="../qml/Today.qml" line="+98"/>
         <source>Feels %1 in %2</source>
         <translation>%2 体感温度 %1</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Feels %1</source>
+        <translation>体感温度 %1</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2536,7 +2551,17 @@
         <translation>下一首</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
+        <source>Working on</source>
+        <translation>正在处理</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Stop this task</source>
+        <translation>停止此任务</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Up next</source>
         <translation>接下来</translation>
     </message>

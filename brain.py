@@ -1,7 +1,7 @@
 """Jarvis's brain: a Gemini agent with PC tools, web search, Photopea and plugins (MCP servers, e.g. Composio).
 Models come from your Google AI Studio API key (GEMINI_API_KEY, in the environment or the env file in Jarvis's config
 folder). An optional local_backends.py can add more backends (see the README). The "agent_models" setting decides the order."""
-import asyncio, base64, difflib, hashlib, ipaddress, itertools, json, logging, os, re, select, shutil, socket, subprocess, sys, tempfile, threading, time, uuid
+import asyncio, base64, difflib, hashlib, ipaddress, itertools, json, logging, os, queue, re, select, shutil, socket, subprocess, sys, tempfile, threading, time, uuid
 from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 from urllib.parse import parse_qs, quote, urlencode, urlparse
 
@@ -14,7 +14,12 @@ import system
 HERE = os.path.dirname(os.path.abspath(__file__))
 ENV_FILE = os.path.join(system.CONFIG, "env")
 DATA = store.DATA
-MAX_STEPS = 30
+MAX_STEPS = 60  # model turns in one task (a long download is ~40); at the limit it says what's done and what's left
+PATIENCE = (5, 20, 45)  # seconds waited, one after another, when no model answered a step: a busy minute isn't a failed task
+STEP_LIMIT = ("(You've reached the step limit for one task. Don't call any more tools. Tell the user in two or three plain "
+              "sentences what is done, what is left, and that saying \"continue\" carries on from here.)")
+HOME = os.path.expanduser("~")
+DOWNLOADS = os.path.join(HOME, "Downloads")
 # actions whose result the model doesn't need: if it already wrote its final reply, finish without another round trip
 SKILL_NUDGE = ("[From Jarvis, not the user: that took several screen steps. If it worked, save the way with skill (action save: a "
                "short name, the task, the steps that worked) so it's quicker next time; if it didn't work, don't. Then reply just: Done.]")
@@ -49,6 +54,15 @@ def http_error(r):
     if r.status_code in (400, 413):
         return BadRequest(f"HTTP {r.status_code}: {r.text[:300]}")
     return Overloaded(f"HTTP {r.status_code}: {r.text[:120]}")  # 5xx, auth problems...: probe until it works
+
+
+class NoModel(RuntimeError):
+    """No model in the chain answered. transient: some were busy or out of reach, so asking again in a moment may work
+    (False: only missing keys and sign-ins, which waiting won't fix)."""
+
+    def __init__(self, msg, transient=True):
+        super().__init__(msg)
+        self.transient = transient
 
 
 class Overloaded(RuntimeError):
@@ -97,6 +111,9 @@ def reply_parts(response):
 
 # ---------------------------------------------------------------- Gemini via your AI Studio key
 READ_TIMEOUT = {"high": 90, "medium": 45, "low": 20, "minimal": 15}  # seconds a reply may take: deep thinking is slow, not stuck
+# seconds before the next model in line is asked as well (the usual answer takes 2-4 s; one that stalls used to hold a
+# look or an agent step for its whole timeout). Deeper thinking is left alone: slow there is normal
+HEDGE = {"minimal": 4, "low": 8}
 
 
 class AIStudio:
@@ -935,9 +952,12 @@ def tool_close_window(name):
     return {"error": problem} if problem else {"result": f"closed {name}"}
 
 
-# commands that change or remove things, stop processes, install software or take the machine down
+# commands that change or remove things, stop processes, install software or take the machine down: at the start of a
+# command, by path (/bin/rm), in a shell's -c or eval, or behind a wrapper (env FOO=1, nice -n 10, timeout 5, nohup...)
+RISKY_START = (r"(?:^|[;&|(`$]\s*|\b(?:sudo|doas|xargs|exec|env|command|builtin|nice|nohup|time|setsid|stdbuf|ionice|"
+               r"timeout(?:\s+-\S+)*\s+\S+)\s+(?:(?:-\S+|\w+=\S*)\s+(?:\d+\s+)?)*|\s-\w*c\s+[\"']\s*|\beval\s+[\"']?\s*)(?:[\w.~-]*/)*")
 RISKY_COMMAND = re.compile(
-    r"(?:^|[;&|(`$]\s*|\b(?:sudo|doas|xargs|exec)\s+)(?:rm|rmdir|shred|unlink|dd|mkfs\S*|fdisk|parted|wipefs|mv|cp|truncate|chmod|"
+    RISKY_START + r"(?:rm|rmdir|shred|unlink|dd|mkfs\S*|fdisk|parted|wipefs|mv|cp|truncate|chmod|"
     r"chown|kill|pkill|killall|shutdown|reboot|poweroff|halt|systemctl|loginctl|pacman|paru|yay|apt|apt-get|dnf|yum|zypper|"
     r"flatpak|snap|pip|pip3|npm|crontab|sudo|doas|su|trash-put|gio\s+trash(?!\s+--list)|tee|ln|rsync|"
     r"git\s+(?:push|reset|clean|checkout|rebase|restore|rm|branch\s+(?:-[dD]|--delete)|stash\s+(?:drop|clear|pop))|"
@@ -979,6 +999,36 @@ def tool_run_command(command, timeout=30, confirmed=False, permanent=False):
 on_change = [lambda what: None]  # set by the app: shows a change in the Activity page
 on_plan = [lambda steps: None]  # set by the app: shows a long task's plan in the chat
 on_asked = [lambda contents: None]  # set by the app: saves the agent's history with the conversation after each task
+
+
+def own_folder(path):
+    """Where Jarvis may save a file it fetched: a folder in the user's home, and not a hidden one (settings, autostart
+    entries and keys live in those: dot folders, and Windows' AppData). The full path, or None."""
+    full, home = os.path.realpath(os.path.expanduser(str(path))), os.path.realpath(HOME)
+    try:
+        inside = os.path.relpath(full, home)
+    except ValueError:  # (Windows: another drive)
+        return None
+    hidden = any(part.startswith(".") or part.lower() == "appdata" for part in inside.split(os.sep) if part != ".")
+    return None if inside.startswith("..") or os.path.isabs(inside) or hidden else full
+
+
+def safe_name(name):
+    """A fetched file's name as a plain file name: never a path, never hidden (it comes from whoever made the file)."""
+    return re.sub(r'[\x00-\x1f<>:"|?*]', "", os.path.basename(str(name).replace("\\", "/"))).strip().lstrip(".").strip() or "file"
+
+
+def save_file(folder, name, data):
+    """Writes a fetched file into this folder under its own name, beside whatever is there (never over it): the path."""
+    os.makedirs(folder, exist_ok=True)
+    stem, ext = os.path.splitext(safe_name(name))
+    path, n = os.path.join(folder, stem + ext), 2
+    while os.path.exists(path):
+        path, n = os.path.join(folder, f"{stem} ({n}){ext}"), n + 1
+    with open(path, "wb") as f:
+        f.write(data)
+    changed(f"saved {path}")
+    return path
 
 
 def changed(what):
@@ -1732,14 +1782,19 @@ def tool_whatsapp_media(chat, id="", question=""):
         return problem
     m = wa.media(found["chat"], id)
     if not m or "error" in m:
-        return {"error": f"couldn't get it from WhatsApp ({m['error']})" if m else f"no voice message, audio or photo in {found['name']}'s recent messages"}
+        return {"error": f"couldn't get it from WhatsApp ({m['error']})" if m else
+                f"no voice message, audio, photo or document in {found['name']}'s recent messages (ones from before Jarvis was linked aren't kept)"}
+    sender = {"chat": found["name"], "from": "the user" if m["me"] else m["by"] or found["name"],
+              "at": time.strftime("%a %d %b %H:%M", time.localtime(m["at"])), "id": m["id"]}
+    if m["type"] == "document":  # kept as the file it is: read_file reads it, or it's moved where the user wants it
+        name = safe_name(m.get("name") or "document")
+        return {**sender, "document": name, "saved": save_file(DOWNLOADS, name, base64.b64decode(m["data"])),
+                **({"caption": m["caption"]} if m["caption"] else {})}
     audio = m["type"] != "image"
     answer = media_text(m, question or ("Transcribe this voice message word for word, in the language it's spoken in; if that isn't "
                                         "English, add an English translation after it." if audio else
                                         "Describe this photo; quote any text in it exactly."))
-    return {"chat": found["name"], "from": "the user" if m["me"] else m["by"] or found["name"],
-            "at": time.strftime("%a %d %b %H:%M", time.localtime(m["at"])), "id": m["id"],
-            "voice message" if audio else "photo": answer, **({"caption": m["caption"]} if m["caption"] else {})}
+    return {**sender, "voice message" if audio else "photo": answer, **({"caption": m["caption"]} if m["caption"] else {})}
 
 
 def tool_whatsapp_send(to, text, confirmed=False):
@@ -1824,6 +1879,35 @@ def tool_discord_react(chat, emoji, message="", confirmed=False):
     m = discord.react(found, emoji, message)
     changed(f"Reacted {emoji} on Discord in {found['name']} to {m['to']}: {m['text'][:100]}")
     return {"result": f"reacted {emoji} to {m['to']}'s message: {m['text'][:200]}"}
+
+
+def tool_unsend(app, chat, text="", confirmed=False):
+    """Delete for everyone a message the user sent on WhatsApp or Discord: their newest in that chat, or the newest
+    holding `text`."""
+    if app not in ("whatsapp", "discord"):
+        return {"error": "app is 'whatsapp' or 'discord'"}
+    slug = f"{app.upper()}_DELETE_MESSAGE"
+    if app == "discord":
+        import discord as link
+    elif not (link := whatsapp_link[0]):
+        return {"error": "WhatsApp isn't running"}
+    if blocked := account_block(slug):
+        return {"error": blocked}
+    found, problem = link.find(chat)
+    if problem:
+        return {**problem, "result": "nothing deleted: ask the user which chat they mean"}
+    if found.get("kind") == "server":
+        return {"error": f"{found['name']} is a server: name one of its channels"}
+    if needs_yes(slug) and not confirmed:
+        return {"error": NEEDS_YES, "to": found["name"]}
+    try:
+        gone = link.unsend(found, text)
+    except ValueError as e:  # (too old for WhatsApp to take back)
+        return {"error": str(e)}
+    if not gone:
+        return {"error": f"no message of the user's{' with those words' if text else ''} in {found['name']}'s recent messages"}
+    changed(f"Deleted a {app.title()} message for everyone in {found['name']}: {gone[:200]}")
+    return {"result": f"deleted for everyone in {found['name']}: {gone[:200]}"}
 
 
 def tool_discord_media(chat, id="", question=""):
@@ -1946,9 +2030,10 @@ TOOLS.update({
     "whatsapp_read": (tool_whatsapp_read, "The user's own WhatsApp (linked to Jarvis): with no chat, the latest chats (unread "
                       "count, last message; groups too, marked group); with chat (a contact's or group's name), its last messages.",
                       obj(chat={"type": "string"}, count={"type": "integer"}, optional=("chat", "count"))),
-    "whatsapp_media": (tool_whatsapp_media, "Listen to a voice message or look at a photo in the user's WhatsApp: the newest one in "
-                       "that chat (or the message id from whatsapp_read), transcribed or described. question: what to find out "
-                       "about it (optional).", obj(chat={"type": "string"}, id={"type": "string"}, question={"type": "string"},
+    "whatsapp_media": (tool_whatsapp_media, "Listen to a voice message, look at a photo or fetch a document (a PDF, a schedule) in "
+                       "the user's WhatsApp: the newest one in that chat (or the message id from whatsapp_read). A voice message "
+                       "is transcribed, a photo described (question: what to find out about it, optional); a document is saved "
+                       "to Downloads (`saved`: its path, for read_file or to move it).", obj(chat={"type": "string"}, id={"type": "string"}, question={"type": "string"},
                                                    optional=("id", "question"))),
     "whatsapp_call": (tool_whatsapp_call, "Phone someone on the user's WhatsApp: Jarvis's voice gives them the message, takes their "
                       "answer, and tells the user how it went when the call ends. to: the chat's name, as for whatsapp_send. "
@@ -1971,6 +2056,12 @@ TOOLS.update({
                      "when the user asked for exactly this message or said yes to it.",
                      obj(to={"type": "string"}, text={"type": "string"}, reply_to={"type": "string"}, confirmed={"type": "boolean"},
                          optional=("reply_to", "confirmed"))),
+    "unsend": (tool_unsend, "Delete for everyone a message the user sent on WhatsApp or Discord (app: 'whatsapp' or 'discord'): "
+               "their newest message in that chat, or with text the newest of theirs holding those words. Only the user's own "
+               "messages, and on WhatsApp only for two days after sending. confirmed: true only when the user asked to delete "
+               "exactly that message or said yes to it.",
+               obj(app={"type": "string", "enum": ["whatsapp", "discord"]}, chat={"type": "string"}, text={"type": "string"},
+                   confirmed={"type": "boolean"}, optional=("text", "confirmed"))),
     "discord_react": (tool_discord_react, "React with an emoji (the emoji itself, e.g. 😂) to a Discord message: someone else's newest "
                       "in that chat, or message: an id from discord_read. confirmed: true only when the user asked for it.",
                       obj(chat={"type": "string"}, emoji={"type": "string"}, message={"type": "string"}, confirmed={"type": "boolean"},
@@ -2085,10 +2176,11 @@ def tool_show_image(source, caption=""):
             r = fetch(source)
         except (PermissionError, requests.RequestException):
             return {"error": "only pictures at public web addresses"}
-        if not r.ok or not r.headers.get("Content-Type", "").startswith("image/"):
-            return {"error": f"that address isn't a picture ({r.status_code} {r.headers.get('Content-Type', '')})"}
+        kind = r.headers.get("Content-Type", "").split(";")[0].strip().lower()
+        if not r.ok or kind not in WEB_PICTURES:  # (the name comes from this list, never the server: "image/x\..\run.bat")
+            return {"error": f"that address isn't a picture the chat can show ({r.status_code} {kind[:60]})"}
         os.makedirs(IMAGE_DIR, exist_ok=True)
-        path = os.path.join(IMAGE_DIR, "web-" + uuid.uuid4().hex[:8] + "." + r.headers["Content-Type"].split("/")[1].split(";")[0])
+        path = os.path.join(IMAGE_DIR, "web-" + uuid.uuid4().hex[:8] + WEB_PICTURES[kind])
         with open(path, "wb") as f:
             f.write(r.content)
     else:
@@ -2103,6 +2195,8 @@ def tool_show_image(source, caption=""):
 
 IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif", ".bmp": "image/bmp"}
 CHAT_PICTURES = {*IMAGE_TYPES, ".svg"}  # what the chat shows (and opens when clicked): window.open_image
+WEB_PICTURES = {"image/png": ".png", "image/jpeg": ".jpg", "image/jpg": ".jpg", "image/webp": ".webp", "image/gif": ".gif",
+                "image/bmp": ".bmp", "image/svg+xml": ".svg"}  # a web picture's type -> the extension it's saved with
 
 
 def tool_read_file(path, question=""):
@@ -2157,7 +2251,9 @@ TOOLS["classroom_announcements"] = (None, "The newest Google Classroom announcem
                                     "teacher post\".", obj(count={"type": "integer"}, optional=("count",)))
 TOOLS["drive_file"] = (None, "Read a Google Drive file by its name (or part of it) or id: Docs, Slides and Sheets come back as text, "
                        "PDFs and text files are read, pictures described (answering `question`). The newest match is read; "
-                       "other_matches lists the rest.", obj(name={"type": "string"}, question={"type": "string"}, optional=("question",)))
+                       "other_matches lists the rest. To download it instead (any kind of file: slides, a zip, a video), pass "
+                       "save_to: a folder in the user's home (made if missing); Docs and Slides are saved as PDF, Sheets as .xlsx.",
+                       obj(name={"type": "string"}, question={"type": "string"}, save_to={"type": "string"}, optional=("question", "save_to")))
 HARNESSES = {  # coding agents run headless: name -> its command (continuing a session; the task comes on its stdin),
     "claude": lambda session, full: ["claude", "-p", "--output-format", "stream-json", "--verbose",  # printing JSON lines
                                           "--permission-mode", "bypassPermissions" if full else "acceptEdits",
@@ -3287,11 +3383,18 @@ class Brain:
     DRIVE_EXPORTS = {"application/vnd.google-apps.document": ("text/plain", ".txt"),
                      "application/vnd.google-apps.presentation": ("text/plain", ".txt"),
                      "application/vnd.google-apps.spreadsheet": ("text/csv", ".csv")}
+    DRIVE_SAVES = {"application/vnd.google-apps.document": ("application/pdf", ".pdf"),  # (kept as files a person opens)
+                   "application/vnd.google-apps.presentation": ("application/pdf", ".pdf"),
+                   "application/vnd.google-apps.spreadsheet": ("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".xlsx")}
 
-    def drive_file(self, name, question=""):
-        """A Google Drive file's contents by name or id: found, downloaded (or exported as text) and read like read_file."""
+    def drive_file(self, name, question="", save_to=""):
+        """A Google Drive file's contents by name or id: found, downloaded (or exported as text) and read like read_file;
+        with save_to, kept as a file in that folder instead."""
         if "googledrive" not in self.connected:
             return {"error": "Google Drive isn't connected (Jarvis's Accounts page)"}
+        folder = own_folder(save_to) if save_to else None
+        if save_to and not folder:
+            return {"error": "save_to must be one of your own folders: in the home folder, and not a hidden one"}
         name = name.strip()
         q = name.replace("\\", "").replace("'", "\\'")
         found = self.app_data("GOOGLEDRIVE_FIND_FILE", {
@@ -3306,7 +3409,7 @@ class Brain:
         if not files:
             return {"error": f"no Drive file with '{name}' in its name"}
         f = files[0]
-        export = self.DRIVE_EXPORTS.get(f.get("mimeType", ""))
+        export = (self.DRIVE_SAVES if folder else self.DRIVE_EXPORTS).get(f.get("mimeType", ""))
         data = self.app_data("GOOGLEDRIVE_DOWNLOAD_FILE", {"fileId": f["id"], **({"mime_type": export[0]} if export else {})})
         url = ((data or {}).get("downloaded_file_content") or {}).get("s3url")
         if not url:
@@ -3314,12 +3417,16 @@ class Brain:
         r = fetch(url, timeout=30)
         if not r.ok:
             return {"error": f"couldn't download {f['name']} from Drive ({r.status_code})"}
-        with tempfile.TemporaryDirectory() as folder:
-            path = os.path.join(folder, "file" + (export[1] if export else os.path.splitext(f["name"])[1].lower() or ".txt"))
+        others = {"other_matches": [x["name"] for x in files[1:6]]} if len(files) > 1 else {}
+        if folder:
+            ext = export[1] if export else ""
+            return {"file": f["name"], "saved": save_file(folder, f["name"] + ("" if f["name"].lower().endswith(ext) else ext), r.content), **others}
+        with tempfile.TemporaryDirectory() as temp:
+            path = os.path.join(temp, "file" + (export[1] if export else os.path.splitext(f["name"])[1].lower() or ".txt"))
             with open(path, "wb") as out:
                 out.write(r.content)
             read = tool_read_file(path, question)
-        return {"file": f["name"], **read, **({"other_matches": [x["name"] for x in files[1:6]]} if len(files) > 1 else {})}
+        return {"file": f["name"], **read, **others}
 
     def run_app_tool(self, slug, args):
         if account_block(slug):
@@ -3518,35 +3625,78 @@ class Brain:
         self.backends.pop(name, None)
         self.down_until = {e: t for e, t in self.down_until.items() if e[0] != name}
 
+    def _think(self, task, msgs, **kw):
+        """One step's answer from the agent's models. None of them answering (all busy at once, the network gone for a
+        moment) isn't the task failing: it's asked again after each wait in PATIENCE, unless the task was stopped or
+        waiting can't help (no key)."""
+        for wait in (*PATIENCE, None):
+            try:
+                return self._generate(msgs, **kw)
+            except NoModel as e:
+                if wait is None or not e.transient or task.cancel.is_set():
+                    raise
+                print(f"[brain] no model answered: asking again in {wait:g} s", flush=True)
+                if task.cancel.wait(wait):
+                    raise
+
     def _generate(self, contents, entries=None, **kw):
-        entries, why = entries or chain(), []
+        entries, why, transient, done = entries or chain(), [], [False], queue.Queue()
         # every one marked down (a network blip marks them all at once): a "not answering" mark is only a guess, so the
         # first such model is tried anyway rather than refusing everything until a probe gets through (minutes); one try,
         # so a network that's really down doesn't cost a timeout per model; rate limits are always kept
-        anyway = all(time.time() < self.down_until.get(e, 0) for e in entries)
-        for entry in entries:
+        anyway, todo = [all(time.time() < self.down_until.get(e, 0) for e in entries)], iter(entries)
+
+        def ask(entry, be):  # on its own thread: one that answers or fails after another model won is still noted
             backend, model, thinking = entry
-            be, problem = self.backend(backend)
-            down = self.down_until.get(entry, 0)
-            if be and anyway and down == float("inf"):
-                anyway = False
-            elif not be or time.time() < down:
-                why.append(f"{backend}: {problem}" if problem else f"{backend}/{model}: busy")  # (a missing key: once)
-                continue
             t = time.time()
             try:
                 parts = be.generate(contents, model, thinking, **kw)
                 print(f"[brain] {backend}/{model} {time.time() - t:.1f}s", flush=True)
                 count_use(backend, model)
-                return parts
-            except BadRequest:
-                raise
+                done.put(parts)
+            except BadRequest as e:
+                done.put(e)
             except Exception as e:  # busy, rate-limited, auth or network trouble: next in line
                 print(f"[brain] {backend}/{model} {time.time() - t:.1f}s skipped: {e}", flush=True)
                 why.append(f"{backend}/{model}: {str(e)[:80]}")
+                transient[0] = True
                 self._mark_down(entry, e, entry == entries[0])
-        raise RuntimeError("no model could answer (" + "; ".join(list(dict.fromkeys(why))[:4]) + "); try again in a minute or check "
-                           "the Models page")
+                done.put(None)
+
+        def start():  # the next model that can be asked, if any
+            for entry in todo:
+                backend, model, thinking = entry
+                be, problem = self.backend(backend)
+                down = self.down_until.get(entry, 0)
+                if be and anyway[0] and down == float("inf"):
+                    anyway[0] = False
+                elif not be or time.time() < down:
+                    why.append(f"{backend}: {problem}" if problem else f"{backend}/{model}: busy")  # (a missing key: once)
+                    transient[0] = transient[0] or bool(be)
+                    continue
+                threading.Thread(target=ask, args=(entry, be), daemon=True).start()
+                return entry
+
+        last = start()
+        running = 1 if last else 0
+        while running:
+            try:
+                got = done.get(timeout=HEDGE.get(last[2]) if last else None)
+            except queue.Empty:  # slow, maybe stuck: the next one is asked as well, and the first answer wins
+                slow, last = last, start()
+                if last:
+                    print(f"[brain] {slow[0]}/{slow[1]} is slow: asking {last[0]}/{last[1]} too", flush=True)
+                    running += 1
+                continue
+            running -= 1
+            if isinstance(got, BadRequest):
+                raise got
+            if got is not None:
+                return got
+            if not running and (last := start()):
+                running = 1
+        raise NoModel("no model could answer (" + "; ".join(list(dict.fromkeys(why))[:4]) + "); try again in a minute or check "
+                      "the Models page", transient[0])
 
     def _mark_down(self, entry, e, is_main):
         if getattr(e, "retry_after", None):  # rate limit: skip it for a bit
@@ -3701,7 +3851,7 @@ class Brain:
             nudges, later = 0, False
             screen_steps, saved_way, answer = 0, bool(known), None  # (a way offered, or saved: no nudge to save one)
             for _ in range(MAX_STEPS):
-                parts = self._generate(msgs, tools=self._tools(), system=self._system(), thoughts=bool(on_thought))
+                parts = self._think(task, msgs, tools=self._tools(), system=self._system(), thoughts=bool(on_thought))
                 for p in parts:
                     if on_thought and p.get("thought") and p.get("text", "").strip():
                         on_thought(p["text"].strip())
@@ -3767,8 +3917,17 @@ class Brain:
                     return "Stopped."
                 if final and all("error" not in r["functionResponse"]["response"] for r in responses):
                     break  # e.g. "close it" done and the answer already written: no extra model call
-            else:
-                return "That's taking more steps than I'd like, so I've stopped; tell me how to continue."
+            else:  # the step limit: what's done and what's left, in the model's own words (the work stays in the history)
+                msgs.append({"role": "user", "parts": [{"text": STEP_LIMIT}]})
+                try:
+                    parts = [p for p in self._think(task, msgs, system=self._system()) if "functionCall" not in p and not p.get("thought")]
+                except Exception as e:  # (no model just then, or one refusing tool calls without the tools: the work is kept)
+                    print(f"[brain] no summary at the step limit: {str(e)[:120]}", flush=True)
+                    parts = []
+                parts = parts if "".join(p.get("text", "") for p in parts).strip() else [
+                    {"text": "That took more steps than I take in one go, so I've paused; say continue and I'll carry on."}]
+                msgs.append({"role": "model", "parts": parts})
+                answer = None
         except Exception:
             del msgs[start:]  # never leave a half-finished turn in the history
             raise

@@ -3,6 +3,32 @@
 ## Unreleased
 
 ### Added
+- **The phone app, rebuilt as a voice remote:** say *"Hey Jarvis"* to your phone (or the wake word you chose on the PC),
+  tap the orb, or use Android's assistant gesture, and you're talking with the Jarvis on your PC: its own voice, every
+  tool, the same conversation, from wherever you are. The wake word is recognised on the phone itself (the PC's own
+  models, sent over once), and listens with the app closed. Tap while Jarvis talks to cut in.
+  - **The PC's chat, live:** what you and Jarvis say at the PC or on the phone shows in the app as it happens, with
+    what it's doing right now (*"Reading your screen…"*).
+  - **Notifications:** reminders, finished tasks and what Jarvis tells you on its own arrive on the phone with the app
+    closed (Settings → *Stay in touch when closed*).
+  - **Today** (the weather, what's coming up, one-tap asks) and **PC** (the tasks Jarvis is working on, each with its
+    own Stop, what's playing with play, pause and skip, a look at the screen, processor, memory and disk, lock, mute,
+    new conversation, stop everything).
+  - **Share to Jarvis** from any app: the text or link waits in the box for what to do with it.
+  - **With the PC off:** with your own Gemini key the app talks and answers by itself (Gemini Live, the PC's voice),
+    and says what it can't do without the PC.
+- **No relay needed at home:** on the same Wi-Fi, or a VPN like Tailscale, the app connects straight to the PC, and
+  pairing works without a Cloudflare account. The relay is still there for everywhere else, and the app picks whichever
+  answers (direct first). Settings → The Jarvis app → *Connect directly on your own network* (on by default; the PC only
+  listens while a phone is paired or a pairing code is showing, and your firewall may need to allow port 47800).
+- **Take a message back:** *"delete the last thing I sent Sam on WhatsApp"*, *"unsend that"* deletes your own message
+  for everyone, on WhatsApp (within two days of sending) or Discord, after your yes.
+- **Working on, in the window:** Home lists every task that's running with what it's doing right now and how long it
+  has been at it, and a Stop for that one only.
+- **Settings has an index:** its sections are listed beside the page; click one to jump there.
+- **Files kept on your PC:** *"download my physics lectures from Classroom into a folder on my desktop"* saves the
+  files themselves from Drive (PDFs, slides, anything), and a document someone sent you on WhatsApp is saved to
+  Downloads and read (*"when's the opening in the schedule Dana sent?"*).
 - **Several things at once:** a second request no longer waits for the first. Voice, typed, phone and scheduled tasks
   run side by side; screen work takes turns, and waits while you're using the keyboard or mouse. *"What are you working
   on?"* lists them, *"stop the flight search"* stops one, and Stop stops them all and says what it stopped.
@@ -51,6 +77,18 @@
   WhatsApp → *Tell people when I'm busy* lets it share your Google Calendar's busy times (never what they are).
 
 ### Changed
+- **Faster when a model stalls:** a model that doesn't answer within a few seconds no longer holds a look at the screen
+  or a task's step for its whole timeout (up to 20 s): the next model on the Models page is asked as well, and the first
+  answer wins.
+- **Missed WhatsApp calls are in the chat:** a number that only rang shows up in your chats, so *"who called me?"* and
+  *"reply to the number that just called"* work.
+- **Easier to read:** the faintest text in the window and the phone app is lighter (it was below the contrast screen
+  readers' guidelines ask for), and buttons that are only a picture say what they do to screen readers.
+- Asked how much memory or processor it's using, Jarvis measures itself instead of guessing.
+- **Jarvis doesn't give up as easily:** a failed tool or a way that doesn't work is a reason to try the next way, and
+  what it doesn't know how to do on your system (bind a shortcut, change a setting) it finds out and does, instead of
+  saying it can't. Long jobs get twice the steps (60), and at the limit it says what's done and what's left, so
+  *"continue"* carries on.
 - **WhatsApp without a browser: about 1 GB less memory.** WhatsApp ran as WhatsApp Web in a hidden Chromium (~950 MB);
   it's now a small helper, `jarvis-wa` (~30 MB, Go: whatsmeow for messages, WaCalls' code for calls), with the same
   replies, calls, reading, sending, voice messages and photos. Link WhatsApp again once in Settings (and remove the old
@@ -61,6 +99,22 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
+- **Safety (Windows):** a picture Jarvis showed from a web address was saved under a name the website chose, which on
+  Windows could put a file anywhere, the Startup folder included. It's always a picture file in Pictures/Jarvis now.
+- **Safety:** commands that change things wait for your yes however they're written: by their path (`/bin/rm`), inside
+  `bash -c "…"` or `eval`, or behind `env`, `nice`, `timeout` and the like.
+- One voice request that went wrong (a tool call that failed) left Jarvis silent until it gave up and asked you to say
+  it again; the other calls' answers are given now. A screen action that ran too long kept clicking after Jarvis had
+  moved on: it stops.
+- Notifications on Linux that started with a dash (a list) never appeared.
+- A WhatsApp or Discord message could go unmentioned when the reply model answered with nothing.
+- The weather no longer names your town as a number ("in 33.83") where the weather service can't tell the town's name.
+- *Set up my relay* works when your Cloudflare sign-in has more than one account (it stopped with "More than one
+  account available"): it uses your own, and tries the deploy once more when Cloudflare didn't answer.
+- No more error in the log when Jarvis quits with its window open.
+- A long task no longer fails because every model was busy for one moment: the step is asked again after a short wait
+  (a 64-step download once ended on a single "no model could answer").
+- A WhatsApp or Discord message that came while no model could answer was never mentioned: it's shown now.
 - **Safety:** opening an app could run any command, so *"rm -rf ~/Documents"* through *launch* skipped the yes that
   run_command asks for; it no longer does. More commands that change things wait for a yes (`sed -i`, `tee`, `rsync`,
   `ln`, `git branch -D`, `docker rm`, piping into Python...). The agent can no longer disconnect your accounts through

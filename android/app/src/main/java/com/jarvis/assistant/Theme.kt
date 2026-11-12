@@ -29,7 +29,7 @@ object J {
     val highlight = Color(0x0FFFFFFF)
     val text = Color(0xFFEAF6FF)
     val text2 = Color(0xFF93A9B9)
-    val text3 = Color(0xFF5E7586)
+    val text3 = Color(0xFF748B9C)
     val accent = Color(0xFF3FD8FF)
     val accentSoft = Color(0x243FD8FF)
     val accentInk = Color(0xFF04202B)
@@ -78,5 +78,9 @@ object Ico {
     val cloudOff = line("M3 3l18 18", "M8.5 7.2A5.5 5.5 0 0 1 17 10.5h.5a3.5 3.5 0 0 1 2.4 6", "M17 19.5H7.5a4.5 4.5 0 0 1-1.6-8.7")
     val check = line("M5 12.5l4.5 4.5L19 7.5", width = 2f)
     val close = line("M6.5 6.5l11 11", "M17.5 6.5l-11 11", width = 2f)
+    val play = line("M8 5.5v13l10.5-6.5L8 5.5z")
+    val pause = line("M8.5 5.5v13", "M15.5 5.5v13", width = 2.4f)
+    val next = line("M6 6l9 6-9 6V6z", "M18 6v12")
+    val previous = line("M18 6l-9 6 9 6V6z", "M6 6v12")
     val phone = line("M8 3h8a1.5 1.5 0 0 1 1.5 1.5v15A1.5 1.5 0 0 1 16 21H8a1.5 1.5 0 0 1-1.5-1.5v-15A1.5 1.5 0 0 1 8 3z", "M11 18h2")
 }

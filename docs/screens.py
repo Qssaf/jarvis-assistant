@@ -55,6 +55,8 @@ CANNED = {
                    "remembered": 7, "tools": 41},
     "/api/media": {"player": "org.mpris.MediaPlayer2.spotify", "app": "Spotify", "status": "Playing", "title": "Neon Tides",
                    "artist": "The Arcs of Light", "art": "", "length": 214.0},
+    "/api/jobs": [{"n": 3, "label": "Find flights to Lisbon for the first week of June", "since": NOW - 187, "now": "web_search", "coding": False},
+                  {"n": 4, "label": "Fix the failing date test", "since": NOW - 1425, "now": "", "coding": True}],
     "/api/system": {"cpu": 18.0, "mem_used": 9.1e9, "mem_total": 16e9, "disk_used": 300e9, "disk_total": 512e9, "uptime": 7200},
     "/api/sessions": {"current": SESSIONS[0]["id"], "sessions": SESSIONS},
     "/api/conversation": {"id": SESSIONS[0]["id"], "title": "What's due this week?", "created": NOW - 600, "updated": NOW - 50,

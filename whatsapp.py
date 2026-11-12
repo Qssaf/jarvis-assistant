@@ -433,6 +433,17 @@ class WhatsApp:
         self._mine(self.ask("send", chat=chat, text=text))
         self.user_wrote[chat] = time.time()  # (the user asked for it: as if they wrote it)
 
+    def unsend(self, found, text=""):
+        """Delete for everyone the user's newest message in a chat (or the newest holding these words): its text, or None
+        when there's none. WhatsApp only takes a message back for about two days."""
+        m = next((m for m in reversed(self.history(found["chat"], 30)) if m["me"] and text.lower() in m["text"].lower()), None)
+        if not m:
+            return None
+        if time.time() - m["at"] > 2 * 86400:
+            raise ValueError("WhatsApp only deletes a message for everyone within two days of sending it")
+        self.ask("unsend", chat=found["chat"], msg=m["id"])
+        return m["text"]
+
     def _need(self):
         if self.state != "connected":
             raise RuntimeError("WhatsApp isn't linked: link it in Settings → WhatsApp" if not self.saved.get("linked")
@@ -560,13 +571,19 @@ def decide(brain, app, me, who, lines, note="", free=""):
                 else f"in {langs[0]}")
     prompt = (REPLY_PROMPT.replace("{APP}", app).replace("{LANGUAGE}", language).replace("{NAME}", me).replace("{WHO}", who)
               .replace("{CHAT}", lines).replace("{NOTE}", note).replace("{FREE}", free).replace("{NOW}", time.strftime("%A %H:%M")))
-    parts = brain._generate([{"role": "user", "parts": [{"text": prompt}]}])
+    try:
+        parts = brain._generate([{"role": "user", "parts": [{"text": prompt}]}])
+    except Exception as e:  # no model could answer just now: no reply, and the user is shown the message as it is
+        print(f"[{app.lower()}] no answer for {who}: {str(e)[:160]}", flush=True)
+        return {}
     text = "".join(p.get("text", "") for p in parts if not p.get("thought"))
     found = re.search(r"\{.*\}", text, re.S)
     try:
-        return json.loads(found.group(0)) if found else {}
+        d = json.loads(found.group(0)) if found else {}
     except ValueError:
         return {}
+    # (text only: a null reply's .strip() killed the thread before the user was shown the message)
+    return {k: v if isinstance(v, str) else "" for k, v in ((k, d.get(k)) for k in ("reply", "tell_user"))} if isinstance(d, dict) else {}
 
 
 def call_languages(cfg):

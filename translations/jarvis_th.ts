@@ -162,7 +162,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+195"/>
+        <location filename="../window.py" line="+226"/>
         <source>Copied</source>
         <translation>คัดลอกแล้ว</translation>
     </message>
@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2703"/>
+        <location filename="../jarvis.py" line="+2915"/>
         <source>LISTENING</source>
         <translation>กำลังฟัง</translation>
     </message>
@@ -1089,7 +1089,7 @@
         <translation>เสียงสำรอง</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+32"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
         <translation>คลิก: เปิด Jarvis · ปุ่มหยุดชั่วคราว: หยุดหรือเริ่มฟัง · ปุ่มสีแดง (หรือคลิกขวา): หยุด</translation>
     </message>
@@ -1282,7 +1282,7 @@
         <translation>การตั้งค่า</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>การเปลี่ยนแปลงจะบันทึกทันที โมเดลและคีย์ API อยู่ในหน้าโมเดล</translation>
     </message>
@@ -1530,12 +1530,12 @@
     <message>
         <location line="+2"/>
         <location line="+138"/>
-        <location line="+52"/>
+        <location line="+56"/>
         <source>Save</source>
         <translation>บันทึก</translation>
     </message>
     <message>
-        <location line="-188"/>
+        <location line="-192"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>นำออก</translation>
@@ -1638,7 +1638,7 @@
     <message>
         <location line="+0"/>
         <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
-        <translation>เมื่อคุณเขียนว่า "พรุ่งนี้จะส่งให้" ใน WhatsApp, Discord หรืออีเมล Jarvis จะตั้งการแจ้งเตือน หรือใส่ไว้ในรายการตอนเย็น</translation>
+        <translation>เมื่อคุณเขียนว่า &quot;พรุ่งนี้จะส่งให้&quot; ใน WhatsApp, Discord หรืออีเมล Jarvis จะตั้งการแจ้งเตือน หรือใส่ไว้ในรายการตอนเย็น</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1792,12 +1792,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+85"/>
+        <location line="+89"/>
         <source>Unpair</source>
         <translation>เลิกจับคู่</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-88"/>
         <source>Remove the bot</source>
         <translation>นำบอตออก</translation>
     </message>
@@ -1812,7 +1812,17 @@
         <translation>แอป Jarvis บน Android เข้าถึงพีซีเครื่องนี้ได้จากทุกที่ผ่านรีเลย์ส่วนตัวของคุณเอง มีการเข้ารหัสต้นทางถึงปลายทาง: รีเลย์แค่ส่งต่อข้อมูลที่อ่านไม่ออก และไม่มีอะไรบนพีซีนี้เปิดสู่อินเทอร์เน็ต</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+2"/>
+        <source>Connect directly on your own network</source>
+        <translation>เชื่อมต่อโดยตรงบนเครือข่ายของคุณเอง</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>On the same Wi-Fi, or a VPN like Tailscale, paired phones reach this PC without the relay, and pairing needs no relay either. Your firewall may need to allow Jarvis</source>
+        <translation>บน Wi-Fi เดียวกัน หรือผ่าน VPN อย่าง Tailscale โทรศัพท์ที่จับคู่ไว้จะเข้าถึงพีซีเครื่องนี้ได้โดยไม่ต้องใช้รีเลย์ และการจับคู่ก็ไม่ต้องใช้รีเลย์เช่นกัน ไฟร์วอลล์ของคุณอาจต้องอนุญาต Jarvis</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Setting up…</source>
         <translation>กำลังตั้งค่า…</translation>
     </message>
@@ -2098,7 +2108,7 @@
     <message>
         <location line="+0"/>
         <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
-        <translation>Jarvis จดว่าหน้าต่างไหนอยู่ด้านหน้า (เฉพาะชื่อหน้าต่าง ไม่เคยจดเนื้อหา และเก็บในพีซีนี้) เพื่อให้คุณถามได้ว่า "เมื่อวานเปิดเว็บอะไรไว้นะ?" ข้ามโหมดส่วนตัวและโปรแกรมจัดการรหัสผ่าน เก็บไว้นานสุดสองสัปดาห์</translation>
+        <translation>Jarvis จดว่าหน้าต่างไหนอยู่ด้านหน้า (เฉพาะชื่อหน้าต่าง ไม่เคยจดเนื้อหา และเก็บในพีซีนี้) เพื่อให้คุณถามได้ว่า &quot;เมื่อวานเปิดเว็บอะไรไว้นะ?&quot; ข้ามโหมดส่วนตัวและโปรแกรมจัดการรหัสผ่าน เก็บไว้นานสุดสองสัปดาห์</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2516,9 +2526,14 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+92"/>
+        <location filename="../qml/Today.qml" line="+98"/>
         <source>Feels %1 in %2</source>
         <translation>ที่ %2 รู้สึกเหมือน %1</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Feels %1</source>
+        <translation>รู้สึกเหมือน %1</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2536,7 +2551,17 @@
         <translation>ถัดไป</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
+        <source>Working on</source>
+        <translation>กำลังทำ</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Stop this task</source>
+        <translation>หยุดงานนี้</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Up next</source>
         <translation>รายการถัดไป</translation>
     </message>

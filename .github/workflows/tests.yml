@@ -40,7 +40,7 @@ jobs:
         working-directory: whatsapp-helper
         run: go vet ./... && go test ./...
 
-  android:  # (the app's unit tests: the handshake byte for byte against phone.py's vector, pairing links)
+  android:  # (the app's unit tests: the handshake byte for byte against phone.py's vector, pairing links, the wake word)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -52,5 +52,12 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - name: The wake word's models (openWakeWord's own: WakeTest runs the app's port against them)
+        run: |
+          mkdir -p "$RUNNER_TEMP/wake"
+          for f in melspectrogram.onnx embedding_model.onnx hey_jarvis_v0.1.onnx; do
+            curl -fsSL -o "$RUNNER_TEMP/wake/$f" "https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/$f"
+          done
+          echo "WAKE_MODELS=$RUNNER_TEMP/wake" >> "$GITHUB_ENV"
       - name: Unit tests
         run: ./gradlew --no-daemon testDebugUnitTest

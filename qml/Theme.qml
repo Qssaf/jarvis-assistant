@@ -22,7 +22,7 @@ QtObject {
     // text
     readonly property color text: "#eaf6ff"
     readonly property color text2: "#93a9b9"
-    readonly property color text3: "#5e7586"
+    readonly property color text3: "#748b9c"
 
     // colour
     readonly property color accent: "#3fd8ff"       // Jarvis's cyan

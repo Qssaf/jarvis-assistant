@@ -162,7 +162,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+195"/>
+        <location filename="../window.py" line="+226"/>
         <source>Copied</source>
         <translation>コピーしました</translation>
     </message>
@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2703"/>
+        <location filename="../jarvis.py" line="+2915"/>
         <source>LISTENING</source>
         <translation>聞き取り中</translation>
     </message>
@@ -1089,7 +1089,7 @@
         <translation>予備の音声</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+32"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
         <translation>クリック: Jarvisを開く · 一時停止ボタン: 聞き取りの停止／再開 · 赤いボタン（または右クリック）: 停止</translation>
     </message>
@@ -1282,7 +1282,7 @@
         <translation>設定</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>変更はすぐに保存されます。モデルとAPIキーはモデルページで設定します。</translation>
     </message>
@@ -1530,12 +1530,12 @@
     <message>
         <location line="+2"/>
         <location line="+138"/>
-        <location line="+52"/>
+        <location line="+56"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location line="-188"/>
+        <location line="-192"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>削除</translation>
@@ -1792,12 +1792,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+85"/>
+        <location line="+89"/>
         <source>Unpair</source>
         <translation>ペアリング解除</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-88"/>
         <source>Remove the bot</source>
         <translation>ボットを削除</translation>
     </message>
@@ -1812,7 +1812,17 @@
         <translation>JarvisのAndroidアプリは、あなた専用の非公開リレーを通じて、どこからでもこのPCにつながります。通信はエンドツーエンドで暗号化され、リレーは暗号化されたデータを中継するだけです。このPCがインターネットに公開されることはありません。</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+2"/>
+        <source>Connect directly on your own network</source>
+        <translation>自分のネットワークで直接接続する</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>On the same Wi-Fi, or a VPN like Tailscale, paired phones reach this PC without the relay, and pairing needs no relay either. Your firewall may need to allow Jarvis</source>
+        <translation>同じWi-Fi、またはTailscaleのようなVPNでは、ペアリングしたスマートフォンがリレーなしでこのPCにつながり、ペアリングにもリレーは不要です。ファイアウォールでJarvisを許可する必要があるかもしれません</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Setting up…</source>
         <translation>セットアップ中…</translation>
     </message>
@@ -2516,9 +2526,14 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+92"/>
+        <location filename="../qml/Today.qml" line="+98"/>
         <source>Feels %1 in %2</source>
         <translation>%2の体感温度 %1</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Feels %1</source>
+        <translation>体感温度 %1</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2536,7 +2551,17 @@
         <translation>次の曲</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
+        <source>Working on</source>
+        <translation>作業中</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Stop this task</source>
+        <translation>このタスクを停止</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Up next</source>
         <translation>この後の予定</translation>
     </message>

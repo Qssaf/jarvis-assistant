@@ -14,6 +14,7 @@ ScrollView {
     property var info: ({})
     property var media: ({})
     property var stats: ({})
+    property var jobs: []
     property var now: new Date()
     readonly property var weather: info.weather || {}
     readonly property bool shown: visible && Window.window !== null && Window.window.visible
@@ -27,6 +28,11 @@ ScrollView {
     function live() {
         Api.get("/api/media", d => media = d)
         Api.get("/api/system", d => stats = d)
+        Api.get("/api/jobs", d => jobs = d)
+    }
+    function clock(seconds) {  // 3:07, 1:02:45
+        const s = Math.max(0, Math.floor(seconds)), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60
+        return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(s % 60).padStart(2, "0")
     }
     function gb(bytes) { return (bytes / 1073741824).toFixed(1) }
     function sky(c) {  // a line icon for wttr.in's condition (its emoji clash with the icon set)
@@ -89,7 +95,7 @@ ScrollView {
                         Layout.fillWidth: true
                         spacing: 1
                         Txt { text: today.weather.condition || ""; weight: 600; Layout.fillWidth: true; elide: Text.ElideRight; wrapMode: Text.NoWrap }
-                        Txt { kind: "small"; text: qsTr("Feels %1 in %2").arg(today.weather.feels || "").arg(today.weather.place || "")
+                        Txt { kind: "small"; text: today.weather.place ? qsTr("Feels %1 in %2").arg(today.weather.feels || "").arg(today.weather.place) : qsTr("Feels %1").arg(today.weather.feels || "")
                               Layout.fillWidth: true; elide: Text.ElideRight; maximumLineCount: 2 }
                     }
                     Txt { text: today.weather.temp || ""; kind: "heading"; font.pixelSize: Theme.px(22); weight: 500; wrapMode: Text.NoWrap }
@@ -151,6 +157,52 @@ ScrollView {
                     IconButton { anchors.verticalCenter: parent.verticalCenter; size: 28; glyph: 14; symbol: "next"; tip: qsTr("Next")
                                  onClicked: Api.post("/api/media/Next", {}, today.live) }
                 }
+            }
+        }
+
+        // what Jarvis is working on: each task that's running, and Stop for that one only
+        Card {
+            Layout.fillWidth: true
+            visible: today.jobs.length > 0
+            padding: 0
+            ColumnLayout {
+                width: parent.width
+                spacing: 0
+                Txt { kind: "label"; text: qsTr("Working on"); Layout.leftMargin: Theme.pad; Layout.topMargin: 16; Layout.bottomMargin: 4 }
+                Repeater {
+                    model: today.jobs
+                    Item {
+                        id: job
+                        required property var modelData
+                        required property int index
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: Math.max(56, jobText.height + 20)  // (a long request takes two lines)
+                        Rectangle { visible: job.index > 0; x: Theme.pad; width: parent.width - 2 * Theme.pad; height: 1; color: Theme.stroke }
+                        Rectangle {
+                            id: jobWell
+                            anchors { left: parent.left; leftMargin: Theme.pad; verticalCenter: parent.verticalCenter }
+                            width: 36; height: 36; radius: 18
+                            color: Theme.warmSoft
+                            Icon { anchors.centerIn: parent; name: job.modelData.coding ? "cpu" : "bolt"; size: 18; color: Theme.warm }
+                        }
+                        Column {
+                            id: jobText
+                            anchors { left: jobWell.right; leftMargin: 12; right: stopJob.left; rightMargin: 4; verticalCenter: parent.verticalCenter }
+                            spacing: 1
+                            Txt { text: job.modelData.label; width: parent.width; elide: Text.ElideRight; maximumLineCount: 2 }
+                            Txt { kind: "small"; width: parent.width; elide: Text.ElideRight; wrapMode: Text.NoWrap; font.features: { "tnum": 1 }
+                                  text: today.clock(today.now.getTime() / 1000 - job.modelData.since)
+                                        + (job.modelData.now ? " · " + Backend.toolLabel(job.modelData.now) : "") }
+                        }
+                        IconButton {
+                            id: stopJob
+                            anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
+                            size: 28; glyph: 14; symbol: "close"; tip: qsTr("Stop this task")
+                            onClicked: Api.post(`/api/jobs/${job.modelData.n}/stop`, {}, today.live)
+                        }
+                    }
+                }
+                Item { Layout.preferredHeight: 6 }
             }
         }
 

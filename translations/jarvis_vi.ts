@@ -162,7 +162,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+195"/>
+        <location filename="../window.py" line="+226"/>
         <source>Copied</source>
         <translation>Đã sao chép</translation>
     </message>
@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2703"/>
+        <location filename="../jarvis.py" line="+2915"/>
         <source>LISTENING</source>
         <translation>ĐANG NGHE</translation>
     </message>
@@ -1089,7 +1089,7 @@
         <translation>GIỌNG DỰ PHÒNG</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+32"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
         <translation>Nhấn: mở Jarvis · Nút tạm dừng: bật/tắt nghe · Nút đỏ (hoặc nhấn chuột phải): dừng</translation>
     </message>
@@ -1282,7 +1282,7 @@
         <translation>Cài đặt</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>Thay đổi được lưu ngay. Mô hình và khóa API nằm ở trang Mô hình.</translation>
     </message>
@@ -1530,12 +1530,12 @@
     <message>
         <location line="+2"/>
         <location line="+138"/>
-        <location line="+52"/>
+        <location line="+56"/>
         <source>Save</source>
         <translation>Lưu</translation>
     </message>
     <message>
-        <location line="-188"/>
+        <location line="-192"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>Gỡ bỏ</translation>
@@ -1638,7 +1638,7 @@
     <message>
         <location line="+0"/>
         <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
-        <translation>Khi bạn viết "mai mình gửi" trên WhatsApp, Discord hay email, Jarvis đặt lời nhắc hoặc đưa vào danh sách buổi tối</translation>
+        <translation>Khi bạn viết &quot;mai mình gửi&quot; trên WhatsApp, Discord hay email, Jarvis đặt lời nhắc hoặc đưa vào danh sách buổi tối</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1792,12 +1792,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+85"/>
+        <location line="+89"/>
         <source>Unpair</source>
         <translation>Hủy ghép nối</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-88"/>
         <source>Remove the bot</source>
         <translation>Gỡ bot</translation>
     </message>
@@ -1812,7 +1812,17 @@
         <translation>Ứng dụng Jarvis cho Android kết nối tới máy tính này từ bất cứ đâu qua relay riêng của bạn. Kết nối được mã hóa đầu cuối: relay chỉ chuyển tiếp dữ liệu đã mã hóa, và máy tính này không mở cổng nào ra internet.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+2"/>
+        <source>Connect directly on your own network</source>
+        <translation>Kết nối trực tiếp trong mạng của bạn</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>On the same Wi-Fi, or a VPN like Tailscale, paired phones reach this PC without the relay, and pairing needs no relay either. Your firewall may need to allow Jarvis</source>
+        <translation>Trên cùng Wi-Fi, hoặc qua VPN như Tailscale, điện thoại đã ghép nối kết nối tới PC này mà không cần relay, và việc ghép nối cũng không cần relay. Tường lửa của bạn có thể cần cho phép Jarvis</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Setting up…</source>
         <translation>Đang thiết lập…</translation>
     </message>
@@ -2098,7 +2108,7 @@
     <message>
         <location line="+0"/>
         <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
-        <translation>Jarvis ghi lại cửa sổ đang ở phía trước (chỉ tiêu đề, không bao giờ ghi nội dung, ngay trên máy này) để bạn hỏi "hôm qua mình mở trang gì nhỉ?". Bỏ qua duyệt web riêng tư và trình quản lý mật khẩu; lưu tối đa hai tuần</translation>
+        <translation>Jarvis ghi lại cửa sổ đang ở phía trước (chỉ tiêu đề, không bao giờ ghi nội dung, ngay trên máy này) để bạn hỏi &quot;hôm qua mình mở trang gì nhỉ?&quot;. Bỏ qua duyệt web riêng tư và trình quản lý mật khẩu; lưu tối đa hai tuần</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2516,9 +2526,14 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+92"/>
+        <location filename="../qml/Today.qml" line="+98"/>
         <source>Feels %1 in %2</source>
         <translation>Cảm giác như %1 tại %2</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Feels %1</source>
+        <translation>Cảm giác như %1</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2536,7 +2551,17 @@
         <translation>Bài tiếp</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
+        <source>Working on</source>
+        <translation>Đang làm</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Stop this task</source>
+        <translation>Dừng tác vụ này</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Up next</source>
         <translation>Sắp tới</translation>
     </message>

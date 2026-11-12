@@ -105,6 +105,9 @@ def simulated(case, name, args):
             return {"error": brain.NEEDS_YES, "to": args.get("to")}
         return ({"result": f"sent to {args.get('to') or args.get('chat')}"} if name != "whatsapp_call" else
                 {"result": f"calling {args.get('to')} now: when the call ends, Jarvis tells the user how it went (say only that you're calling)"})
+    if name == "unsend":  # (never the real WhatsApp or Discord: a real message would be deleted)
+        return ({"result": f"deleted for everyone in {args.get('chat')}: see you at 5"} if args.get("confirmed")
+                else {"error": brain.NEEDS_YES, "to": args.get("chat")})
     if name == "answer_task":
         return {"error": "no task is waiting for an answer: treat it as a new request"}
     if name == "look":
@@ -319,6 +322,10 @@ CASES = [
     ("chat_hello", ["Hey, how's it going?"], lambda c, s: not c or "no tools needed"),
     ("chat_math", ["What's 17 percent of 240?"], lambda c, s: "40.8" in s[0] or "40 point 8" in s[0].lower() or "the answer (40.8)"),
     ("chat_fact", ["What's the capital of Australia?"], lambda c, s: "canberra" in s[0].lower() or "Canberra"),
+    # (it said "I can't bind global keyboard shortcuts": setting the PC up is the agent's job, which has a shell)
+    ("pc_shortcut", ["Set Super plus M to mute my microphone, system wide."], lambda c, s: called(c, "do_task", "run_command") or "handed to do_task"),
+    # (it said "I cannot delete or recall a message once it has been sent")
+    ("unsend", ["Delete the last message I sent Sam on WhatsApp."], lambda c, s: called(c, "unsend") or "unsend"),
     ("chat_explain", ["Explain what a black hole is, in one sentence."], lambda c, s: (not called(c, "do_task") and len(s[0]) < 400) or "short, no task"),
     ("chat_joke", ["Tell me a joke."], lambda c, s: not called(c, "do_task", "web_search") or "no tools for a joke"),
     ("chat_translate", ["How do you say good morning in Spanish?"], lambda c, s: "buenos" in s[0].lower() or "buenos días"),

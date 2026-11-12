@@ -162,7 +162,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+195"/>
+        <location filename="../window.py" line="+226"/>
         <source>Copied</source>
         <translation>Kopyalandı</translation>
     </message>
@@ -1064,7 +1064,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2703"/>
+        <location filename="../jarvis.py" line="+2915"/>
         <source>LISTENING</source>
         <translation>DİNLİYOR</translation>
     </message>
@@ -1089,7 +1089,7 @@
         <translation>YEDEK SES</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+32"/>
         <source>Click: open Jarvis · Pause button: stop or start listening · Red button (or right-click): stop</source>
         <translation>Tıklama: Jarvis&apos;i açar · Duraklat düğmesi: dinlemeyi durdurur veya başlatır · Kırmızı düğme (veya sağ tık): durdurur</translation>
     </message>
@@ -1282,7 +1282,7 @@
         <translation>Ayarlar</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>Değişiklikler anında kaydedilir. Modeller ve API anahtarları Modeller sayfasındadır.</translation>
     </message>
@@ -1530,12 +1530,12 @@
     <message>
         <location line="+2"/>
         <location line="+138"/>
-        <location line="+52"/>
+        <location line="+56"/>
         <source>Save</source>
         <translation>Kaydet</translation>
     </message>
     <message>
-        <location line="-188"/>
+        <location line="-192"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>Kaldır</translation>
@@ -1638,7 +1638,7 @@
     <message>
         <location line="+0"/>
         <source>When you write &quot;I&apos;ll send it tomorrow&quot; on WhatsApp, Discord or email, Jarvis sets a reminder, or puts it on the evening list</source>
-        <translation>WhatsApp, Discord veya e-postada "yarın gönderirim" yazdığında Jarvis bir hatırlatıcı kurar ya da akşam listesine ekler</translation>
+        <translation>WhatsApp, Discord veya e-postada &quot;yarın gönderirim&quot; yazdığında Jarvis bir hatırlatıcı kurar ya da akşam listesine ekler</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1792,12 +1792,12 @@
     </message>
     <message>
         <location line="+6"/>
-        <location line="+85"/>
+        <location line="+89"/>
         <source>Unpair</source>
         <translation>Eşlemeyi kaldır</translation>
     </message>
     <message>
-        <location line="-84"/>
+        <location line="-88"/>
         <source>Remove the bot</source>
         <translation>Botu kaldır</translation>
     </message>
@@ -1812,7 +1812,17 @@
         <translation>Jarvis Android uygulaması bu bilgisayara her yerden, size ait özel bir aktarıcı üzerinden ulaşır. Uçtan uca şifrelidir: aktarıcı yalnızca şifreli verileri iletir ve bu bilgisayarda internete açık hiçbir şey yoktur.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+2"/>
+        <source>Connect directly on your own network</source>
+        <translation>Kendi ağınızda doğrudan bağlan</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>On the same Wi-Fi, or a VPN like Tailscale, paired phones reach this PC without the relay, and pairing needs no relay either. Your firewall may need to allow Jarvis</source>
+        <translation>Aynı Wi-Fi&apos;de veya Tailscale gibi bir VPN ile eşleştirilmiş telefonlar bu bilgisayara aktarıcı olmadan ulaşır; eşleştirme için de aktarıcı gerekmez. Güvenlik duvarınızın Jarvis&apos;e izin vermesi gerekebilir</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Setting up…</source>
         <translation>Kuruluyor…</translation>
     </message>
@@ -2088,7 +2098,7 @@
     <message>
         <location line="+1"/>
         <source>On this PC Jarvis keeps what it remembers about you, your conversations, reminders and routines, short clips of your wake word (to learn your voice) and a log. What you say after the wake word, and screenshots when a task needs the screen, go to Google Gemini; account actions go through Composio.</source>
-        <translation>Jarvis bu bilgisayarda sizin hakkınızda hatırladıklarını, konuşmalarınızı, hatırlatıcılarınızı ve rutinlerinizi, uyandırma sözcüğünüzün kısa kayıtlarını (sesinizi öğrenmek için) ve bir günlük tutar. Uyandırma sözcüğünden sonra söyledikleriniz ve bir görev ekranı gerektirdiğinde ekran görüntüleri Google Gemini'ye gider; hesap işlemleri Composio üzerinden yapılır.</translation>
+        <translation>Jarvis bu bilgisayarda sizin hakkınızda hatırladıklarını, konuşmalarınızı, hatırlatıcılarınızı ve rutinlerinizi, uyandırma sözcüğünüzün kısa kayıtlarını (sesinizi öğrenmek için) ve bir günlük tutar. Uyandırma sözcüğünden sonra söyledikleriniz ve bir görev ekranı gerektirdiğinde ekran görüntüleri Google Gemini&apos;ye gider; hesap işlemleri Composio üzerinden yapılır.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2098,7 +2108,7 @@
     <message>
         <location line="+0"/>
         <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
-        <translation>Jarvis önündeki pencereyi not eder (yalnızca başlığını, içeriğini asla, bu bilgisayarda) böylece "dün açtığım o site neydi?" diye sorabilirsin. Gizli gezinme ve parola yöneticileri atlanır; en fazla iki hafta saklanır</translation>
+        <translation>Jarvis önündeki pencereyi not eder (yalnızca başlığını, içeriğini asla, bu bilgisayarda) böylece &quot;dün açtığım o site neydi?&quot; diye sorabilirsin. Gizli gezinme ve parola yöneticileri atlanır; en fazla iki hafta saklanır</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2516,9 +2526,14 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+92"/>
+        <location filename="../qml/Today.qml" line="+98"/>
         <source>Feels %1 in %2</source>
         <translation>Hissedilen %1 · %2</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Feels %1</source>
+        <translation>Hissedilen %1</translation>
     </message>
     <message>
         <location line="+44"/>
@@ -2536,7 +2551,17 @@
         <translation>Sonraki</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
+        <source>Working on</source>
+        <translation>Üzerinde çalışılanlar</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Stop this task</source>
+        <translation>Bu görevi durdur</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Up next</source>
         <translation>Sırada</translation>
     </message>
