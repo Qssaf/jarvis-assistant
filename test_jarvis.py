@@ -4480,10 +4480,10 @@ store.update_settings({"screen_history": False})
 launcher, started = os.path.join(_home, "vesktop"), []
 with open(launcher, "w") as f:
     f.write('_FLAGS_FILE="${XDG_CONFIG_HOME}/vesktop-flags.conf"\n')
+login_entry = os.path.join(_home, "config", "autostart", "vesktop.desktop")
+os.makedirs(os.path.dirname(login_entry), exist_ok=True)  # (first: on Windows nothing else makes the XDG config folder)
 with open(os.path.join(_home, "config", "vesktop-flags.conf"), "w") as f:
     f.write("--enable-wayland-ime")
-login_entry = os.path.join(_home, "config", "autostart", "vesktop.desktop")
-os.makedirs(os.path.dirname(login_entry), exist_ok=True)
 with open(login_entry, "w") as f:
     f.write("[Desktop Entry]\nExec=/usr/lib/electron/electron /usr/lib/vesktop/app.asar --start-minimized\nIcon=vesktop\n")
 real = (system.vesktop, system.have, system.shutil.which, system.subprocess.Popen, system.IS_WINDOWS)
