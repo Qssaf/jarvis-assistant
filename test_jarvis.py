@@ -1218,7 +1218,7 @@ assert calls[1] == ("GOOGLEDRIVE_DOWNLOAD_FILE", {"fileId": "b", "mime_type": "t
 # and only where the user's own files are (it said "that's a binary file", and a 64-step download came to nothing)
 brain.fetch = lambda url, **k: types.SimpleNamespace(ok=True, status_code=200, content=b"%PDF-1.7 \x00\x01 lecture")
 real_user_home, brain.HOME = brain.HOME, _home
-lectures = os.path.join(_home, "Desktop", "Math lectures")
+lectures = os.path.realpath(os.path.join(_home, "Desktop", "Math lectures"))  # (saved paths are real ones: Windows CI's temp is C:\Users\RUNNER~1)
 for expected in ("Graph notes.pdf", "Graph notes (2).pdf"):
     got = db.drive_file("graph notes", save_to=lectures)
     assert got == {"file": "Graph notes", "saved": os.path.join(lectures, expected), "other_matches": ["Graph notes v2.pdf"]}, got
