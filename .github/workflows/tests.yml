@@ -52,7 +52,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: The wake word's models (openWakeWord's own: WakeTest runs the app's port against them)
+      - name: The wake word's models (openWakeWord's own, which WakeTest checks the app's port against)
         run: |
           mkdir -p "$RUNNER_TEMP/wake"
           for f in melspectrogram.onnx embedding_model.onnx hey_jarvis_v0.1.onnx; do

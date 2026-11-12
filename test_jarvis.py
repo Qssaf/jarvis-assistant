@@ -4896,4 +4896,20 @@ for field in ("depends", "makedepends", "optdepends", "source"):
     have = [line.split(" = ", 1)[1].split("::", 1)[0] for line in srcinfo if line.startswith(f"{field} = ")]
     assert have == want, (field, have, want)
 
+# the CI workflows are valid YAML: a value that isn't quoted can't hold ": " (a step's name did, and GitHub ran no tests
+# at all for three pushes)
+for workflow in glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".github", "workflows", "*.yml")):
+    block = None  # a `run: |` script's lines are text, not YAML: those indented deeper than its key
+    for n, line in enumerate(open(workflow, encoding="utf-8"), 1):
+        indent = len(line) - len(line.lstrip())
+        if block is not None and (indent > block or not line.strip()):
+            continue
+        block = None
+        if m := re.match(r"\s*(?:- )?[\w.-]+:\s+(.*)", line):
+            value = re.sub(r"(^|\s+)#.*", "", m[1]).rstrip()
+            if value[:1] in ("|", ">"):
+                block = indent
+            assert value[:1] in ("|", ">", '"', "'", "[", "{", "&", "*", "!") or ": " not in value and not value.endswith(":"), \
+                f"{os.path.basename(workflow)}:{n}: put that value in quotes"
+
 print("ok")
