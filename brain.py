@@ -1,7 +1,7 @@
 """Jarvis's brain: a Gemini agent with PC tools, web search, Photopea and plugins (MCP servers, e.g. Composio).
 Models come from your Google AI Studio API key (GEMINI_API_KEY, in the environment or the env file in Jarvis's config
 folder). An optional local_backends.py can add more backends (see the README). The "agent_models" setting decides the order."""
-import asyncio, base64, difflib, hashlib, ipaddress, itertools, json, logging, os, queue, re, select, shutil, socket, subprocess, sys, tempfile, threading, time, uuid
+import asyncio, base64, difflib, hashlib, ipaddress, itertools, json, logging, os, queue, random, re, select, shutil, socket, subprocess, sys, tempfile, threading, time, uuid
 from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 from urllib.parse import parse_qs, quote, urlencode, urlparse
 
@@ -358,6 +358,18 @@ class Antigravity:
         self.tokens = {}  # refresh token -> (access token, expiry)
         self.resting = {}  # (refresh token, model) -> when it may be asked again; model None: the account, for every model
         self.followed = {}  # "gemini"/"claude" -> the refresh token of the account opencode's plugin was last seen on
+        self.refusals = {}  # (refresh token, model) -> Google's refusals in a row (429, 5xx), for the CLI's delays
+
+    @staticmethod
+    def agy_delay(n):
+        """How long the Antigravity CLI waits to ask again after its nth refusal in a row (a 429 or 503), as the opencode
+        plugin recorded it: 4 s, then a random 50-100% of 8, 16 and 30 s, staying at 30 s. It has no other pacing."""
+        return 4.0 if n <= 0 else min(30, 4 * 2 ** min(n, 3)) * (0.5 + 0.5 * random.random())
+
+    def _refused(self, key, model):
+        n = self.refusals.get((key, model), 0)
+        self.refusals[key, model] = n + 1
+        return self.agy_delay(n)
 
     def _rest(self, acct, model):
         """When this account may be asked for this model again: what Jarvis noted (a rate limit, an account Google
@@ -417,19 +429,20 @@ class Antigravity:
                     if r.status_code != 401:
                         break
                     self.tokens.pop(key, None)
-            except requests.Timeout:  # (skipped a while, as the Antigravity CLI waits to ask again: a "hi" probe is a request it never sends)
-                raise Overloaded("timed out", retry_after=30)
+            except requests.RequestException as e:  # (skipped a while, as the Antigravity CLI waits to ask again: a "hi" probe is a request it never sends)
+                raise Overloaded("timed out" if isinstance(e, requests.Timeout) else f"no connection to Google ({type(e).__name__})",
+                                 retry_after=30)
             except Overloaded as e:  # this account's sign-in was refused: the next one
                 refused = e
                 continue
             if r.status_code == 429:
                 wait, reason = limit_info(r)
+                rest = max(self._refused(key, model), wait or 0)  # (never sooner than Google asked)
                 if reason == "MODEL_CAPACITY_EXHAUSTED":  # the model's servers are full, whichever account asks
-                    raise Overloaded("busy", retry_after=wait or 60)
-                rest = max(wait or 300, 30)  # this account is rate-limited: the next one
-                self.resting[key, model] = time.time() + rest
+                    raise Overloaded("busy", retry_after=rest)
+                self.resting[key, model] = time.time() + rest  # this account is rate-limited: the next one
                 print(f"[brain] antigravity: {who} is rate-limited for {model} ({reason or 'no reason given'}): not asked "
-                      f"for {rest / 60:.0f} min", flush=True)
+                      f"for {f'{rest / 60:.0f} min' if rest >= 120 else f'{rest:.0f} s'}", flush=True)
                 continue
             if r.status_code in (401, 403):  # the account's own trouble (suspended, wants verifying): never the next request's
                 banned = self.BANNED in r.text
@@ -437,11 +450,14 @@ class Antigravity:
                 print(f"[brain] antigravity: Google refused {who} (HTTP {r.status_code}: {r.text[:200]}): not asked "
                       + ("again" if banned else "for 10 min"), flush=True)
                 continue
-            if r.status_code >= 500:  # Google's side (503: no capacity for the model): the same, for as long as it says
-                raise Overloaded(f"HTTP {r.status_code}: {r.text[:120]}", retry_after=limit_info(r)[0] or 60)
+            if r.status_code >= 500:  # Google's side (503: no capacity for the model): skipped as the CLI would wait
+                raise Overloaded(f"HTTP {r.status_code}: {r.text[:120]}", retry_after=max(self._refused(key, model), limit_info(r)[0] or 0))
+            if r.status_code == 404:  # a model these accounts aren't served: an hour, as a probe would never bring it
+                raise Overloaded(f"HTTP 404: {r.text[:120]}", retry_after=3600)
             if not r.ok:
                 raise http_error(r)
             self.idx = accounts.index(acct)
+            self.refusals.pop((key, model), None)
             return reply_parts(r.json().get("response", {}))
         if refused:
             raise refused
@@ -449,7 +465,7 @@ class Antigravity:
         if back == float("inf"):  # (a day: skipped without a probe, and nothing is sent when it's tried again)
             raise Overloaded("Google has disabled this for " + ", ".join(a.get("email") or "an account" for a in accounts)
                              + " (its terms of service)", retry_after=86400)
-        raise Overloaded("every Google account is rate-limited", retry_after=max(back - time.time(), 30))
+        raise Overloaded("every Google account is rate-limited", retry_after=max(back - time.time(), 1))
 
     def models(self):
         """The chat models these accounts can use, for picking on the Models page ("-tiered" ones by their plain names,

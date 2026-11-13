@@ -3411,6 +3411,7 @@ assert [(a["email"], a["source"]) for a in brain.google_accounts()] == [("a@x", 
 # answers, and with none left it's an Overloaded, so the chain moves on to the AI Studio key (a BadRequest failed every task)
 ag = brain.Antigravity.__new__(brain.Antigravity)
 ag.client, ag.idx, ag.tokens, ag.resting, ag.followed = ("id", "secret"), 0, {}, {}, {}
+ag.refusals = {}
 
 
 class GoogleHttp:
@@ -3452,7 +3453,7 @@ class LimitedHttp:
 def limited(replies, accounts=None):
     store.write_json(brain.OPENCODE_ACCOUNTS, {"accounts": accounts or [
         {"email": f"{t}@x", "refreshToken": t, "managedProjectId": "m"} for t in replies]})
-    ag.http, ag.tokens, ag.idx, ag.resting, ag.followed = LimitedHttp(replies), {}, 0, {}, {}
+    ag.http, ag.tokens, ag.idx, ag.resting, ag.followed, ag.refusals = LimitedHttp(replies), {}, 0, {}, {}, {}
     return ag.http
 
 
@@ -3482,7 +3483,7 @@ assert ag.generate([], "gemini-3.8-flash", "low") == [{"text": "r2"}] and ag.gen
 assert http.asked == ["r1", "r2", "r2"], http.asked  # the limited one rests, the other goes on answering
 # the model's servers are full: no account's fault, so the others aren't sent the same request
 http = limited({"r1": (429, '{"error": {"details": [{"reason": "MODEL_CAPACITY_EXHAUSTED"}]}}'), "r2": (200, "")})
-assert refused().retry_after == 60 and http.asked == ["r1"], http.asked
+assert refused().retry_after == 4 and http.asked == ["r1"], http.asked  # (the Antigravity CLI's first wait)
 # an account Google disabled for its terms: never asked again, said once, and no probe keeps trying it
 BANNED = '{"error": {"code": 403, "message": "This service has been disabled in this account for violation of Terms of Service."}}'
 http = limited({"r1": (403, BANNED), "r2": (200, "")})
@@ -3525,10 +3526,46 @@ limited({"r1": (200, ""), "r2": (200, "")})
 ag.http = http = SlowHttp(ag.http.replies)
 e_slow = refused()
 assert http.asked == ["r1"] and str(e_slow) == "timed out", (http.asked, e_slow)
-for e in (e503, e_slow):
+class NoNetHttp(LimitedHttp):
+    def post(self, url, **kw):
+        if not url.endswith("/token"):
+            self.asked.append(kw["headers"]["Authorization"].split()[1])
+            raise brain.requests.ConnectionError()
+        return super().post(url, **kw)
+
+
+limited({"r1": (200, ""), "r2": (200, "")})
+ag.http = http = NoNetHttp(ag.http.replies)
+e_offline = refused()
+assert http.asked == ["r1"] and e_offline.retry_after == 30, (http.asked, e_offline)
+# a model Google doesn't serve these accounts (404): skipped an hour, not probed
+http = limited({"r1": (404, '{"error": {"code": 404, "message": "Requested entity was not found."}}'), "r2": (200, "")})
+e404 = refused()
+assert http.asked == ["r1"] and e404.retry_after == 3600, (http.asked, e404)
+assert 15 <= brain.Antigravity.agy_delay(10 ** 6) <= 30  # (a day of refusals in a row: still the CLI's 30 s, and quick)
+for e in (e503, e_slow, e_offline):
     b.down_until = {}
     b._mark_down(("antigravity", "gemini-3.8-flash", "low"), e, True)
     assert 0 < b.down_until["antigravity", "gemini-3.8-flash", "low"] - time.time() <= 60, (e, b.down_until)  # (inf: a probe)
+# Paced as the Antigravity CLI paces itself: no cap of Jarvis's own (a 10-a-minute one sent the agent's bursts elsewhere),
+# and after refusals in a row it waits as the CLI does, 4 s, then 50-100% of 8, 16 and 30 s; never sooner than Google asks
+http = limited({"r1": (200, ""), "r2": (200, "")})
+for _ in range(20):
+    ag.generate([], "gemini-3.8-flash", "low")
+assert http.asked == ["r1"] * 20, http.asked
+http = limited({"r1": (429, '{"error": {"code": 429, "message": "Too Many Requests"}}')})
+rests = []
+for _ in range(5):
+    ag.resting.clear()
+    refused()
+    rests.append(ag.resting["r1", "gemini-3.8-flash-tiered"] - time.time())
+assert 3.9 < rests[0] <= 4 and 3.9 < rests[1] <= 8 and 7.9 < rests[2] <= 16 and 14.9 < rests[3] <= 30 and 14.9 < rests[4] <= 30, rests
+http.replies["r1"] = (200, "")
+ag.resting.clear()
+ag.generate([], "gemini-3.8-flash", "low")
+http.replies["r1"] = (429, '{"error": {"details": [{"@type": "type.googleapis.com/google.rpc.RetryInfo", "retryDelay": "40s"}]}}')
+refused()
+assert 39 < ag.resting["r1", "gemini-3.8-flash-tiered"] - time.time() <= 40, ag.resting  # (an answer starts the delays over)
 
 
 # One account at a time, and with opencode's accounts the one its plugin is on now (Jarvis used to start on the first

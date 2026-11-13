@@ -381,8 +381,10 @@ each account once at most: a 429 rests that account for that model (`Antigravity
 from the reply; the plugin's `rateLimitResetTimes` count too) and the next one is asked, except
 `MODEL_CAPACITY_EXHAUSTED` (no account's fault: not sprayed over the others); a 403 "disabled in this account" rests the
 account for good, another 401/403 for 10 min; with every account resting it raises `Overloaded` with `retry_after` (so
-no "hi" probe) and sends nothing. A timeout (30 s) and a 5xx (60 s, or Google's delay) carry `retry_after` too: the
-Antigravity CLI never sends "hi" probes, it waits and asks again. One account at a time: `idx` (the one that answered last) takes every model's
+no "hi" probe) and sends nothing. Waits follow the Antigravity CLI (`agy_delay`, by `refusals` in a row per account
+and model, reset by an answer; never shorter than Google's delay): a 429's rest and a 5xx's `retry_after`. A timeout or
+lost connection carries `retry_after` 30 s, a 404 an hour: the CLI never sends "hi" probes, and it has no pacing of
+its own, so neither has Jarvis. One account at a time: `idx` (the one that answered last) takes every model's
 requests until it can't, and on opencode's accounts it's set to the plugin's `activeIndexByFamily` one whenever that
 changes (`followed`), so the two apps aren't on two accounts at once. A refused token refresh is `Overloaded` too, never `BadRequest` (that would stop the
 whole model chain).

@@ -107,9 +107,13 @@
 - **One Google account at a time:** Jarvis keeps to the account that answered last for every model, and with accounts
   shared from the opencode plugin it uses the one the plugin is on now (it used to start on the first one whichever
   opencode was using: two accounts at once from one PC). An account signed in from Jarvis still comes first.
-- **No "hi" probes on Google accounts:** when Google had no capacity for a model (503) or didn't answer in time,
-  Jarvis sent "hi" to it every few minutes until it answered, requests the Antigravity app never sends. It now waits
-  30 s (a timeout), or 60 s or as long as Google says (a 503), and tries again with the next real request.
+- **No "hi" probes on Google accounts:** when Google had no capacity for a model (503), didn't answer in time, couldn't
+  be reached or didn't serve the model (404), Jarvis sent "hi" to it every few minutes until it answered, requests the
+  Antigravity app never sends. It now waits (30 s after a timeout or a lost connection, an hour after a 404) and tries
+  again with the next real request.
+- **Google accounts are paced like the Antigravity app:** after a 429 or 503 Jarvis waits as the app does, 4 s, then
+  up to 8, 16 and 30 s while refusals continue (never sooner than Google asks), instead of its own 30 s to 5 min, and
+  like the app it puts no cap of its own on how many requests it sends.
 - **Privacy:** the window fetched any web picture written into the text it shows (a reply, a message, a song's title)
   by itself, so a page or email that tricked the model into writing an image link with your data in it could send that
   data out with no tool call or safety check. The window now only loads files from this PC; a player's cover on the
