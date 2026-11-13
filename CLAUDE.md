@@ -50,7 +50,8 @@ pyside6-lupdate -no-obsolete qml/*.qml jarvis.py window.py -ts translations/jarv
   the command, which then kills itself); match `[.]venv/bin/python .../jarvis.py` in `ps -eo pid,args` instead.
   SIGTERM quits it cleanly (exit handlers run); start the installed one again detached with `setsid -f
   ~/.local/bin/jarvis` (environment variables such as `JARVIS_WA_LOG` reach it). Its log is `jarvis.log` in
-  `system.DATA` (`~/.local/share/jarvis` on Linux).
+  `system.DATA` (`~/.local/share/jarvis` on Linux). Notes being taken live only in memory until stopped: before a
+  restart, check the log for a `notes` start with no "Your notes on ... are ready" after it (a restart loses them).
 - From `CONTRIBUTING.md`: a bug fix comes with a check that fails without it; nothing personal (names, numbers, emails,
   keys) in code, tests, prompts or commit messages; user-visible changes get a `CHANGELOG.md` line.
 - Running a second copy alongside an installed Jarvis: set `JARVIS_HUD_PORT` to another port and point the XDG dirs
