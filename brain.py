@@ -213,13 +213,26 @@ def google_accounts():
     """Signed-in Google accounts, Jarvis's own first: [{email, refresh_token, project, source, fingerprint?}]."""
     own = [{**a, "source": "jarvis"} for a in store.read_json(GOOGLE_FILE, {}).get("accounts", [])]
     seen = {a["refresh_token"] for a in own}
-    for a in store.read_json(OPENCODE_ACCOUNTS, {}).get("accounts", []):
+    theirs = store.read_json(OPENCODE_ACCOUNTS, {})
+    active = theirs.get("activeIndexByFamily") or {}  # the account the plugin is on now, for "gemini" and for "claude"
+    for i, a in enumerate(theirs.get("accounts", [])):
         token = str(a.get("refreshToken", "")).split("|")[0]
         project = a.get("managedProjectId") or a.get("projectId")  # (accounts added from the menu have only projectId)
         if a.get("enabled", True) and token and project and token not in seen:
-            own.append({"email": a.get("email", ""), "refresh_token": token, "project": project,
-                        "source": "opencode", "fingerprint": a.get("fingerprint") or {}})
+            own.append({"email": a.get("email", ""), "refresh_token": token, "project": project, "source": "opencode",
+                        "fingerprint": a.get("fingerprint") or {}, "limits": a.get("rateLimitResetTimes") or {},
+                        "active": [f for f in ("gemini", "claude") if active.get(f, theirs.get("activeIndex")) == i]})
     return own
+
+
+def limit_info(r):
+    """What Google's 429 says: the seconds until it may be asked again (the longest it names, None if none) and its
+    reason ("" if none)."""
+    units = {"h": 3600, "m": 60, "s": 1, "ms": .001}
+    waits = [sum(float(n) * units[u] for n, u in re.findall(r"(\d+(?:\.\d+)?)(ms|h|m|s)", a or b)) for a, b in
+             re.findall(r'"(?:retryDelay|quotaResetDelay)":\s*"([^"]+)"|reset after\s+([0-9hms.]+)', r.text)]
+    reason = re.search(r'"reason":\s*"([A-Z_]+)"', r.text)
+    return max(waits, default=None), reason[1] if reason else ""
 
 
 def google_project(access_token):
@@ -332,6 +345,7 @@ def antigravity_model(model, thinking):
 class Antigravity:
     """Models through the signed-in Google accounts, taking turns when one is rate-limited."""
     URL = "https://daily-cloudcode-pa.googleapis.com/v1internal:{}"
+    BANNED = "disabled in this account"  # in Google's 403 for an account it suspended from the service
 
     def __init__(self):
         if not google_accounts():
@@ -342,6 +356,15 @@ class Antigravity:
         self.http = requests.Session()
         self.idx = 0
         self.tokens = {}  # refresh token -> (access token, expiry)
+        self.resting = {}  # (refresh token, model) -> when it may be asked again; model None: the account, for every model
+        self.followed = {}  # "gemini"/"claude" -> the refresh token of the account opencode's plugin was last seen on
+
+    def _rest(self, acct, model):
+        """When this account may be asked for this model again: what Jarvis noted (a rate limit, an account Google
+        refused) and, for opencode's accounts, what the plugin did (its times are in ms, by quota: "gemini-...", "claude")."""
+        family = "claude" if "claude" in model else "gemini"
+        theirs = [ms / 1000 for key, ms in acct.get("limits", {}).items() if key.startswith(family) and isinstance(ms, (int, float))]
+        return max([self.resting.get((acct["refresh_token"], m), 0) for m in (model, None)] + theirs)
 
     def _token(self, acct):
         tok, exp = self.tokens.get(acct["refresh_token"], (None, 0))
@@ -371,34 +394,68 @@ class Antigravity:
         if not accounts:
             raise RuntimeError("signed out of Google")
         model, thinking = antigravity_model(model, thinking)
-        refused = None
-        for _ in range(len(accounts) * 2):
-            acct = accounts[self.idx % len(accounts)]
+        refused, at = None, self.idx % len(accounts)
+        # One account at a time: the one that answered last (idx) takes every request until it can't. On opencode's
+        # accounts that's the one its plugin is on now, so the two apps never use two accounts at once; an account Jarvis
+        # had to move to itself is kept until the plugin moves
+        family = "claude" if "claude" in model else "gemini"
+        theirs = next((i for i, a in enumerate(accounts) if family in a.get("active", ())), None)
+        if theirs is not None and accounts[at]["source"] == "opencode" and accounts[theirs]["refresh_token"] != self.followed.get(family):
+            self.followed[family], self.idx, at = accounts[theirs]["refresh_token"], theirs, theirs
+        # Each account once, and never one that's resting: a limited account used to be asked twice per request, again a
+        # minute later for as long as its limit lasted (hours), and one Google had disabled was asked for good
+        for acct in accounts[at:] + accounts[:at]:
+            key, who = acct["refresh_token"], acct.get("email") or "an account"
+            if time.time() < self._rest(acct, model):
+                continue
             try:
-                r = self._post(acct, "generateContent", {
-                    "model": model, "request": build_request(contents, tools, system, thinking, **options),
-                    "requestType": "agent", "userAgent": "antigravity", "requestId": f"agent-{uuid.uuid4()}"},
-                    READ_TIMEOUT.get(thinking, 60))
-            except requests.Timeout:
-                raise Overloaded("timed out")
+                for _ in range(2):  # (a 401: once more, with a new access token)
+                    r = self._post(acct, "generateContent", {
+                        "model": model, "request": build_request(contents, tools, system, thinking, **options),
+                        "requestType": "agent", "userAgent": "antigravity", "requestId": f"agent-{uuid.uuid4()}"},
+                        READ_TIMEOUT.get(thinking, 60))
+                    if r.status_code != 401:
+                        break
+                    self.tokens.pop(key, None)
+            except requests.Timeout:  # (skipped a while, as the Antigravity CLI waits to ask again: a "hi" probe is a request it never sends)
+                raise Overloaded("timed out", retry_after=30)
             except Overloaded as e:  # this account's sign-in was refused: the next one
-                refused, self.idx = e, self.idx + 1
+                refused = e
                 continue
-            if r.status_code == 401:
-                self.tokens.pop(acct["refresh_token"], None)
+            if r.status_code == 429:
+                wait, reason = limit_info(r)
+                if reason == "MODEL_CAPACITY_EXHAUSTED":  # the model's servers are full, whichever account asks
+                    raise Overloaded("busy", retry_after=wait or 60)
+                rest = max(wait or 300, 30)  # this account is rate-limited: the next one
+                self.resting[key, model] = time.time() + rest
+                print(f"[brain] antigravity: {who} is rate-limited for {model} ({reason or 'no reason given'}): not asked "
+                      f"for {rest / 60:.0f} min", flush=True)
                 continue
-            if r.status_code == 429:  # this account is rate-limited: the next one
-                self.idx += 1
+            if r.status_code in (401, 403):  # the account's own trouble (suspended, wants verifying): never the next request's
+                banned = self.BANNED in r.text
+                self.resting[key, None] = float("inf") if banned else time.time() + 600
+                print(f"[brain] antigravity: Google refused {who} (HTTP {r.status_code}: {r.text[:200]}): not asked "
+                      + ("again" if banned else "for 10 min"), flush=True)
                 continue
+            if r.status_code >= 500:  # Google's side (503: no capacity for the model): the same, for as long as it says
+                raise Overloaded(f"HTTP {r.status_code}: {r.text[:120]}", retry_after=limit_info(r)[0] or 60)
             if not r.ok:
                 raise http_error(r)
+            self.idx = accounts.index(acct)
             return reply_parts(r.json().get("response", {}))
-        raise refused or Overloaded("every Google account is rate-limited", retry_after=60)
+        if refused:
+            raise refused
+        back = min(self._rest(a, model) for a in accounts)
+        if back == float("inf"):  # (a day: skipped without a probe, and nothing is sent when it's tried again)
+            raise Overloaded("Google has disabled this for " + ", ".join(a.get("email") or "an account" for a in accounts)
+                             + " (its terms of service)", retry_after=86400)
+        raise Overloaded("every Google account is rate-limited", retry_after=max(back - time.time(), 30))
 
     def models(self):
         """The chat models these accounts can use, for picking on the Models page ("-tiered" ones by their plain names,
         which antigravity_model adds it back to)."""
-        r = self._post(google_accounts()[0], "fetchAvailableModels", {}, 15)
+        acct = min(google_accounts(), key=lambda a: self._rest(a, "gemini"))  # (not one that's resting, if another isn't)
+        r = self._post(acct, "fetchAvailableModels", {}, 15)
         if not r.ok:
             raise http_error(r)
         found = r.json().get("models", {})
@@ -3701,8 +3758,8 @@ class Brain:
     def _mark_down(self, entry, e, is_main):
         if getattr(e, "retry_after", None):  # rate limit: skip it for a bit
             if e.retry_after > 3600 and self.down_until.get(entry, 0) < time.time():
-                self.notify(f"{entry[1]}'s free daily quota is used up: Jarvis uses the next model on the Models page until it "
-                            f"resets in {e.retry_after / 3600:.0f} h.")
+                self.notify(f"{entry[1]} via {entry[0]}: {e}. Jarvis uses the next model on the Models page for the next "
+                            f"{e.retry_after / 3600:.0f} h.")
             self.down_until[entry] = time.time() + e.retry_after
             return
         probing = self.down_until.get(entry) == float("inf")  # (tried anyway while down: its probe is already running)

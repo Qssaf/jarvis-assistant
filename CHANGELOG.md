@@ -99,6 +99,17 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
+- **Google accounts (Models page) are no longer hammered when they're rate-limited:** a limited account was asked twice
+  per request and again a minute later for as long as the limit lasted, every other account got the same request the
+  same second, and an account Google had disabled was asked again for good. Each account is now asked once, rests as
+  long as Google says (or as long as the opencode plugin already knows), a full model isn't retried on the other
+  accounts, and a disabled or refused account is left alone, with a notice when none is left.
+- **One Google account at a time:** Jarvis keeps to the account that answered last for every model, and with accounts
+  shared from the opencode plugin it uses the one the plugin is on now (it used to start on the first one whichever
+  opencode was using: two accounts at once from one PC). An account signed in from Jarvis still comes first.
+- **No "hi" probes on Google accounts:** when Google had no capacity for a model (503) or didn't answer in time,
+  Jarvis sent "hi" to it every few minutes until it answered, requests the Antigravity app never sends. It now waits
+  30 s (a timeout), or 60 s or as long as Google says (a 503), and tries again with the next real request.
 - **Privacy:** the window fetched any web picture written into the text it shows (a reply, a message, a song's title)
   by itself, so a page or email that tricked the model into writing an image link with your data in it could send that
   data out with no tool call or safety check. The window now only loads files from this PC; a player's cover on the

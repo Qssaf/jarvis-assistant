@@ -3410,7 +3410,7 @@ assert [(a["email"], a["source"]) for a in brain.google_accounts()] == [("a@x", 
 # a revoked sign-in (Google's 400 "invalid_grant") is that account's problem, not a bad request: the next account
 # answers, and with none left it's an Overloaded, so the chain moves on to the AI Studio key (a BadRequest failed every task)
 ag = brain.Antigravity.__new__(brain.Antigravity)
-ag.client, ag.idx, ag.tokens = ("id", "secret"), 0, {}
+ag.client, ag.idx, ag.tokens, ag.resting, ag.followed = ("id", "secret"), 0, {}, {}, {}
 
 
 class GoogleHttp:
@@ -3431,6 +3431,134 @@ try:
     raise AssertionError("a refused sign-in answered")
 except brain.Overloaded as e:
     assert not isinstance(e, brain.BadRequest) and "sign in again" in str(e), e
+
+
+# A rate-limited account rests as long as Google says, and one Google disabled is never asked again: every request used
+# to go to each account twice, a minute apart for as long as the limit lasted, and a disabled account was probed for good
+class LimitedHttp:
+    def __init__(self, replies):
+        self.replies, self.asked = replies, []  # refresh token -> (status, body); the accounts asked, in order
+
+    def post(self, url, timeout=None, data=None, json=None, headers=None):
+        if url.endswith("/token"):
+            return types.SimpleNamespace(ok=True, status_code=200, json=lambda: {"access_token": data["refresh_token"], "expires_in": 3600})
+        who = headers["Authorization"].split()[1]
+        self.asked.append(who)
+        status, body = self.replies[who]
+        return types.SimpleNamespace(ok=status == 200, status_code=status, text=body, json=lambda: {
+            "response": {"candidates": [{"content": {"parts": [{"text": who}]}}]}})
+
+
+def limited(replies, accounts=None):
+    store.write_json(brain.OPENCODE_ACCOUNTS, {"accounts": accounts or [
+        {"email": f"{t}@x", "refreshToken": t, "managedProjectId": "m"} for t in replies]})
+    ag.http, ag.tokens, ag.idx, ag.resting, ag.followed = LimitedHttp(replies), {}, 0, {}, {}
+    return ag.http
+
+
+def refused(model="gemini-3.8-flash"):
+    try:
+        ag.generate([], model, "low")
+    except brain.Overloaded as e:
+        return e
+    raise AssertionError("it answered")
+
+
+QUOTA = ('{"error": {"code": 429, "details": [{"@type": "type.googleapis.com/google.rpc.ErrorInfo", "reason": "QUOTA_EXHAUSTED", '
+         '"metadata": {"quotaResetDelay": "2h0m5s"}}, {"@type": "type.googleapis.com/google.rpc.RetryInfo", "retryDelay": "7205s"}]}}')
+assert brain.limit_info(types.SimpleNamespace(text=QUOTA)) == (7205, "QUOTA_EXHAUSTED")
+assert brain.limit_info(types.SimpleNamespace(text='{"error": {"message": "quota will reset after 1h2m3s."}}')) == (3723, "")
+assert brain.limit_info(types.SimpleNamespace(text="Too Many Requests")) == (None, "")
+http = limited({"r1": (429, QUOTA), "r2": (429, QUOTA)})
+e = refused()
+assert http.asked == ["r1", "r2"], http.asked  # each account once, not twice
+assert 7000 < e.retry_after <= 7205, e.retry_after  # the model is skipped until the quota is back (it was a minute)
+refused()
+assert http.asked == ["r1", "r2"], http.asked  # asked again meanwhile: nothing is sent
+refused("gemini-3.1-flash-lite")
+assert http.asked[2:] == ["r1", "r2"], http.asked  # (another model's quota is its own)
+http = limited({"r1": (429, QUOTA), "r2": (200, "")})
+assert ag.generate([], "gemini-3.8-flash", "low") == [{"text": "r2"}] and ag.generate([], "gemini-3.8-flash", "low")
+assert http.asked == ["r1", "r2", "r2"], http.asked  # the limited one rests, the other goes on answering
+# the model's servers are full: no account's fault, so the others aren't sent the same request
+http = limited({"r1": (429, '{"error": {"details": [{"reason": "MODEL_CAPACITY_EXHAUSTED"}]}}'), "r2": (200, "")})
+assert refused().retry_after == 60 and http.asked == ["r1"], http.asked
+# an account Google disabled for its terms: never asked again, said once, and no probe keeps trying it
+BANNED = '{"error": {"code": 403, "message": "This service has been disabled in this account for violation of Terms of Service."}}'
+http = limited({"r1": (403, BANNED), "r2": (200, "")})
+assert ag.generate([], "gemini-3.8-flash", "low") == [{"text": "r2"}] and ag.generate([], "gemini-3.1-flash-lite", "low")
+assert http.asked == ["r1", "r2", "r2"], http.asked
+http = limited({"r1": (403, BANNED)})
+e = refused()
+assert e.retry_after and "disabled" in str(e) and "r1@x" in str(e), e  # (retry_after: skipped, not probed with "hi")
+refused()
+assert http.asked == ["r1"], http.asked
+said, b = [], brain.Brain.__new__(brain.Brain)
+b.down_until, b.notify = {}, said.append
+b._mark_down(("antigravity", "gemini-3.8-flash", "low"), e, True)
+assert len(said) == 1 and "disabled" in said[0] and "quota" not in said[0], said
+# another 403 (Google wants the account verified): that account rests ten minutes and the next one answers
+http = limited({"r1": (403, '{"error": {"message": "Verify your account to continue."}}'), "r2": (200, "")})
+assert ag.generate([], "gemini-3.8-flash", "low") == [{"text": "r2"}] and 500 < ag.resting["r1", None] - time.time() <= 600
+# what the opencode plugin knows is rate-limited (its rateLimitResetTimes, in ms) isn't asked either
+http = limited({"r1": (200, ""), "r2": (200, "")}, [
+    {"email": "a@x", "refreshToken": "r1", "managedProjectId": "m",
+     "rateLimitResetTimes": {"gemini-antigravity:antigravity-gemini-3.8-flash": (time.time() + 900) * 1000, "claude": 1}},
+    {"email": "b@x", "refreshToken": "r2", "managedProjectId": "m"}])
+assert ag.generate([], "gemini-3.8-flash", "low") == [{"text": "r2"}] and http.asked == ["r2"], http.asked
+# Google out of capacity (its 503) or not answering in time: the model is skipped a while, as the Antigravity CLI waits
+# before asking again, never probed with "hi" (requests that app never sends); the other account isn't asked either
+http = limited({"r1": (503, '{"error": {"code": 503, "message": "No capacity available for model x on the server"}}'), "r2": (200, "")})
+e503 = refused()
+assert http.asked == ["r1"], http.asked
+
+
+class SlowHttp(LimitedHttp):
+    def post(self, url, **kw):
+        if not url.endswith("/token"):
+            self.asked.append(kw["headers"]["Authorization"].split()[1])
+            raise brain.requests.Timeout()
+        return super().post(url, **kw)
+
+
+limited({"r1": (200, ""), "r2": (200, "")})
+ag.http = http = SlowHttp(ag.http.replies)
+e_slow = refused()
+assert http.asked == ["r1"] and str(e_slow) == "timed out", (http.asked, e_slow)
+for e in (e503, e_slow):
+    b.down_until = {}
+    b._mark_down(("antigravity", "gemini-3.8-flash", "low"), e, True)
+    assert 0 < b.down_until["antigravity", "gemini-3.8-flash", "low"] - time.time() <= 60, (e, b.down_until)  # (inf: a probe)
+
+
+# One account at a time, and with opencode's accounts the one its plugin is on now (Jarvis used to start on the first
+# while opencode was on another: two accounts at once from one PC). Jarvis follows when the plugin moves on; an account
+# Jarvis had to move to itself (the plugin's was rate-limited) is kept for every model until the plugin moves again
+def plugin_on(i):
+    theirs = store.read_json(brain.OPENCODE_ACCOUNTS, {})
+    store.write_json(brain.OPENCODE_ACCOUNTS, {**theirs, "activeIndex": 0, "activeIndexByFamily": {"claude": 0, "gemini": i}})
+
+
+http = limited({"r1": (200, ""), "r2": (200, ""), "r3": (200, "")})
+plugin_on(1)
+ag.generate([], "gemini-3.8-flash", "low"), ag.generate([], "gemini-3.1-flash-lite", "low")
+assert http.asked == ["r2", "r2"], http.asked
+plugin_on(2)
+ag.generate([], "gemini-3.8-flash", "low")
+assert http.asked[2:] == ["r3"], http.asked
+http.replies["r3"] = (429, QUOTA)
+ag.generate([], "gemini-3.8-flash", "low"), ag.generate([], "gemini-3.1-flash-lite", "low"), ag.generate([], "gemini-3.8-flash", "low")
+assert http.asked[3:] == ["r3", "r1", "r1", "r1"], http.asked  # (the other model too: not back on r3 beside r1)
+plugin_on(1)
+ag.generate([], "gemini-3.8-flash", "low")
+assert http.asked[7:] == ["r2"], http.asked
+store.write_json(brain.GOOGLE_FILE, {"accounts": [{"email": "own@x", "refresh_token": "r9", "project": "m"}]}, private=True)
+http = limited({"r9": (200, ""), "r1": (200, ""), "r2": (200, "")}, [
+    {"email": "a@x", "refreshToken": "r1", "managedProjectId": "m"}, {"email": "b@x", "refreshToken": "r2", "managedProjectId": "m"}])
+plugin_on(1)
+ag.generate([], "gemini-3.8-flash", "low")
+assert http.asked == ["r9"], http.asked  # an account signed in from Jarvis comes first: opencode's aren't touched
+store.write_json(brain.GOOGLE_FILE, {"accounts": []}, private=True)
 os.remove(brain.OPENCODE_ACCOUNTS)
 assert brain.antigravity_model("gemini-3.8-flash", "minimal") == ("gemini-3.8-flash-tiered", "low")
 assert brain.antigravity_model("gemini-3.1-flash-image", None) == ("gemini-3.1-flash-image", None)

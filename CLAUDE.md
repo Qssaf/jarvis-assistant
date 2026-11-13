@@ -66,7 +66,9 @@ pyside6-lupdate -no-obsolete qml/*.qml jarvis.py window.py -ts translations/jarv
   `Live.__new__` set the attributes they need by hand (`contents`, `asking`, `quick_tasks` as a dict...): a new
   attribute on those classes usually needs adding there.
 - Windows CI runs the same file: a check of a Linux-only path must force it (`system.IS_WINDOWS = False`, then restore),
-  and timestamps must stay before the year 3000 (Windows can't format later ones).
+  and timestamps must stay before the year 3000 (Windows can't format later ones). Its temp folder is a short 8.3 name
+  (`C:\Users\RUNNER~1`): compare real paths (a symlinked `TMPDIR` reproduces it here); and nothing makes the XDG config
+  folder there (settings live under `APPDATA`): a check writing into it makes it first.
 - The test window load fails on any QML warning, and it also checks that every `<rootId>.fn()` a page calls is defined
   in that page (Settings once lost its `set()` and every switch silently did nothing).
 - GUI checks without touching the user's screen: `docs/screens.py OUT [page...]` renders pages with made-up data (it
@@ -374,8 +376,16 @@ prompts.
 **Google sign-in.** The `antigravity` backend (brain.py) uses Google accounts signed in from the Models page
 (`google_sign_in`: Antigravity's OAuth client, read by `google_client()` from the opencode Antigravity plugin
 (`PLUGIN_REPO`, found through `opencode.json` first) or the env file and never committed (GitHub's push protection blocks it), PKCE, a callback on `localhost:51121`, then `loadCodeAssist` /
-`onboardUser` for the account's project) plus any from the opencode plugin's `antigravity-accounts.json`, rotating on 429
-and on a refused token refresh (raised as `Overloaded`, never `BadRequest`: that would stop the whole model chain).
+`onboardUser` for the account's project) plus any from the opencode plugin's `antigravity-accounts.json`. A request asks
+each account once at most: a 429 rests that account for that model (`Antigravity.resting`, as long as `limit_info` reads
+from the reply; the plugin's `rateLimitResetTimes` count too) and the next one is asked, except
+`MODEL_CAPACITY_EXHAUSTED` (no account's fault: not sprayed over the others); a 403 "disabled in this account" rests the
+account for good, another 401/403 for 10 min; with every account resting it raises `Overloaded` with `retry_after` (so
+no "hi" probe) and sends nothing. A timeout (30 s) and a 5xx (60 s, or Google's delay) carry `retry_after` too: the
+Antigravity CLI never sends "hi" probes, it waits and asks again. One account at a time: `idx` (the one that answered last) takes every model's
+requests until it can't, and on opencode's accounts it's set to the plugin's `activeIndexByFamily` one whenever that
+changes (`followed`), so the two apps aren't on two accounts at once. A refused token refresh is `Overloaded` too, never `BadRequest` (that would stop the
+whole model chain).
 Opt-in and warned about (Google may suspend accounts used this way). With no account its constructor raises
 `LookupError`, so its entries (first in every built-in list) are skipped and Brain says nothing. Tests point
 `OPENCODE_ACCOUNTS` and `PLUGIN_CONSTANTS` at temp files.
@@ -408,7 +418,7 @@ Missing: Go, Kotlin/Compose → vault: none → find-skills if wanted
 
 ## Skill notes
 - requesting-code-review inline (no reviewer agent, never a Workflow: it burned the user's usage): a full-diff pass after green tests still found 6 real bugs; a whole-codebase pass, area by area with a scratch notes file, found 16; a second full read (every file, a repro or failing check per suspect before any fix) found 13 more; the parts never read before (QML pages, evals, packaging) gave 6 more, one a privacy leak a local HTTP server proved: re-reading pays, and so does probing Qt's own behaviour.
-- Tests and evals must stub the real desktop (`system._idle_seconds`, `system.fullscreen`): a full-screen game failed the suite.
+- Tests and evals must stub the real desktop (`system._idle_seconds`, `system.fullscreen`): a full-screen game failed the suite. verification-before-completion includes CI: after a push, check the run really ran and passed (`gh run list`): an unparsable workflow is red with no jobs, unseen for three pushes.
 - Evals: the default chain (no EVAL_MODELS) worked when one model was 503; `EVAL_OUT` is a file path; a new change tool must be simulated in voice_eval first (it runs real tools); Live closes with 1006 once the key's daily quota is gone.
 - OpenChamber: drive it through its own local `/api` (port in its settings.json); never read its opencode server's password (blocked as credential digging, rightly).
-- "Gives up / can't do X" reports: read `jarvis.log` for the request, its tools and errors first; the causes were code (a model outage killing the task, a tool missing a capability) more than the prompt.
+- "Gives up / can't do X / rate limited" reports: read the logs first (`jarvis.log`; for Google accounts also the opencode plugin's `antigravity-logs/` and the accounts file's limits); the causes were code (a model outage killing the task, a tool missing a capability, the plugin saving 503 "No capacity" as a rate limit) more than the prompt or Google.
