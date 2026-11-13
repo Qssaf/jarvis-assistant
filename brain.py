@@ -1653,6 +1653,9 @@ NOTES_DIR = os.path.join(os.path.expanduser("~"), "Documents", "Jarvis Notes")
 notes_done = [lambda text: print(text, flush=True)]  # set by the app: says the notes are ready
 
 
+SOURCES = {"both": "what the PC plays and the microphone hears", "pc": "what the PC is playing", "room": "the room"}
+
+
 class Notes:
     """Records what the PC plays (a lecture, a call) or the room, transcribes it in chunks as it goes, and at the end
     writes a summary and the transcript to a file. One recording at a time; three hours at most. When several people
@@ -1665,23 +1668,30 @@ class Notes:
         self.on = None  # {"title", "source", "started", "stop" (Event), "parts" [text or None], "heard" [text], "thread"}
         self.pool = ThreadPoolExecutor(1)  # (one at a time, in order: each chunk needs the speakers named before it)
 
-    def start(self, title="", source="pc"):
-        if self.on:
-            return {"error": f"already taking notes ('{self.on['title']}', {self._minutes()} min so far): stop those first"}
+    def start(self, title="", source="both"):
+        if self.on:  # (the voice sometimes asks twice: the notes going on is the answer, not an error)
+            return {"result": f"already taking notes ('{self.on['title']}', {self._minutes()} min so far): they go on"}
         title = " ".join(str(title or "").split())[:80] or time.strftime("Notes %d %b %H:%M")
-        self.on = {"title": title, "source": source, "started": time.time(), "stop": threading.Event(), "parts": [], "heard": [], "folder": tempfile.mkdtemp(prefix="jarvis-notes-")}
-        self.on["thread"] = threading.Thread(target=self._record, args=(self.on,), daemon=True)
+        source = source if source in SOURCES else "both"
+        folder = tempfile.mkdtemp(prefix="jarvis-notes-")
+        try:  # (the first piece starts here: if this PC can't record, say so rather than take notes of nothing)
+            first = system.record_audio(os.path.join(folder, "000.wav"), source)
+        except Exception as e:
+            shutil.rmtree(folder, ignore_errors=True)
+            return {"error": f"can't record here: {e}"}
+        self.on = {"title": title, "source": source, "started": time.time(), "stop": threading.Event(), "parts": [], "heard": [], "folder": folder}
+        self.on["thread"] = threading.Thread(target=self._record, args=(self.on, first), daemon=True)
         self.on["thread"].start()
-        return {"result": f"taking notes of {'what the PC is playing' if source == 'pc' else 'the room'}: '{title}'. Say stop the notes when it ends."}
+        return {"result": f"taking notes of {SOURCES[source]}: '{title}'. Say stop the notes when it ends."}
 
     def _minutes(self):
         return round((time.time() - self.on["started"]) / 60) if self.on else 0
 
-    def _record(self, on):
+    def _record(self, on, first):
         n = 0
         while not on["stop"].is_set() and time.time() - on["started"] < self.LONGEST:
             path = os.path.join(on["folder"], f"{n:03d}.wav")
-            proc = system.record_audio(path, on["source"])
+            proc = first if n == 0 else system.record_audio(path, on["source"])
             on["stop"].wait(self.CHUNK)
             system.stop_recording(proc)
             on["parts"].append(self.pool.submit(self._transcribe_file, path, on))
@@ -1711,6 +1721,8 @@ class Notes:
             text = self.transcribe(audio, self._prompt(on["heard"]))
             if text.strip() != "(silence)":
                 on["heard"].append(text)
+                if on["source"] != "file":  # (saved as it goes: a restart or a crash keeps what was said)
+                    self._write(on, "(still being taken: the summary is written when they're stopped)", "\n".join(on["heard"]))
             return text
         except Exception as e:
             return f"(this part couldn't be transcribed: {str(e)[:100]})"
@@ -1738,13 +1750,20 @@ class Notes:
             summary = self.summarise(transcript) if transcript else "Nothing was heard."
         except Exception as e:
             summary = f"(the summary couldn't be written: {str(e)[:100]})"
+        path = self._write(on, summary, transcript)
+        shutil.rmtree(on["folder"], ignore_errors=True)
+        notes_done[0](f"Your notes on '{on['title']}' are ready: {summary[:300]}", path)
+
+    @staticmethod
+    def _write(on, summary, transcript):
+        """The notes file, named by when they started (the same one while they're being taken and once they're done)."""
         os.makedirs(NOTES_DIR, exist_ok=True)
-        path = os.path.join(NOTES_DIR, time.strftime("%Y-%m-%d %H-%M ") + re.sub(r"[^\w .-]", "", on["title"])[:60].strip() + ".md")
+        path = os.path.join(NOTES_DIR, time.strftime("%Y-%m-%d %H-%M ", time.localtime(on["started"]))
+                            + re.sub(r"[^\w .-]", "", on["title"])[:60].strip() + ".md")
         with open(path, "w", encoding="utf-8") as f:
             f.write(f"# {on['title']}\n\n{time.strftime('%A %d %B %Y, %H:%M', time.localtime(on['started']))}\n\n"
                     f"## Summary\n\n{summary}\n\n## Transcript\n\n{transcript or '(nothing)'}\n")
-        shutil.rmtree(on["folder"], ignore_errors=True)
-        notes_done[0](f"Your notes on '{on['title']}' are ready: {summary[:300]}", path)
+        return path
 
     def status(self):
         return {"taking_notes": self.on["title"], "minutes": self._minutes()} if self.on else {"taking_notes": None}
@@ -1785,7 +1804,7 @@ def audible(wav):
 notes = [None]  # set by Brain
 
 
-def tool_notes(action, title="", source="pc"):
+def tool_notes(action, title="", source="both"):
     n = notes[0]
     return n.start(title, source) if action == "start" else n.stop() if action == "stop" else n.status()
 
@@ -2165,10 +2184,11 @@ TOOLS.update({
               "60); one watch at a time. stop: stop watching.", obj(action={"type": "string", "enum": ["start", "stop"]},
               what={"type": "string", "description": "what to watch for, described plainly"}, minutes={"type": "number"},
               optional=("what", "minutes"))),
-    "notes": (tool_notes, "Take notes of a lecture, meeting or video: start (source pc: what the PC is playing; room: the "
-              "microphone, for a class in person; a title), stop (the summary and transcript are saved to Documents/Jarvis "
-              "Notes and announced when ready), or status.", obj(action={"type": "string", "enum": ["start", "stop", "status"]},
-              title={"type": "string"}, source={"type": "string", "enum": ["pc", "room"]}, optional=("title", "source"))),
+    "notes": (tool_notes, "Take notes of a lecture, meeting or video: start (it records the microphone and what the PC plays "
+              "together, so it doesn't matter where the meeting is; source pc or room only when the user wants just one; a "
+              "title), stop (the summary and transcript are saved to Documents/Jarvis Notes and announced when ready), or "
+              "status.", obj(action={"type": "string", "enum": ["start", "stop", "status"]}, title={"type": "string"},
+              source={"type": "string", "enum": ["both", "pc", "room"]}, optional=("title", "source"))),
     "recent_changes": (tool_recent_changes, "What Jarvis changed lately (commands that changed things, account actions), newest "
                        "first, and how to reverse each: for \"undo that\" or \"what did you change?\".", obj()),
     "plan": (tool_plan, "Show the user your plan for a long task (more than three steps), before or alongside your first "

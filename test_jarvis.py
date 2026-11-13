@@ -3426,16 +3426,18 @@ brain.notes_done[0] = lambda text, path: done.append((text, path))
 heard = iter(["**Speaker 1:** Today: derivatives. The slope is rise over run.", "(silence)", "Homework: exercises 1 to 5, due Friday."])
 n = brain.Notes(transcribe=lambda audio, prompt: next(heard), summarise=lambda t: "Derivatives; homework 1-5 due Friday." if "Homework" in t else "?")
 n.CHUNK = 0.15
-assert "taking notes of the room" in n.start("Calculus 2", "room")["result"] and "error" in n.start("again")
+assert "taking notes of the room" in n.start("Calculus 2", "room")["result"] and "already taking notes" in n.start("again")["result"]
 time.sleep(0.4)
 assert n.status()["taking_notes"] == "Calculus 2"
+early = glob.glob(os.path.join(brain.NOTES_DIR, "*Calculus 2.md"))  # (saved as it goes: a restart keeps what was said)
+assert len(early) == 1 and "rise over run" in open(early[0], encoding="utf-8").read() and "still being taken" in open(early[0], encoding="utf-8").read()
 assert "stopped after" in n.stop()["result"] and "error" in n.stop()
 end = time.time() + 3
 while not done and time.time() < end:
     time.sleep(0.05)
 text, path = done[0]
 saved = open(path, encoding="utf-8").read()
-assert "homework 1-5 due Friday" in text and "# Calculus 2" in saved and "rise over run" in saved and "(silence)" not in saved
+assert path == early[0] and "homework 1-5 due Friday" in text and "# Calculus 2" in saved and "rise over run" in saved and "(silence)" not in saved
 assert "Speaker 1" not in saved  # (one person talked: no labels)
 assert set(recorded) == {"room"}
 # several people: each chunk is told the labels used so far, so they stay the same; the summary is asked to credit them
@@ -3459,6 +3461,19 @@ assert "**Speaker 2:** Is it on the exam?" in summarised[0] and "**Speaker 2:** 
 assert "one person has spoken so far" in n._prompt(["Just the lecturer, no labels."])
 assert "Speaker 1, Speaker 2." in n._prompt(["**Speaker 1**: Hi.\n**Speaker 2**: Hello."])  # (colon outside the bold too)
 assert brain.Notes.SPEAKER.sub("", "**Speaker 1**: Hi.\n**Speaker 1:** Bye.") == "Hi.\nBye."
+# a start that can't record says so (it said "taking notes" and recorded nothing); by default both sides are recorded
+def no_record(path, source):
+    raise RuntimeError("recording needs PipeWire (Linux)")
+system.record_audio, recorded[:] = no_record, []
+n = brain.Notes(transcribe=lambda audio, prompt: "(silence)", summarise=lambda t: "")
+assert "PipeWire" in n.start("x")["error"] and n.on is None
+system.record_audio, brain.notes[0], done[:] = fake_record, n, []
+assert "microphone" in brain.tool_notes("start")["result"] and recorded[0] == "both"
+n.stop()
+end = time.time() + 3
+while not done and time.time() < end:  # (written up before the notes folder is the real one again)
+    time.sleep(0.05)
+brain.notes[0] = None
 # the voice starting notes stops listening: the meeting kept the voice answering it, and a "c'est tout" in it hung up
 n = brain.Notes(transcribe=lambda audio, prompt: "(silence)", summarise=lambda t: "")
 n.CHUNK, brain.notes[0], real_brain, done[:] = 0.15, n, live.brain, []
@@ -3466,12 +3481,13 @@ live.brain = types.SimpleNamespace(_run_tool=lambda name, args: (brain.TOOLS[nam
 start = types.SimpleNamespace(name="notes", args={"action": "start", "source": "room"})
 live.mic, live.user_spoke_at = True, time.time()
 assert "taking notes" in asyncio.run(type(live)._tool(live, start))["result"] and not live.mic
-live.mic = True
-assert "error" in asyncio.run(type(live)._tool(live, start)) and live.mic  # (already on: nothing changed)
 n.stop()
 end = time.time() + 3
 while not done and time.time() < end:  # (written up before the notes folder is the real one again)
     time.sleep(0.05)
+live.mic, system.record_audio = True, no_record
+assert "error" in asyncio.run(type(live)._tool(live, start)) and live.mic  # (it couldn't record: the voice keeps listening)
+system.record_audio = fake_record
 live.brain, brain.notes[0] = real_brain, None
 # a recording on disk (a voice recorder's): a short one's words come back at once, a long one is written up as notes
 real_chunks, wanted = system.audio_chunks, [1]
@@ -3509,6 +3525,27 @@ try:
 except RuntimeError as e:
     assert "ffmpeg" in str(e)
 system.record_audio, system.stop_recording = real_rec
+# "both": the PC's sound and the microphone side by side, mixed into one file when stopped (loud parts clip, not wrap)
+import wave
+spawned, real_popen, real_have, real_windows = [], system.subprocess.Popen, system.have, system.IS_WINDOWS
+class Recorder:
+    def __init__(self, args, **kw):
+        spawned.append(args)
+        self.path, self.level = args[-1], 5000 if "-P" in args else 30000
+    def send_signal(self, sig):
+        with wave.open(self.path, "wb") as w:
+            w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000)
+            w.writeframes(np.array([self.level] * (3 if self.level == 5000 else 2), np.int16).tobytes())
+    def wait(self, timeout=None):
+        return 0
+system.subprocess.Popen, system.have, system.IS_WINDOWS = Recorder, (lambda program: True), False
+mixed = os.path.join(store.DATA, "both.wav")
+system.stop_recording(system.record_audio(mixed, "both"))
+system.subprocess.Popen, system.have, system.IS_WINDOWS = real_popen, real_have, real_windows
+with wave.open(mixed) as w:
+    assert np.frombuffer(w.readframes(9), np.int16).tolist() == [32767, 32767, 5000]
+assert len(spawned) == 2 and sum("-P" in a for a in spawned) == 1 and not glob.glob(mixed + ".*")
+os.remove(mixed)
 import wave
 def wav(samples):
     buf = io.BytesIO()

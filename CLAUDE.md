@@ -32,6 +32,8 @@ pyside6-lupdate -no-obsolete qml/*.qml jarvis.py window.py -ts translations/jarv
   release when a `v*` tag is pushed. The auto-updater (`update_now`) downloads `Jarvis-windows.zip` and checks the
   asset's `digest`: keep that name. `packaging/aur` is the Arch package (/opt install, per-user venv on first run).
   Pushing a tag publishes a public release: ask first.
+- The GitHub repo is private (since 2026-11-13): Jarvis.exe's updater, the AUR package and the source copy's update check
+  (raw.githubusercontent.com) can't read it, so they find nothing new; making it public again restores them.
 - `evals/agent_eval.py` runs the real `Brain.ask` on real models against simulated tools (nothing on the PC or in
   accounts is touched) and checks the moves the agent made. Run it before and after prompt or tool changes. Keep eval
   harnesses in the repo, not a temp dir.
@@ -50,8 +52,9 @@ pyside6-lupdate -no-obsolete qml/*.qml jarvis.py window.py -ts translations/jarv
   the command, which then kills itself); match `[.]venv/bin/python .../jarvis.py` in `ps -eo pid,args` instead.
   SIGTERM quits it cleanly (exit handlers run); start the installed one again detached with `setsid -f
   ~/.local/bin/jarvis` (environment variables such as `JARVIS_WA_LOG` reach it). Its log is `jarvis.log` in
-  `system.DATA` (`~/.local/share/jarvis` on Linux). Notes being taken live only in memory until stopped: before a
-  restart, check the log for a `notes` start with no "Your notes on ... are ready" after it (a restart loses them).
+  `system.DATA` (`~/.local/share/jarvis` on Linux). Restart only when it's idle: check the log's last lines (a reply
+  being said, a task, or notes started with no "Your notes on ... are ready" after them: their file holds the transcript
+  so far, but the summary and the piece being recorded are lost).
 - From `CONTRIBUTING.md`: a bug fix comes with a check that fails without it; nothing personal (names, numbers, emails,
   keys) in code, tests, prompts or commit messages; user-visible changes get a `CHANGELOG.md` line.
 - Running a second copy alongside an installed Jarvis: set `JARVIS_HUD_PORT` to another port and point the XDG dirs
@@ -317,8 +320,11 @@ newest in the chat or the one holding `text`, and is in `ONCE_TOOLS`: a second c
 system notices: WhatsApp and Discord lines), notes files, WhatsApp (the helper's `search` over `jarvis_msgs`, calls left
 out), people pages and memory, newest first; screen history apart. `read_file` on an `AUDIO_TYPES` file is
 `Notes.from_file`: `system.audio_chunks` (ffmpeg) cuts it into `CHUNK` pieces; one piece's words come back at once, more
-are transcribed in order and written up like live notes. A voice `notes` start turns the mic off (the meeting kept the
-voice answering it). `learn_pass` (every 2 min): once the session's last you/jarvis line is `LEARN_AFTER` old,
+are transcribed in order and written up like live notes. Live notes record `both` by default (`system.record_audio`:
+two `pw-record`s, the PC's sound and the mic, mixed by `mix_wavs` when each piece stops; "pc" alone once caught only
+Jarvis's own voice in a meeting held in the room), start the first piece in `start` (a PC that can't record says so),
+and write their file after every piece, named by when they started (`_write`), so a restart keeps the transcript. A voice
+`notes` start turns the mic off (the meeting kept the voice answering it). `learn_pass` (every 2 min): once the session's last you/jarvis line is `LEARN_AFTER` old,
 `Brain.learn` asks the agent's models once (`LEARN`) for at most three new facts the user said; `learned.json` is
 stamped first, so a failing model isn't asked again; `learn_from_talk` turns it off.
 

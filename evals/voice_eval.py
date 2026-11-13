@@ -159,7 +159,7 @@ def simulated(case, name, args):
         return ({"result": f"won't ask before {args.get('tool')} again"} if args.get("action") == "allow" else
                 {"result": f"will ask again before {args.get('tool')}"} if args.get("action") == "remove" else {"done_without_asking": {}})
     if name == "notes":
-        what = "the room" if args.get("source") == "room" else "what the PC is playing"
+        what = brain.SOURCES.get(args.get("source", "both"), brain.SOURCES["both"])
         return {"start": {"result": f"taking notes of {what}: '{args.get('title') or 'Notes'}'"},
                 "stop": {"result": "stopped after 48 min; writing up the notes (they'll be announced when ready)"}}.get(
             args.get("action"), {"taking_notes": None})
@@ -522,7 +522,7 @@ CASES = [
     ("notes_stop", ["Take notes of this lecture.", "Stop the notes."], lambda c, s: any(x[0] == "notes" and x[1].get("action") == "stop" for x in c) or "notes stop"),
     ("notes_conference", ["Keep listening to my microphone.", "No, as in I have a conference right now. I need to keep listening to my "
                           "microphone. You just don't have to talk even for anything."],
-     lambda c, s: (arg(c, "notes", "action") == "start" and arg(c, "notes", "source") == "room") or "notes start from the microphone"),
+     lambda c, s: (arg(c, "notes", "action") == "start" and arg(c, "notes", "source", "both") in ("room", "both")) or "notes start, with the microphone"),
     ("notes_listen_with_me", ["I want you to listen to the conference with me."],
      lambda c, s: (arg(c, "notes", "action") == "start") or "notes start"),
     ("search_mine_trip", ["What did Sam send me about the trip?"],
@@ -532,7 +532,7 @@ CASES = [
     ("approvals_remove", ["Actually, ask me again before marking emails as read."],
      lambda c, s: arg(c, "approvals", "action") == "remove" or "approvals remove"),
     ("notes_class_quiet", ["I'm in a class right now, just stay quiet and hear all of it."],
-     lambda c, s: (arg(c, "notes", "action") == "start" and arg(c, "notes", "source") == "room") or "notes start from the microphone"),
+     lambda c, s: (arg(c, "notes", "action") == "start" and arg(c, "notes", "source", "both") in ("room", "both")) or "notes start, with the microphone"),
     ("routine_save", ["When I say movie night, turn the volume up to 70 percent and open Netflix."], lambda c, s: arg(c, "routine", "action") == "save" or "save a routine"),
     ("routine_run", ["Movie night."], lambda c, s: (arg(c, "routine", "action") == "run" and ("70" in cmd(c) or called(c, "open_url", "do_task"))) or "run it, then do its steps"),
 

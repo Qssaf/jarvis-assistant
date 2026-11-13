@@ -90,6 +90,10 @@
   WhatsApp → *Tell people when I'm busy* lets it share your Google Calendar's busy times (never what they are).
 
 ### Changed
+- **Notes hear the room and the PC together:** live notes record the microphone and what the PC plays at once, so a
+  meeting in the room or on a call is caught either way (notes of "the conference" once recorded only the PC's sound,
+  which held nothing but Jarvis's own voice). The notes file is written as they go, so a restart keeps the transcript,
+  and a PC that can't record says so instead of taking notes of nothing.
 - **Your saved keys never leave in a tool call:** a tool call carrying one of your API keys or sign-in tokens is
   refused, and any that turn up in a file or command output are hidden before a model sees them, so a page or an email
   can't talk Jarvis into sending them.

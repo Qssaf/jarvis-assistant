@@ -277,13 +277,40 @@ class AudioOut:
 
 
 def record_audio(path, source="pc"):
-    """Start recording to a 16 kHz mono WAV: what the PC is playing ("pc") or the microphone ("room"). The process; end it
-    with stop_recording, which finishes the file."""
+    """Start recording to a 16 kHz mono WAV: what the PC is playing ("pc"), the microphone ("room"), or both at once
+    ("both": mixed into path when stopped). The process (both: a dict); end it with stop_recording, which finishes the file."""
     if IS_WINDOWS or not have("pw-record"):
         raise RuntimeError("recording needs PipeWire (Linux)")
+    if source == "both":
+        return {"path": path, "parts": [record_audio(path + ".pc.wav", "pc"), record_audio(path + ".mic.wav", "room")]}
     what = ["-P", "{ stream.capture.sink=true }"] if source == "pc" else []
     return subprocess.Popen(["pw-record", *what, "--rate", "16000", "--channels", "1", "--format", "s16", path],
                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def mix_wavs(paths, out):
+    """16 kHz mono 16-bit WAVs added together into out (as long as the longest; loud parts clip rather than wrap). The
+    parts are removed; one that didn't record leaves the other."""
+    import wave
+    import numpy as np
+    tracks = []
+    for p in paths:
+        try:
+            with wave.open(p) as w:
+                tracks.append(np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.int32))
+        except (OSError, EOFError, wave.Error):
+            pass
+        finally:
+            if os.path.exists(p):
+                os.remove(p)
+    mixed = np.zeros(max((len(t) for t in tracks), default=0), np.int32)
+    for t in tracks:
+        mixed[:len(t)] += t
+    with wave.open(out, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(16000)
+        w.writeframes(np.clip(mixed, -32768, 32767).astype(np.int16).tobytes())
 
 
 def audio_chunks(path, folder, seconds=300):
@@ -301,6 +328,10 @@ def audio_chunks(path, folder, seconds=300):
 
 def stop_recording(proc):
     import signal
+    if isinstance(proc, dict):  # (both: each side stopped, then mixed into one file)
+        for part in proc["parts"]:
+            stop_recording(part)
+        return mix_wavs([proc["path"] + ".pc.wav", proc["path"] + ".mic.wav"], proc["path"])
     proc.send_signal(signal.SIGINT)  # (pw-record finishes the WAV header on SIGINT)
     try:
         proc.wait(5)
