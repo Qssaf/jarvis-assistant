@@ -392,6 +392,8 @@ func run(c map[string]any) {
 		out, err = chats(num("count", 10))
 	case "history":
 		out, err = messages(ctx, str("chat"), num("count", 15))
+	case "search": // the newest messages, in any chat, holding every word
+		out, err = search(str("text"), num("count", 20))
 	case "media":
 		out, err = mediaOf(ctx, str("chat"), str("msg"))
 	case "transcript": // a voice message's words, kept as its text
@@ -517,6 +519,43 @@ func messages(ctx context.Context, chat string, n int) ([]map[string]any, error)
 	}
 	earlier(ctx, chat, got[0])
 	return read()
+}
+
+// search: the newest messages in any chat holding every word of text (Latin letters in any case), calls left out
+func search(text string, n int) ([]map[string]any, error) {
+	q, args := `SELECT chat, me, sender, text, at FROM jarvis_msgs WHERE kind != 'call'`, []any{}
+	for _, w := range strings.Fields(text) {
+		q += ` AND text LIKE ? ESCAPE '\'`
+		args = append(args, "%"+strings.NewReplacer(`\`, `\\`, "%", `\%`, "_", `\_`).Replace(w)+"%")
+	}
+	rows, err := db.Query(q+` ORDER BY at DESC LIMIT ?`, append(args, n)...)
+	if err != nil {
+		return nil, err
+	}
+	type row struct {
+		chat, sender, text string
+		me                 bool
+		at                 int64
+	}
+	var all []row
+	for rows.Next() {
+		var r row
+		rows.Scan(&r.chat, &r.me, &r.sender, &r.text, &r.at)
+		all = append(all, r)
+	}
+	rows.Close() // (before naming them: names are looked up in the same database)
+	out := []map[string]any{}
+	for _, r := range all {
+		m := map[string]any{"chat": r.chat, "name": r.chat, "me": r.me, "text": r.text, "at": r.at, "by": nil}
+		if j, err := types.ParseJID(r.chat); err == nil {
+			m["name"] = nameOf(j)
+		}
+		if r.sender != "" {
+			m["by"] = senderName(r.sender)
+		}
+		out = append(out, m)
+	}
+	return out, nil
 }
 
 func earlier(ctx context.Context, chat string, oldest map[string]any) {

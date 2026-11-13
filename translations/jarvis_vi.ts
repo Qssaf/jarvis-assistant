@@ -1069,7 +1069,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2925"/>
+        <location filename="../jarvis.py" line="+2953"/>
         <source>LISTENING</source>
         <translation>ĐANG NGHE</translation>
     </message>
@@ -2114,6 +2114,16 @@
         <location line="+0"/>
         <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
         <translation>Jarvis ghi lại cửa sổ đang ở phía trước (chỉ tiêu đề, không bao giờ ghi nội dung, ngay trên máy này) để bạn hỏi &quot;hôm qua mình mở trang gì nhỉ?&quot;. Bỏ qua duyệt web riêng tư và trình quản lý mật khẩu; lưu tối đa hai tuần</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Learn from conversations</source>
+        <translation>Học từ các cuộc trò chuyện</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>When a conversation is over, Jarvis adds lasting things you said about yourself to its memory, and shows each one in the chat</source>
+        <translation>Khi cuộc trò chuyện kết thúc, Jarvis thêm vào bộ nhớ những điều lâu dài bạn nói về bản thân và hiển thị từng điều trong khung chat</translation>
     </message>
     <message>
         <location line="+3"/>

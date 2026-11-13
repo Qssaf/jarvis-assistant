@@ -56,10 +56,10 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - People: "what's up with Sam?", "what did I promise Maya?" → person (their page and latest messages); "Sam is my cousin", "Maya's exam is Friday" → person with note (until: the day it stops being true), not remember. "Who's waiting on me?" → waiting_on_me; "leave Sam off the list", "take Maya off the evening list" → waiting_on_me with skip. "Who am I seeing today?" → briefing (each meeting says who comes). "What was that site I had open yesterday?" → screen_history.
 - Messaging: [{click_on: "the chat named 'Sam Lee' in the left list"}, {expect: "the open conversation is with Sam Lee"}, {click_on: "the message box at the bottom"}, {type: "..."}, {keys: "Return"}, {look: "Is the message in the conversation?"}].
 - System info, files, volume, clipboard: run_command. {SYSTEM} Open apps with act launch, not run_command.
-- Pictures: make_image, show_image. Local files: read_file. Time: set_reminder (repeat for "every day/weekday/week"), list_reminders, cancel_reminder.
+- Pictures: make_image, show_image. Local files: read_file (a recording too: it writes it down, and a long one becomes notes). Time: set_reminder (repeat for "every day/weekday/week"), list_reminders, cancel_reminder.
 - Something to do later rather than say ("every weekday at 8, check my inbox and tell me what matters", "at 6 send me the weather"): set_reminder with task: true and the whole instruction as text. "Keep an eye on X", "tell me if Y happens" over hours or days: checks add (watch is only for the screen right now).
 - "This"/"what I selected"/"what I copied" with summarise, translate, explain or rewrite: selection. Music: media (play_pause, next, previous, now_playing).
-- "Take notes of this lecture/meeting/video": notes start at once, without asking anything first (the start would be lost): source pc for what the PC plays, room only if they say it's in person; the title is optional. "Stop the notes": notes stop.
+- "Take notes of this lecture/meeting/video", or listening along to one ("listen to this meeting with me", "keep listening, I'm in a call", "just hear it, don't talk"): notes start at once, without asking anything first (the start would be lost). Source pc for what the PC plays, room when it's in person or they say the microphone; the title is optional. Starting them turns your microphone off until the wake word (it also closes after a few seconds of quiet), so never promise to stay on or keep listening: notes is what hears all of it. "Stop the notes": notes stop.
 - "Type X" or "write X here": act [{type: "X"}] into the focused window. Never just say it back. When they leave the words to you ("type five jokes", "write something funny"), make them up and type them at once: never read them out or ask "shall I?" first. Every joke must be new: never one you sent lately (listed below) or told in this conversation, nor the same one reworded. Several messages ("send ten lines, each on its own") go in one act: type, Return, type, Return. Never say text out loud before typing it, and never type a placeholder ("..."): type all of it.
 - Questions about this PC itself (why is it slow, is the internet slow, what's using the CPU, is the disk full): check with run_command first and answer from what it shows, never with general advice. Say the numbers it showed (ping in ms, packet loss in %, free GB).
 - "Mute/unmute my mic": the PC's microphone, with run_command (not stop_listening); say you won't hear them either until it's unmuted.
@@ -67,6 +67,8 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - "Download X" (an app, a file, a song or video): do_task (save it to Downloads). Downloading what the user asks for is fine: never refuse it. Opening the download page isn't downloading it.
 - Volume: check the level first. "Louder" or "I can't hear you" only ever turns it up; already at 100%, say so (their speakers or the app's own slider).
 - "Undo that" or "what did you change?": recent_changes, then reverse it (or do_task for screen work).
+- "Don't ask me before marking emails read" (no more asking before one account action): approvals allow with that action's tool name, straight away; "ask me again before that": approvals remove.
+- What someone sent or said, anywhere ("what did Sam send me about the trip?", "who mentioned the deadline?"): search_mine with one to three words (person: who it's from). It searches past conversations, notes, every WhatsApp chat and people's pages at once.
 - Something from an earlier conversation: recall, with words for a topic ("what was that site you told me about?") or a day as YYYY-MM-DD ("what did we talk about yesterday?").
 - Routines: when the user says one of their routines' names (listed under what you can do), routine run, then do its steps. "When I say X, do Y": routine save.
 - Something lasting about the user (what to call them, where they live, a preference): remember it right away; forget when they take it back.
@@ -161,7 +163,7 @@ VOICE_ACT = ("Do a whole job on screen in one go, in order. Each step is one of:
 SCREEN_TOOLS = {"act", "look", "show_image", "ui_controls", "list_windows", "focus_window", "close_window", "open_url", "run_command"}
 QUERY_TOOLS = {"look", "web_search", "read_webpage", "youtube_search", "read_file", "briefing", "ui_controls", "list_windows", "list_reminders",
                "recall", "selection", "whatsapp_read", "whatsapp_media", "discord_read", "discord_media", "people_rules",
-               "person", "waiting_on_me", "screen_history"}
+               "person", "waiting_on_me", "screen_history", "search_mine"}
 VOICE_RESULT_LIMIT = 12000  # characters of one tool result the voice model gets
 # tools the voice may call for one thing the user said: looking for an app that isn't open, it once called list_windows
 # and look over 100 times in a minute without a word to the user
@@ -172,7 +174,8 @@ LIVE_TOOLS = ["jobs", "code", "run_command", "web_search", "read_webpage", "yout
               "cancel_reminder", "list_windows", "focus_window", "close_window", "act", "look", "ui_controls", "make_image",
               "show_image", "read_file", "briefing", "account_settings", "weather", "classroom_due", "classroom_announcements", "drive_file", "routine",
               "recall", "selection", "media", "notes", "recent_changes", "watch", "checks", "whatsapp_read", "whatsapp_media", "whatsapp_send", "whatsapp_call",
-              "discord_read", "discord_send", "discord_react", "discord_media", "unsend", "people_rules", "person", "waiting_on_me", "screen_history"]
+              "discord_read", "discord_send", "discord_react", "discord_media", "unsend", "people_rules", "person", "waiting_on_me", "screen_history",
+              "search_mine", "approvals"]
 
 # what the user asked to be called, from what Jarvis remembers ("prefers to be called Q", "call me Sam, not sir")
 # ponytail: a pattern over remember()'s usual wording, not understanding; unmatched memory falls back to the prompt's rule
@@ -209,7 +212,7 @@ TOOL_LABELS = {"run_command": "Running a command", "web_search": "Searching the 
                "discord_react": "Reacting on Discord", "unsend": "Deleting a message", "discord_media": "Opening a Discord message", "people_rules": "Updating who Jarvis answers",
                "person": "Checking on them", "waiting_on_me": "Checking who's waiting", "screen_history": "Searching your screen history",
                "skill": "Saving how it's done", "jobs": "Checking your tasks", "code": "Starting a coding job",
-               "wait_screen": "Waiting for the screen"}
+               "wait_screen": "Waiting for the screen", "search_mine": "Searching your things", "approvals": "Updating what I ask about"}
 
 
 def tool_label(name):
@@ -958,7 +961,10 @@ class Live:
                 self.asked[key] = [task, float("inf")]
                 task.add_done_callback(lambda t, k=key: self.asked.get(k, [None])[0] is t and self.asked[k].__setitem__(1, time.time()))
             return await asyncio.shield(self.asked[key][0])
-        return await self._answer(fc, args)
+        result = await self._answer(fc, args)
+        if fc.name == "notes" and args.get("action") == "start" and "result" in result:
+            self.mic = False  # the notes hear the meeting: listening on, the voice answered it (and hung up on a "that's all")
+        return result
 
     async def _type_once(self, fc, args):
         """An act that types: the same text never goes in twice. The voice model sometimes calls the same act again right
@@ -1633,6 +1639,30 @@ def presence_pass(live):
         news = held[:]
         del held[:len(news)]
         live.announce("While you were away: " + " Also: ".join(news), asked=True)
+
+
+LEARNED = os.path.join(store.DATA, "learned.json")  # {"at": the newest message automatic memory has read}
+LEARN_AFTER = 600  # seconds of quiet that end a conversation: then what the user said about themselves is noted
+
+
+def learn_pass(brain, now=None):
+    """Once a conversation is over, lasting facts the user said about themselves go into memory (one model call), each
+    shown in the chat, where "forget that" takes it back."""
+    now = now or time.time()
+    since = store.read_json(LEARNED, {}).get("at", 0)
+    talk = [m for m in sessions.messages if m.get("who") in ("you", "jarvis") and m.get("time", 0) > since]
+    if not talk or now - talk[-1]["time"] < LEARN_AFTER:
+        return
+    store.write_json(LEARNED, {"at": talk[-1]["time"]})  # (first: a model that fails isn't asked about it again and again)
+    if store.settings()["learn_from_talk"] and len(" ".join(str(m["text"]) for m in talk if m["who"] == "you")) >= 40:
+        for fact in brain.learn(talk):
+            emit("log", who="system", text=f"🧠 Remembered: {fact} (say \"forget that\" if it's wrong)")
+
+
+def learn_loop(brain):
+    while True:
+        time.sleep(120)
+        learn_pass(brain)
 
 
 def presence_loop(live):
@@ -3220,6 +3250,7 @@ def main():
         system.notify("Notes ready", text[:200])
         live.announce(text)
     brain_mod.notes_done[0] = notes_ready
+    brain_mod.user_said[0] = lambda: live.last_heard  # (what only the user's own words may decide: approvals)
 
     def watch_saw(text):
         emit("log", who="system", text=f"👁 {text}")
@@ -3244,6 +3275,7 @@ def main():
     background(check_loop, live, restart=True)
     background(tidy_loop, restart=True)
     background(presence_loop, live, restart=True)
+    background(learn_loop, brain, restart=True)
     brain_mod.job_done[0] = lambda text: job_done(live, text)
     import remote
     chat = lambda who, text: emit("log", who=who, text=text)  # (tasks from the phone and their answers)

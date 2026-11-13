@@ -423,6 +423,11 @@ class WhatsApp:
         self._need()
         return self.ask("history", chat=chat, count=int(count))
 
+    def search(self, text, count=20):
+        """The newest saved messages, in any chat, holding every word of text."""
+        self._need()
+        return self.ask("search", text=text, count=int(count))
+
     def media(self, chat, id=""):
         """The newest (or that) voice message, audio or photo in a chat, with its bytes as base64; None if there's none."""
         self._need()

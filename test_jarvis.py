@@ -946,6 +946,133 @@ except ValueError:
 store.set_connector_mode("gmail", "ask")
 assert "gmail" not in store.connector_modes()
 
+# "don't ask me before marking emails read" lifts that one action's yes, but only in the user's own words, about that app
+b = brain.Brain.__new__(brain.Brain)
+slug, real_said = "GMAIL_BATCH_MODIFY_MESSAGES", brain.user_said[0]
+assert brain.needs_yes(slug)
+for words in ("don't ask me before marking my emails read", "You don't have to ask before archiving mail", "no need to ask, just clear my inbox",
+              "stop asking me before you mark mail read", "mark my emails read without asking from now on", "you no longer need to ask about mail"):
+    assert brain.NO_ASK.search(words), words
+for words in ("don't forget to ask me before sending mail", "mark my emails read", "I asked you to archive the mail", "ask me first"):
+    assert not brain.NO_ASK.search(words), words
+brain.user_said[0] = lambda: "mark my emails read"
+assert "own words" in b._run_tool("approvals", {"action": "allow", "tool": slug})[0]["error"] and brain.needs_yes(slug)
+brain.user_said[0] = lambda: "don't ask me before marking my emails read"
+assert "github" in b.approvals("allow", "GITHUB_DELETE_A_REPOSITORY")["error"]  # (an injected action the user didn't name)
+assert "isn't an account action" in b.approvals("allow", "GMAIL_FETCH_EMAILS")["error"]
+assert "error" in b.approvals("allow", slug, task=brain.Task("don't ask me before marking emails read", unattended=True))
+assert "won't ask" in b._run_tool("approvals", {"action": "allow", "tool": slug.lower()})[0]["result"] and not brain.needs_yes(slug)
+assert slug in brain.account_policy() and slug in b.approvals()["done_without_asking"]
+assert brain.needs_yes("GMAIL_SEND_EMAIL")  # (only that action)
+assert f"doesn't ask before {slug}" in store.read_json(store.CHANGES_FILE, [])[-1]["what"]  # (recent_changes: "undo that")
+b.approvals("remove", slug)
+assert brain.needs_yes(slug) and not store.approvals()
+store.set_secret(store.PASSPHRASE, "blue bird")
+assert "passphrase" in b.approvals("allow", slug)["error"]
+brain.user_said[0] = lambda: "blue bird, don't ask me before marking my emails read"
+assert "result" in b.approvals("allow", slug) and "blue" not in store.approvals()[slug]["said"]
+store.set_approval(slug)
+phone = brain.Task("don't ask before you mark my mail read", remote=True)  # (a phone message is the user's own: no passphrase)
+brain.user_said[0] = lambda: ""
+assert "result" in b.approvals("allow", slug, task=phone) and not brain.needs_yes(slug)
+store.set_approval(slug)
+store.set_secret(store.PASSPHRASE, "")
+brain.user_said[0] = real_said
+
+# a saved key never leaves in a tool call, and no tool result shows one to a model (a page or email can't ask for it)
+key, refresh = "AIza" + "k3y" * 12, "1//0g" + "t0ken" * 10
+store.set_secret("aistudio", key)
+store.write_json(brain.GOOGLE_FILE, {"accounts": [{"email": "someone@example.com", "refresh_token": refresh, "project": "p"}]})
+store.set_secret("telegram", "short")  # (too short to be a key: never matched)
+store.set_secret("work", "w0rk-" + "s3cret" * 4)  # (any key in the keychain's fallback file counts, whatever its name)
+brain._secrets[0] = 0
+b.tool_owner, b.app_tools, b.plugins = {}, {}, {}
+assert "aistudio" in b._run_tool("remember", {"fact": f"my key is {key}"})[0]["error"] and key not in store.memory()
+assert "Google sign-in" in b._run_tool("remember", {"fact": f"https://example.com/?t={refresh}"})[0]["error"]
+assert "result" in b._run_tool("remember", {"fact": "short is my favourite word"})[0]
+assert "work" in b._run_tool("web_search", {"query": "w0rk-" + "s3cret" * 4})[0]["error"]
+leak = os.path.join(store.DATA, "leak.txt")
+open(leak, "w").write(f"GEMINI_API_KEY={key}\nrefresh: {refresh}\n")
+shown = b._run_tool("read_file", {"path": leak})[0]["text"]
+assert key not in shown and refresh not in shown and shown.count("[a saved key, hidden]") == 2, shown
+store.forget("short is my favourite word")
+store.set_secret("aistudio", ""); store.set_secret("telegram", ""); store.set_secret("work", "")
+os.remove(brain.GOOGLE_FILE); os.remove(leak)
+brain._secrets[0] = 0
+
+# search_mine: one search over what Jarvis keeps (conversations with their notices, notes, every WhatsApp chat, people,
+# memory), newest first; a person narrows it, days too, and WhatsApp failing or paused leaves the rest
+import people
+real_notes_dir, real_link = brain.NOTES_DIR, brain.whatsapp_link[0]
+brain.NOTES_DIR = os.path.join(store.DATA, "notes-search")
+os.makedirs(brain.NOTES_DIR, exist_ok=True)
+open(os.path.join(brain.NOTES_DIR, "2026-11-01 10-00 Geography.md"), "w").write("# Geography\n\n- Zanzibar is an island\n- Rome is not\n")
+os.makedirs(store.SESSIONS_DIR, exist_ok=True)
+store.write_json(os.path.join(store.SESSIONS_DIR, "20200101-000000-search.json"), {"id": "20200101-000000-search", "title": "t", "created": 1,
+    "updated": 2, "messages": [{"who": "you", "text": "Book the Zanzibar trip for June", "time": 1000},
+                               {"who": "system", "text": "💬 Discord from Biscuit: Zanzibar vote tonight", "time": 3000}]})
+store.write_json(people.FILE, {"Sam Lee": {"notes": [{"text": "planning Zanzibar", "at": 2000}], "promises": [{"what": "send Zanzibar photos", "at": 2500}]}})
+sent = [{"name": "Sam Lee", "me": False, "by": None, "text": "zanzibar tickets booked", "at": 4000}]
+brain.whatsapp_link[0] = types.SimpleNamespace(search=lambda text, n: [m for m in sent if all(w in m["text"] for w in text.split())])
+found = brain.tool_search_mine("zanzibar")["found"]
+assert [f["from"] for f in found] == ["notes: 2026-11-01 10-00 Geography", "WhatsApp, Sam Lee", "a notice in the chat", "Sam Lee's page",
+                                      "Sam Lee's page", "the user, to Jarvis"], found
+assert found[1]["by"] == "Sam Lee" and found[-1]["when"] == time.strftime("%a %d %b %Y, %H:%M", time.localtime(1000))
+assert [f["text"] for f in brain.tool_search_mine("zanzibar", person="sam")["found"]] == ["zanzibar tickets booked", "send Zanzibar photos", "planning Zanzibar"]
+assert [f["from"] for f in brain.tool_search_mine("zanzibar", days=1)["found"]] == ["notes: 2026-11-01 10-00 Geography"]
+assert brain.tool_search_mine("zanzibar june")["found"][0]["text"] == "Book the Zanzibar trip for June"  # (every word)
+assert "try fewer" in brain.tool_search_mine("quetzal")["note"]
+assert "error" in brain.tool_search_mine(" ")  # (no words: not everything there is)
+brain.whatsapp_link[0] = types.SimpleNamespace(search=lambda text, n: 1 / 0)
+assert "error" in brain.tool_search_mine("zanzibar")["found"][-1] and len(brain.tool_search_mine("zanzibar")["found"]) == 6
+store.set_connector_mode("whatsapp", "paused")
+assert not any("WhatsApp" in f["from"] for f in brain.tool_search_mine("zanzibar")["found"])
+store.set_connector_mode("whatsapp", "ask")
+os.remove(people.FILE); os.remove(os.path.join(store.SESSIONS_DIR, "20200101-000000-search.json"))
+shutil.rmtree(brain.NOTES_DIR)
+brain.NOTES_DIR, brain.whatsapp_link[0] = real_notes_dir, real_link
+
+# automatic memory: once a conversation is over (10 min quiet), lasting facts the user said about themselves are saved and
+# shown in the chat; one model call per conversation, none for small talk; nothing known, secret or beyond three
+b, asked = brain.Brain.__new__(brain.Brain), []
+answer = ['```json\n["Studies at AUB", "studies at aub", "Lives in Beirut", "Has a cat"]\n```']
+b._generate = lambda contents, **k: asked.append(contents[0]["parts"][0]["text"]) or [{"text": answer[0]}]
+real_memory, real_current, real_emit_ = store.memory(), jarvis.sessions.current, jarvis.emit
+store.set_memory("- Studies at AUB")
+assert b.learn([{"who": "you", "text": "I moved to Beirut and I have a cat"}]) == ["Lives in Beirut"]  # (the 4th is past three)
+assert "User: I moved to Beirut" in asked[0] and "- Studies at AUB" in asked[0] and "- Lives in Beirut" in store.memory()
+key = "AIza" + "k3y" * 12
+store.set_secret("aistudio", key); brain._secrets[0] = 0
+answer[0] = f'["Gemini key: {key}", "not json'
+assert b.learn([{"who": "you", "text": "x"}]) == []
+answer[0] = f'["Gemini key: {key}"]'
+assert b.learn([{"who": "you", "text": "x"}]) == [] and key not in store.memory()
+store.set_secret("aistudio", ""); brain._secrets[0] = 0
+shown, now = [], time.time()
+jarvis.emit = lambda kind, **d: shown.append(d.get("text", ""))
+jarvis.sessions.current = {"id": "t", "title": "t", "created": now, "updated": now, "agent": [], "messages": [
+    {"who": "you", "text": "My sister Maya is starting university in Lyon this year", "time": now - 650},
+    {"who": "jarvis", "text": "Lovely.", "time": now - 100}]}
+if os.path.exists(jarvis.LEARNED):
+    os.remove(jarvis.LEARNED)
+answer[0], asked[:] = '["Sister: Maya, at university in Lyon"]', []
+jarvis.learn_pass(b, now=now)
+assert not asked and not os.path.exists(jarvis.LEARNED)  # (still going: 100 s since the last line)
+jarvis.learn_pass(b, now=now + 600)
+assert len(asked) == 1 and shown == ['🧠 Remembered: Sister: Maya, at university in Lyon (say "forget that" if it\'s wrong)']
+jarvis.learn_pass(b, now=now + 900)
+assert len(asked) == 1  # (that conversation is done)
+jarvis.sessions.current["messages"] += [{"who": "you", "text": "thanks", "time": now + 1000}]
+jarvis.learn_pass(b, now=now + 2000)
+assert len(asked) == 1 and store.read_json(jarvis.LEARNED, {})["at"] == now + 1000  # (small talk: no model asked)
+jarvis.sessions.current["messages"] += [{"who": "you", "text": "My brother Karim lives in Montreal with his two kids", "time": now + 3000}]
+store.update_settings({"learn_from_talk": False})
+jarvis.learn_pass(b, now=now + 4000)
+assert len(asked) == 1
+store.update_settings({"learn_from_talk": True})
+store.set_memory(real_memory)
+jarvis.sessions.current, jarvis.emit = real_current, real_emit_
+
 import json, threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -3332,6 +3459,55 @@ assert "**Speaker 2:** Is it on the exam?" in summarised[0] and "**Speaker 2:** 
 assert "one person has spoken so far" in n._prompt(["Just the lecturer, no labels."])
 assert "Speaker 1, Speaker 2." in n._prompt(["**Speaker 1**: Hi.\n**Speaker 2**: Hello."])  # (colon outside the bold too)
 assert brain.Notes.SPEAKER.sub("", "**Speaker 1**: Hi.\n**Speaker 1:** Bye.") == "Hi.\nBye."
+# the voice starting notes stops listening: the meeting kept the voice answering it, and a "c'est tout" in it hung up
+n = brain.Notes(transcribe=lambda audio, prompt: "(silence)", summarise=lambda t: "")
+n.CHUNK, brain.notes[0], real_brain, done[:] = 0.15, n, live.brain, []
+live.brain = types.SimpleNamespace(_run_tool=lambda name, args: (brain.TOOLS[name][0](**args), None), app_tools={})
+start = types.SimpleNamespace(name="notes", args={"action": "start", "source": "room"})
+live.mic, live.user_spoke_at = True, time.time()
+assert "taking notes" in asyncio.run(type(live)._tool(live, start))["result"] and not live.mic
+live.mic = True
+assert "error" in asyncio.run(type(live)._tool(live, start)) and live.mic  # (already on: nothing changed)
+n.stop()
+end = time.time() + 3
+while not done and time.time() < end:  # (written up before the notes folder is the real one again)
+    time.sleep(0.05)
+live.brain, brain.notes[0] = real_brain, None
+# a recording on disk (a voice recorder's): a short one's words come back at once, a long one is written up as notes
+real_chunks, wanted = system.audio_chunks, [1]
+def fake_chunks(path, folder, seconds):
+    for i in range(wanted[0]):
+        open(os.path.join(folder, f"{i:03d}.wav"), "wb").write(b"RIFF" + b"\0" * 40000)
+    return sorted(os.path.join(folder, f) for f in os.listdir(folder))
+system.audio_chunks = fake_chunks
+heard = iter(["Remember the milk.", "**Speaker 1:** Welcome.", "**Speaker 2:** Thanks. Budget first.", "(silence)"])
+n = brain.Notes(transcribe=lambda audio, prompt: next(heard), summarise=lambda t: "A conference about the budget.")
+recording = os.path.join(store.DATA, "Conference 13 Nov.ogg")
+open(recording, "wb").write(b"OggS")
+brain.notes[0], done[:] = n, []
+assert brain.tool_read_file(recording) == {"transcript": "Remember the milk."}
+wanted[0] = 3
+assert "written up as notes" in brain.tool_read_file(recording)["result"]
+end = time.time() + 3
+while not done and time.time() < end:
+    time.sleep(0.05)
+text, path = done[0]
+saved = open(path, encoding="utf-8").read()
+assert "# Conference 13 Nov" in saved and "**Speaker 2:** Thanks. Budget first." in saved and "budget" in text and "(silence)" not in saved
+system.audio_chunks, brain.notes[0] = real_chunks, None
+os.remove(recording)
+if system.have("ffmpeg"):  # the real cutting: 1.5 s of 48 kHz stereo -> 16 kHz mono pieces of a second
+    import wave
+    recording, cut = os.path.join(store.DATA, "stereo.wav"), tempfile.mkdtemp()
+    with wave.open(recording, "wb") as w:
+        w.setnchannels(2); w.setsampwidth(2); w.setframerate(48000); w.writeframes(b"\1\0" * 2 * 72000)
+    pieces = system.audio_chunks(recording, cut, 1)
+    assert len(pieces) == 2 and all(wave.open(p).getframerate() == 16000 and wave.open(p).getnchannels() == 1 for p in pieces), pieces
+    shutil.rmtree(cut); os.remove(recording)
+try:
+    system.audio_chunks(os.path.join(store.DATA, "missing.mp3"), tempfile.mkdtemp(dir=store.DATA), 1); raise AssertionError("no error")
+except RuntimeError as e:
+    assert "ffmpeg" in str(e)
 system.record_audio, system.stop_recording = real_rec
 import wave
 def wav(samples):

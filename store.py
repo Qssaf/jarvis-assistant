@@ -64,6 +64,7 @@ DEFAULT_SETTINGS = {
     "track_promises": True,        # promises in what you send ("I'll send it tomorrow") get a reminder or go on the evening list
     "evening_digest": "20:00",     # who's waiting on you and what's due tomorrow, said once a day at this time; empty = off
     "phone_direct": True,          # paired phones on the same Wi-Fi or VPN connect straight to this PC (phone.PORT), without the relay
+    "learn_from_talk": True,       # after a conversation, lasting things you said about yourself go into memory (shown in the chat)
     "screen_history": False,       # a private timeline of the windows you had open (titles only, on this PC), for "what was that site?"
     "echo_cancel": False,          # echo cancelling (PipeWire on Linux, WebRTC + a speaker loopback on Windows): talk over Jarvis on speakers (experimental)
     "learn_my_voice": True,        # learn from real wake-ups to ignore things that aren't you saying the wake word
@@ -478,7 +479,8 @@ def delete_data():
     (they're removed on their own pages)."""
     with _lock:
         for path in (MEMORY_FILE, REMINDERS_FILE, ROUTINES_FILE, CHANGES_FILE, SKILLS_FILE, *OLD_LOGS, *(os.path.join(DATA, name) for name in (
-                "usage.json", "deadlines.json", "calendar.json", "briefing.json", "people.json", "attention.json", "digest.json", "waiting.json"))):
+                "usage.json", "deadlines.json", "calendar.json", "briefing.json", "people.json", "attention.json", "digest.json", "waiting.json",
+                "learned.json"))):
             try:
                 os.remove(path)
             except FileNotFoundError:
@@ -691,6 +693,21 @@ def set_connector_mode(slug, mode):
         modes = connector_modes()
         modes.pop(slug, None) if mode == "ask" else modes.update({slug: mode})
         write_json(CONNECTORS_FILE, modes)
+
+
+APPROVALS_FILE = os.path.join(CONFIG, "approvals.json")  # account actions the user said not to ask about: slug -> {at, said}
+
+
+def approvals():
+    return read_json(APPROVALS_FILE, {})
+
+
+def set_approval(slug, said=""):
+    """Stop asking before this account action (said: the user's words saying so), or with said="" ask again."""
+    with _lock:
+        found = approvals()
+        found.pop(slug, None) if not said else found.update({slug: {"at": time.time(), "said": said[:200]}})
+        write_json(APPROVALS_FILE, found)
 
 
 # ---------------------------------------------------------------- plugins (MCP servers)

@@ -86,6 +86,12 @@ GAVE_UP = re.compile(r"\b(can't|cannot|can not|unable|not able|couldn't|could no
 # put the payment before the window on Wednesdays, and NOTHING was right)
 SINCE, FAILED_AT = (time.strftime("%A %H:%M", time.localtime(time.time() - h * 3600)) for h in (3, 1))
 CASES = [
+    {"id": "search_mine", "task": "What did Sam say about the trip?",
+     "found": [{"when": "Mon 10 Nov 2026, 18:02", "from": "WhatsApp, Sam Lee", "by": "Sam Lee", "text": "trip is moved to Saturday, bring a jacket"}],
+     "check": lambda c, r, a: "search_mine" in names(c) and "saturday" in r.lower() and not set(names(c)) & {"act", "screenshot"}},
+    {"id": "approvals_allow", "task": "Don't ask me before marking my emails read from now on.",
+     "check": lambda c, r, a: any(x["name"] == "approvals" and x["args"].get("action") == "allow" and "GMAIL" in str(x["args"].get("tool", "")).upper()
+                                  for x in c)},
     {"id": "mark_read", "task": "Mark all my unread emails as read.",
      "check": lambda c, r, a: ran(c, "GMAIL_BATCH_MODIFY_MESSAGES", confirmed=True) and ran(c, "GMAIL_BATCH_MODIFY_MESSAGES", removeLabelIds="UNREAD")
      and not set(names(c)) & {"screenshot", "act", "open_url"}},
@@ -304,6 +310,11 @@ def simulate(case, name, args, calls, asked):
                           {"n": 2, "task": "coding: fix the login bug", "for": "12 min", "now": "Edit"}]}, None
     if name.startswith("GMAIL_") or name.startswith("COMPOSIO_"):
         return gmail(case, name, args), None
+    if name == "search_mine":
+        return {"found": case.get("found", [])} if case.get("found") else {"found": [], "note": "nothing holds all of these words"}, None
+    if name == "approvals":
+        return ({"result": f"won't ask before {args.get('tool')} again"} if args.get("action") == "allow" else
+                {"result": f"will ask again before {args.get('tool')}"} if args.get("action") == "remove" else {"done_without_asking": {}}), None
     return {"error": f"(not simulated: {name})"}, None
 
 

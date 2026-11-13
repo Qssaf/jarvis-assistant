@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/binary"
+	"strconv"
 	"testing"
 
 	"go.mau.fi/whatsmeow/types"
@@ -66,5 +67,33 @@ func TestRang(t *testing.T) {
 	db.QueryRow(`SELECT count(*) FROM jarvis_chats WHERE chat = ?`, peer.String()).Scan(&chats)
 	if n != 2 || chats != 1 || text != "[a WhatsApp video call]" {
 		t.Errorf("calls kept: %d rows, %d chats, %q", n, chats, text)
+	}
+}
+
+func TestSearch(t *testing.T) {
+	db, _ = sql.Open("sqlite", ":memory:")
+	db.SetMaxOpenConns(1)
+	defer db.Close()
+	if _, err := db.Exec(schema); err != nil {
+		t.Fatal(err)
+	}
+	group := types.NewJID("120363000000", types.GroupServer)
+	db.Exec(`INSERT INTO jarvis_chats VALUES (?, 'Trip planning', 3, 0)`, group.String())
+	for i, text := range []string{"The TRIP is on Friday", "trip: bring 100% of the snacks", "no plans", "[a WhatsApp call] trip"} {
+		kind := "text"
+		if i == 3 {
+			kind = "call"
+		}
+		db.Exec(`INSERT INTO jarvis_msgs VALUES (?, ?, 1, '', ?, ?, ?, NULL)`, group.String(), strconv.Itoa(i), i, text, kind)
+	}
+	got, err := search("trip", 10)
+	if err != nil || len(got) != 2 || got[0]["text"] != "trip: bring 100% of the snacks" || got[0]["name"] != "Trip planning" {
+		t.Fatalf("search trip: %v %v", got, err)
+	}
+	if got, _ := search("100% snacks", 10); len(got) != 1 {
+		t.Errorf("every word, %% taken literally: %v", got)
+	}
+	if got, _ := search("trip_", 10); len(got) != 0 {
+		t.Errorf("_ is a letter, not a wildcard: %v", got)
 	}
 }

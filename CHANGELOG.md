@@ -3,6 +3,19 @@
 ## Unreleased
 
 ### Added
+- **Search everything Jarvis keeps:** *"what did Sam send me about the trip?"* looks through past conversations (with
+  the WhatsApp and Discord messages shown in them), your lecture and meeting notes, every WhatsApp chat, people's pages
+  and memory at once, newest first.
+- **Read a recording:** point Jarvis at a voice recorder's file (*"read my conference recording"*): a short one's words
+  come back at once, a long one is written up as notes (a summary and the whole transcript) like live notes. Needs
+  ffmpeg.
+- **"Don't ask me before marking emails read":** saying so lifts the yes for that one account action (*"ask me again
+  before that"* brings it back). Only your own words count, they must name the app, and with a spoken passphrase set
+  it has to be said too; an email or a page can't do it.
+- **Learns from conversations:** when a conversation is over, Jarvis adds lasting things you said about yourself to its
+  memory (at most three, never other people's messages or a video in the background) and shows each in the chat.
+  Settings → Your data → *Learn from conversations*.
+
 - **The phone app, rebuilt as a voice remote:** say *"Hey Jarvis"* to your phone (or the wake word you chose on the PC),
   tap the orb, or use Android's assistant gesture, and you're talking with the Jarvis on your PC: its own voice, every
   tool, the same conversation, from wherever you are. The wake word is recognised on the phone itself (the PC's own
@@ -77,6 +90,9 @@
   WhatsApp → *Tell people when I'm busy* lets it share your Google Calendar's busy times (never what they are).
 
 ### Changed
+- **Your saved keys never leave in a tool call:** a tool call carrying one of your API keys or sign-in tokens is
+  refused, and any that turn up in a file or command output are hidden before a model sees them, so a page or an email
+  can't talk Jarvis into sending them.
 - **Faster when a model stalls:** a model that doesn't answer within a few seconds no longer holds a look at the screen
   or a task's step for its whole timeout (up to 20 s): the next model on the Models page is asked as well, and the first
   answer wins.
@@ -99,6 +115,10 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
+- **"Listen to the conference with me" takes notes now:** asking Jarvis to keep listening through a meeting, class or
+  conference without talking got *"I'll remain active and keep listening"*, though its microphone closes after a few
+  seconds of quiet, and words from the meeting could end the conversation. It now starts its notes (from the microphone
+  when it's in the room) and goes quiet; *"stop the notes"* at the end gives the summary and transcript.
 - **Google accounts (Models page) are no longer hammered when they're rate-limited:** a limited account was asked twice
   per request and again a minute later for as long as the limit lasted, every other account got the same request the
   same second, and an account Google had disabled was asked again for good. Each account is now asked once, rests as

@@ -20,7 +20,7 @@ import system
 # ---------------------------------------------------------------- nothing personal or on the PC may change
 _real_write = store.write_json
 PROTECTED = [store.MEMORY_FILE, store.REMINDERS_FILE, store.ROUTINES_FILE, store.CHANGES_FILE, store.SETTINGS_FILE,
-             store.CONNECTORS_FILE, store.PLUGINS_FILE, store.SESSIONS_DIR, store.SKILLS_FILE,
+             store.CONNECTORS_FILE, store.PLUGINS_FILE, store.SESSIONS_DIR, store.SKILLS_FILE, store.APPROVALS_FILE,
              *(os.path.join(store.DATA, f) for f in ("people.json", "waiting.json", "attention.json", "digest.json", "activity"))]
 
 
@@ -155,8 +155,12 @@ def simulated(case, name, args):
             return {"routine": args.get("name"), "steps": steps, "next": "do these steps now, in order"} if steps else \
                 {"error": f"no routine called {args.get('name')}", "routines": list(case.get("routines", {}))}
         return {"routines": case.get("routines", {})}
+    if name == "approvals":  # (never the real approvals.json: the real gate is test_jarvis's)
+        return ({"result": f"won't ask before {args.get('tool')} again"} if args.get("action") == "allow" else
+                {"result": f"will ask again before {args.get('tool')}"} if args.get("action") == "remove" else {"done_without_asking": {}})
     if name == "notes":
-        return {"start": {"result": f"taking notes of what the PC is playing: '{args.get('title') or 'Notes'}'"},
+        what = "the room" if args.get("source") == "room" else "what the PC is playing"
+        return {"start": {"result": f"taking notes of {what}: '{args.get('title') or 'Notes'}'"},
                 "stop": {"result": "stopped after 48 min; writing up the notes (they'll be announced when ready)"}}.get(
             args.get("action"), {"taking_notes": None})
     if name == "watch":
@@ -184,7 +188,7 @@ def simulated(case, name, args):
 
 
 REAL = {"web_search", "read_webpage", "youtube_search", "weather", "classroom_due", "classroom_announcements", "briefing", "drive_file", "recall",
-        "list_windows", "list_reminders", "discord_read", "person", "waiting_on_me", "screen_history"}
+        "list_windows", "list_reminders", "discord_read", "person", "waiting_on_me", "screen_history", "search_mine"}
 
 
 def run_tool(case, name, args):
@@ -516,6 +520,19 @@ CASES = [
     ("selection_translate", ["Translate what I copied into French."], lambda c, s: called(c, "selection") or "selection"),
     ("notes_start", ["Take notes of this lecture."], lambda c, s: arg(c, "notes", "action") == "start" or "notes start"),
     ("notes_stop", ["Take notes of this lecture.", "Stop the notes."], lambda c, s: any(x[0] == "notes" and x[1].get("action") == "stop" for x in c) or "notes stop"),
+    ("notes_conference", ["Keep listening to my microphone.", "No, as in I have a conference right now. I need to keep listening to my "
+                          "microphone. You just don't have to talk even for anything."],
+     lambda c, s: (arg(c, "notes", "action") == "start" and arg(c, "notes", "source") == "room") or "notes start from the microphone"),
+    ("notes_listen_with_me", ["I want you to listen to the conference with me."],
+     lambda c, s: (arg(c, "notes", "action") == "start") or "notes start"),
+    ("search_mine_trip", ["What did Sam send me about the trip?"],
+     lambda c, s: ("trip" in str(arg(c, "search_mine", "words", "")).lower()) or "search_mine for the trip"),
+    ("approvals_allow", ["Don't ask me before marking my emails as read anymore."],
+     lambda c, s: (arg(c, "approvals", "action") == "allow" and "GMAIL" in str(arg(c, "approvals", "tool", "")).upper()) or "approvals allow, a Gmail action"),
+    ("approvals_remove", ["Actually, ask me again before marking emails as read."],
+     lambda c, s: arg(c, "approvals", "action") == "remove" or "approvals remove"),
+    ("notes_class_quiet", ["I'm in a class right now, just stay quiet and hear all of it."],
+     lambda c, s: (arg(c, "notes", "action") == "start" and arg(c, "notes", "source") == "room") or "notes start from the microphone"),
     ("routine_save", ["When I say movie night, turn the volume up to 70 percent and open Netflix."], lambda c, s: arg(c, "routine", "action") == "save" or "save a routine"),
     ("routine_run", ["Movie night."], lambda c, s: (arg(c, "routine", "action") == "run" and ("70" in cmd(c) or called(c, "open_url", "do_task"))) or "run it, then do its steps"),
 
@@ -556,7 +573,7 @@ def main():
     BRAIN = brain.Brain(notify=lambda text: print(f"[notice] {text}", flush=True))
     BRAIN.tools_ready.wait(60)
     if store.read_json(whatsapp.STATE_FILE, {}).get("linked"):  # (the prompt says what the user has; the real link is Jarvis's)
-        brain.whatsapp_link[0] = types.SimpleNamespace(saved={"linked": True}, state="connected", find=lambda who: (None, []),
+        brain.whatsapp_link[0] = types.SimpleNamespace(saved={"linked": True}, state="connected", find=lambda who: (None, []), search=lambda text, n: [],
                                                        chats=lambda n: [], history=lambda chat, n: [])
     print(f"accounts: {', '.join(sorted(BRAIN.connected)) or 'none'}; direct tools: {len(BRAIN.app_tools)}", flush=True)
     client = genai.Client(api_key=brain.api_key())

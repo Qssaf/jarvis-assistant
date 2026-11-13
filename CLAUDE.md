@@ -152,7 +152,8 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
 only into `own_folder`s (the home folder, nothing hidden), under a `safe_name`, never over another file.
 `brain.TOOLS` maps a name to `(function, description, JSON schema)`. A function returns a dict, or
 `(dict, jpeg_bytes)` to attach a screenshot. `briefing`, `classroom_due`, `classroom_announcements`, `drive_file`, `ask_user` and
-`account_settings` (entries with `None`) are Brain methods dispatched in `Brain._run_tool`. Results from outside
+`account_settings`, `approvals` (entries with `None`) are Brain methods dispatched in `Brain._dispatch` (behind
+`_run_tool`'s key guard). Results from outside
 sources (`OUTSIDE_CONTENT`, accounts, plugins) get the `UNTRUSTED` note. To add a tool: put it in `TOOLS`, in
 `LIVE_TOOLS` if the voice model should run it directly (`QUERY_TOOLS` if its result must be spoken), and in
 `TOOL_LABELS` for the notch/chat label. brain.py never imports jarvis.py: what a tool needs from the app is a
@@ -168,6 +169,13 @@ refuses risky commands in "ask" mode (use `run_command`). Every change that runs
 With a spoken passphrase set (`store.PASSPHRASE`, a secret), a voice `confirmed: true` also needs it in `last_heard`
 (`Live._tool`; typed text counts), and an agent task's needs an `ask_user` answer that carried it (`passphrase_ok`;
 phone tasks are exempt). `emit` and `ask_user` replace it with `•••`, so it's never in the chat, sessions or log.
+`Brain._run_tool` (the real dispatcher is `_dispatch`) refuses a call whose arguments hold a saved key or sign-in token
+(`saved_secrets`: keychain provider keys and Telegram, the Google, opencode, plugin and `DATA/mcp` token files; 16+
+characters, read again every 30 s) and hides them in every result (`hide_secrets`), for the voice and the agent alike.
+Remembered approvals (`store.approvals`, `approvals.json` in CONFIG, never in backups): `needs_yes` skips a slug the user
+lifted, and `approvals allow` passes only `may_stop_asking`: the user's latest own words (`user_said`, the app's
+`live.last_heard`; a phone task's label; never an unattended task's) say not to ask (`NO_ASK`), name the app
+(`APP_WORDS`), and hold the passphrase when one is set (not needed from the phone).
 
 **Wake word.** `wake_word` is a `store.WAKE_WORDS` key or the path of the user's own `.onnx`; `store.wake_phrase` is
 what every message tells the user to say. `VoiceLearner` keeps clips and verifier per wake word (`wake_folder`:
@@ -304,13 +312,22 @@ sends whatsmeow's `BuildRevoke`, Discord's JS deletes through `RestAPI`) only ta
 newest in the chat or the one holding `text`, and is in `ONCE_TOOLS`: a second call would delete the one before it. Jarvis's own replies are known by `(channel, text)` in
 `mine` (memory only).
 
+**Search, recordings, learning.** `search_mine` matches every word in the sessions' messages (you, jarvis and the
+system notices: WhatsApp and Discord lines), notes files, WhatsApp (the helper's `search` over `jarvis_msgs`, calls left
+out), people pages and memory, newest first; screen history apart. `read_file` on an `AUDIO_TYPES` file is
+`Notes.from_file`: `system.audio_chunks` (ffmpeg) cuts it into `CHUNK` pieces; one piece's words come back at once, more
+are transcribed in order and written up like live notes. A voice `notes` start turns the mic off (the meeting kept the
+voice answering it). `learn_pass` (every 2 min): once the session's last you/jarvis line is `LEARN_AFTER` old,
+`Brain.learn` asks the agent's models once (`LEARN`) for at most three new facts the user said; `learned.json` is
+stamped first, so a failing model isn't asked again; `learn_from_talk` turns it off.
+
 **People, promises, attention.** `people.py`: `people.json` holds a page per person (notes with an optional `until`,
 `seen`/`wrote` per app from one-to-one WhatsApp and Discord messages via `talked`, which writes at most every 5 min per
 person, and `promises`). `Tracker` (`people.tracker[0]`, made in `main()`) takes the user's own outgoing messages (and
 WhatsApp sends Jarvis made for them; Discord's come back through `Listener`), keeps only ones `HINT` says talk about
 later, and after `wait` seconds asks the agent's models once per burst (`PROMPT`); a promise with a time gets a
 reminder, the rest go on the evening list. `evals/proactive_eval.py` checks the prompt. `Brain.person` and
-`Brain.waiting_on_me` are the tools (dispatched in `_run_tool`); `evening_digest` (jarvis.py) scans the day's sent
+`Brain.waiting_on_me` are the tools (dispatched in `_dispatch`); `evening_digest` (jarvis.py) scans the day's sent
 mail, then tells `digest_text(waiting_on_me(listing=True))` once a day; `waiting.json` remembers that list's chats
 (`listed`: said apart next time if still waiting) and `skip`'s names (`leave_off`: hidden until a newer message or
 promise). `people.meeting` writes a calendar event with its guests matched to pages (`Brain.events` reads them). `Attention` (jarvis.py, `attention.json`): `announce(...,
@@ -421,6 +438,6 @@ Missing: Go, Kotlin/Compose → vault: none → find-skills if wanted
 ## Skill notes
 - requesting-code-review inline (no reviewer agent, never a Workflow: it burned the user's usage): a full-diff pass after green tests still found 6 real bugs; a whole-codebase pass, area by area with a scratch notes file, found 16; a second full read (every file, a repro or failing check per suspect before any fix) found 13 more; the parts never read before (QML pages, evals, packaging) gave 6 more, one a privacy leak a local HTTP server proved: re-reading pays, and so does probing Qt's own behaviour.
 - Tests and evals must stub the real desktop (`system._idle_seconds`, `system.fullscreen`): a full-screen game failed the suite. verification-before-completion includes CI: after a push, check the run really ran and passed (`gh run list`): an unparsable workflow is red with no jobs, unseen for three pushes.
-- Evals: the default chain (no EVAL_MODELS) worked when one model was 503; `EVAL_OUT` is a file path; a new change tool must be simulated in voice_eval first (it runs real tools); Live closes with 1006 once the key's daily quota is gone.
+- Evals: the default chain (no EVAL_MODELS) worked when one model was 503; `EVAL_OUT` is a file path; a new change tool must be simulated in voice_eval first (it runs real tools); Live closes with 1006 once the key's daily quota is gone; 1011 "Resource has been exhausted" after ~12 sessions in 15 min is a short window (back in ~10 min; the running Jarvis shares the key); a spoken-reply check must strip "\u200b" (the model "says" it).
 - OpenChamber: drive it through its own local `/api` (port in its settings.json); never read its opencode server's password (blocked as credential digging, rightly).
 - "Gives up / can't do X / rate limited" reports: read the logs first (`jarvis.log`; for Google accounts also the opencode plugin's `antigravity-logs/` and the accounts file's limits); the causes were code (a model outage killing the task, a tool missing a capability, the plugin saving 503 "No capacity" as a rate limit) more than the prompt or Google.

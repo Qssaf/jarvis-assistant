@@ -1572,6 +1572,57 @@ def tool_list_reminders():
                            **({"paused": True} if r.get("off") else {})} for r in store.reminders()]}
 
 
+def tool_search_mine(words, person="", days=0):
+    """Everything Jarvis keeps on this PC that holds all these words, newest first: conversations (with the messages and
+    notices shown in them), notes, every WhatsApp chat, people's pages and memory; the screen history apart (no dates)."""
+    import activity, glob, people
+    terms, who = str(words).lower().split(), str(person).strip().lower()
+    if not terms:
+        return {"error": "give one to three words to look for (someone's latest messages: whatsapp_read or person)"}
+    since = time.time() - float(days) * 86400 if days else 0
+    found = []
+
+    def add(at, item):
+        if at >= since and (not who or who in json.dumps(item, ensure_ascii=False).lower()):
+            found.append((at, {"when": time.strftime("%a %d %b %Y, %H:%M", time.localtime(at)), **item}))
+
+    def holds(text):
+        return all(w in str(text).lower() for w in terms)
+    for name in os.listdir(store.SESSIONS_DIR) if os.path.isdir(store.SESSIONS_DIR) else []:
+        for m in (store.read_json(os.path.join(store.SESSIONS_DIR, name), None) or {}).get("messages", []) if name.endswith(".json") else []:
+            if m.get("who") in ("you", "jarvis", "system") and holds(m.get("text", "")):
+                add(m.get("time", 0), {"from": {"you": "the user, to Jarvis", "jarvis": "Jarvis"}.get(m["who"], "a notice in the chat"),
+                                       "text": str(m["text"])[:300]})
+    wa = whatsapp_link[0]
+    if wa and not account_block(WA_READ):
+        try:
+            for m in wa.search(" ".join(terms), 30):
+                add(m["at"], {"from": f"WhatsApp, {m['name']}", "by": "the user" if m["me"] else m.get("by") or m["name"], "text": m["text"][:300]})
+        except Exception as e:  # (not linked, or the helper is restarting: the rest still answers)
+            found.append((0, {"from": "WhatsApp", "error": str(e)[:100]}))
+    for path in glob.glob(os.path.join(NOTES_DIR, "*.md")):
+        lines = [l.strip() for l in open(path, encoding="utf-8", errors="replace") if holds(l)]
+        for line in lines[:5]:
+            add(os.path.getmtime(path), {"from": f"notes: {os.path.basename(path)[:-3]}", "text": line[:300]})
+    for name, page in store.read_json(people.FILE, {}).items():
+        for n in page.get("notes", []) + [{"text": p.get("what", ""), "at": p.get("at", 0)} for p in page.get("promises", [])]:
+            if holds(f"{name} {n.get('text', '')}"):
+                add(n.get("at", 0), {"from": f"{name}'s page", "text": str(n.get("text", ""))[:300]})
+    if os.path.exists(store.MEMORY_FILE):
+        for line in store.memory().splitlines():
+            if holds(line):
+                add(os.path.getmtime(store.MEMORY_FILE), {"from": "memory", "text": line.strip("- ")[:300]})
+    seen, out = set(), []
+    for _, item in sorted(found, key=lambda f: -f[0]):
+        if item.get("text", "")[:120] not in seen:
+            seen.add(item.get("text", "")[:120])
+            out.append(item)
+    screen = (activity.search(" ".join(terms), limit=5).get("windows") or []) if not who and store.settings()["screen_history"] else []
+    if not out and not screen:
+        return {"found": [], "note": "nothing holds all of these words: try fewer or other ones (a name, a place). Email: the Gmail tools"}
+    return {"found": out[:25], **({"more": len(out) - 25} if len(out) > 25 else {}), **({"screen_history": screen} if screen else {})}
+
+
 def tool_recall(query="", day=""):
     if not query.strip() and not day:
         return {"error": "give words to look for, a day (YYYY-MM-DD), or both"}
@@ -1697,6 +1748,26 @@ class Notes:
 
     def status(self):
         return {"taking_notes": self.on["title"], "minutes": self._minutes()} if self.on else {"taking_notes": None}
+
+    def from_file(self, path, title=""):
+        """A recording on disk (a voice recorder's file) written down: a short one's words at once; a longer one transcribed
+        in order like a live recording (beside one, if notes are being taken), then written up as notes and announced."""
+        folder = tempfile.mkdtemp(prefix="jarvis-notes-")
+        try:
+            chunks = system.audio_chunks(path, folder, self.CHUNK)
+        except Exception:
+            shutil.rmtree(folder, ignore_errors=True)
+            raise
+        title = " ".join(str(title or os.path.splitext(os.path.basename(path))[0]).split())[:80]
+        on = {"title": title, "source": "file", "started": os.path.getmtime(path), "stop": threading.Event(), "heard": [], "folder": folder}
+        if len(chunks) == 1:
+            text = self._transcribe_file(chunks[0], on)
+            shutil.rmtree(folder, ignore_errors=True)
+            return {"transcript": text if text and text.strip() != "(silence)" else "(nothing was said in it)"}
+        on["parts"] = [self.pool.submit(self._transcribe_file, c, on) for c in chunks]
+        threading.Thread(target=self._finish, args=(on,), daemon=True).start()
+        return {"result": f"a recording of about {len(chunks) * self.CHUNK // 60} minutes: it's being written up as notes (a summary "
+                          "and the whole transcript, in Documents/Jarvis Notes), announced when ready"}
 
 
 def audible(wav):
@@ -2076,6 +2147,12 @@ TOOLS.update({
                "Adding one is the whole job: don't search the accounts for it now, alongside or after (the checks do that). "
                "Not for the screen right now: that's watch.",
                obj(action={"type": "string", "enum": ["add", "remove", "list"]}, text={"type": "string"}, optional=("text",))),
+    "search_mine": (tool_search_mine, "Search everything Jarvis keeps on this PC at once: past conversations (with the WhatsApp and "
+                    "Discord messages and notices shown in them), lecture and meeting notes, every WhatsApp chat, people's pages, memory "
+                    "and screen history. For \"what did Sam send me about the trip?\" (words: trip, person: Sam) or \"where did someone "
+                    "mention the deadline?\". Every word must appear: one to three distinctive words; nothing found, try others. Email: "
+                    "the Gmail tools.", obj(words={"type": "string"}, person={"type": "string"}, days={"type": "number", "description":
+                    "only the last n days"}, optional=("person", "days"))),
     "recall": (tool_recall, "Search past conversations with the user (\"what was that site you told me about?\"): when, and "
                "the lines that mention it. day (YYYY-MM-DD) for one day's conversations (\"what did we talk about yesterday?\"), "
                "with or without words to look for.", obj(query={"type": "string"}, day={"type": "string"}, optional=("query", "day"))),
@@ -2266,6 +2343,7 @@ def tool_show_image(source, caption=""):
     return {"result": "shown in the chat"}
 
 
+AUDIO_TYPES = (".wav", ".mp3", ".ogg", ".oga", ".opus", ".m4a", ".aac", ".flac", ".webm", ".wma", ".amr", ".3gp")
 IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif", ".bmp": "image/bmp"}
 CHAT_PICTURES = {*IMAGE_TYPES, ".svg"}  # what the chat shows (and opens when clicked): window.open_image
 WEB_PICTURES = {"image/png": ".png", "image/jpeg": ".jpg", "image/jpg": ".jpg", "image/webp": ".webp", "image/gif": ".gif",
@@ -2280,6 +2358,8 @@ def tool_read_file(path, question=""):
     if not os.path.isfile(path):
         return {"error": f"no such file: {path}"}
     ext = os.path.splitext(path)[1].lower()
+    if ext in AUDIO_TYPES:  # (a recording: its words; a long one becomes notes)
+        return notes[0].from_file(path)
     if ext in IMAGE_TYPES:
         with open(path, "rb") as f:
             data = f.read()
@@ -2305,7 +2385,7 @@ TOOLS["make_image"] = (tool_make_image, "Create a picture from a description (or
 TOOLS["show_image"] = (tool_show_image, "Show a picture in the chat window: a file on this PC or a public image address.",
                        obj(source={"type": "string"}, caption={"type": "string"}, optional=("caption",)))
 TOOLS["read_file"] = (tool_read_file, "Read a file on this PC: pictures are described (ask a question about them), PDFs and "
-                      "text files are read, folders are listed. Use it for files the user attached or mentions.",
+                      "text files are read, recordings are written down (a long one becomes notes), folders are listed. Use it for files the user attached or mentions.",
                       obj(path={"type": "string"}, question={"type": "string"}, optional=("question",)))
 TOOLS["account_settings"] = (None, "See how Jarvis may use one of the user's connected accounts (gmail, github, google_classroom...), "
                              "make it stricter (mode 'read_only' or 'paused'), or open a new sign-in (action 'reconnect'). Loosening an "
@@ -2313,6 +2393,10 @@ TOOLS["account_settings"] = (None, "See how Jarvis may use one of the user's con
                              "the user to do that there.", obj(app={"type": "string"}, mode={"type": "string", "enum": [
                                  "ask", "full", "read_only", "paused"]}, action={"type": "string", "enum": ["reconnect", "disconnect"]},
                                  optional=("mode", "action")))
+TOOLS["approvals"] = (None, "Account actions Jarvis does without asking first because the user said so (\"don't ask me before marking "
+                      "emails read\"): list; allow: right after the user themselves said not to ask before that action (their words "
+                      "are checked); remove: ask first again. tool: the action's name, e.g. GMAIL_BATCH_MODIFY_MESSAGES.",
+                      obj(action={"type": "string", "enum": ["list", "allow", "remove"]}, tool={"type": "string"}, optional=("tool",)))
 TOOLS["weather"] = (tool_weather, "The weather now and for the next three days (temperatures, rain chance, wind) for a place; leave place "
                     "empty for where the user is. Fast: use it instead of a web search for weather.",
                     obj(place={"type": "string"}, optional=("place",)))
@@ -2929,7 +3013,29 @@ NEEDS_YES = ("NOT DONE: nothing was sent or changed yet, because this changes th
 def needs_yes(slug):
     """An account change that waits for the user's yes: the account is in "ask" mode and Jarvis's safety setting is on."""
     return (store.settings()["safety"] == "ask" and store.connector_modes().get(toolkit_of(slug), "ask") == "ask"
-            and not is_read_action(slug))
+            and not is_read_action(slug) and slug.upper() not in store.approvals())
+
+
+user_said = [lambda: ""]  # set by the app: the user's latest words (spoken or typed), for what only they may decide
+NO_ASK = re.compile(r"\b(?:(?:don'?t|do not|no need to|no longer|never|stop|without)\s+(?:(?:have|need|you|to|me|ever|even)\s+){0,3}"
+                    r"ask(?:ing)?\b|without (?:my |me )?(?:permission|ok(?:ay)?|confirmation)|(?:don'?t|do not) (?:check|confirm) with me)", re.I)
+APP_WORDS = {"gmail": r"mail|inbox", "googlecalendar": r"calendar|event|meeting", "googledrive": r"drive|file", "googledocs": r"\bdoc",
+             "googlesheets": r"sheet", "googletasks": r"task|to-?do", "google_classroom": r"classroom|homework|assignment"}
+
+
+def may_stop_asking(slug, said, passphrase=True):
+    """Why the user's own words don't lift the yes for this account action, or None: they must say not to ask, about that
+    app (an email can't make the model lift it, nor slip a GitHub action into "don't ask before marking emails read")."""
+    app = toolkit_of(slug)
+    if not re.fullmatch(r"[A-Z][A-Z0-9_]+", slug) or is_read_action(slug):
+        return f"{slug} isn't an account action that asks first"
+    if not NO_ASK.search(said or ""):
+        return "only the user can lift it, in their own words (\"don't ask me before marking emails read\"): ask them"
+    if not re.search(APP_WORDS.get(app, re.escape(app.replace("_", " "))), said, re.I):
+        return f"the user didn't say this was about {app}: ask them which action they meant"
+    if passphrase and store.secret(store.PASSPHRASE) and not store.said_passphrase(said):
+        return "the user has a spoken passphrase: it has to be said with the request"
+    return None
 
 
 def with_confirmed(schema):
@@ -2942,8 +3048,61 @@ def with_confirmed(schema):
 def account_policy():
     """The user's per-account settings, for the prompts ('' if all are the default)."""
     modes = {k: v for k, v in store.connector_modes().items() if v in MODE_NOTES}
-    return ("Account permissions the user set: " + "; ".join(f"{k}: {MODE_NOTES[v]}" for k, v in sorted(modes.items()))
-            + ". Every other account: confirm before changing anything.") if modes else ""
+    free = ("Done without asking first (the user said so): " + ", ".join(sorted(store.approvals())) + ".") if store.approvals() else ""
+    return " ".join(filter(None, [("Account permissions the user set: " + "; ".join(f"{k}: {MODE_NOTES[v]}" for k, v in sorted(modes.items()))
+                                   + ". Every other account: confirm before changing anything.") if modes else "", free]))
+
+
+LEARN = ("Below is what Jarvis already remembers about the user, then a conversation between them. List new lasting facts about "
+         "the user that the user said themselves: who they are, where they live or study, the people in their life, their likes and "
+         "ways of doing things, long-running plans. Leave out one-off requests and tasks, what Jarvis said, anything read out from "
+         "messages, emails or pages (other people wrote those), lines that sound like a video, a call or a meeting in the "
+         "background, what's already remembered, and passwords, codes or keys. Each fact a short line in the third person, like the "
+         "remembered ones (\"Prefers tea\", \"Sister: Maya\"). Reply with only a JSON array of at most three strings: [] when "
+         "there's nothing new (most conversations).\n\nRemembered:\n{memory}\n\nConversation:\n{talk}")
+
+
+# ---------------------------------------------------------------- saved keys never leave in a tool call
+SECRET_FIELD = re.compile(r"token|secret|key|password|authorization", re.I)
+_secrets = [0.0, {}]  # [when read, {value: what it is}]
+
+
+def saved_secrets():
+    """The user's saved keys and sign-in tokens (16+ characters), read again every 30 s: {value: what it is}. The voice
+    passphrase is a spoken word, not a key: it isn't one of them."""
+    if time.time() - _secrets[0] < 30:
+        return _secrets[1]
+    found = {store.secret(name): f"the saved {name} key" for name in {"aistudio", "telegram", *providers()}}
+    found.update({v: f"the saved {k} key" for k, v in store.read_json(store.KEYS_FILE, {}).items() if k != store.PASSPHRASE})
+
+    def walk(value, what, field=""):
+        if isinstance(value, dict):
+            for k, v in value.items():
+                walk(v, what, k)
+        elif isinstance(value, list):
+            for v in value:
+                walk(v, what, field)
+        elif isinstance(value, str) and SECRET_FIELD.search(field):
+            found.update(dict.fromkeys(value.split(), what))  # ("Bearer <token>": the token alone counts too)
+    import glob
+    for path, what in [(GOOGLE_FILE, "a Google sign-in"), (OPENCODE_ACCOUNTS, "a Google sign-in"), (store.PLUGINS_FILE, "a plugin's key"), *((p, "a plugin's sign-in") for p in glob.glob(os.path.join(DATA, "mcp", "*.json")))]:
+        walk(store.read_json(path, {}), what)
+    _secrets[:] = [time.time(), {v: what for v, what in found.items() if v and len(v) >= 16}]
+    return _secrets[1]
+
+
+def hide_secrets(value, keys):
+    """value (a tool's result) with every saved key in it replaced: a model that never sees one can't be talked into sending it."""
+    if isinstance(value, str):
+        for k in keys:
+            if k in value:
+                value = value.replace(k, "[a saved key, hidden]")
+        return value
+    if isinstance(value, dict):
+        return {k: hide_secrets(v, keys) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [hide_secrets(v, keys) for v in value]
+    return value
 
 
 # ---------------------------------------------------------------- the agent
@@ -3542,6 +3701,42 @@ class Brain:
             return {"result": f"{app} is now: {mode}"}
         return {"result": f"{app} is {store.connector_modes().get(app, 'ask')}", "connected": app in self.connected}
 
+    def learn(self, talk):
+        """Lasting facts about the user from a finished conversation (talk: its messages) saved to memory: the ones saved."""
+        lines = "\n".join(f"{'User' if m['who'] == 'you' else 'Jarvis'}: {' '.join(str(m['text']).split())[:500]}" for m in talk[-60:])
+        parts = self._generate([{"role": "user", "parts": [{"text": LEARN.format(memory=store.memory() or "(nothing yet)", talk=lines[-8000:])}]}])
+        found = re.search(r"\[.*\]", "".join(p.get("text", "") for p in parts if not p.get("thought")), re.S)
+        try:
+            facts = json.loads(found[0]) if found else []
+        except ValueError:
+            return []
+        known, keys, saved = store.memory().lower(), saved_secrets(), []
+        for fact in facts[:3] if isinstance(facts, list) else []:
+            fact = " ".join(fact.split())[:200] if isinstance(fact, str) else ""
+            if fact and fact.lower() not in known and hide_secrets(fact, keys) == fact and store.hide_passphrase(fact) == fact:
+                saved.append(store.remember(fact))
+        return saved
+
+    def approvals(self, action="list", tool="", task=None):
+        """The voice and agent tool: account actions done without asking first. Only the user's own words lift a yes
+        (may_stop_asking: never a scheduled task's, nor the agent's paraphrase); asking again is always allowed."""
+        slug = str(tool).strip().upper()
+        if action == "list" or not slug:
+            return {"done_without_asking": {s: a.get("said", "") for s, a in store.approvals().items()}}
+        if action == "remove":
+            store.set_approval(slug)
+            changed(f"asks again before {slug}")
+            return {"result": f"will ask again before {slug}"}
+        remote = bool(task and task.remote)  # (a phone task's label is the user's own message, and needs no passphrase)
+        said = "" if task and task.unattended else task.label if remote else user_said[0]()  # (unattended: remote too)
+        problem = may_stop_asking(slug, said, passphrase=not remote)
+        if problem:
+            return {"error": f"NOT DONE: {problem}"}
+        said = store.hide_passphrase(said)
+        store.set_approval(slug, said)
+        changed(f"doesn't ask before {slug} any more (the user said: \"{said[:120]}\")")
+        return {"result": f"won't ask before {slug} again (\"ask me again before...\" undoes it)"}
+
     def workspaces(self):
         names = account_names(self._composio([{"name": slug, "action": "list"} for slug, _ in WORKSPACES]).get("results", {}))
         modes = store.connector_modes()
@@ -3597,6 +3792,18 @@ class Brain:
         return prompt
 
     def _run_tool(self, name, args, task=None):
+        """Every tool call, the voice's and the agent's: none may carry a saved key out, and no result shows one to a model."""
+        keys = saved_secrets()
+        sent = json.dumps(args, ensure_ascii=False, default=str)
+        leaked = next((what for value, what in keys.items() if value in sent), None)
+        if leaked:
+            print(f"[safety] blocked {name}: it carried {leaked}", flush=True)
+            return {"error": f"NOT DONE: that would have sent {leaked} out. Nothing the user asks for needs a saved key passed "
+                             "on: don't try again, and tell the user it was blocked."}, None
+        result, image = self._dispatch(name, args, task)
+        return hide_secrets(result, keys), image
+
+    def _dispatch(self, name, args, task=None):
         if name == "briefing":
             out = self.briefing(), None
         elif name == "classroom_due":
@@ -3613,6 +3820,8 @@ class Brain:
             out = (task.ask_user(**args) if task else {"error": "only a task can ask the user"}), None
         elif name == "account_settings":
             out = self.account_settings(**args), None
+        elif name == "approvals":
+            out = self.approvals(**args, task=task), None
         elif name == "jobs":
             out = tool_jobs(**args, caller=task), None
         elif name in self.tool_owner and self.tool_owner[name][1] == "COMPOSIO_MANAGE_CONNECTIONS" and any(

@@ -286,6 +286,19 @@ def record_audio(path, source="pc"):
                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
+def audio_chunks(path, folder, seconds=300):
+    """A recording (any format: a voice recorder's, a call's) cut by ffmpeg into 16 kHz mono WAV files of `seconds` each,
+    in order, in folder."""
+    if not have("ffmpeg"):
+        raise RuntimeError("reading a recording needs ffmpeg installed (Linux: the package manager; Windows: winget install ffmpeg)")
+    said = run(["ffmpeg", "-v", "error", "-nostdin", "-i", path, "-ac", "1", "-ar", "16000", "-f", "segment", "-segment_time",
+                str(seconds), os.path.join(folder, "%03d.wav")], timeout=600)
+    chunks = sorted(os.path.join(folder, n) for n in os.listdir(folder) if n.endswith(".wav"))
+    if not chunks:
+        raise RuntimeError(f"ffmpeg couldn't read that recording: {said[:200]}")
+    return chunks
+
+
 def stop_recording(proc):
     import signal
     proc.send_signal(signal.SIGINT)  # (pw-record finishes the WAV header on SIGINT)

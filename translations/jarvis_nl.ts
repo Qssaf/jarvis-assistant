@@ -1079,7 +1079,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2925"/>
+        <location filename="../jarvis.py" line="+2953"/>
         <source>LISTENING</source>
         <translation>LUISTERT</translation>
     </message>
@@ -2127,6 +2127,16 @@
         <location line="+0"/>
         <source>Jarvis notes which window you have in front (its title only, never what&apos;s in it, on this PC) so you can ask &quot;what was that site I had open yesterday?&quot;. Private browsing and password managers are skipped; kept two weeks at most</source>
         <translation>Jarvis houdt bij welk venster je voor je hebt (alleen de titel, nooit de inhoud, op deze pc), zodat je kunt vragen &quot;welke site had ik gisteren open?&quot;. Privé browsen en wachtwoordmanagers worden overgeslagen; hooguit twee weken bewaard</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Learn from conversations</source>
+        <translation>Leren van gesprekken</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>When a conversation is over, Jarvis adds lasting things you said about yourself to its memory, and shows each one in the chat</source>
+        <translation>Als een gesprek voorbij is, zet Jarvis blijvende dingen die je over jezelf zei in zijn geheugen, en laat elk ervan in de chat zien</translation>
     </message>
     <message>
         <location line="+3"/>

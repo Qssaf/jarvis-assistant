@@ -571,6 +571,8 @@ ScrollPage {
                      + "task needs the screen, go to Google Gemini; account actions go through Composio.")
         Toggle { Layout.fillWidth: true; text: qsTr("Screen history"); hint: qsTr("Jarvis notes which window you have in front (its title only, never what's in it, on this PC) so you can ask \"what was that site I had open yesterday?\". Private browsing and password managers are skipped; kept two weeks at most")
                  checked: !!page.s.screen_history; onToggled: page.set("screen_history", checked) }
+        Toggle { Layout.fillWidth: true; text: qsTr("Learn from conversations"); hint: qsTr("When a conversation is over, Jarvis adds lasting things you said about yourself to its memory, and shows each one in the chat")
+                 checked: !!page.s.learn_from_talk; onToggled: page.set("learn_from_talk", checked) }
         Row2 {
             Setting { label: qsTr("Keep conversations and logs for")
                 Select { Layout.fillWidth: true; value: String(page.s.keep_days || 0); onPicked: v => page.set("keep_days", v)
