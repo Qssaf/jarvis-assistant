@@ -83,6 +83,7 @@ ScrollPage {
                         }
                         Toggle {
                             implicitWidth: 44
+                            Accessible.name: row.modelData.name
                             checked: row.modelData.enabled
                             onToggled: Api.post(`/api/plugins/${row.modelData.name}/toggle`, {}, page.load)
                         }

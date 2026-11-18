@@ -99,7 +99,7 @@ ScrollPage {
                         symbol: modelData.task ? "sparkle" : "bell"
                         title: modelData.text
                         detail: modelData.task ? qsTr("%1 · Jarvis does it").arg(modelData.when) : modelData.when
-                        Toggle { visible: !!modelData.repeat; checked: !modelData.off; Layout.preferredWidth: 44
+                        Toggle { visible: !!modelData.repeat; checked: !modelData.off; Layout.preferredWidth: 44; Accessible.name: modelData.text
                                  onToggled: page.change("/api/reminders", { id: modelData.id, text: modelData.text, at: modelData.edit_at, was: modelData.edit_at,
                                                       repeat: modelData.repeat, task: !!modelData.task, on: checked }) }
                         Edit { onClicked: page.editing = "reminder " + modelData.id }
@@ -163,7 +163,7 @@ ScrollPage {
                         symbol: "search"
                         title: modelData.text
                         detail: modelData.on ? "" : qsTr("Paused")
-                        Toggle { checked: modelData.on; Layout.preferredWidth: 44
+                        Toggle { checked: modelData.on; Layout.preferredWidth: 44; Accessible.name: modelData.text
                                  onToggled: page.change("/api/checks", { text: modelData.text, old: modelData.text, on: checked }) }
                         Edit { onClicked: page.editing = "check " + modelData.text }
                         Remove { tip: qsTr("Delete"); onClicked: page.change("/api/checks", { text: "", old: modelData.text }) }

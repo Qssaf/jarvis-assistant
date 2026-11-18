@@ -164,7 +164,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+242"/>
+        <location filename="../window.py" line="+243"/>
         <source>Copied</source>
         <translation>Скопировано</translation>
     </message>
@@ -282,7 +282,7 @@
         <translation>Спросите Jarvis</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+24"/>
         <source>Pause listening</source>
         <translation>Приостановить прослушивание</translation>
     </message>
@@ -300,6 +300,92 @@
         <location line="+0"/>
         <source>Send (Enter)</source>
         <translation>Отправить (Enter)</translation>
+    </message>
+</context>
+<context>
+    <name>CostPage</name>
+    <message>
+        <location filename="../qml/CostPage.qml" line="+11"/>
+        <source>Cost</source>
+        <translation>Стоимость</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis&apos;s model use would cost at Google&apos;s paid-tier prices.</source>
+        <translation>Сколько стоило бы использование моделей Jarvis по ценам платного тарифа Google.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>no price</source>
+        <translation>нет цены</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Today</source>
+        <translation>Сегодня</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>7 days</source>
+        <translation>7 дней</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>30 days</source>
+        <translation>30 дней</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>%1 tokens at paid-tier prices</source>
+        <translation>%1 токенов по ценам платного тарифа</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>%1: %2</source>
+        <translation>%1: %2</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Nothing is billed on the free tier or through a Google sign-in: this is what the same use would cost with billing on. Google Search fees aren&apos;t counted.</source>
+        <translation>На бесплатном тарифе и при входе через аккаунт Google ничего не списывается: столько стоило бы то же использование с включённой оплатой. Плата за Google Search не учитывается.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>By model</source>
+        <translation>По моделям</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n model(s) have no known price, so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>У %n модели нет известной цены, поэтому она не входит в итог.</numerusform>
+            <numerusform>У %n моделей нет известной цены, поэтому они не входят в итог.</numerusform>
+            <numerusform>У %n моделей нет известной цены, поэтому они не входят в итог.</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+25"/>
+        <source>%1 · %n request(s)</source>
+        <translation>
+            <numerusform>%1 · %n запрос</numerusform>
+            <numerusform>%1 · %n запроса</numerusform>
+            <numerusform>%1 · %n запросов</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 in · %2 out</source>
+        <translation>%1 на входе · %2 на выходе</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>No model use yet today.</source>
+        <translation>Сегодня модели ещё не использовались.</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No model use in this period.</source>
+        <translation>За этот период модели не использовались.</translation>
     </message>
 </context>
 <context>
@@ -557,7 +643,7 @@
         <translation>Новый чат</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Backup voice</source>
         <translation>Запасной голос</translation>
     </message>
@@ -625,12 +711,17 @@
         <translation>Состояние</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>Cost</source>
+        <translation>Стоимость</translation>
+    </message>
+    <message>
         <location line="+4"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+63"/>
         <source>Minimise</source>
         <translation>Свернуть</translation>
     </message>
@@ -952,6 +1043,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Several keys for one provider take over from each other.</source>
+        <translation>Несколько ключей одного провайдера подменяют друг друга.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Kept in %1</source>
         <translation>Хранится в: %1</translation>
     </message>
@@ -962,13 +1058,13 @@
     </message>
     <message>
         <location line="+30"/>
-        <source>Key saved · paste a new one to replace it</source>
-        <translation>Ключ сохранён · вставьте новый, чтобы заменить</translation>
+        <source>Paste an API key</source>
+        <translation>Вставьте ключ API</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>Paste an API key</source>
-        <translation>Вставьте ключ API</translation>
+        <source>Paste another key</source>
+        <translation>Вставьте ещё один ключ</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -991,7 +1087,12 @@
         <translation>Удалить этого провайдера</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+16"/>
+        <source>Resting (rate limited or refused): the next key answers</source>
+        <translation>Отдыхает (лимит или отказ): отвечает следующий ключ</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>More providers</source>
         <translation>Другие провайдеры</translation>
     </message>
@@ -1076,7 +1177,8 @@
         <translation>Пробовать раньше</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-137"/>
+        <location line="+139"/>
         <source>Remove</source>
         <translation>Убрать</translation>
     </message>
@@ -1089,7 +1191,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2953"/>
+        <location filename="../jarvis.py" line="+3146"/>
         <source>LISTENING</source>
         <translation>СЛУШАЮ</translation>
     </message>
@@ -1194,7 +1296,7 @@
         <translation>Попробовать сейчас</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Click again to remove</source>
         <translation>Нажмите ещё раз, чтобы удалить</translation>
     </message>
@@ -2544,7 +2646,7 @@
 <context>
     <name>Theme</name>
     <message>
-        <location filename="../qml/Theme.qml" line="+70"/>
+        <location filename="../qml/Theme.qml" line="+58"/>
         <source>Listening</source>
         <translation>Слушаю</translation>
     </message>
@@ -2655,7 +2757,7 @@
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+117"/>
+        <location filename="../jarvis.py" line="+122"/>
         <source>Open Jarvis</source>
         <translation>Открыть Jarvis</translation>
     </message>

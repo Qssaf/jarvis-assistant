@@ -162,7 +162,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+242"/>
+        <location filename="../window.py" line="+243"/>
         <source>Copied</source>
         <translation>คัดลอกแล้ว</translation>
     </message>
@@ -274,7 +274,7 @@
         <translation>ถาม Jarvis</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+24"/>
         <source>Pause listening</source>
         <translation>หยุดฟังชั่วคราว</translation>
     </message>
@@ -292,6 +292,88 @@
         <location line="+0"/>
         <source>Send (Enter)</source>
         <translation>ส่ง (Enter)</translation>
+    </message>
+</context>
+<context>
+    <name>CostPage</name>
+    <message>
+        <location filename="../qml/CostPage.qml" line="+11"/>
+        <source>Cost</source>
+        <translation>ค่าใช้จ่าย</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis&apos;s model use would cost at Google&apos;s paid-tier prices.</source>
+        <translation>ค่าใช้จ่ายของการใช้โมเดลของ Jarvis หากคิดตามราคาระดับชำระเงินของ Google</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>no price</source>
+        <translation>ไม่มีราคา</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Today</source>
+        <translation>วันนี้</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>7 days</source>
+        <translation>7 วัน</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>30 days</source>
+        <translation>30 วัน</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>%1 tokens at paid-tier prices</source>
+        <translation>%1 โทเคนตามราคาระดับชำระเงิน</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>%1: %2</source>
+        <translation>%1: %2</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Nothing is billed on the free tier or through a Google sign-in: this is what the same use would cost with billing on. Google Search fees aren&apos;t counted.</source>
+        <translation>ไม่มีการเรียกเก็บเงินในระดับฟรีหรือเมื่อลงชื่อเข้าใช้ด้วย Google ตัวเลขนี้คือค่าใช้จ่ายของการใช้งานเดียวกันหากเปิดการเรียกเก็บเงิน ไม่รวมค่าบริการ Google Search</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>By model</source>
+        <translation>แยกตามโมเดล</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n model(s) have no known price, so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>%n โมเดลไม่มีราคาที่ทราบ จึงไม่ได้รวมอยู่ในยอดรวม</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+25"/>
+        <source>%1 · %n request(s)</source>
+        <translation>
+            <numerusform>%1 · %n คำขอ</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 in · %2 out</source>
+        <translation>อินพุต %1 · เอาต์พุต %2</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>No model use yet today.</source>
+        <translation>วันนี้ยังไม่มีการใช้โมเดล</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No model use in this period.</source>
+        <translation>ไม่มีการใช้โมเดลในช่วงเวลานี้</translation>
     </message>
 </context>
 <context>
@@ -543,7 +625,7 @@
         <translation>แชทใหม่</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Backup voice</source>
         <translation>เสียงสำรอง</translation>
     </message>
@@ -611,12 +693,17 @@
         <translation>สถานะระบบ</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>Cost</source>
+        <translation>ค่าใช้จ่าย</translation>
+    </message>
+    <message>
         <location line="+4"/>
         <source>Settings</source>
         <translation>การตั้งค่า</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+63"/>
         <source>Minimise</source>
         <translation>ย่อเล็กสุด</translation>
     </message>
@@ -932,6 +1019,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Several keys for one provider take over from each other.</source>
+        <translation>คีย์หลายตัวของผู้ให้บริการเดียวกันจะรับช่วงต่อกัน</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Kept in %1</source>
         <translation>เก็บไว้ใน %1</translation>
     </message>
@@ -942,13 +1034,13 @@
     </message>
     <message>
         <location line="+30"/>
-        <source>Key saved · paste a new one to replace it</source>
-        <translation>บันทึกคีย์แล้ว · วางคีย์ใหม่เพื่อแทนที่</translation>
+        <source>Paste an API key</source>
+        <translation>วางคีย์ API</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>Paste an API key</source>
-        <translation>วางคีย์ API</translation>
+        <source>Paste another key</source>
+        <translation>วางคีย์อีกตัว</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -971,7 +1063,12 @@
         <translation>นำผู้ให้บริการนี้ออก</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+16"/>
+        <source>Resting (rate limited or refused): the next key answers</source>
+        <translation>พักอยู่ (ติดขีดจำกัดหรือถูกปฏิเสธ): คีย์ถัดไปตอบแทน</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>More providers</source>
         <translation>ผู้ให้บริการอื่นๆ</translation>
     </message>
@@ -1056,7 +1153,8 @@
         <translation>ลองตัวนี้ก่อน</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-137"/>
+        <location line="+139"/>
         <source>Remove</source>
         <translation>นำออก</translation>
     </message>
@@ -1069,7 +1167,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2953"/>
+        <location filename="../jarvis.py" line="+3146"/>
         <source>LISTENING</source>
         <translation>กำลังฟัง</translation>
     </message>
@@ -1168,7 +1266,7 @@
         <translation>ลองใหม่เลย</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Click again to remove</source>
         <translation>คลิกอีกครั้งเพื่อนำออก</translation>
     </message>
@@ -2518,7 +2616,7 @@
 <context>
     <name>Theme</name>
     <message>
-        <location filename="../qml/Theme.qml" line="+70"/>
+        <location filename="../qml/Theme.qml" line="+58"/>
         <source>Listening</source>
         <translation>กำลังฟัง</translation>
     </message>
@@ -2629,7 +2727,7 @@
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+117"/>
+        <location filename="../jarvis.py" line="+122"/>
         <source>Open Jarvis</source>
         <translation>เปิด Jarvis</translation>
     </message>

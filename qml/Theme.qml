@@ -35,18 +35,6 @@ QtObject {
     readonly property color green: "#4ade80"
     readonly property color red: "#f87171"
 
-    // older names, kept for pages not yet moved over
-    readonly property color panel: glassStrong
-    readonly property color card: glass
-    readonly property color cardHover: glassHover
-    readonly property color raised: track
-    readonly property color line: stroke
-    readonly property color lineStrong: strokeStrong
-    readonly property color dim: text2
-    readonly property color faint: text3
-    readonly property color ink: accentInk
-    readonly property color accentDeep: "#1b9cc4"
-
     readonly property string font: "Inter Variable"
     readonly property string mono: "JetBrainsMono Nerd Font"
     property real scale: 1.0  // Settings → Text size

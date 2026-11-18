@@ -7,7 +7,9 @@ AbstractButton {
     property string hint: ""
     checkable: true
     hoverEnabled: true
-    focusPolicy: Qt.NoFocus
+    focusPolicy: Qt.TabFocus  // (Tab reaches it; a click leaves the typing where it was)
+    Keys.onReturnPressed: click()
+    Keys.onEnterPressed: click()
     implicitHeight: text === "" ? 26 : Math.max(56, col.implicitHeight + 16)  // (a labelled one is a 56 px list row)
     implicitWidth: 300
     contentItem: Item {
@@ -24,6 +26,7 @@ AbstractButton {
             width: 44; height: 26; radius: 13
             color: t.checked ? Theme.accent : t.hovered ? Theme.alpha(Theme.track, 1.5) : Theme.track
             Behavior on color { ColorAnimation { duration: 160 } }
+            Focus { keyboard: true; visible: t.visualFocus }
             Rectangle {
                 width: 20; height: 20; radius: 10
                 y: 3; x: t.checked !== t.mirrored ? parent.width - width - 3 : 3

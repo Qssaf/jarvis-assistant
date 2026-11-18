@@ -162,7 +162,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+242"/>
+        <location filename="../window.py" line="+243"/>
         <source>Copied</source>
         <translation>コピーしました</translation>
     </message>
@@ -274,7 +274,7 @@
         <translation>Jarvisに質問</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+24"/>
         <source>Pause listening</source>
         <translation>聞き取りを一時停止</translation>
     </message>
@@ -292,6 +292,88 @@
         <location line="+0"/>
         <source>Send (Enter)</source>
         <translation>送信 (Enter)</translation>
+    </message>
+</context>
+<context>
+    <name>CostPage</name>
+    <message>
+        <location filename="../qml/CostPage.qml" line="+11"/>
+        <source>Cost</source>
+        <translation>料金</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis&apos;s model use would cost at Google&apos;s paid-tier prices.</source>
+        <translation>Jarvisのモデル使用量を、Googleの有料ティアの料金で計算した金額です。</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>no price</source>
+        <translation>料金不明</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Today</source>
+        <translation>今日</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>7 days</source>
+        <translation>7日間</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>30 days</source>
+        <translation>30日間</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>%1 tokens at paid-tier prices</source>
+        <translation>有料ティアの料金で%1トークン</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>%1: %2</source>
+        <translation>%1：%2</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Nothing is billed on the free tier or through a Google sign-in: this is what the same use would cost with billing on. Google Search fees aren&apos;t counted.</source>
+        <translation>無料ティアやGoogleログイン経由では料金はかかりません。これは課金を有効にした場合に同じ使用量でかかる金額です。Google Searchの料金は含まれていません。</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>By model</source>
+        <translation>モデル別</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n model(s) have no known price, so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>%n個のモデルは料金が不明なため、合計に含まれていません。</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+25"/>
+        <source>%1 · %n request(s)</source>
+        <translation>
+            <numerusform>%1 · リクエスト%n回</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 in · %2 out</source>
+        <translation>入力%1 · 出力%2</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>No model use yet today.</source>
+        <translation>今日はまだモデルを使っていません。</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No model use in this period.</source>
+        <translation>この期間にモデルの使用はありません。</translation>
     </message>
 </context>
 <context>
@@ -543,7 +625,7 @@
         <translation>新しいチャット</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Backup voice</source>
         <translation>予備の音声</translation>
     </message>
@@ -611,12 +693,17 @@
         <translation>診断</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>Cost</source>
+        <translation>料金</translation>
+    </message>
+    <message>
         <location line="+4"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+63"/>
         <source>Minimise</source>
         <translation>最小化</translation>
     </message>
@@ -932,6 +1019,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Several keys for one provider take over from each other.</source>
+        <translation>同じプロバイダーの複数のキーは、互いに引き継ぎます。</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Kept in %1</source>
         <translation>%1に保存</translation>
     </message>
@@ -942,13 +1034,13 @@
     </message>
     <message>
         <location line="+30"/>
-        <source>Key saved · paste a new one to replace it</source>
-        <translation>キーは保存済み · 新しいキーを貼り付けると置き換えます</translation>
+        <source>Paste an API key</source>
+        <translation>APIキーを貼り付け</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>Paste an API key</source>
-        <translation>APIキーを貼り付け</translation>
+        <source>Paste another key</source>
+        <translation>別のキーを貼り付け</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -971,7 +1063,12 @@
         <translation>このプロバイダーを削除</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+16"/>
+        <source>Resting (rate limited or refused): the next key answers</source>
+        <translation>休止中（制限超過または拒否）：次のキーが応答します</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>More providers</source>
         <translation>その他のプロバイダー</translation>
     </message>
@@ -1056,7 +1153,8 @@
         <translation>優先度を上げる</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-137"/>
+        <location line="+139"/>
         <source>Remove</source>
         <translation>削除</translation>
     </message>
@@ -1069,7 +1167,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2953"/>
+        <location filename="../jarvis.py" line="+3146"/>
         <source>LISTENING</source>
         <translation>聞き取り中</translation>
     </message>
@@ -1168,7 +1266,7 @@
         <translation>今すぐ再試行</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Click again to remove</source>
         <translation>もう一度クリックすると削除します</translation>
     </message>
@@ -2518,7 +2616,7 @@
 <context>
     <name>Theme</name>
     <message>
-        <location filename="../qml/Theme.qml" line="+70"/>
+        <location filename="../qml/Theme.qml" line="+58"/>
         <source>Listening</source>
         <translation>聞き取り中</translation>
     </message>
@@ -2629,7 +2727,7 @@
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+117"/>
+        <location filename="../jarvis.py" line="+122"/>
         <source>Open Jarvis</source>
         <translation>Jarvisを開く</translation>
     </message>

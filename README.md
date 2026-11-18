@@ -268,7 +268,9 @@ Mistral or xAI, or add any other OpenAI-compatible service (LM Studio, vLLM, a p
 provider which models your key can use, so you pick the agent's models (and how hard each thinks) from drop-downs, and
 the voice model from Gemini's real-time ones. Keys are kept in your system
 keychain (Windows Credential Manager, GNOME Keyring / KWallet), or in a private file if there's none. They're never
-saved in settings, never shown again, and never sent over plain http to another machine. The voice uses Gemini Live;
+saved in settings, never shown again (only a key's last four characters, to tell them apart), and never sent over
+plain http to another machine. **Several keys for one provider** take over from each other: paste another and, when
+one is rate limited, out of its daily quota or refused, the next answers (the voice moves on too). The voice uses Gemini Live;
 the backup voice (when Live can't be used) uses the *Hearing you* and *Speaking* models.
 
 **Sign in with Google** (Models page, optional): Gemini and Claude through your Google account's Antigravity quota,

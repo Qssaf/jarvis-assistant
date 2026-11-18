@@ -162,7 +162,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+242"/>
+        <location filename="../window.py" line="+243"/>
         <source>Copied</source>
         <translation>복사됨</translation>
     </message>
@@ -274,7 +274,7 @@
         <translation>Jarvis에게 물어보기</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+24"/>
         <source>Pause listening</source>
         <translation>듣기 일시 중지</translation>
     </message>
@@ -292,6 +292,88 @@
         <location line="+0"/>
         <source>Send (Enter)</source>
         <translation>보내기 (Enter)</translation>
+    </message>
+</context>
+<context>
+    <name>CostPage</name>
+    <message>
+        <location filename="../qml/CostPage.qml" line="+11"/>
+        <source>Cost</source>
+        <translation>비용</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis&apos;s model use would cost at Google&apos;s paid-tier prices.</source>
+        <translation>Jarvis의 모델 사용량을 Google 유료 등급 가격으로 계산한 비용이에요.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>no price</source>
+        <translation>가격 없음</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Today</source>
+        <translation>오늘</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>7 days</source>
+        <translation>7일</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>30 days</source>
+        <translation>30일</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>%1 tokens at paid-tier prices</source>
+        <translation>유료 등급 가격 기준 토큰 %1개</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>%1: %2</source>
+        <translation>%1: %2</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Nothing is billed on the free tier or through a Google sign-in: this is what the same use would cost with billing on. Google Search fees aren&apos;t counted.</source>
+        <translation>무료 등급이나 Google 로그인으로는 요금이 청구되지 않아요. 결제를 사용 설정하면 같은 사용량에 이만큼의 비용이 들어요. Google Search 요금은 포함되지 않아요.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>By model</source>
+        <translation>모델별</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n model(s) have no known price, so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>모델 %n개는 가격을 알 수 없어 합계에 포함되지 않았어요.</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+25"/>
+        <source>%1 · %n request(s)</source>
+        <translation>
+            <numerusform>%1 · 요청 %n회</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 in · %2 out</source>
+        <translation>입력 %1 · 출력 %2</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>No model use yet today.</source>
+        <translation>오늘은 아직 모델 사용이 없어요.</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No model use in this period.</source>
+        <translation>이 기간에는 모델 사용이 없어요.</translation>
     </message>
 </context>
 <context>
@@ -543,7 +625,7 @@
         <translation>새 채팅</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Backup voice</source>
         <translation>백업 음성</translation>
     </message>
@@ -611,12 +693,17 @@
         <translation>진단</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>Cost</source>
+        <translation>비용</translation>
+    </message>
+    <message>
         <location line="+4"/>
         <source>Settings</source>
         <translation>설정</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+63"/>
         <source>Minimise</source>
         <translation>최소화</translation>
     </message>
@@ -932,6 +1019,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Several keys for one provider take over from each other.</source>
+        <translation>한 제공업체의 여러 키는 서로 이어받아 사용됩니다.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Kept in %1</source>
         <translation>%1에 보관됨</translation>
     </message>
@@ -942,13 +1034,13 @@
     </message>
     <message>
         <location line="+30"/>
-        <source>Key saved · paste a new one to replace it</source>
-        <translation>키 저장됨 · 바꾸려면 새 키를 붙여 넣으세요</translation>
+        <source>Paste an API key</source>
+        <translation>API 키 붙여 넣기</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>Paste an API key</source>
-        <translation>API 키 붙여 넣기</translation>
+        <source>Paste another key</source>
+        <translation>다른 키 붙여넣기</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -971,7 +1063,12 @@
         <translation>이 제공업체 제거</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+16"/>
+        <source>Resting (rate limited or refused): the next key answers</source>
+        <translation>쉬는 중(한도 초과 또는 거부됨): 다음 키가 응답합니다</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>More providers</source>
         <translation>다른 제공업체</translation>
     </message>
@@ -1056,7 +1153,8 @@
         <translation>이 모델을 더 먼저 시도</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-137"/>
+        <location line="+139"/>
         <source>Remove</source>
         <translation>제거</translation>
     </message>
@@ -1069,7 +1167,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2953"/>
+        <location filename="../jarvis.py" line="+3146"/>
         <source>LISTENING</source>
         <translation>듣는 중</translation>
     </message>
@@ -1168,7 +1266,7 @@
         <translation>지금 시도</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Click again to remove</source>
         <translation>한 번 더 클릭하면 제거돼요</translation>
     </message>
@@ -2518,7 +2616,7 @@
 <context>
     <name>Theme</name>
     <message>
-        <location filename="../qml/Theme.qml" line="+70"/>
+        <location filename="../qml/Theme.qml" line="+58"/>
         <source>Listening</source>
         <translation>듣는 중</translation>
     </message>
@@ -2629,7 +2727,7 @@
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+117"/>
+        <location filename="../jarvis.py" line="+122"/>
         <source>Open Jarvis</source>
         <translation>Jarvis 열기</translation>
     </message>

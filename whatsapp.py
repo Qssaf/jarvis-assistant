@@ -26,6 +26,8 @@ CALLER_LIMIT = 3     # calls from one person Jarvis picks up an hour
 ANSWER_AFTER = 20    # seconds a call rings before Jarvis picks up (time for the user to answer on the phone)
 CALL_LIMIT = 300     # seconds: Jarvis wraps a call up after this
 RING_FOR = 45        # seconds Jarvis lets its own call ring before giving up
+SEND_WAIT = 75       # seconds a send or unsend may take: longer than the helper's own 60, so its verdict is the one reported
+# (at 30 a slow send was "failed" while it still went out: sent again, the contact got it twice)
 HEAR = ("Transcribe this voice message word for word, in the language it's spoken in. Answer with only its words, or "
         "\"(no words)\" if nobody speaks.")
 
@@ -353,7 +355,10 @@ class WhatsApp:
         if contact_rule(name) == "always":  # (never answered by Jarvis: said to the user, even in quiet hours)
             self.tell(f"WhatsApp from {name}: {said}", loud=True)
             return
-        if time.time() - self.user_wrote.get(chat, 0) < QUIET:
+        # (the chat's own messages too: after a restart user_wrote is empty, and Jarvis introduced itself in the middle of
+        # the user's conversation)
+        wrote = max([self.user_wrote.get(chat, 0), *(m.get("at") or 0 for m in history if m["me"] and m["id"] not in self.mine)])
+        if time.time() - wrote < QUIET:
             self.notify(f"💬 WhatsApp from {name}: {said} (you're chatting with them, so Jarvis left it)")
             return
         self.replies = [r for r in self.replies if r[0] > time.time() - 3600]
@@ -363,7 +368,7 @@ class WhatsApp:
         decision = self.decide(name, history)
         reply, urgent = decision.get("reply", "").strip()[:700], decision.get("tell_user", "").strip()
         if reply:
-            self._mine(self.ask("send", chat=chat, text=reply))
+            self._mine(self.ask("send", timeout=SEND_WAIT, chat=chat, text=reply))
             self.replies.append((time.time(), chat))
         self.notify(f"💬 WhatsApp from {name}: {said}" + (f"\nJarvis replied: {reply}" if reply else ""))
         if urgent:
@@ -435,7 +440,7 @@ class WhatsApp:
 
     def send(self, chat, text):
         self._need()
-        self._mine(self.ask("send", chat=chat, text=text))
+        self._mine(self.ask("send", timeout=SEND_WAIT, chat=chat, text=text))
         self.user_wrote[chat] = time.time()  # (the user asked for it: as if they wrote it)
 
     def unsend(self, found, text=""):
@@ -446,7 +451,7 @@ class WhatsApp:
             return None
         if time.time() - m["at"] > 2 * 86400:
             raise ValueError("WhatsApp only deletes a message for everyone within two days of sending it")
-        self.ask("unsend", chat=found["chat"], msg=m["id"])
+        self.ask("unsend", timeout=SEND_WAIT, chat=found["chat"], msg=m["id"])
         return m["text"]
 
     def _need(self):
@@ -490,31 +495,48 @@ class WhatsApp:
             if state != "ringing":
                 print(f"[whatsapp] the call is {state} before Jarvis picked up", flush=True)
                 return  # answered on the phone, declined, or they hung up
-        try:
-            self.ask("accept", call=c["id"])
-        except (RuntimeError, TimeoutError) as e:
-            print(f"[whatsapp] picking up {c['name']}: {e}", flush=True)
-            self.notify(f"📞 Couldn't pick up {c['name']}'s call: {e}")
+        with self.lock:  # (again, after the wait: two calls ringing in the same 20 s were both picked up, and Jarvis's
+            # voice went into both)
+            busy = bool(self.call or self.dialing)
+            if not busy:
+                self.call = session = CallSession(self, c)
+        if busy:
+            self.notify(f"📞 WhatsApp {kind} from {c['name']} (Jarvis is on another call)")
             return
-        print(f"[whatsapp] answered a call from {c['name']}", flush=True)
-        self.answered.append((time.time(), c["name"]))
-        self.call = CallSession(self, c)
         try:
-            transcript = self.call.run()
+            # its voice first: picked up with Gemini Live out of reach, the caller was cut off at once or left in silence
+            if not session.open():
+                self.notify(f"📞 WhatsApp {kind} from {c['name']} (Jarvis couldn't pick up: its voice isn't available right now)")
+                return
+            if self.calls.get(c["id"], "over") != "ringing":  # (the user picked up, or they hung up, meanwhile)
+                return
+            try:
+                self.ask("accept", call=c["id"])
+            except (RuntimeError, TimeoutError) as e:
+                print(f"[whatsapp] picking up {c['name']}: {e}", flush=True)
+                self.notify(f"📞 Couldn't pick up {c['name']}'s call: {e}")
+                return
+            print(f"[whatsapp] answered a call from {c['name']}", flush=True)
+            self.answered.append((time.time(), c["name"]))
+            transcript = session.run()
         finally:
+            session.done.set()
             self.call = None
         if transcript:  # (the transcript too, for the agent: asked "did you tell him my address?", it could only guess)
             self.tell(f"I answered {c['name']}'s WhatsApp call. {self.summary(c['name'], transcript)}", transcript=transcript)
+        else:  # (the call's voice couldn't start, or they hung up at once: the user heard nothing more of it)
+            self.tell(f"I picked up {c['name']}'s WhatsApp call, but nothing was said: you may want to call back.")
 
     def dial(self, found, message, on_answer=lambda: None):
         """Phone a contact and give them the message in Jarvis's voice; the user is told how it went when it ends.
         on_answer runs once they pick up (the change log: a call that never connected isn't something Jarvis did)."""
         self._need()
-        if self.call or self.dialing:
-            raise RuntimeError("Jarvis is already on a WhatsApp call")
         if found.get("group"):
             raise RuntimeError("Jarvis calls one person, not a group")
-        self.dialing = True
+        with self.lock:  # (checked and taken in one go: see _ring)
+            if self.call or self.dialing:
+                raise RuntimeError("Jarvis is already on a WhatsApp call")
+            self.dialing = True
         threading.Thread(target=self._dial, args=(found, message, on_answer), daemon=True).start()
 
     def _dial(self, found, message, on_answer):
@@ -553,11 +575,16 @@ class WhatsApp:
                 f"the message got across and what {name} said back") if message else (
                 f"took this phone call from {name} for the user. In one or two plain sentences, tell the user what {name} "
                 f"wanted and any message or callback request")
-        parts = self.brain._generate([{"role": "user", "parts": [{"text": (
-            f"Jarvis (an assistant) {call}, in "
-            f"{store.LANGUAGES[store.settings()['language']].split(' (')[0]}. The other person's side comes from speech recognition: words in an unexpected language are "
-            f"mishearing, so never report them as what was said. Transcript:\n{transcript[:20000]}")}]}])
-        return "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
+        try:
+            parts = self.brain._generate([{"role": "user", "parts": [{"text": (
+                f"Jarvis (an assistant) {call}, in "
+                f"{store.LANGUAGES[store.settings()['language']].split(' (')[0]}. The other person's side comes from speech recognition: words in an unexpected language are "
+                f"mishearing, so never report them as what was said. Transcript:\n{transcript[:20000]}")}]}])
+            said = "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
+        except Exception as e:  # (no model just then: the call still happened, and the user was told nothing of it)
+            print(f"[whatsapp] no summary of the call with {name}: {str(e)[:120]}", flush=True)
+            said = ""
+        return said or "I couldn't sum it up just now. It went: " + " / ".join(transcript.split("\n")[:8])[:500]
 
 
 def contact_rule(names, app="whatsapp"):
@@ -611,18 +638,30 @@ class CallSession:
         self.queue = None
         self.lines = []
         self.done = threading.Event()
+        self.thread, self.live = None, False
+        self.ready, self.go = threading.Event(), threading.Event()  # its voice is up (or won't be); the call is picked up
 
     def heard(self, pcm):
         if self.queue and not self.done.is_set():  # (the call's loop closes once it's over)
             self.loop.call_soon_threadsafe(self.queue.put_nowait, pcm)
 
-    def run(self):
+    def open(self, wait=15):
+        """Bring the call's voice up before the call is picked up: True once Gemini Live is connected (it says nothing
+        until run)."""
         def talk():
             try:
                 self.loop.run_until_complete(self._talk())
             finally:
                 self.loop.close()  # (one loop per call: left open, each call kept its file descriptors for good)
-        threading.Thread(target=talk, daemon=True).start()
+        if not self.thread:
+            self.thread = threading.Thread(target=talk, daemon=True)
+            self.thread.start()
+        self.ready.wait(wait)
+        return self.live and not self.done.is_set()
+
+    def run(self):
+        self.open(0)
+        self.go.set()
         try:
             end = time.time() + CALL_LIMIT + 30
             while not self.done.wait(1) and time.time() < end:
@@ -637,30 +676,36 @@ class CallSession:
         return "\n".join(self.lines)
 
     async def _talk(self):
-        from google import genai
-        from brain import api_key
-        t = genai.types
-        cfg = store.settings()
-        self.queue = asyncio.Queue()
-        prompt = ((DIAL_PROMPT.replace("{MESSAGE}", self.message.replace('"', "'")) if self.message else CALL_PROMPT)
-                  .replace("{NAME}", self.wa._me()).replace("{WHO}", self.who).replace("{NOTE}", self.wa._note())
-                  .replace("{FREE}", self.wa._free())
-                  .replace("{LANGUAGE}", call_languages(cfg)))
-        config = t.LiveConnectConfig(
-            response_modalities=["AUDIO"], system_instruction=prompt,
-            speech_config=t.SpeechConfig(**({} if cfg["languages"] else {"language_code": cfg["language"]}),
-                                         voice_config=t.VoiceConfig(prebuilt_voice_config=t.PrebuiltVoiceConfig(voice_name=cfg["voice"]))),
-            # (hearing only these: it "heard" Korean or Spanish in a noisy call, and answered in it)
-            input_audio_transcription=t.AudioTranscriptionConfig(language_hints=t.LanguageHints(
-                language_codes=list(dict.fromkeys([cfg["language"], *cfg["languages"]])))),
-            output_audio_transcription={},
-            # (turn-taking like Jarvis's own voice: it answers once the caller stops, not seconds later)
-            **({"thinking_config": t.ThinkingConfig(thinking_budget=0)} if cfg["fast_voice"] else {}),
-            realtime_input_config=t.RealtimeInputConfig(automatic_activity_detection=t.AutomaticActivityDetection(
-                end_of_speech_sensitivity="END_SENSITIVITY_HIGH", silence_duration_ms=cfg["end_of_speech_ms"])),
-            tools=[{"function_declarations": [{"name": "end_call", "description": "Hang up: the conversation is over."}]}])
         try:
+            from google import genai
+            from brain import api_key
+            t = genai.types
+            cfg = store.settings()
+            self.queue = asyncio.Queue()
+            prompt = ((DIAL_PROMPT.replace("{MESSAGE}", self.message.replace('"', "'")) if self.message else CALL_PROMPT)
+                      .replace("{NAME}", self.wa._me()).replace("{WHO}", self.who).replace("{NOTE}", self.wa._note())
+                      .replace("{FREE}", self.wa._free())
+                      .replace("{LANGUAGE}", call_languages(cfg)))
+            config = t.LiveConnectConfig(
+                response_modalities=["AUDIO"], system_instruction=prompt,
+                speech_config=t.SpeechConfig(**({} if cfg["languages"] else {"language_code": cfg["language"]}),
+                                             voice_config=t.VoiceConfig(prebuilt_voice_config=t.PrebuiltVoiceConfig(voice_name=cfg["voice"]))),
+                # (hearing only these: it "heard" Korean or Spanish in a noisy call, and answered in it)
+                input_audio_transcription=t.AudioTranscriptionConfig(language_hints=t.LanguageHints(
+                    language_codes=list(dict.fromkeys([cfg["language"], *cfg["languages"]])))),
+                output_audio_transcription={},
+                # (turn-taking like Jarvis's own voice: it answers once the caller stops, not seconds later)
+                **({"thinking_config": t.ThinkingConfig(thinking_budget=0)} if cfg["fast_voice"] else {}),
+                realtime_input_config=t.RealtimeInputConfig(automatic_activity_detection=t.AutomaticActivityDetection(
+                    end_of_speech_sensitivity="END_SENSITIVITY_HIGH", silence_duration_ms=cfg["end_of_speech_ms"])),
+                tools=[{"function_declarations": [{"name": "end_call", "description": "Hang up: the conversation is over."}]}])
             async with genai.Client(api_key=api_key()).aio.live.connect(model=cfg["live_model"], config=config) as s:
+                self.live = True
+                self.ready.set()
+                while not self.go.is_set():  # (opened before the pickup: nothing is said until the call is connected)
+                    if self.done.is_set():
+                        return
+                    await asyncio.sleep(0.05)
                 if self.message:  # they say "hello?" first: talking over it at once, Jarvis was half lost
                     for _ in range(8):
                         if self.lines:
@@ -678,6 +723,8 @@ class CallSession:
                     while True:
                         async for m in s.receive():  # (one model turn at a time)
                             sc = m.server_content
+                            if getattr(m, "usage_metadata", None):  # (the Cost page)
+                                brain.count_live(cfg["live_model"], m.usage_metadata)
                             if m.tool_call:  # end_call
                                 if not self.may_hang_up():
                                     await s.send_tool_response(function_responses=[t.FunctionResponse(
@@ -713,6 +760,7 @@ class CallSession:
             print(f"[whatsapp] call: {e}", flush=True)
         finally:
             self.done.set()
+            self.ready.set()
 
     def may_hang_up(self):
         """Only once they've said something since Jarvis started talking, or stayed quiet 15 s after it last spoke: it gave

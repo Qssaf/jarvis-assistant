@@ -26,6 +26,7 @@ ComboBox {
         border.color: c.popup.visible ? Theme.accent : Theme.stroke
         Behavior on color { ColorAnimation { duration: Theme.fast } }
         Focus { visible: c.popup.visible }
+        Focus { keyboard: true; visible: c.visualFocus && !c.popup.visible }
     }
     contentItem: Text {
         leftPadding: c.mirrored ? 36 : 14  // (the chevron's side is kept clear)

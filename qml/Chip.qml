@@ -9,7 +9,9 @@ AbstractButton {
     property bool active: checked
     property color ink: active ? Theme.accent : Theme.text2
     hoverEnabled: true
-    focusPolicy: Qt.NoFocus
+    focusPolicy: Qt.TabFocus  // (Tab reaches it; a click leaves the typing where it was)
+    Keys.onReturnPressed: click()
+    Keys.onEnterPressed: click()
     implicitHeight: 32
     implicitWidth: row.implicitWidth + 26
     background: Rectangle {
@@ -18,6 +20,7 @@ AbstractButton {
         border.width: 1
         border.color: c.active ? Theme.alpha(Theme.accent, 0.3) : Theme.stroke
         Behavior on color { ColorAnimation { duration: Theme.fast } }
+        Focus { keyboard: true; visible: c.visualFocus }
     }
     contentItem: Item {
         Row {

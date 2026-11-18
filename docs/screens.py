@@ -1,8 +1,8 @@
 """Renders the window's pages to PNGs with made-up data, off screen (nothing of the real user's shows: own config
 dirs, canned API answers). For design work and the README's pictures:
 
-    .venv/bin/python docs/screens.py OUT_DIR [home home-empty chats activity accounts plugins models memory settings
-                                               health setup] [--size 1280x820] [--state idle|listening|thinking|speaking]
+    .venv/bin/python docs/screens.py OUT_DIR [home home-empty chats activity accounts plugins models memory cost
+                                               cost-month settings health setup] [--size 1280x820] [--state idle|listening|thinking|speaking]
 
 WINDOW_LANGUAGES="ar" (or "ja de"...) renders it in those languages.
 """
@@ -28,6 +28,7 @@ brain.PLUGIN_CONSTANTS = [os.path.join(tmp, "constants.js")]
 brain.google_accounts = lambda: [{"email": "sam@example.com", "source": "jarvis"}]
 brain.google_client = lambda: True
 brain.api_key = lambda: "made-up"
+jarvis.store.set_secret("aistudio", "made-up-key-one-4f2a\nmade-up-key-two-9c1e")  # (two keys: the Models page lists them)
 brain.ollama_models = lambda: []
 
 NOW = time.time()
@@ -101,9 +102,26 @@ STUB = types.SimpleNamespace(
                               "live": ["gemini-3.8-live"]})
 
 
+def cost(days):
+    """A made-up Cost page: a day's use of each model (requests, tokens in, out, USD or None), spread over the period."""
+    day = [("aistudio gemini-3.8-live", 38, 160_000, 52_000, 1.014), ("antigravity gemini-3.8-flash", 46, 420_000, 11_000, 0.356),
+           ("aistudio gemini-4-hydrogen", 4, 38_000, 3_000, 0.08), ("aistudio gemini-3.5-flash-lite", 63, 210_000, 6_000, 0.078),
+           ("aistudio gemini-3.7-flash", 2, 12_000, 1_000, None)]
+    spread = [0.6, 1.1, 0.4, 0.9, 1.3, 0.2, 1.0, 0.8, 1.2, 0.5][:days] * 3 if days > 1 else [1.0]
+    spread = spread[:days]
+    stamps = [time.strftime("%Y-%m-%d", time.localtime(time.time() - i * 86400)) for i in range(days - 1, -1, -1)]
+    total = sum(sum(c or 0 for *_, c in day) * f for f in spread)
+    return {"total": round(total, 6), "tokens": int(sum((i + o) for _, _, i, o, _ in day) * sum(spread)), "unpriced": 1,
+            "days": [{"day": d, "cost": round(sum(c or 0 for *_, c in day) * f, 6)} for d, f in zip(stamps, spread)],
+            "models": [{"key": k, "requests": int(r * sum(spread)), "input": int(i * sum(spread)), "output": int(o * sum(spread)),
+                        "cost": None if c is None else round(c * sum(spread), 6)} for k, r, i, o, c in day]}
+
+
 def get(path):
     if path in CANNED:
         return CANNED[path]
+    if path.startswith("/api/cost"):
+        return cost(int(path.partition("days=")[2] or 1))
     if path.startswith("/api/sessions/"):
         return CANNED["/api/conversation"]
     if path.startswith("/api/search"):
@@ -123,7 +141,8 @@ def main():
     if "--state" in args:
         state = args.pop(args.index("--state") + 1)
         args.remove("--state")
-    pages = args or ["home", "home-empty", "chats", "activity", "accounts", "plugins", "models", "memory", "settings", "health", "setup"]
+    pages = args or ["home", "home-empty", "chats", "activity", "accounts", "plugins", "models", "memory", "cost", "cost-month", "settings",
+                     "health", "setup"]
     os.makedirs(out, exist_ok=True)
     if len(pages) > 1:  # (one window per process: Qt allows only one)
         import subprocess
@@ -146,11 +165,14 @@ def main():
     root.setProperty("width", w)
     root.setProperty("height", h)
     root.setProperty("needsSetup", page == "setup")
-    root.setProperty("page", "home" if page in ("home-empty", "setup") else page)
+    root.setProperty("page", "home" if page in ("home-empty", "setup") else "cost" if page == "cost-month" else page)
     settle = time.time() + 2.0
     while time.time() < settle:
         qt.processEvents()
         time.sleep(0.02)
+    if page == "cost-month":  # (the 30 days chip, pressed)
+        from PySide6.QtCore import QObject
+        root.findChild(QObject, "costPage").setProperty("days", 30)
     root.setProperty("needsSetup", page == "setup")  # (the window asks the settings once it's up)
     settle = time.time() + 0.5
     while time.time() < settle:

@@ -163,7 +163,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+242"/>
+        <location filename="../window.py" line="+243"/>
         <source>Copied</source>
         <translation>Gekopieerd</translation>
     </message>
@@ -278,7 +278,7 @@
         <translation>Vraag Jarvis iets</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+24"/>
         <source>Pause listening</source>
         <translation>Luisteren pauzeren</translation>
     </message>
@@ -296,6 +296,90 @@
         <location line="+0"/>
         <source>Send (Enter)</source>
         <translation>Versturen (Enter)</translation>
+    </message>
+</context>
+<context>
+    <name>CostPage</name>
+    <message>
+        <location filename="../qml/CostPage.qml" line="+11"/>
+        <source>Cost</source>
+        <translation>Kosten</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis&apos;s model use would cost at Google&apos;s paid-tier prices.</source>
+        <translation>Wat het modelgebruik van Jarvis zou kosten tegen de prijzen van het betaalde niveau van Google.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>no price</source>
+        <translation>geen prijs</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Today</source>
+        <translation>Vandaag</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>7 days</source>
+        <translation>7 dagen</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>30 days</source>
+        <translation>30 dagen</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>%1 tokens at paid-tier prices</source>
+        <translation>%1 tokens tegen de prijzen van het betaalde niveau</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>%1: %2</source>
+        <translation>%1: %2</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Nothing is billed on the free tier or through a Google sign-in: this is what the same use would cost with billing on. Google Search fees aren&apos;t counted.</source>
+        <translation>Op het gratis niveau of via een Google-aanmelding wordt niets in rekening gebracht: dit is wat hetzelfde gebruik zou kosten met facturering aan. Kosten voor Google Search zijn niet meegeteld.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>By model</source>
+        <translation>Per model</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n model(s) have no known price, so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>%n model heeft geen bekende prijs en telt daarom niet mee in het totaal.</numerusform>
+            <numerusform>%n modellen hebben geen bekende prijs en tellen daarom niet mee in het totaal.</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+25"/>
+        <source>%1 · %n request(s)</source>
+        <translation>
+            <numerusform>%1 · %n verzoek</numerusform>
+            <numerusform>%1 · %n verzoeken</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 in · %2 out</source>
+        <translation>%1 in · %2 uit</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>No model use yet today.</source>
+        <translation>Vandaag nog geen modelgebruik.</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No model use in this period.</source>
+        <translation>Geen modelgebruik in deze periode.</translation>
     </message>
 </context>
 <context>
@@ -550,7 +634,7 @@
         <translation>Nieuwe chat</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Backup voice</source>
         <translation>Reservestem</translation>
     </message>
@@ -618,12 +702,17 @@
         <translation>Diagnose</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>Cost</source>
+        <translation>Kosten</translation>
+    </message>
+    <message>
         <location line="+4"/>
         <source>Settings</source>
         <translation>Instellingen</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+63"/>
         <source>Minimise</source>
         <translation>Minimaliseren</translation>
     </message>
@@ -942,6 +1031,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Several keys for one provider take over from each other.</source>
+        <translation>Meerdere sleutels voor één aanbieder nemen het van elkaar over.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Kept in %1</source>
         <translation>Bewaard in %1</translation>
     </message>
@@ -952,13 +1046,13 @@
     </message>
     <message>
         <location line="+30"/>
-        <source>Key saved · paste a new one to replace it</source>
-        <translation>Sleutel opgeslagen · plak een nieuwe om hem te vervangen</translation>
+        <source>Paste an API key</source>
+        <translation>Plak een API-sleutel</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>Paste an API key</source>
-        <translation>Plak een API-sleutel</translation>
+        <source>Paste another key</source>
+        <translation>Plak nog een sleutel</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -981,7 +1075,12 @@
         <translation>Deze aanbieder verwijderen</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+16"/>
+        <source>Resting (rate limited or refused): the next key answers</source>
+        <translation>Rust (limiet bereikt of geweigerd): de volgende sleutel antwoordt</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>More providers</source>
         <translation>Meer aanbieders</translation>
     </message>
@@ -1066,7 +1165,8 @@
         <translation>Deze eerder proberen</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-137"/>
+        <location line="+139"/>
         <source>Remove</source>
         <translation>Verwijderen</translation>
     </message>
@@ -1079,7 +1179,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2953"/>
+        <location filename="../jarvis.py" line="+3146"/>
         <source>LISTENING</source>
         <translation>LUISTERT</translation>
     </message>
@@ -1181,7 +1281,7 @@
         <translation>Nu proberen</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Click again to remove</source>
         <translation>Klik nogmaals om te verwijderen</translation>
     </message>
@@ -2531,7 +2631,7 @@
 <context>
     <name>Theme</name>
     <message>
-        <location filename="../qml/Theme.qml" line="+70"/>
+        <location filename="../qml/Theme.qml" line="+58"/>
         <source>Listening</source>
         <translation>Luistert</translation>
     </message>
@@ -2642,7 +2742,7 @@
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+117"/>
+        <location filename="../jarvis.py" line="+122"/>
         <source>Open Jarvis</source>
         <translation>Jarvis openen</translation>
     </message>

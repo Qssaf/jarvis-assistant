@@ -134,6 +134,7 @@ Item {
             id: backup
             anchors { verticalCenter: fresh.verticalCenter; left: parent.left; leftMargin: (parent.width - home.column) / 2 }
             visible: Backend.backup
+            focusPolicy: Qt.NoFocus
             dot: "working"
             text: qsTr("Backup voice")
             Tip { text: qsTr("The backup voice (Models page) answers instead of Gemini Live"); visible: backup.hovered }
@@ -240,7 +241,9 @@ Item {
         property string title
         property string hint
         hoverEnabled: true
-        focusPolicy: Qt.NoFocus
+        focusPolicy: Qt.TabFocus  // (Tab reaches it; a click leaves the typing where it was)
+        Keys.onReturnPressed: click()
+        Keys.onEnterPressed: click()
         implicitHeight: 76
         onClicked: Backend.send(title)
         background: Glass {
@@ -248,6 +251,7 @@ Item {
             border.color: s.hovered ? Theme.alpha(Theme.accent, 0.3) : Theme.stroke
             Behavior on color { ColorAnimation { duration: Theme.fast } }
             Behavior on border.color { ColorAnimation { duration: Theme.fast } }
+            Focus { keyboard: true; visible: s.visualFocus }
         }
         contentItem: Item {
             Rectangle {

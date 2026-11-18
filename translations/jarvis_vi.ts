@@ -162,7 +162,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+242"/>
+        <location filename="../window.py" line="+243"/>
         <source>Copied</source>
         <translation>Đã sao chép</translation>
     </message>
@@ -274,7 +274,7 @@
         <translation>Hỏi Jarvis</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+24"/>
         <source>Pause listening</source>
         <translation>Tạm dừng nghe</translation>
     </message>
@@ -292,6 +292,88 @@
         <location line="+0"/>
         <source>Send (Enter)</source>
         <translation>Gửi (Enter)</translation>
+    </message>
+</context>
+<context>
+    <name>CostPage</name>
+    <message>
+        <location filename="../qml/CostPage.qml" line="+11"/>
+        <source>Cost</source>
+        <translation>Chi phí</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis&apos;s model use would cost at Google&apos;s paid-tier prices.</source>
+        <translation>Chi phí cho lượt dùng mô hình của Jarvis nếu tính theo giá gói trả phí của Google.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>no price</source>
+        <translation>chưa có giá</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Today</source>
+        <translation>Hôm nay</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>7 days</source>
+        <translation>7 ngày</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>30 days</source>
+        <translation>30 ngày</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>%1 tokens at paid-tier prices</source>
+        <translation>%1 token theo giá gói trả phí</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>%1: %2</source>
+        <translation>%1: %2</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Nothing is billed on the free tier or through a Google sign-in: this is what the same use would cost with billing on. Google Search fees aren&apos;t counted.</source>
+        <translation>Gói miễn phí hoặc khi đăng nhập bằng Google thì không bị tính phí: đây là chi phí cho cùng mức sử dụng nếu bật thanh toán. Không tính phí Google Search.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>By model</source>
+        <translation>Theo mô hình</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n model(s) have no known price, so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>%n mô hình chưa có giá nên không được tính vào tổng.</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+25"/>
+        <source>%1 · %n request(s)</source>
+        <translation>
+            <numerusform>%1 · %n yêu cầu</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 in · %2 out</source>
+        <translation>%1 đầu vào · %2 đầu ra</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>No model use yet today.</source>
+        <translation>Hôm nay chưa có lượt dùng mô hình nào.</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No model use in this period.</source>
+        <translation>Không có lượt dùng mô hình nào trong khoảng thời gian này.</translation>
     </message>
 </context>
 <context>
@@ -543,7 +625,7 @@
         <translation>Trò chuyện mới</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Backup voice</source>
         <translation>Giọng dự phòng</translation>
     </message>
@@ -611,12 +693,17 @@
         <translation>Tình trạng</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>Cost</source>
+        <translation>Chi phí</translation>
+    </message>
+    <message>
         <location line="+4"/>
         <source>Settings</source>
         <translation>Cài đặt</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+63"/>
         <source>Minimise</source>
         <translation>Thu nhỏ</translation>
     </message>
@@ -932,6 +1019,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Several keys for one provider take over from each other.</source>
+        <translation>Nhiều khóa của cùng một nhà cung cấp sẽ thay phiên nhau.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Kept in %1</source>
         <translation>Lưu trong %1</translation>
     </message>
@@ -942,13 +1034,13 @@
     </message>
     <message>
         <location line="+30"/>
-        <source>Key saved · paste a new one to replace it</source>
-        <translation>Đã lưu khóa · dán khóa mới để thay thế</translation>
+        <source>Paste an API key</source>
+        <translation>Dán khóa API</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>Paste an API key</source>
-        <translation>Dán khóa API</translation>
+        <source>Paste another key</source>
+        <translation>Dán thêm một khóa</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -971,7 +1063,12 @@
         <translation>Gỡ nhà cung cấp này</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+16"/>
+        <source>Resting (rate limited or refused): the next key answers</source>
+        <translation>Đang nghỉ (bị giới hạn hoặc bị từ chối): khóa tiếp theo trả lời</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>More providers</source>
         <translation>Thêm nhà cung cấp</translation>
     </message>
@@ -1056,7 +1153,8 @@
         <translation>Ưu tiên thử sớm hơn</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-137"/>
+        <location line="+139"/>
         <source>Remove</source>
         <translation>Gỡ bỏ</translation>
     </message>
@@ -1069,7 +1167,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2953"/>
+        <location filename="../jarvis.py" line="+3146"/>
         <source>LISTENING</source>
         <translation>ĐANG NGHE</translation>
     </message>
@@ -1168,7 +1266,7 @@
         <translation>Thử ngay</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Click again to remove</source>
         <translation>Nhấn lần nữa để gỡ</translation>
     </message>
@@ -2518,7 +2616,7 @@
 <context>
     <name>Theme</name>
     <message>
-        <location filename="../qml/Theme.qml" line="+70"/>
+        <location filename="../qml/Theme.qml" line="+58"/>
         <source>Listening</source>
         <translation>Đang nghe</translation>
     </message>
@@ -2629,7 +2727,7 @@
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+117"/>
+        <location filename="../jarvis.py" line="+122"/>
         <source>Open Jarvis</source>
         <translation>Mở Jarvis</translation>
     </message>

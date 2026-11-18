@@ -66,6 +66,8 @@ Glass {
                     leftPadding: 4
                     background: null
                     focus: true
+                    Keys.onTabPressed: nextItemInFocusChain().forceActiveFocus(Qt.TabFocusReason)
+                    Keys.onBacktabPressed: nextItemInFocusChain(false).forceActiveFocus(Qt.BacktabFocusReason)
                     Keys.onReturnPressed: event => {
                         if (event.modifiers & Qt.ShiftModifier) { event.accepted = false; return }
                         c.submitted(text)

@@ -167,7 +167,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+242"/>
+        <location filename="../window.py" line="+243"/>
         <source>Copied</source>
         <translation>تم النسخ</translation>
     </message>
@@ -294,7 +294,7 @@
         <translation>اسأل Jarvis</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+24"/>
         <source>Pause listening</source>
         <translation>إيقاف الاستماع مؤقتًا</translation>
     </message>
@@ -312,6 +312,98 @@
         <location line="+0"/>
         <source>Send (Enter)</source>
         <translation>إرسال (Enter)</translation>
+    </message>
+</context>
+<context>
+    <name>CostPage</name>
+    <message>
+        <location filename="../qml/CostPage.qml" line="+11"/>
+        <source>Cost</source>
+        <translation>التكلفة</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis&apos;s model use would cost at Google&apos;s paid-tier prices.</source>
+        <translation>ما كان سيكلّفه استخدام Jarvis للنماذج بأسعار الفئة المدفوعة من Google.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>no price</source>
+        <translation>بلا سعر</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Today</source>
+        <translation>اليوم</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>7 days</source>
+        <translation>7 أيام</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>30 days</source>
+        <translation>30 يومًا</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>%1 tokens at paid-tier prices</source>
+        <translation>%1 من الرموز بأسعار الفئة المدفوعة</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>%1: %2</source>
+        <translation>%1: %2</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Nothing is billed on the free tier or through a Google sign-in: this is what the same use would cost with billing on. Google Search fees aren&apos;t counted.</source>
+        <translation>لا يُحتسب أي مبلغ في الفئة المجانية أو عند تسجيل الدخول بحساب Google: هذا ما كان سيكلّفه الاستخدام نفسه مع تفعيل الفوترة. رسوم Google Search غير محتسبة.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>By model</source>
+        <translation>حسب النموذج</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n model(s) have no known price, so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>%n نموذج بلا سعر معروف، لذا لا يدخل في الإجمالي.</numerusform>
+            <numerusform>نموذج واحد بلا سعر معروف، لذا لا يدخل في الإجمالي.</numerusform>
+            <numerusform>نموذجان بلا سعر معروف، لذا لا يدخلان في الإجمالي.</numerusform>
+            <numerusform>%n نماذج بلا سعر معروف، لذا لا تدخل في الإجمالي.</numerusform>
+            <numerusform>%n نموذجًا بلا سعر معروف، لذا لا تدخل في الإجمالي.</numerusform>
+            <numerusform>%n نموذج بلا سعر معروف، لذا لا تدخل في الإجمالي.</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+25"/>
+        <source>%1 · %n request(s)</source>
+        <translation>
+            <numerusform>%1 · %n طلب</numerusform>
+            <numerusform>%1 · طلب واحد</numerusform>
+            <numerusform>%1 · طلبان</numerusform>
+            <numerusform>%1 · %n طلبات</numerusform>
+            <numerusform>%1 · %n طلبًا</numerusform>
+            <numerusform>%1 · %n طلب</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 in · %2 out</source>
+        <translation>%1 إدخال · %2 إخراج</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>No model use yet today.</source>
+        <translation>لا استخدام للنماذج اليوم بعد.</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No model use in this period.</source>
+        <translation>لا استخدام للنماذج في هذه الفترة.</translation>
     </message>
 </context>
 <context>
@@ -578,7 +670,7 @@
         <translation>محادثة جديدة</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Backup voice</source>
         <translation>الصوت الاحتياطي</translation>
     </message>
@@ -646,12 +738,17 @@
         <translation>الحالة</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>Cost</source>
+        <translation>التكلفة</translation>
+    </message>
+    <message>
         <location line="+4"/>
         <source>Settings</source>
         <translation>الإعدادات</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+63"/>
         <source>Minimise</source>
         <translation>تصغير</translation>
     </message>
@@ -982,6 +1079,11 @@
     </message>
     <message>
         <location line="+1"/>
+        <source>Several keys for one provider take over from each other.</source>
+        <translation>عدة مفاتيح للمزوّد نفسه يتناوب أحدها مكان الآخر.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Kept in %1</source>
         <translation>محفوظ في %1</translation>
     </message>
@@ -992,13 +1094,13 @@
     </message>
     <message>
         <location line="+30"/>
-        <source>Key saved · paste a new one to replace it</source>
-        <translation>حُفظ المفتاح · الصق مفتاحًا جديدًا لاستبداله</translation>
+        <source>Paste an API key</source>
+        <translation>الصق مفتاح API</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>Paste an API key</source>
-        <translation>الصق مفتاح API</translation>
+        <source>Paste another key</source>
+        <translation>الصق مفتاحًا آخر</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1021,7 +1123,12 @@
         <translation>إزالة هذا المزوّد</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+16"/>
+        <source>Resting (rate limited or refused): the next key answers</source>
+        <translation>في استراحة (تجاوز الحد أو رُفض): المفتاح التالي يجيب</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>More providers</source>
         <translation>مزوّدون آخرون</translation>
     </message>
@@ -1106,7 +1213,8 @@
         <translation>تقديمه في الترتيب</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-137"/>
+        <location line="+139"/>
         <source>Remove</source>
         <translation>إزالة</translation>
     </message>
@@ -1119,7 +1227,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+2953"/>
+        <location filename="../jarvis.py" line="+3146"/>
         <source>LISTENING</source>
         <translation>يستمع</translation>
     </message>
@@ -1233,7 +1341,7 @@
         <translation>أعد المحاولة الآن</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+13"/>
         <source>Click again to remove</source>
         <translation>انقر مجددًا للإزالة</translation>
     </message>
@@ -2583,7 +2691,7 @@
 <context>
     <name>Theme</name>
     <message>
-        <location filename="../qml/Theme.qml" line="+70"/>
+        <location filename="../qml/Theme.qml" line="+58"/>
         <source>Listening</source>
         <translation>يستمع</translation>
     </message>
@@ -2694,7 +2802,7 @@
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+117"/>
+        <location filename="../jarvis.py" line="+122"/>
         <source>Open Jarvis</source>
         <translation>فتح Jarvis</translation>
     </message>

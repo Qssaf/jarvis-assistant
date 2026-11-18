@@ -96,12 +96,27 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   the next one asked beside it and the first answer wins; the slow one's late failure still marks it down. A test that
   stubs `threading.Thread` must let those through (only `probe` is stubbed).
   When none answers it raises `NoModel`; a task's step (`_think`) then waits and asks again (`PATIENCE`) while that's
-  `transient`, and at `MAX_STEPS` the model is asked once, without tools, for what's done and what's left.
+  `transient`, and at `MAX_STEPS` the model is asked once, without tools, for what's done and what's left. A reply with
+  no text and no call is asked again (three in a row: the task says it got no answer, never "Done."). A task that
+  fails after steps ran keeps them (`Task.failed` ends its history, joined by `ask`), and the error names what ran.
   Independent calls (accounts, plugins, `PARALLEL_TOOLS`) run in parallel; screen tools keep their order.
 - A voice call of a change (`ONCE_TOOLS`, or an account tool that isn't `is_read_action`) goes through `_send_once`: the
-  same arguments again before the user speaks are refused (the model re-calls a send right after it worked).
+  same arguments again before the user speaks are refused (the model re-calls a send right after it worked), and so is
+  one whose first answer never reached the model (`told`, set when `_quick` delivers): a cut-off call still finishes
+  (shielded), so `_quick` answers it "NOT stopped", never "cancelled" (only an act that types nothing really stops).
+  A result is SILENT after Gemini spoke only for a change that worked: reads (`QUERY_TOOLS`, account reads) and errors are said.
+- Context: `recent_talk` is the conversation as both models get it ("HH:MM who: text", newest last; notices only from
+  the last `NOTICE_KEEP`). `_config` puts it in the voice's prompt; a do_task passes it as `Brain.ask(context=)` (its
+  task text is the voice's summary: the user's words win); people's messages and calls shown while a session is open go
+  in as `Live.notice` (client content, `turn_complete=False`, at a quiet moment or before the next request). A voice
+  `whatsapp_send`/`discord_send` to someone the user didn't name while they're talking with someone else there is
+  refused once (`wrong_person`), a different second message to the same chat for one request always (`sent_to`), and
+  typed text is never `ignore`d. `evals/voice_eval.py`'s cases can seed the chat (`talk`) and mirror those gates.
 - `Live` has resilience logic that's easy to break: request tracking (`inflight`), session resumption, `_recover`
   and `_relisten` after drops, the `_watch` silence watchdog, and half-duplex mic gating while the speaker plays.
+  `_recover` and the watchdog stand back only for the request's own work (`_own_work`: a quick tool running, or a
+  do_task this request started, kept in `inflight["tasks"]`), never for another request's task; quick tools whose
+  answers can't be sent because the session closed reopen one and hand them over (`_hand_over`, as `_task` does).
   A tool reply sent with `scheduling="SILENT"` (always for `stop_listening` and `ignore`, the voice's "say nothing" for noise) gets no spoken answer, so the request
   must be cleared (`inflight = None`) or the watchdog reconnects 12 s later and re-asks. Something Jarvis says on its
   own (`announce`: reminders, scheduled tasks, `--say`) waits 25 s instead, and never asks the user to repeat it. Code in `_run`'s `except`
@@ -123,7 +138,8 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   A query tool asked again with the same arguments while the first is still running (noise "interrupting" makes the
   model re-ask) shares that run's answer (`asked`); a finished one is shared for 3 s at most, never longer (a screen or
   a list may have changed). A voice act that types goes through `_type_once` (shielded, one at a time): the same text
-  isn't sent again until the user speaks, and text a cancelled act left in the box isn't typed over it.
+  isn't sent again until the user speaks, and text isn't typed over what's in the box when the act before was cut off
+  (`left`) or nothing was said since (a finished act's text is typed again when the user asks).
 - Tasks run side by side (`brain.running`, each a `brain.Task`: its own `contents`, `cancel`, `remote`, `unattended`,
   `passphrase_ok`, `label`). `Brain.ask` gives a task a copy of the conversation and `_join`s its turn back when done:
   the whole trace if no other task joined meanwhile (`joined`), else just what was asked and answered; nothing after
@@ -146,6 +162,7 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   2 min (`CHAMBER_POLL`). Without it, `HARNESSES` (`claude -p --output-format stream-json`, `acceptEdits` unless safety
   is "full"), with the task on stdin (`run_lines(stdin_text=)`: npm's `claude.cmd` goes through cmd.exe, which splits
   free text at quotes, `&` or a new line). Tests use a fake server: never the real one.
+- `check_pass` counts "new since" from the last check that got an answer (`ok` in checks.json), not the last one started.
 - Task reminders (`task: true`) and the `checks` loop run `Brain.ask(..., unattended=True)` (`run_unattended`): its own
   empty history, and `confirmed` is dropped from every agent call (in `_ask`, not `_run_tool`: the voice
   runs its tools there meanwhile), so nothing that waits for a yes runs. A
@@ -193,10 +210,16 @@ replaying `WAKE_PRE_ROLL` frames when sound returns; `evals/wake_eval.py` replay
 `<job>_models` setting (lines `"backend model thinking"`) or the built-in list. `_generate` skips entries in
 `down_until`; a 429 with `PerDay` pauses that model until the Pacific-midnight reset (`quota_reset_in`), and when every
 entry is marked down (a network blip) the first "not answering" one is tried anyway. `count_use` keeps today's requests
-per model for the Health page.
+per model for the Health page. Every backend also records its reply's tokens (`count_tokens` with `gemini_usage` /
+`openai_usage`; Gemini Live's per-request `usage_metadata` through `count_live`, WhatsApp calls too) in `usage.json`
+(90 days); `cost_report` prices them from `PRICES` (Google's paid tier, dated tiers, per modality) for the Cost page.
+Gemini 4 Hydrogen leads `agent_models` only: it refuses "minimal" thinking with a 400 (which ends the chain), and on
+the free key it answered in 35-40 s, hit 503s and used its daily quota up in about ten requests.
 
 **Accounts and plugins.** Plugins are MCP servers (`McpServer`: streamable HTTP with OAuth, or a stdio command). Each
-keeps one connection, and concurrent calls open their own. Composio is the default plugin. For connected toolkits,
+keeps one connection, and concurrent calls open their own. A call that fails is sent again once after reconnecting,
+but a change (`call(again=False)`: not `is_read_action`) only when it surely never arrived (`unsent`). `app_data` reads
+results whole (`limit=None`; the model's copy is capped at 20,000 characters). Composio is the default plugin. For connected toolkits,
 `APP_TOOLS` slugs are loaded as direct tools via `COMPOSIO_GET_TOOL_SCHEMAS` and run through
 `COMPOSIO_MULTI_EXECUTE_TOOL`; `app_data` unwraps Composio's double-wrapped results (None when a call failed: keep
 that distinct from "nothing there", as `briefing` and `classroom_work` do). Remote logins are renewed `REFRESH_EARLY`
@@ -296,7 +319,8 @@ Jarvis.exe (release.yml builds it), next to its source (the AUR package), or bui
 missing or older than the source (install.sh does too). Auto-replies go through `brain._generate` with only that chat
 (no tools, no memory; `{FREE}`: calendar busy times when `whatsapp_share_free`), within `REPLY_LIMIT`/`CHAT_LIMIT` an
 hour; a contact's voice message is transcribed on arrival (`_listen`, `HEAR_LIMIT`) and its words saved as its text
-(`transcript`); the ids Jarvis sent persist in `whatsapp.json` (`mine`); answered calls are a separate Gemini Live session (`CallSession`). The agent's
+(`transcript`); the ids Jarvis sent persist in `whatsapp.json` (`mine`); answered calls are a separate Gemini Live session (`CallSession`:
+`open` connects its voice before `accept`, so a call isn't picked up without one; `_ring` and `dial` take the call under `lock`, one at a time). The agent's
 `whatsapp_read`/`whatsapp_send` reach it through `brain.whatsapp_link`; sending follows the `whatsapp` account mode and
 `confirmed`, and a name must match exactly one chat. What WhatsApp `tell`s the user joins the agent's history
 (`add_turn`, with a call's transcript), except rings (`keep=False`): the history is capped at 80 messages. A 2.1 browser
@@ -323,7 +347,9 @@ out), people pages and memory, newest first; screen history apart. `read_file` o
 are transcribed in order and written up like live notes. Live notes record `both` by default (`system.record_audio`:
 two `pw-record`s, the PC's sound and the mic, mixed by `mix_wavs` when each piece stops; "pc" alone once caught only
 Jarvis's own voice in a meeting held in the room), start the first piece in `start` (a PC that can't record says so),
-and write their file after every piece, named by when they started (`_write`), so a restart keeps the transcript. A voice
+and write their file after every piece, named by when they started (`_write`), so a restart keeps the transcript. A
+piece no model could write down is tried again (`PATIENCE`), then its WAV is kept beside the notes (`_keep`); a recorder
+ends itself after `RECORD_LIMIT` and at exit (`end_recordings`), so none outlives Jarvis. A voice
 `notes` start turns the mic off (the meeting kept the voice answering it). `learn_pass` (every 2 min): once the session's last you/jarvis line is `LEARN_AFTER` old,
 `Brain.learn` asks the agent's models once (`LEARN`) for at most three new facts the user said; `learned.json` is
 stamped first, so a failing model isn't asked again; `learn_from_talk` turns it off.
@@ -357,7 +383,8 @@ names are checked on import). `tidy` (daily `tidy_loop`) deletes what's older th
 **Background loops.** `background(fn, restart=True)` restarts a loop that dies (voice, reminders, calendar/Classroom
 reminders, the user's `checks`, the phone links), with backoff; `system.mic_frames` restarts `pw-record` itself when PipeWire restarts.
 
-**Window and API.** The window is Qt Quick: `window.py` registers a `Backend` QObject as the QML singleton `Jarvis.Backend`
+**Window and API.** Jarvis's own Qt platform (XWayland for the notch) goes in `qt_args`, never `os.environ` (launched
+apps inherited it). The window is Qt Quick: `window.py` registers a `Backend` QObject as the QML singleton `Jarvis.Backend`
 (`qml/*.qml`, theme tokens in `qml/Theme.qml`). QML calls `Api.get/post` → `Backend.request` (thread pool) → `get(path)`/`post(path,
 data)`, which map to `api_get`/`api_post` in jarvis.py, and events from `emit()` reach it because `Backend` sits in `clients` (it has
 `put()`). Polled values (state, mic level) refresh at 30 fps, only while the window is shown (`Backend.watch`); the notch ticks at 30 fps only while it shows. The look ("glass": tokens in `Theme.qml`, shared pieces
@@ -366,7 +393,9 @@ QML gotchas: the engine loads local files only (`window.LocalOnly`): Qt fetches 
 itself, so a reply's image link could carry data out; a web picture is saved first (`system._web_art` for covers). File paths become URLs through `Backend.fileUrl`/`localPath` (`"file://" + path` broke on Windows); `AbstractButton` has a FINAL `icon` (ours is `symbol`); local
 `Label.qml`/`Page.qml` get shadowed by QtQuick.Controls (ours are `Txt`, `ScrollPage`); `#AARRGGBB` colours; font sizes go
 through `Theme.px(n)` (the text-size setting, rounded to whole pixels); QtSvg only reads `#rrggbb`; `window.py` forces the
-Basic style (Windows' native one ignores custom backgrounds). The first-run `SetupWizard` covers the window until
+Basic style (Windows' native one ignores custom backgrounds). Buttons, switches and chips are `Qt.TabFocus` (Tab reaches
+them, a click doesn't move the typing) with `Focus { keyboard: true }` on `visualFocus` and Enter as `click()`; a chip
+that's only a label sets `Qt.NoFocus`; `ScrollPage` scrolls a control Tab reached into view. The first-run `SetupWizard` covers the window until
 `setup_done`. `ScrollPage`'s `index: true` (Settings) lists the page's `Section`s beside it (hidden in a narrow window) and
 jumps to one; Home's "Working on" (`Today.qml`) polls `/api/jobs` (`brain.running`) and stops one task with
 `/api/jobs/<n>/stop`. Every user-visible QML text goes through `qsTr()` (`.arg()` for values, `%n` plurals; Python's tray/notch
@@ -385,7 +414,12 @@ matching Host header. `/api/task` (`jarvis --task`, `jarvis --mcp`) runs unatten
 after a key changes. `to_openai`/`from_openai` translate between the Gemini-format history the agent keeps and the
 OpenAI chat format; Gemini thought signatures ride along as `thoughtSignature` parts and are only sent to Google hosts.
 Keys live in the OS keychain via `store.secret`/`set_secret`, falling back to a 0600 `keys.json`; tests force the file
-fallback with `PYTHON_KEYRING_BACKEND`. The voice uses Gemini Live; when Live can't be opened (`Live._fall_back`, retried
+fallback with `PYTHON_KEYRING_BACKEND`. A provider may have several (`store.secrets`: one keychain entry, a key per
+line; `secret` is the first): `brain.Keys` uses one at a time inside the backend, below the model chain (the one that
+answered last stays; `http_error`'s `key=True`, a 429, 401/403 or Gemini's 400 `API_KEY_INVALID`, rests it, per model
+for a limit, for all for `KEY_REST` when refused), and the chain only sees `Overloaded` once every key rests. One key
+behaves as before. Gemini Live tries each of `gemini_keys()` once per session open (`Live._next_key`,
+`brain.live_key`, which WhatsApp's calls follow). The window only ever gets a key's last four characters. The voice uses Gemini Live; when Live can't be opened (`Live._fall_back`, retried
 after `LIVE_RETRY`) or `always_backup_voice` is on, `Backup` (jarvis.py) takes Live's mic, typed text and announcements:
 it cuts requests at a pause, `Brain.hear` writes them down, `Brain.ask` answers, `Brain.speak` (or `system.speech_wav`)
 says it. `hear`/`speak` are `MODEL_JOBS` whose failures all move on to the next model (`_speech`, no probes).
@@ -443,8 +477,8 @@ frontend-design
 Missing: Go, Kotlin/Compose → vault: none → find-skills if wanted
 
 ## Skill notes
-- requesting-code-review inline (no reviewer agent, never a Workflow: it burned the user's usage): a full-diff pass after green tests still found 6 real bugs; a whole-codebase pass, area by area with a scratch notes file, found 16; a second full read (every file, a repro or failing check per suspect before any fix) found 13 more; the parts never read before (QML pages, evals, packaging) gave 6 more, one a privacy leak a local HTTP server proved: re-reading pays, and so does probing Qt's own behaviour.
-- Tests and evals must stub the real desktop (`system._idle_seconds`, `system.fullscreen`): a full-screen game failed the suite. verification-before-completion includes CI: after a push, check the run really ran and passed (`gh run list`): an unparsable workflow is red with no jobs, unseen for three pushes.
-- Evals: the default chain (no EVAL_MODELS) worked when one model was 503; `EVAL_OUT` is a file path; a new change tool must be simulated in voice_eval first (it runs real tools); Live closes with 1006 once the key's daily quota is gone; 1011 "Resource has been exhausted" after ~12 sessions in 15 min is a short window (back in ~10 min; the running Jarvis shares the key); a spoken-reply check must strip "\u200b" (the model "says" it).
+- requesting-code-review inline (no reviewer agent, never a Workflow: it burned the user's usage): a full-diff pass after green tests still found 6 real bugs; a whole-codebase pass, area by area with a scratch notes file, found 16; a second full read (every file, a repro or failing check per suspect before any fix) found 13 more; the parts never read before (QML pages, evals, packaging) gave 6 more, one a privacy leak a local HTTP server proved: re-reading pays, and so does probing Qt's own behaviour. With Ultracode on and the user asking for few subagents, one read-only 4-reader sweep that had to write a repro script per finding gave 28 real ones (fixes inline, each repro rerun).
+- Tests and evals must stub the real desktop (`system._idle_seconds`, `system.fullscreen`): a full-screen game failed the suite, and the window load read the desktop's real media player (`canned` in the test now answers `/api/media`). verification-before-completion includes CI: after a push, check the run really ran and passed (`gh run list`): an unparsable workflow is red with no jobs, unseen for three pushes.
+- Evals: the default chain (no EVAL_MODELS) worked when one model was 503; `EVAL_OUT` is a file path; a new change tool must be simulated in voice_eval first (it runs real tools); Live closes with 1006 once the key's daily quota is gone; 1011 "Resource has been exhausted" after ~12 sessions in 15 min is a short window (back in ~10 min; the running Jarvis shares the key); a spoken-reply check must strip "\u200b" (the model "says" it). A voice-prompt rule alone fixed a relay case in 2 of 5 runs: run eval cases 3+ times, and back a must-hold behaviour with a code gate (mirrored in voice_eval's simulation).
 - OpenChamber: drive it through its own local `/api` (port in its settings.json); never read its opencode server's password (blocked as credential digging, rightly).
 - "Gives up / can't do X / rate limited" reports: read the logs first (`jarvis.log`; for Google accounts also the opencode plugin's `antigravity-logs/` and the accounts file's limits); the causes were code (a model outage killing the task, a tool missing a capability, the plugin saving 503 "No capacity" as a rate limit) more than the prompt or Google.

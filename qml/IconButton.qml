@@ -14,15 +14,18 @@ AbstractButton {
     implicitWidth: size
     implicitHeight: size
     hoverEnabled: true
-    focusPolicy: Qt.NoFocus
+    focusPolicy: Qt.TabFocus  // (Tab reaches it; a click leaves the typing where it was)
+    Keys.onReturnPressed: click()
+    Keys.onEnterPressed: click()
     Accessible.name: tip  // (a button with only a picture: screen readers say what it does)
-    Tip { text: b.tip; visible: b.tip !== "" && b.hovered }
+    Tip { text: b.tip; visible: b.tip !== "" && (b.hovered || b.visualFocus) }  // (the keyboard gets the name too)
     background: Rectangle {
         radius: width / 2
         color: b.tint.a > 0 ? (b.hovered ? Qt.lighter(b.tint, 1.1) : b.tint) : (b.down ? Theme.glassHover : b.hovered ? Theme.glass : "transparent")
         border.width: b.tint.a === 0 && b.hovered ? 1 : 0
         border.color: Theme.stroke
         Behavior on color { ColorAnimation { duration: Theme.fast } }
+        Focus { keyboard: true; visible: b.visualFocus }
     }
     contentItem: Item {
         Icon { anchors.centerIn: parent; name: b.symbol; size: b.glyph; color: b.iconColor }

@@ -33,6 +33,14 @@ system._idle_seconds = lambda: None  # (no way to tell, and the rest of these ch
 assert system.user_idle() is None
 system.fullscreen = lambda: False  # (the real desktop's: a full-screen game there hushed the reminder checks)
 
+# Gemini 4 Hydrogen leads background tasks (it guesses less); it refuses "minimal" thinking with a 400, which ends the
+# whole model chain, so no built-in list asks it for that
+import store as store_early
+assert store_early.DEFAULT_SETTINGS["agent_models"][0] == "aistudio gemini-4-hydrogen low"
+assert not [e for lst in (brain.LOOK_MODELS, brain.POINT_MODELS, brain.POINT_MODELS_STRONG, brain.SEARCH_MODELS, brain.HEAR_MODELS,
+                          [brain.entry(line) for line in store_early.DEFAULT_SETTINGS["agent_models"]]) for e in lst
+            if e[1].startswith("gemini-4") and e[2] == "minimal"]
+
 # click grid: Gemini's 0-1000 coordinates map onto the screen, clamped to its edges
 brain.screen_size[:] = (1600, 900)
 assert brain.to_pixels(0, 0) == (0, 0)
@@ -135,6 +143,16 @@ store.MEMORY_FILE, store.REMINDERS_FILE = f"{tmp}/memory.md", f"{tmp}/reminders.
 store.remember("likes tea"); store.remember("exam on June 5")
 assert store.forget("TEA") == 1 and "June 5" in store.memory() and "tea" not in store.memory()
 store.remember("Exam  on June 5")  # a fact said twice (or a lesson learnt twice) is kept once
+# two facts remembered at the same moment (the voice sends both calls in one batch) are both kept: one was lost nearly every
+# time, and one time in five the whole memory with it (read outside the lock, and the file emptied before it was written)
+before_race = store.memory()
+import threading
+for i in range(30):
+    gate = threading.Barrier(2)
+    pair = [threading.Thread(target=lambda f=f: (gate.wait(), store.remember(f))) for f in (f"race {i} a", f"race {i} b")]
+    [th.start() for th in pair]; [th.join() for th in pair]
+assert all(f"- race {i} {s}" in store.memory() for i in range(30) for s in "ab") and before_race in store.memory(), store.memory()[:300]
+store.set_memory(before_race)
 assert store.memory().lower().count("exam on june 5") == 1, store.memory()
 store.add_reminder(100, "past"); store.add_reminder(4e9, "future")  # (2096: Windows can't show dates past 3000)
 assert [r["text"] for r in store.pop_due(now=200)] == ["past"] and [r["text"] for r in store.reminders()] == ["future"]
@@ -187,6 +205,17 @@ class AddsCheck:
 real_checks, brain.TOOLS["checks"] = brain.TOOLS["checks"], (lambda action, text="": {"result": brain.CHECK_ADDED},) + brain.TOOLS["checks"][1:]
 a.backends = {"x": AddsCheck()}
 assert a.ask("tell me if a payment fails") == "I'll tell you if a payment fails." and AddsCheck.calls == 2
+# a voice task carries the user's own words: the voice's summary once dropped "using commands", and the agent took the screen
+class Records:
+    seen = []
+
+    def generate(self, contents, model, thinking, **kw):
+        Records.seen.append(contents[-1]["parts"][0]["text"])
+        return [{"text": "Done."}]
+a.backends = {"x": Records()}
+a.ask("Find the chat in OpenChamber", context="09:00 you: check that chat using commands, not my screen")
+assert "Find the chat in OpenChamber" in Records.seen[0] and "using commands, not my screen" in Records.seen[0], Records.seen
+asked_saved.pop()
 brain.TOOLS["checks"] = real_checks
 # a scheduled task or background check runs on its own history, and can't confirm a change itself: nobody said yes
 class SelfConfirms:
@@ -216,6 +245,15 @@ a.ask("reboot now, blue bird")
 assert "bird" not in str(a.contents) and "•••" in str(a.contents)
 store.set_secret(store.PASSPHRASE, "")
 brain.system.shell = real_shell
+# a command that times out stops with everything it started: the rest ran on after "timed out" (asked again, it ran twice)
+if not system.IS_WINDOWS:
+    import subprocess
+    try:
+        system.shell(f"bash -c 'sleep 1; touch {tmp}/late'; true", 0.5)
+        raise AssertionError("no timeout")
+    except subprocess.TimeoutExpired:
+        time.sleep(0.8)
+    assert not os.path.exists(f"{tmp}/late")
 a.add_turn("[check] failed payments", "Two failed: offer a free month?")
 assert a.contents[-1] == {"role": "model", "parts": [{"text": "Two failed: offer a free month?"}]} and a.contents[-2]["role"] == "user"
 import threading
@@ -538,7 +576,7 @@ live = jarvis.Live.__new__(jarvis.Live)
 live.mic, live.session, live.floor, live.voice_at, live.level = True, None, 100.0, 0.0, 0.0
 live.speaker, live.backlog = jarvis.Speaker(), collections.deque(maxlen=125)  # the real one: a fake hid a renamed attribute
 live.backup = jarvis.Backup(live)
-live.asking, live.doing = threading.Lock(), set()
+live.asking, live.doing, live.warned, live.sent_to = threading.Lock(), set(), None, {}
 frame = lambda rms: (np.random.default_rng(1).normal(0, rms, 1280)).astype(np.int16)
 for _ in range(50):
     live.feed(frame(60))  # quiet room
@@ -573,6 +611,19 @@ live.speaker.echo_cancelled, live.speaker.until = False, 0.0
 
 # keys: common names become xkb's, several chains run in order; only portal errors are blamed on the permission prompt
 assert system.key_chains("Enter control+a esc") == [["Return"], ["ctrl", "a"], ["Escape"]]
+# the window Jarvis launched gets the keyboard back only just after the launch: later, typing went into that old window
+focused, real_win = [], (system.window_ids, system.active_window, system.focus_window)
+system.window_ids, system.active_window = (lambda: {"A"}), (lambda: "B")
+system.focus_window = lambda name, wid=None: focused.append(wid or name) or ""
+brain.last_window[0], brain.last_app[1] = "A", time.time()
+brain.focus_launched()
+assert focused == ["A"]
+brain.last_app[1] = time.time() - 60
+brain.focus_launched()
+assert focused == ["A"] and brain.last_window[0] == ""
+brain.last_window[0] = "A"
+assert "result" in brain.tool_focus_window("B") and brain.last_window[0] == ""  # (another window was asked for since)
+system.window_ids, system.active_window, system.focus_window = real_win
 brain.focus_launched = lambda: None
 system.press_keys, pressed = (lambda keys: pressed.append(keys) or ""), []
 assert "result" in brain.tool_press_keys("ctrl+l") and pressed == ["ctrl+l"]
@@ -637,6 +688,32 @@ out = brain.tool_act([{"type": "hi"}, {"keys": "Return"}, {"look": "is it in the
 assert 1.0 in slept and "sent" in out[0], (slept, out)  # (a look step returns its screenshot too)
 slept.clear()
 assert "sent" not in brain.tool_act([{"keys": "Return"}, {"look": "what happened?"}], screenshot_after=False)[0] and 1.0 not in slept
+# a step that raises (no model for the look) still tells what ran before it and that the message went: it was sent again
+def no_look(*a, **kw):
+    raise brain.NoModel("no model is answering")
+
+
+brain.tool_look = no_look
+out = brain.tool_act([{"type": "hi"}, {"keys": "Return"}, {"look": "is it in the chat?"}], screenshot_after=False)
+assert out["done"] == ["typed", "pressed"] and "sent" in out and "step 3 failed" in out["error"], out
+# ...and so does a plan whose closing screenshot can't be taken
+def no_shot():
+    raise RuntimeError("no screenshot tool")
+
+
+shot, brain.tool_screenshot = brain.tool_screenshot, no_shot
+out = brain.tool_act([{"type": "hi"}, {"keys": "Return"}])
+assert isinstance(out, dict) and out["result"] == ["typed", "pressed"] and "sent" in out and "couldn't be taken" in out["note"], out
+brain.tool_screenshot = shot
+# an app step that can't bring its window up types nothing (the text went into whatever was in front)
+real_focus, real_active = system.focus_window, system.active_app
+system.focus_window, system.active_app = (lambda name, wid=None: f"no window matching {name}"), (lambda: "kate")
+typed.clear()
+out = brain.tool_act([{"app": "Discord", "type": "hi"}], screenshot_after=False)
+assert "couldn't bring up Discord" in out["error"] and typed == [], out
+system.active_app = lambda: "discord"  # (already in front: the focus call failing changes nothing)
+assert brain.tool_act([{"app": "Discord", "type": "hi"}], screenshot_after=False)["result"] == ["typed"] and typed == ["hi"]
+system.focus_window, system.active_app = real_focus, real_active
 brain.time.sleep, brain.tool_look = real_sleep, real_look
 # a combined click and type step executes both (clicks then types) instead of dropping the type
 typed.clear()
@@ -710,6 +787,10 @@ live.last_said = live.last_heard = ""
 # noise gets no answer at all ("Yes?" after every sound wore the user out), and the watchdog doesn't re-ask it
 live.inflight = {"text": None, "heard": "desde", "since": time.time(), "tool": False, "answered": False, "recovered": False}
 assert asyncio.run(live._tool(types.SimpleNamespace(name="ignore", args={}))) == {"result": "ignored"} and live.inflight is None
+# typed text is never noise: "say yes" typed in the chat got ignore, and so no answer at all
+live.inflight = {"text": "say yes", "heard": "", "since": time.time(), "tool": False, "answered": False, "recovered": False, "typed": True}
+assert "typed" in asyncio.run(live._tool(types.SimpleNamespace(name="ignore", args={}))).get("error", "") and live.inflight
+live.inflight = None
 import threading
 # the agent asks the user mid-task: the voice says the question, its answer_task hands the answer back, and Stop ends the wait
 asked_voice, real_notify = [], system.notify
@@ -778,6 +859,7 @@ opened = []
 live.brain = types.SimpleNamespace(tools_ready=threading.Event(), refresh_if_stale=lambda: None)
 live.task = live.ready = None
 live.closing, live.tools_wait = False, None
+live.muted = True  # (the reply before was cut off with Stop and its session ended: the next reply was never heard)
 async def fake_run():
     opened.append(1)
     live.ready.set()
@@ -787,7 +869,7 @@ async def both():
     asyncio.get_running_loop().call_later(0.05, live.brain.tools_ready.set)
     await asyncio.gather(live._open(), live._open(), live._open())
 asyncio.run(both())
-assert opened == [1], opened
+assert opened == [1] and live.muted is False, opened
 
 # cutting off a reply that has already finished generating mustn't mute the next one
 live.speaker = types.SimpleNamespace(busy=lambda: True, stop=lambda: None)
@@ -936,7 +1018,7 @@ b = brain.Brain.__new__(brain.Brain)
 b.plugins = {}  # (any real call would fail on this: nothing may reach Composio)
 b.app_tools = {"GMAIL_SEND_EMAIL": {}, "GMAIL_FETCH_EMAILS": {}, "GITHUB_LIST_NOTIFICATIONS": {}}
 assert list(b.active_app_tools()) == ["GMAIL_FETCH_EMAILS"] and "error" in b.run_app_tool("GMAIL_SEND_EMAIL", {})
-srv = types.SimpleNamespace(call=lambda *a: 1 / 0)
+srv = types.SimpleNamespace(call=lambda *a, **kw: 1 / 0)
 b.tool_owner = {"COMPOSIO_MULTI_EXECUTE_TOOL": (srv, "COMPOSIO_MULTI_EXECUTE_TOOL")}
 assert "paused" in b._run_tool("COMPOSIO_MULTI_EXECUTE_TOOL", {"tools": [{"tool_slug": "GITHUB_CREATE_AN_ISSUE"}]})[0]["error"]
 try:
@@ -1104,6 +1186,8 @@ assert day["weather"].startswith("couldn't check") and day["unread_emails"] == "
 assert [x.split(" (")[0] for x in day["classroom_due_this_week_not_turned_in"]] == ["Lab"]
 b.app_data = lambda slug, args: None
 assert b.briefing()["classroom_due_this_week_not_turned_in"].startswith("couldn't check")
+b.app_data = lambda slug, args: CLASS.get(slug) if slug == "GOOGLE_CLASSROOM_COURSES_LIST" else None  # (a course that can't be read)
+assert b.briefing()["classroom_due_this_week_not_turned_in"].startswith("couldn't check")
 # announcements: every course in one call, newest first, by the course's full name; a course that failed is named
 POSTS = {"c1": {"announcements": [{"text": "Quiz moved", "updateTime": "2026-10-10T08:00:00Z"}]},
          "c2": {"announcements": [{"text": "Lab tonight", "updateTime": "2026-10-12T08:00:00.5Z"}]}}
@@ -1179,6 +1263,58 @@ assert gone.status == "error" and gone.offline and len(said) == 1 and gone.error
 missing = brain.McpServer("missing", {"command": "/no/such/mcp-server"}, mcp_loop, said.append)
 missing.connect()
 assert missing.status == "error" and not missing.offline  # (a missing command: no retry brings it back)
+# a change whose answer is lost on the way back isn't sent a second time (the email went out twice); a read is asked again,
+# and so is a change the server surely never got (it had ended the session)
+from contextlib import asynccontextmanager
+got_calls, breaks = [], []
+class LossySession:
+    async def call_tool(self, tool, args):
+        got_calls.append(args["tools"][0]["tool_slug"])
+        if breaks:
+            raise RuntimeError(breaks.pop())
+        return types.SimpleNamespace(content=[types.SimpleNamespace(text='{"successful": true}')], is_error=False)
+
+
+@asynccontextmanager
+async def lossy_open():
+    yield LossySession()
+lossy = brain.McpServer("composio", {"url": "https://example.invalid/mcp"}, mcp_loop, said.append)
+lossy._open = lossy_open
+lossy_brain = brain.Brain.__new__(brain.Brain)
+lossy_brain.plugins, real_modes = {"composio": lossy}, store.connector_modes
+store.connector_modes = lambda: {"gmail": "full"}
+for slug, why, calls, ok in (("GMAIL_SEND_EMAIL", "SSE stream ended without a response", 1, False), ("GMAIL_FETCH_EMAILS", "SSE stream ended without a response", 2, True),
+                             ("GMAIL_SEND_EMAIL", "Session terminated", 2, True)):
+    got_calls[:], breaks[:] = [], [why]
+    try:
+        out = lossy_brain.run_app_tool(slug, {"subject": "hello"})
+    except RuntimeError as e:
+        out = {"error": str(e)}
+    assert len(got_calls) == calls and ("error" not in out) == ok and (ok or "MAY have gone through" in out["error"]), (slug, why, got_calls, out)
+store.connector_modes = real_modes
+# an account result longer than the model's 20,000 characters is still read whole as data (it couldn't be parsed, and a
+# course with two dozen assignments read as "nothing due")
+big = {"data": {"results": [{"response": {"data": {"courseWork": [{"id": str(i), "description": "x" * 900} for i in range(25)]}}}]}}
+class BigSession:
+    async def call_tool(self, tool, args):
+        return types.SimpleNamespace(content=[types.SimpleNamespace(text=json.dumps(big))], is_error=False)
+
+
+@asynccontextmanager
+async def big_open():
+    yield BigSession()
+# the Accounts page seeing an account added keeps the ones without direct tools connected (the voice said Docs wasn't)
+no_tools = next(slug for slug, _ in brain.WORKSPACES if slug not in brain.APP_TOOLS)
+lossy_brain._composio = lambda toolkits: {"results": {slug: {"accounts": [{"status": "active"}]} for slug in ("gmail", no_tools)}}
+lossy_brain.app_tools_for, refreshed = set(), threading.Event()
+lossy_brain.refresh_app_tools = lambda connected: (setattr(lossy_brain, "connected", set(connected)), refreshed.set())
+lossy_brain.workspaces()
+assert refreshed.wait(5) and lossy_brain.connected == {"gmail", no_tools}
+del lossy_brain._composio
+lossy_brain.plugins = {"composio": brain.McpServer("composio", {"url": "https://example.invalid/mcp"}, mcp_loop, said.append)}
+lossy_brain.plugins["composio"]._open = big_open
+assert len(lossy_brain.app_data("GOOGLE_CLASSROOM_COURSE_WORK_LIST", {"courseId": "1"})["courseWork"]) == 25
+assert len(lossy_brain.run_app_tool("GOOGLE_CLASSROOM_COURSE_WORK_LIST", {"courseId": "1"})["result"]) == 20000  # (the model's is capped)
 # ...and its accounts are still connected: the agent said Gmail "isn't connected" during a Composio outage
 down_brain = brain.Brain.__new__(brain.Brain)
 down_brain.plugins = {"composio": gone}
@@ -1209,6 +1345,112 @@ try:
     b._generate([]); raise AssertionError("no key, yet it answered")
 except RuntimeError as e:
     assert str(e).count("no API key") == 1, e  # a missing key is said once, not once per model
+
+# several keys for one provider: saved together and used one at a time; the next takes over when one is rate-limited or
+# refused, and the model chain only hears of it once every key is resting. The spoken passphrase stays one secret
+store.set_secret("openai", "sk-one-key-1111\nsk-two-key-2222")
+assert store.secrets("openai") == ["sk-one-key-1111", "sk-two-key-2222"] and store.secret("openai") == "sk-one-key-1111"
+store.set_secret(store.PASSPHRASE, "blue bird 42")
+assert store.secret(store.PASSPHRASE) == "blue bird 42" and store.secrets("nosuch") == []
+store.set_secret(store.PASSPHRASE, "")
+assert b.backend("openai")[0].keys.keys == store.secrets("openai")
+b.backends.clear()
+oc, sent, hi = brain.OpenAICompatible("openai", "https://api.openai.com/v1", store.secrets("openai")), [], [{"role": "user", "parts": [{"text": "hi"}]}]
+refused = {"sk-one-key-1111": types.SimpleNamespace(ok=False, status_code=429, text='{"retryDelay": "33s"}')}
+answer = types.SimpleNamespace(ok=True, json=lambda: {"choices": [{"message": {"content": "hello"}}]})
+oc.http = types.SimpleNamespace(post=lambda url, headers, **kw: sent.append(headers["Authorization"][-4:]) or refused.get(headers["Authorization"][7:], answer))
+assert oc.generate(hi, "gpt-a", "low") == [{"text": "hello"}] and sent == ["1111", "2222"], sent
+assert oc.generate(hi, "gpt-a", "low") and oc.generate(hi, "gpt-b", "low") and sent[2:] == ["2222", "2222"], sent  # the one that answered keeps on
+refused["sk-two-key-2222"] = types.SimpleNamespace(ok=False, status_code=401, text="Incorrect API key provided")  # (revoked)
+try:
+    oc.generate(hi, "gpt-a", "low"); raise AssertionError("answered with every key resting")
+except brain.Overloaded as e:  # the first still rests for this model: not asked, and the chain is told how long
+    assert 30 < e.retry_after <= 34 and sent[4:] == ["2222"], (e.retry_after, sent)
+del refused["sk-one-key-1111"]
+assert oc.generate(hi, "gpt-b", "low") and sent[5:] == ["1111"] and oc.keys.idx == 0, sent  # (a limit is per model, a refused key for all)
+assert [k["tail"] for k in oc.keys.state()] == ["1111", "2222"] and all(k["resting"] > 0 for k in oc.keys.state())
+try:
+    oc.generate(hi, "gpt-a", "low"); raise AssertionError("answered with every key resting")
+except brain.Overloaded:
+    assert len(sent) == 6  # nothing is sent while they all rest
+oc.keys.resting.clear()
+refused["sk-one-key-1111"] = refused["sk-two-key-2222"]  # every key refused: no time to wait out, so the user is told (as with one bad key)
+try:
+    oc.generate(hi, "gpt-a", "low"); raise AssertionError("answered with every key refused")
+except brain.Overloaded as e:
+    assert e.retry_after is None and "refused" in str(e) and "sk-" not in str(e), e
+try:
+    oc.models(); raise AssertionError("listed models with every key refused")
+except brain.Overloaded:
+    pass
+oc.keys.resting.clear()
+oc.http.get = lambda url, headers, **kw: refused["sk-two-key-2222"] if headers["Authorization"].endswith("1111") else types.SimpleNamespace(ok=True, json=lambda: {"data": [{"id": "gpt-a"}]})
+oc.keys.idx = 0
+assert oc.models() == ["gpt-a"] and oc.keys.idx == 1  # (the Models page's list comes from a key that works)
+oc.keys.resting.clear()
+n, oc.keys.idx = len(sent), 0
+refused["sk-one-key-1111"] = types.SimpleNamespace(ok=False, status_code=503, text="busy")  # the service's trouble, not the key's:
+try:
+    oc.generate(hi, "gpt-a", "low"); raise AssertionError("a 503 answered")
+except brain.Overloaded as e:  # no other key is spent on it
+    assert not e.key and len(sent) == n + 1 and not oc.keys.resting, (sent, oc.keys.resting)
+one = brain.OpenAICompatible("openai", "https://api.openai.com/v1", "sk-one-key-1111")  # one key: as it always was
+one.http, refused["sk-one-key-1111"] = oc.http, types.SimpleNamespace(ok=False, status_code=429, text='{"retryDelay": "33s"}')
+try:
+    one.generate(hi, "gpt-a", "low"); raise AssertionError("a 429 answered")
+except brain.Overloaded as e:
+    assert e.retry_after == 34 and str(e) == "rate limited" and not one.keys.resting
+# a key Gemini calls invalid is that key's trouble (it was a bad request, which ended the whole model chain)
+invalid = brain.http_error(types.SimpleNamespace(status_code=400, text='{"error": {"status": "INVALID_ARGUMENT", "details": [{"reason": "API_KEY_INVALID"}]}}'))
+assert isinstance(invalid, brain.Overloaded) and invalid.key and invalid.retry_after is None
+assert isinstance(brain.http_error(types.SimpleNamespace(status_code=400, text="bad schema")), brain.BadRequest)
+assert brain.http_error(types.SimpleNamespace(status_code=429, text="")).key and not brain.http_error(types.SimpleNamespace(status_code=500, text="")).key
+# Gemini's own keys: the environment's first, then the saved ones; a used-up daily quota rests that key until the reset
+real_env = os.environ.pop("GEMINI_API_KEY", None)
+store.set_secret("aistudio", "AIza-first-key-00001\nAIza-second-key-0002")
+assert brain.gemini_keys() == ["AIza-first-key-00001", "AIza-second-key-0002"] and brain.api_key() == "AIza-first-key-00001"
+os.environ["GEMINI_API_KEY"] = "AIza-from-the-env-03"
+assert brain.gemini_keys() == ["AIza-from-the-env-03", "AIza-first-key-00001", "AIza-second-key-0002"]
+del os.environ["GEMINI_API_KEY"]
+studio, sent = brain.AIStudio(), []
+used_up = types.SimpleNamespace(ok=False, status_code=429, text='{"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier"}')
+studio.http = types.SimpleNamespace(post=lambda url, headers, **kw: sent.append(headers["x-goog-api-key"][-1]) or (
+    used_up if headers["x-goog-api-key"].endswith("1") else types.SimpleNamespace(ok=True, json=lambda: {"candidates": [{"content": {"parts": [{"text": "hi"}]}}]})))
+assert studio.generate(hi, "gemini-x", "low") == [{"text": "hi"}] and sent == ["1", "2"] and studio.key == "AIza-second-key-0002"
+assert studio.keys.resting[(0, "gemini-x")] - time.time() > 59
+# every backend keeps its reply's tokens for the Cost page
+studio.http = types.SimpleNamespace(post=lambda url, headers, **kw: types.SimpleNamespace(ok=True, json=lambda: {
+    "candidates": [{"content": {"parts": [{"text": "hi"}]}}], "usageMetadata": {"promptTokenCount": 7, "candidatesTokenCount": 3}}))
+studio.generate(hi, "gemini-y", "low")
+oc.http = types.SimpleNamespace(post=lambda url, headers, **kw: types.SimpleNamespace(ok=True, json=lambda: {
+    "choices": [{"message": {"content": "hello"}}], "usage": {"prompt_tokens": 11, "completion_tokens": 2}}))
+oc.generate(hi, "gpt-b", "low")
+used = {m["key"]: m for m in brain.cost_report(1)["models"]}
+assert (used["aistudio gemini-y"]["input"], used["aistudio gemini-y"]["output"], used["openai gpt-b"]["input"]) == (7, 3, 11), used
+# every saved key is kept out of what the models see, and the window only gets each one's last four characters
+store.set_secret("work", "w0rk-" + "a" * 16 + "\nw0rk-" + "b" * 16)
+brain._secrets[0] = 0
+assert {"AIza-first-key-00001", "AIza-second-key-0002", "w0rk-" + "a" * 16, "w0rk-" + "b" * 16} <= set(brain.saved_secrets())
+store.set_secret("work", ""); store.set_secret("aistudio", ""); store.set_secret("openai", "")
+kl, row = jarvis.Live.__new__(jarvis.Live), (lambda info, name: next(p for p in info["providers"] if p["name"] == name))
+jarvis.api_post("/api/keys/openai", {"key": "sk-one-key-1111"}, kl, b)
+info = jarvis.api_post("/api/keys/openai", {"key": "sk-two-key-2222"}, kl, b)  # a pasted key is added, not put in the other's place
+assert store.secrets("openai") == ["sk-one-key-1111", "sk-two-key-2222"] and row(info, "openai")["key"]
+assert [k["tail"] for k in row(info, "openai")["keys"]] == ["1111", "2222"] and "sk-" not in json.dumps(info), row(info, "openai")
+b.backend("openai")[0].keys.resting[(1, None)] = time.time() + 500
+assert [k["resting"] > 0 for k in row(jarvis.models_info(b), "openai")["keys"]] == [False, True]
+assert len(jarvis.api_post("/api/keys/openai", {"key": "sk-two-key-2222"}, kl, b)["providers"]) and len(store.secrets("openai")) == 2  # (the same one: once)
+jarvis.api_post("/api/keys/openai", {"remove": 0}, kl, b)
+assert store.secrets("openai") == ["sk-two-key-2222"] and not b.backends  # (rebuilt with the keys that are left)
+try:
+    jarvis.api_post("/api/keys/openai", {"remove": 5}, kl, b); raise AssertionError("removed a key that isn't there")
+except ValueError:
+    pass
+assert not row(jarvis.api_post("/api/keys/openai", {"key": ""}, kl, b), "openai")["key"] and store.secrets("openai") == []
+assert jarvis.models_info()["providers"] and jarvis.models_info(types.SimpleNamespace())["providers"]  # (no brain yet, or one with no backends)
+if real_env:
+    os.environ["GEMINI_API_KEY"] = real_env
+brain._secrets[0] = 0
 
 # OpenAI-style translation: tool calls and results paired by id, pictures as data URLs, Gemini signatures only when asked
 turns = [{"role": "user", "parts": [{"text": "hi"}, {"inlineData": {"mimeType": "image/png", "data": "QUJD"}}]},
@@ -1265,6 +1507,22 @@ jarvis.sessions.add({"who": "jarvis", "text": "Here you are."})
 jarvis.sessions.new()
 assert jarvis.sessions.sent() == ["'the one about the garden'"]
 assert "never send one of these again" in live._config().system_instruction and "- 'the one about the garden'" in live._config().system_instruction
+# the voice sees what the chat showed, in order and with times: the WhatsApp message itself, not only Jarvis's summary of
+# it (it never saw "You at home?", then sent "Yes, I am him." to someone else). Message notices from long ago are left out.
+jarvis.sessions.add({"who": "you", "text": "an old request"})
+jarvis.sessions.add({"who": "system", "text": "💬 WhatsApp from Old Friend: an old one"})
+for m in jarvis.sessions.messages:
+    m["time"] -= 7200
+jarvis.sessions.add({"who": "system", "text": "💬 WhatsApp from Maya: Did you get my bottle? / You at home?"})
+jarvis.sessions.add({"who": "jarvis", "text": "WhatsApp from Maya: Maya is asking if you got her bottle."})
+prompt = live._config().system_instruction
+assert "Maya: Did you get my bottle? / You at home?" in prompt and prompt.index("You at home?") < prompt.index("asking if you got her")
+assert "an old request" in prompt and "an old one" not in prompt and "notice: 💬 WhatsApp from Maya" in prompt, prompt[-600:]
+assert len(jarvis.recent_talk(limit=100)) <= 100 and jarvis.recent_talk(limit=100).endswith("got her bottle.")  # (whole lines, newest kept)
+for i in range(20):  # a burst of pings doesn't push the user's own words out: the newest notices only
+    jarvis.sessions.add({"who": "system", "text": f"💬 Discord from Server #general: ping {i}"})
+talk = jarvis.recent_talk()
+assert "ping 19" in talk and "ping 7" not in talk and "an old request" in talk and talk.count("notice:") == jarvis.NOTICE_LINES, talk
 jarvis.sessions = real_sessions
 
 assert os.environ["TQDM_DISABLE"] == "1"  # (tqdm's \r bars hid whole conversations in the log)
@@ -1412,6 +1670,15 @@ brain.BACKENDS, brain.providers, brain.chain = real_lists
 
 # the window: line icons draw, and every page loads against the real API without a single QML warning
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
+# Jarvis's own windows use XWayland through Qt's arguments, not the environment (every app and command it started
+# inherited that, and opened as an X11 app too)
+import inspect
+had_display, os.environ["DISPLAY"] = os.environ.get("DISPLAY"), ":0"
+assert jarvis.qt_args() == ["jarvis", "-platform", "xcb"] and os.environ["QT_QPA_PLATFORM"] == "offscreen"
+del os.environ["DISPLAY"]
+assert jarvis.qt_args() == ["jarvis"] and "environ[" not in inspect.getsource(jarvis.run_tray)
+if had_display:
+    os.environ["DISPLAY"] = had_display
 from PySide6.QtCore import QtMsgType, qInstallMessageHandler
 from PySide6.QtGui import QColor
 from PySide6.QtQuick import QQuickWindow
@@ -1430,18 +1697,22 @@ stub = types.SimpleNamespace(plugin_status=lambda: [], workspaces=lambda: [], ap
 live.mic = False
 canned = {"/api/health": {"checks": [{"name": "Microphone", "ok": False, "detail": "no audio", "fix": "check it", "page": "settings"}],
                           "usage": {"aistudio gemini-3.8-flash": 3}},
-          "/api/setup/key": {"ok": False, "detail": "no key yet"}}  # (the real ones take a screenshot and call Google)
+          "/api/setup/key": {"ok": False, "detail": "no key yet"},  # (the real ones take a screenshot and call Google)
+          "/api/media": {"title": ""}}  # (...and read what the desktop is playing: its cover going away failed this load)
 win = window.Window(get=lambda path: canned.get(path) or jarvis.api_get(path, stub), post=lambda path, data: {"ok": True}, tool_label=jarvis.tool_label,
                     live=live, shown_state=jarvis.shown_state, version="test", show=True)
 root = win.engine.rootObjects()[0]
 assert root.property("needsSetup") is not None
-for page in ("chats", "activity", "accounts", "plugins", "models", "memory", "settings", "health", "home"):
+for page in ("chats", "activity", "accounts", "plugins", "models", "memory", "cost", "settings", "health", "home"):
     root.setProperty("page", page)
     qt.processEvents()
 end = time.time() + 1.5
 while time.time() < end:
     qt.processEvents()
     time.sleep(0.02)
+from PySide6.QtCore import QObject
+cost_page = root.findChild(QObject, "costPage")  # (an unknown page name shows nothing, and no warning)
+assert cost_page is not None and cost_page.property("report") is not None, "the Cost page didn't load its report"
 # the backup voice answering shows in the polled state (Home's chip, the notch, the tray), and its chip loads cleanly
 assert win.backend.property("backup") is False
 jarvis.shown_state[1] = True
@@ -1489,6 +1760,48 @@ shiboken6.delete(leak)
 qt.processEvents()
 assert web_hits == [], web_hits
 warnings.clear()  # (the refused loads are logged)
+
+# the keyboard reaches every button, switch and chip: Tab moves to it (with a ring to show where), Enter or Space presses
+# it (they took no keyboard focus at all, so only the mouse could use the window)
+from PySide6.QtCore import QEvent, Qt
+from PySide6.QtGui import QKeyEvent
+keys_qml = QQmlComponent(win.engine)
+keys_qml.setData(b'''import QtQuick
+import Jarvis
+Window { id: w; visible: true; width: 300; height: 300
+    property int hits: 0
+    property alias on: sw.checked
+    property alias ring: pill.visualFocus
+    Column {
+        Field { Component.onCompleted: forceActiveFocus() }
+        Pill { id: pill; text: "Go"; onClicked: w.hits += 1 }
+        Toggle { id: sw; text: "Switch" }
+        Chip { text: "Chip"; onClicked: w.hits += 10 }
+        IconButton { tip: "Icon"; onClicked: w.hits += 100 }
+    }
+}''', QUrl.fromLocalFile(os.path.join(os.path.dirname(os.path.abspath(window.__file__)), "qml", "check.qml")))
+kw = keys_qml.create()
+assert kw, keys_qml.errorString()
+kw.requestActivate()
+def press(key, text=""):
+    for kind in (QEvent.Type.KeyPress, QEvent.Type.KeyRelease):
+        qt.sendEvent(kw, QKeyEvent(kind, key, Qt.KeyboardModifier.NoModifier, text))
+    qt.processEvents()
+end = time.time() + 0.3
+while time.time() < end:
+    qt.processEvents()
+press(Qt.Key.Key_Tab)
+assert kw.property("ring") is True  # (shown for the keyboard only: a click doesn't draw it)
+press(Qt.Key.Key_Return)
+assert kw.property("hits") == 1
+press(Qt.Key.Key_Tab); press(Qt.Key.Key_Enter)
+assert kw.property("on") is True
+press(Qt.Key.Key_Tab); press(Qt.Key.Key_Space, " ")
+press(Qt.Key.Key_Tab); press(Qt.Key.Key_Return)
+assert kw.property("hits") == 111, kw.property("hits")
+shiboken6.delete(kw)
+qt.processEvents()
+assert not warnings, ascii(warnings)[:2000]
 
 # the window's languages: each text in the first that has it, none after "en" (the English it's written in); with Arabic
 # first it reads right to left; languages without a .qm leave it in English, and switching takes no restart
@@ -1542,7 +1855,7 @@ def effective_align(item):
     return QQmlExpression(QQmlEngine.contextForObject(item), item, "effectiveHorizontalAlignment").evaluate()[0]
 for codes, word in ((["ar"], "الإعدادات"), (["ja", "de"], "設定")):
     win.languages(codes)
-    for page in ("chats", "activity", "accounts", "plugins", "models", "memory", "settings", "health", "home"):
+    for page in ("chats", "activity", "accounts", "plugins", "models", "memory", "cost", "settings", "health", "home"):
         root.setProperty("page", page)
         qt.processEvents()
         if codes == ["ar"] and page == "settings":
@@ -1631,6 +1944,42 @@ assert sent_responses[0][0].scheduling is None
 sent_responses.clear()
 asyncio.run(live._quick(fake_session, [types.SimpleNamespace(name="act", id="2", args={})], gen=1, spoke_before=True))
 assert sent_responses[0][0].scheduling == "SILENT"
+# ...but never a change that failed (after "sending it now" the user never heard it hadn't gone), nor a lookup's answer
+# ("let me check", then nothing: the weather, an account read)
+live._tool = lambda fc, halt=None: asyncio.sleep(0.001, result={"error": "WhatsApp isn't linked"})
+sent_responses.clear()
+asyncio.run(live._quick(fake_session, [types.SimpleNamespace(name="whatsapp_send", id="2b", args={})], gen=1, spoke_before=True))
+assert sent_responses[0][0].scheduling is None
+sent_responses.clear()  # (nor ignore refused for typed text: the model must answer it)
+asyncio.run(live._quick(fake_session, [types.SimpleNamespace(name="ignore", id="2c", args={})], gen=1, spoke_before=False))
+assert sent_responses[0][0].scheduling is None
+live._tool = lambda fc, halt=None: asyncio.sleep(0.001, result={"result": "ok"})
+sent_responses.clear()
+asyncio.run(live._quick(fake_session, [types.SimpleNamespace(name=n, id=n, args={}) for n in ("weather", "GMAIL_FETCH_EMAILS", "GMAIL_SEND_EMAIL")],
+                        gen=1, spoke_before=True))
+assert [r.scheduling for r in sent_responses[0]] == [None, None, "SILENT"]
+# the session closed while the tool ran: its answer is handed to a fresh one (nothing was said, nothing reconnected and
+# a send was never confirmed), unless the user pressed Stop
+class ClosedSession:
+    async def send_tool_response(self, **kwargs):
+        raise ConnectionError("received 1011 (internal error)")
+
+
+handed, real_send, was = [], live._send, (getattr(live, "mic", False), getattr(live, "inflight", None))
+live._send = lambda text, **kw: handed.append((text, kw)) or asyncio.sleep(0)
+live.task, live.resume_handle, live.session, live.closing, live.mic = None, None, None, False, False
+live.inflight = {"text": None, "heard": "what's on my screen", "since": time.time(), "tool": True, "answered": False, "recovered": False}
+asyncio.run(live._quick(ClosedSession(), [types.SimpleNamespace(name="look", id="9", args={})], gen=1))
+assert len(handed) == 1 and '"ok"' in handed[0][0] and "what's on my screen" in handed[0][0] and "never run them again" in handed[0][0], handed
+assert handed[0][1] == {"track": False} and live.mic and live.inflight["recovered"] and live.running == 0
+live.stopped = True
+asyncio.run(live._quick(ClosedSession(), [types.SimpleNamespace(name="look", id="9", args={})], gen=1))
+assert len(handed) == 1
+# a session the user opened meanwhile isn't hung up for it: it just gets the news
+live.stopped, live.session, live.mic = False, object(), False
+asyncio.run(live._quick(ClosedSession(), [types.SimpleNamespace(name="look", id="9", args={})], gen=1))
+assert len(handed) == 2 and not live.closing and not live.mic
+live.session, live._send, (live.mic, live.inflight) = None, real_send, was
 
 # 3. user spoke while tool was running -> scheduling is SILENT
 sent_responses.clear()
@@ -1762,6 +2111,49 @@ async def same_twice():
 asyncio.run(same_twice())
 got = {r.id: r.response for batch in sent_responses for r in batch}
 assert ran_tasks == ["Text Sam I'm late"] and "Already" in got["t6"]["result"] and got["t5"] == {"result": "done: Text Sam I'm late"}, (ran_tasks, got)
+# the agent gets the user's own recent words with the voice's summary of the task (it once dropped "using commands")
+real_sessions, jarvis.sessions = jarvis.sessions, store.Sessions()
+jarvis.sessions.dir = tempfile.mkdtemp()
+jarvis.sessions.add({"who": "you", "text": "check the AI migration chat using commands, not my screen"})
+given = []
+live.brain.ask, live.working = (lambda text, *a, **kw: given.append((text, kw.get("context"), kw.get("label"))) or "Done."), 1
+asyncio.run(live._task(fake_session, task_call("t7", "Open OpenChamber and find the AI migration chat")))
+assert given[0][0] == given[0][2] == "Open OpenChamber and find the AI migration chat" and "using commands, not my screen" in given[0][1], given
+jarvis.sessions = real_sessions
+# a WhatsApp message that arrives while the voice session is open reaches it as context, without asking for a reply;
+# while Jarvis is busy it waits, and goes in before the user's next words
+contents = []
+class ContextSession:
+    async def send_client_content(self, turns, turn_complete):
+        contents.append((turns.parts[0].text, turn_complete))
+was_session, live.session, live.waiting, live.inflight, live.notes = live.session, ContextSession(), False, None, []
+was_speaker, live.speaker = live.speaker, jarvis.Speaker()  # (the real one, quiet: an earlier check left a fake that's always talking)
+live.loop, live._open, stub_go = asyncio.new_event_loop(), (lambda: asyncio.sleep(0)), live._go
+live._go = types.MethodType(jarvis.Live._go, live)  # (the real one: earlier checks stub it)
+threading.Thread(target=live.loop.run_forever, daemon=True).start()
+real_live, jarvis.live_ref[0] = jarvis.live_ref[0], live
+jarvis.emit("log", who="system", text="💬 WhatsApp from Maya: You at home?")
+jarvis.emit("log", who="system", text="🧠 Remembered: likes tea")  # (only messages and calls from people go in)
+time.sleep(0.2)
+assert len(contents) == 1 and "Maya: You at home?" in contents[0][0] and contents[0][1] is False, contents
+live.waiting = True
+jarvis.emit("log", who="system", text="💬 WhatsApp from Maya: Ok I might pass by")
+time.sleep(0.2)
+assert len(contents) == 1
+asyncio.run(live._send("tell her yes", typed=True))  # (while still busy: the request takes the waiting notes first)
+assert [c[1] for c in contents[1:]] == [False, True] and "pass by" in contents[1][0] and contents[2][0] == "tell her yes", contents
+assert live.inflight["typed"] and live.notes == []
+# the voice's own tokens count too (audio priced as audio), from Gemini Live's usage messages
+voice_key = f"aistudio {store.settings()['live_model']}"
+voice_had = {m["key"]: m["input"] for m in brain.cost_report(1)["models"]}.get(voice_key, 0)
+asyncio.run(live._handle(fake_session, genai.types.LiveServerMessage(usage_metadata=genai.types.UsageMetadata(
+    prompt_token_count=900, response_token_count=40, prompt_tokens_details=[genai.types.ModalityTokenCount(modality="AUDIO", token_count=900)],
+    response_tokens_details=[genai.types.ModalityTokenCount(modality="AUDIO", token_count=40)]))))
+assert {m["key"]: m["input"] for m in brain.cost_report(1)["models"]}[voice_key] == voice_had + 900
+time.sleep(0.6)  # (the waiter for the second notice sees the request took it, and ends)
+live.loop.call_soon_threadsafe(live.loop.stop)
+jarvis.live_ref[0], live.session, live.inflight, live.waiting, live._go = real_live, was_session, None, False, stub_go
+live.speaker = was_speaker
 # a long report goes to the chat in full; the voice says its gist
 live.working = 1
 live.brain.ask = lambda text, *a, **kw: "Report. " * 200
@@ -2026,6 +2418,7 @@ fl.client = types.SimpleNamespace(aio=types.SimpleNamespace(live=types.SimpleNam
 fl._config, fl.brain = (lambda: None), types.SimpleNamespace(app_tools={})
 fl.skip_app_tools, fl.resume_handle, fl.resume_next, fl.inflight, fl.stopped = False, None, False, None, False
 fl.session, fl.waiting, fl.heard, fl.said, fl.announcing, fl.utterance = None, False, "", "", False, collections.deque()
+fl.notes = []
 fl.mic, fl.backlog = True, collections.deque([frame(3000).tobytes()] * 5 + [frame(60).tobytes()] * 10, maxlen=125)
 fl.backup, woke, logged = jarvis.Backup(fl), [], []
 fl.backup.wake = lambda heard=(): woke.append(heard)
@@ -2059,6 +2452,37 @@ real_key, brain.api_key, fl.client, fl.mic, n = brain.api_key, no_key, None, Fal
 asyncio.run(connect_fails())
 brain.api_key = real_key
 assert any("there's no Google AI Studio key" in str(t) for t in logged[n:]) and fl.backup_now() and len(woke) == 2, logged
+# several AI Studio keys: a session one key can't open (the quota is each key's own) is opened with the next, each tried
+# once, and only when none opens does the backup voice answer; WhatsApp calls then use the key that worked
+from google import genai
+class Opens:
+    def __init__(self, key):
+        self.key = key
+    async def __aenter__(self):
+        opened_with.append(self.key)
+        return self
+    async def __aexit__(self, *a):
+        pass
+    async def receive(self):
+        return
+        yield
+class KeyClient:
+    def __init__(self, api_key):
+        self.aio = types.SimpleNamespace(live=types.SimpleNamespace(connect=lambda model, config: QuotaGone() if api_key.endswith("1") else Opens(api_key)))
+real_client, genai.Client, opened_with, real_env = genai.Client, KeyClient, [], os.environ.pop("GEMINI_API_KEY", None)
+store.set_secret("aistudio", "AIza-first-key-00001\nAIza-second-key-0002")
+fl.client, fl.down_until, fl.mic, brain.live_key[0], n = None, 0.0, False, 0, len(logged)
+asyncio.run(connect_fails())
+assert opened_with == ["AIza-second-key-0002"] and not fl.backup_now() and brain.api_key() == "AIza-second-key-0002", (opened_with, logged[n:])
+assert not any("backup voice" in str(t) for t in logged[n:]), logged[n:]
+store.set_secret("aistudio", "AIza-first-key-00001\nAIza-third-key-00001")  # both used up: the backup voice, as with one key
+fl.client = None
+asyncio.run(connect_fails())
+assert len(opened_with) == 1 and fl.backup_now() and any("quota is used up" in str(t) for t in logged[n:]), logged[n:]
+genai.Client, brain.live_key[0], fl.client, fl.down_until = real_client, 0, None, 0.0
+store.set_secret("aistudio", "")
+if real_env:
+    os.environ["GEMINI_API_KEY"] = real_env
 # "Always use the backup voice" (for keys without Live): Live isn't even tried
 fl.down_until = 0.0
 store.update_settings({"always_backup_voice": True})
@@ -2109,6 +2533,20 @@ gate.set()
 settle()
 assert ("jarvis", "Here you go.") not in logged and not bl.mic and bk.frames is None
 bl.brain.ask = lambda text, on_tool, on_thought=None, label="": asks.append(text) or replies[0]
+# ...and Stop pressed while the request is still being written down: the agent is never given it (it ran it all, silently)
+real_hear, n = bl.brain.hear, len(asks)
+bl.brain.hear = lambda wav: gate.wait(2) and "delete everything in my downloads folder"
+gate.clear()
+bl.speaker.stop()
+bk.listen()
+for rms, count in ((3000, 10), (60, 6)):
+    for _ in range(count):
+        bl.feed(frame(rms))
+bk.stop()
+gate.set()
+settle()
+assert len(asks) == n and ("you", "delete everything in my downloads folder") not in logged
+bl.brain.hear = real_hear
 # the agent's question: what's said next is its answer, not a new request
 q = bl.question = {"text": "Sam Lee or Sam Leeds?", "answered": threading.Event(), "answer": None}
 heard[0], n, bl.mic = "Sam Lee", len(asks), True
@@ -2489,6 +2927,24 @@ async def watch_stray():
     watcher.cancel()
     return alive
 assert asyncio.run(watch_stray()) and live.inflight is None and recovering == []
+# a background task at work doesn't switch the watchdog off for another request (Gemini dropped one meanwhile, and it
+# was never asked again: the mic just closed); the request that started the task still waits for it
+async def watch_working(own):
+    now = time.time()
+    live.last = live.last_msg = live.voice_at = now - 20
+    live.working, live.doing = 1, {"book a table"}
+    live.inflight = {"text": None, "heard": "what's the weather tomorrow", "since": now - 20, "tool": False, "answered": False,
+                     "recovered": False, **own}
+    watcher = asyncio.create_task(live._watch())
+    await asyncio.sleep(0.6)
+    watcher.cancel()
+asyncio.run(watch_working({}))
+assert recovering == ["no answer for 12 s"], recovering
+recovering.clear()
+asyncio.run(watch_working({"tasks": {"book a table"}}))
+asyncio.run(real_recover("session failed"))  # (a dropped session: its task brings the answer)
+assert recovering == [] and live.inflight["recovered"] is False
+live.working, live.doing, live.inflight = False, set(), None
 # an announcement (a reminder, a scheduled task's outcome) waits 25 s before reconnecting, not 12, and if even the retry
 # gets no answer it isn't "please say it again": the user said nothing
 async def watch_announce(quiet, recovered):
@@ -2533,7 +2989,7 @@ system.shell = real_shell
 # account changes in "ask" mode wait for a yes; reads don't; the flag never reaches the account
 ab = brain.Brain.__new__(brain.Brain)
 executed = []
-ab.plugins = {"composio": types.SimpleNamespace(call=lambda tool, args: executed.append(args) or {"result": "ok"})}
+ab.plugins = {"composio": types.SimpleNamespace(call=lambda tool, args, **kw: executed.append(args) or {"result": "ok"})}
 assert ab.run_app_tool("GMAIL_SEND_EMAIL", {"to": "a@b.c"})["error"] == brain.NEEDS_YES and executed == []
 assert ab.run_app_tool("GMAIL_SEND_EMAIL", {"to": "a@b.c", "confirmed": True}) == {"result": "ok"}
 assert executed[-1]["tools"][0]["arguments"] == {"to": "a@b.c"}
@@ -2553,9 +3009,52 @@ assert 60 <= daily.retry_after <= 86400 and minute.retry_after == 34
 assert 0 < brain.quota_reset_in() <= 86400
 
 # use per model per day, for the Health page
+today = time.strftime("%Y-%m-%d")
+store.write_json(brain.USAGE_FILE, {"day": today, "models": {"aistudio old": 4}})  # (the file before the Cost page)
+assert brain.usage_today() == {"aistudio old": 4}
+brain.count_use("aistudio", "old")
+assert brain.usage_today() == {"aistudio old": 5}
+store.write_json(brain.USAGE_FILE, {"days": {time.strftime("%Y-%m-%d", time.localtime(time.time() - 100 * 86400)): {"aistudio x": {"requests": 1}}}})
 brain.count_use("aistudio", "gemini-x")
 brain.count_use("aistudio", "gemini-x")
 assert brain.usage_today()["aistudio gemini-x"] == 2
+assert len(store.read_json(brain.USAGE_FILE, {})["days"]) == 1  # (90 days are kept)
+# ...and the tokens behind them, priced at Google's paid-tier rates for the Cost page (the free key bills nothing; the
+# user wants to see what the same use would cost)
+meta = {"promptTokenCount": 1200, "candidatesTokenCount": 300, "thoughtsTokenCount": 200, "cachedContentTokenCount": 1000,
+        "toolUsePromptTokenCount": 50, "promptTokensDetails": [{"modality": "TEXT", "tokenCount": 1000}, {"modality": "AUDIO", "tokenCount": 200}],
+        "candidatesTokensDetails": [{"modality": "TEXT", "tokenCount": 300}]}
+assert brain.gemini_usage(meta) == {"in": {"text": 50, "audio": 200}, "out": {"text": 500}, "cached": 1000}, brain.gemini_usage(meta)
+assert brain.gemini_usage({"promptTokenCount": 900, "responseTokenCount": 400, "responseTokensDetails": [{"modality": "AUDIO", "tokenCount": 400}],
+                           "promptTokensDetails": [{"modality": "AUDIO", "tokenCount": 800}, {"modality": "TEXT", "tokenCount": 100}]}) == {
+    "in": {"audio": 800, "text": 100}, "out": {"audio": 400}, "cached": 0}  # (Gemini Live's names)
+assert brain.gemini_usage({"promptTokenCount": 10, "candidatesTokenCount": 5}) == {"in": {"text": 10}, "out": {"text": 5}, "cached": 0}
+assert brain.gemini_usage(None) == {"in": {}, "out": {}, "cached": 0}
+assert brain.openai_usage({"prompt_tokens": 100, "completion_tokens": 40, "prompt_tokens_details": {"cached_tokens": 30, "audio_tokens": 10},
+                           "completion_tokens_details": {"reasoning_tokens": 20, "audio_tokens": 0}}) == {"in": {"text": 60, "audio": 10}, "out": {"text": 40}, "cached": 30}
+million = {"in": {"text": 1_000_000}, "out": {}, "cached": 0}
+assert round(brain.cost_of(million, brain.price_of("gemini-3.8-flash", "2026-12-31")), 6) == 0.75  # (each day at its own price:
+assert round(brain.cost_of(million, brain.price_of("gemini-3.8-flash", "2027-01-01")), 6) == 1.50  # Flash doubles in 2027)
+live_turn = {"in": {"audio": 1_000_000, "text": 1_000_000}, "out": {"audio": 1_000_000}, "cached": 0}
+assert round(brain.cost_of(live_turn, brain.price_of("gemini-3.8-live", "2026-11-18")), 6) == 3.00 + 0.75 + 12.00  # (audio as audio)
+assert round(brain.cost_of({"in": {}, "out": {}, "cached": 1_000_000}, brain.price_of("gemini-4-hydrogen", "2026-11-18")), 6) == 0.075
+assert brain.price_of("gemini-3.7-flash", "2026-11-18") is None  # (not on Google's page any more)
+brain.count_tokens("aistudio", "gemini-x", {"in": {"text": 10}, "out": {"text": 5}, "cached": 0})
+brain.count_tokens("aistudio", "gemini-x", {})  # (a reply without usage: nothing breaks)
+brain.count_use("aistudio", "gemini-3.8-flash")
+brain.count_tokens("aistudio", "gemini-3.8-flash", brain.gemini_usage({"promptTokenCount": 2_000_000, "candidatesTokenCount": 0}))
+report = brain.cost_report(7)
+rows = {m["key"]: m for m in report["models"]}
+flash = round(2 * brain.price_of("gemini-3.8-flash", today)["in"], 6)
+assert len(report["days"]) == 7 and report["days"][-1] == {"day": today, "cost": flash} and report["unpriced"] == 1, report
+assert rows["aistudio gemini-x"] == {"key": "aistudio gemini-x", "requests": 2, "input": 10, "output": 5, "cost": None}, rows
+assert rows["aistudio gemini-3.8-flash"]["cost"] == flash == report["total"] and report["models"][0]["key"] == "aistudio gemini-3.8-flash"
+assert report["tokens"] == 2_000_015 and brain.usage_today()["aistudio gemini-x"] == 2
+threads = [threading.Thread(target=lambda: [brain.count_use("aistudio", "busy") for _ in range(50)]) for _ in range(4)]
+[t.start() for t in threads], [t.join() for t in threads]
+assert brain.usage_today()["aistudio busy"] == 200  # (hedged requests record at once: none lost)
+assert jarvis.api_get("/api/cost?days=7", None) == brain.cost_report(7) and len(jarvis.api_get("/api/cost?days=30", None)["days"]) == 30
+assert len(jarvis.api_get("/api/cost", None)["days"]) == 1 and len(jarvis.api_get("/api/cost?days=999", None)["days"]) == 1  # (only 1, 7, 30)
 
 # the Health page: every check answers, with a fix for what's broken (no real screenshot or Google call here)
 class FakeStudio:
@@ -2708,6 +3207,21 @@ jarvis.run_unattended(check_live, "check", check=True)
 jarvis.system.notify = real_notify
 assert told == ["Your card payment failed."] and all(u for _, u in check_asks)
 assert turns == [("check", "Your card payment failed.")]  # (so "yes, do it" from the phone has the context; NOTHING isn't kept)
+# a check that failed or was stopped doesn't move "new since" on: what arrived during an outage was never mentioned
+def failing(text, on_tool, unattended, label=""):
+    check_asks.append((text, unattended))
+    raise brain.NoModel("no model could answer")
+store.update_settings({"checks": ["tell me if the landlord emails"], "checks_every": 30})
+store.write_json(jarvis.CHECKS_STAMP, {"at": time.time() - 3600})
+since = time.strftime("%H:%M", time.localtime(time.time() - 3600))
+check_live.brain.ask, working = failing, check_live.brain.ask
+jarvis.check_pass(check_live)
+assert since in check_asks[-1][0] and time.time() - store.read_json(jarvis.CHECKS_STAMP, {})["at"] < 5
+store.write_json(jarvis.CHECKS_STAMP, {**store.read_json(jarvis.CHECKS_STAMP, {}), "at": time.time() - 1801})  # the next one, 30 min on
+check_live.brain.ask, reply = working, ["Nothing."]
+jarvis.check_pass(check_live)
+assert since in check_asks[-1][0] and time.time() - store.read_json(jarvis.CHECKS_STAMP, {})["ok"] < 5, check_asks[-1][0][:200]
+store.update_settings({"checks": []})
 # what happens on WhatsApp joins it too ("call him back" from the phone called the person Jarvis had phoned last)
 jarvis.system.notify = lambda *a: None
 jarvis.tell(check_live, "Sam is calling on WhatsApp.", event="WhatsApp")
@@ -2882,6 +3396,8 @@ system.selected_text = lambda: ("the selected words", "older copied text")
 assert brain.tool_selection() == {"selected": "the selected words", "clipboard": "older copied text"}
 system.selected_text = lambda: ("", "")
 assert "nothing is selected" in brain.tool_selection()["error"]
+system.selected_text = lambda: ("TypeError: unsupported operand type(s) for +: 'int' and 'str'", "")  # an error message the
+assert brain.tool_selection()["selected"].startswith("TypeError")  # user selected to ask about is text (it was "nothing selected")
 system.selected_text = real_sel
 # a picture on the clipboard isn't text: no crash, and no bytes passed off as the user's text
 assert system.run([sys.executable, "-c", "import sys; sys.stdout.buffer.write(bytes([0x81]) + b'PNG')"]) == "\ufffdPNG"  # (0x81: invalid in UTF-8 and cp1252 alike)
@@ -3467,6 +3983,30 @@ def no_record(path, source):
 system.record_audio, recorded[:] = no_record, []
 n = brain.Notes(transcribe=lambda audio, prompt: "(silence)", summarise=lambda t: "")
 assert "PipeWire" in n.start("x")["error"] and n.on is None
+# a piece no model can write down at that moment is tried again, and if it still can't be, its recording is kept beside
+# the notes (one busy minute deleted five minutes of a meeting for good)
+tries, real_patience, brain.PATIENCE, real_audible, brain.audible = [], brain.PATIENCE, (0.01, 0.01), brain.audible, (lambda audio: True)
+def busy_then(audio, prompt):
+    tries.append(1)
+    if len(tries) < 3:
+        raise brain.NoModel("no model could answer (busy)")
+    return "The piece, heard on the third try."
+kn = brain.Notes(transcribe=busy_then, summarise=lambda t: "")
+on = {"title": "Kept", "source": "room", "started": time.time(), "heard": []}
+piece = os.path.join(store.DATA, "007.wav")
+open(piece, "wb").write(b"RIFF" + b"\1" * 40000)
+assert kn._transcribe_file(piece, on) == "The piece, heard on the third try." and len(tries) == 3 and not os.path.exists(piece)
+def never(audio, prompt):
+    raise brain.NoModel("no model could answer (offline)")
+kn.transcribe = never
+open(piece, "wb").write(b"RIFF" + b"\1" * 40000)
+line = kn._transcribe_file(piece, on)
+kept = os.path.splitext(brain.Notes._path(on))[0] + " part 007.wav"
+assert "couldn't be transcribed" in line and kept in line and os.path.getsize(kept) == 40004 and not os.path.exists(piece), line
+open(piece, "wb").write(b"RIFF" + b"\1" * 40000)
+assert "kept" not in kn._transcribe_file(piece, dict(on, source="file")) and not os.path.exists(piece)  # (a file's piece: the file is still there)
+os.remove(kept)
+brain.PATIENCE, brain.audible = real_patience, real_audible
 system.record_audio, brain.notes[0], done[:] = fake_record, n, []
 assert "microphone" in brain.tool_notes("start")["result"] and recorded[0] == "both"
 n.stop()
@@ -3541,10 +4081,17 @@ class Recorder:
 system.subprocess.Popen, system.have, system.IS_WINDOWS = Recorder, (lambda program: True), False
 mixed = os.path.join(store.DATA, "both.wav")
 system.stop_recording(system.record_audio(mixed, "both"))
+# a recorder ends by itself and with Jarvis: it writes to a file, so one outlived a restart and recorded for a day
+assert all(a[:4] == ["timeout", "-s", "INT", str(system.RECORD_LIMIT)] for a in spawned) and not system._recording
+left = system.record_audio(os.path.join(store.DATA, "left.wav"), "room")
+assert left in system._recording
+system.end_recordings()  # (what quitting or restarting runs)
+assert not system._recording and os.path.exists(left.path)
+os.remove(left.path)
 system.subprocess.Popen, system.have, system.IS_WINDOWS = real_popen, real_have, real_windows
 with wave.open(mixed) as w:
     assert np.frombuffer(w.readframes(9), np.int16).tolist() == [32767, 32767, 5000]
-assert len(spawned) == 2 and sum("-P" in a for a in spawned) == 1 and not glob.glob(mixed + ".*")
+assert len(spawned) == 3 and sum("-P" in a for a in spawned) == 1 and not glob.glob(mixed + ".*")
 os.remove(mixed)
 import wave
 def wav(samples):
@@ -3633,11 +4180,15 @@ class GoogleHttp:
             ok = data["refresh_token"] == "r3"
             return types.SimpleNamespace(ok=ok, status_code=200 if ok else 400, text='{"error": "invalid_grant"}',
                                          json=lambda: {"access_token": "a3", "expires_in": 3600})
-        return types.SimpleNamespace(ok=True, status_code=200, json=lambda: {"response": {"candidates": [{"content": {"parts": [{"text": "hi"}]}}]}})
+        return types.SimpleNamespace(ok=True, status_code=200, json=lambda: {"response": {"candidates": [{"content": {"parts": [{"text": "hi"}]}}],
+                                                                                          "usageMetadata": {"promptTokenCount": 5}}})
 
 
 ag.http = GoogleHttp()
+signed_in = lambda: {m["key"]: m["input"] for m in brain.cost_report(1)["models"]}.get("antigravity gemini-3.8-flash", 0)
+was = signed_in()
 assert ag.generate([], "gemini-3.8-flash", "low") == [{"text": "hi"}]  # (a@x refused, c@x answered)
+assert signed_in() == was + 5  # (its tokens are counted under the name Jarvis asked for)
 store.write_json(brain.OPENCODE_ACCOUNTS, {"accounts": [{"email": "a@x", "refreshToken": "r1", "managedProjectId": "m1"}]})
 ag.tokens = {}
 try:
@@ -3935,7 +4486,7 @@ brain.pointer[0], brain.tool_screenshot, brain.WATCH_EVERY = real_pointer, real_
 logged = []
 real_changed = brain.changed
 brain.changed = logged.append
-srv = types.SimpleNamespace(call=lambda tool, args: {"result": "ok"})
+srv = types.SimpleNamespace(call=lambda tool, args, **kw: {"result": "ok"})
 ob = brain.Brain.__new__(brain.Brain)
 ob.tool_owner, ob.app_tools = {"COMPOSIO_MULTI_EXECUTE_TOOL": (srv, "COMPOSIO_MULTI_EXECUTE_TOOL")}, {}
 store.update_settings({"safety": "full"})
@@ -4028,7 +4579,7 @@ to_alex = types.SimpleNamespace(name="act", args={"steps": [{"click_on": "Alex i
                                                             {"type": "bye"}, {"keys": "Return"}]})
 assert "error" not in asyncio.run(live._tool(to_alex, halt)) and len(sent_steps) == 3
 live.user_spoke_at = time.time() + 2
-live.typed = {"hi": {"at": time.time(), "sent": False}}  # a cancelled act typed it, then stopped before Return
+live.typed = {"hi": {"at": time.time(), "sent": False, "left": True}}  # a cancelled act typed it, then stopped before Return
 asyncio.run(live._tool(send, halt))
 assert sent_steps[-1] == [{"keys": "Return"}], sent_steps[-1]
 # a chat opened by typing its name, then a send, with no check of which chat opened: a misheard "Brian" for Ryan is refused
@@ -4036,7 +4587,26 @@ live.user_spoke_at = time.time() + 3
 brian = types.SimpleNamespace(name="act", args={"steps": [{"keys": "ctrl+k"}, {"type": "Brian"}, {"keys": "Return"},
                                                           {"type": "hello"}, {"keys": "Return"}]})
 assert "expect" in asyncio.run(live._tool(brian, halt))["error"] and len(sent_steps) == 4
+# text an act typed and finished is typed again when the user asks ("now type it again in the Confirm box" only clicked
+# it), not when the model repeats the act by itself, nor after an act that was cut off mid-way
+box = lambda name: types.SimpleNamespace(name="act", args={"steps": [{"click_on": name}, {"type": "jo@example.com"}]})
+live.typed, live.user_spoke_at = {}, time.time()
+asyncio.run(live._tool(box("the Email box"), threading.Event()))
+live.user_spoke_at = time.time() + 1
+asyncio.run(live._tool(box("the Confirm box"), threading.Event()))
+assert sent_steps[-1] == box("the Confirm box").args["steps"], sent_steps[-1]
+live.user_spoke_at = time.time() - 5
+asyncio.run(live._tool(box("the Confirm box"), threading.Event()))
+assert sent_steps[-1] == [{"click_on": "the Confirm box"}], sent_steps[-1]
+cut, live.typed = threading.Event(), {}
+cut.set()
+asyncio.run(live._tool(box("the Email box"), cut))
+live.user_spoke_at = time.time() + 1  # (the noise that cut it off, heard as speech)
+asyncio.run(live._tool(box("the Email box"), threading.Event()))
+assert sent_steps[-1] == [{"click_on": "the Email box"}], sent_steps[-1]
 # the same goes for the message tools: discord_send called twice in a row with the same words sent them twice
+real_sessions, jarvis.sessions = jarvis.sessions, store.Sessions()  # (no one's messages lately: see wrong_person below)
+jarvis.sessions.dir = tempfile.mkdtemp()
 tool_sends = []
 live.brain = types.SimpleNamespace(_run_tool=lambda name, args: (tool_sends.append(args) or {"result": f"sent to {args.get('to')}"}, None), app_tools={})
 live.last_said, live.user_spoke_at = "", time.time()
@@ -4059,7 +4629,66 @@ live.brain = types.SimpleNamespace(_run_tool=lambda name, args: (tool_sends.appe
 asyncio.run(live._tool(types.SimpleNamespace(name="discord_send", args={"to": "Sam", "text": "yo"}), halt))
 asyncio.run(live._tool(types.SimpleNamespace(name="discord_send", args={"to": "Sam", "text": "yo"}), halt))
 assert len(tool_sends) == 8
+# "tell him yes" goes to whoever the user is talking with: the voice sent "Yes, I am him." to someone who wrote an hour
+# before. Refused once with who it most likely is; the same call again goes (the model may know better: "tell my dad")
+jarvis.sessions.add({"who": "system", "text": "💬 WhatsApp from Dr Abed: are you at the university?"})
+jarvis.sessions.add({"who": "system", "text": "💬 WhatsApp from Sam Lee: You at home?"})
+assert "Sam Lee" in jarvis.wrong_person("whatsapp_send", "Dr Abed", "tell him yes am him") and "You at home?" in jarvis.wrong_person("whatsapp_send", "Dr Abed", "")
+assert jarvis.wrong_person("whatsapp_send", "Sam Lee", "tell him yes") is None
+assert jarvis.wrong_person("whatsapp_send", "Dr Abed", "tell Abed I'm on my way") is None  # (named)
+assert jarvis.wrong_person("discord_send", "Dr Abed", "tell him yes") is None  # (no Discord talk lately)
+live.brain, live.typed, live.last_heard = types.SimpleNamespace(_run_tool=lambda name, args: (tool_sends.append(args) or {"result": "sent"}, None), app_tools={}), {}, "tell him yes am him"
+wrong = types.SimpleNamespace(name="whatsapp_send", args={"to": "Dr Abed", "text": "Yes, I am him.", "confirmed": True})
+assert "Sam Lee" in asyncio.run(live._tool(wrong, halt))["error"] and len(tool_sends) == 8
+live.last_heard = "yes, him"  # (the user confirming: not warned again)
+assert asyncio.run(live._tool(wrong, halt)) == {"result": "sent"} and len(tool_sends) == 9
+jarvis.sessions.add({"who": "system", "text": "✏️ Changed: Sent a WhatsApp message to Dr Abed: on my way"})
+assert jarvis.wrong_person("whatsapp_send", "Dr Abed", "and tell him I'm late") is None  # (the user's latest is with him now)
+jarvis.sessions.messages.clear()
+# ...and one request sends one message there: the voice sent "Yes, I'm home.", then "Yes, that's me." to the same chat
+live.last_heard, n = "tell sam yes I'm home", len(tool_sends)
+first = types.SimpleNamespace(name="whatsapp_send", args={"to": "Sam Lee", "text": "Yes, I'm home.", "confirmed": True})
+second = types.SimpleNamespace(name="whatsapp_send", args={"to": "Sam Lee", "text": "Yes, that's me.", "confirmed": True})
+assert asyncio.run(live._tool(first, halt)) == {"result": "sent"} and "already went" in asyncio.run(live._tool(second, halt))["error"]
+assert "already went" in asyncio.run(live._tool(second, halt))["error"] and len(tool_sends) == n + 1  # (not once: never)
+live.last_heard = "and tell him to bring the charger"  # (a new request: its own message)
+assert asyncio.run(live._tool(types.SimpleNamespace(name="whatsapp_send", args={"to": "Sam Lee", "text": "Bring the charger.", "confirmed": True}), halt)) == {"result": "sent"}
+assert len(tool_sends) == n + 2
+del tool_sends[-3:]  # (the counts below are the duplicate checks')
+live.last_heard, live.user_spoke_at = "", time.time()  # (and a fresh count of the voice's tools)
+# a send cut off by a noise still goes through: the model is told so (told "cancelled", it sent again), and the same call
+# again is refused once, even after the noise's transcript made it look like the user had spoken since
+def slow_send(name, args):
+    time.sleep(0.3)
+    return tool_sends.append(args) or {"result": "sent"}, None
+
+
+live.brain, live.typed, live.quick_tasks = types.SimpleNamespace(_run_tool=slow_send, app_tools={}), {}, {}
+omw = types.SimpleNamespace(name="whatsapp_send", id="cut", args={"to": "Sam", "text": "on my way", "confirmed": True})
+async def cut_off():
+    sent_responses.clear()
+    cut = threading.Event()
+    t = asyncio.create_task(live._quick(fake_session, [omw], halt=cut))
+    live.quick_tasks[t] = cut
+    await asyncio.sleep(0.1)
+    live._cancel_quick()
+    await asyncio.sleep(0.5)  # (the shielded send finishes meanwhile)
+    live.user_spoke_at = time.time()  # the noise's transcript
+    again = await live._tool(omw, cut)
+    live.user_spoke_at = time.time() + 1  # "send it again"
+    return again, await live._tool(omw, cut)
+again, asked = asyncio.run(cut_off())
+told = [r.response for batch in sent_responses for r in batch]
+assert "NOT stopped" in told[0]["result"] and "NOT DONE" in again["error"] and "error" not in asked and len(tool_sends) == 10, (told, again, asked)
+# ...while one whose answer did reach the model is sent again as soon as the user asks
+async def answered():
+    await live._quick(fake_session, [omw])
+    live.user_spoke_at = time.time() + 2
+    return await live._tool(omw, threading.Event())
+live.typed = {}
+assert "error" not in asyncio.run(answered()) and len(tool_sends) == 12
 live.brain = real_brain
+jarvis.sessions = real_sessions
 # something Jarvis announces is in the chat once: tell() logged it, so the spoken copy isn't added again
 logged, real_emit = [], jarvis.emit
 jarvis.emit = lambda kind, **kw: logged.append(kw.get("text"))
@@ -4456,10 +5085,13 @@ wa = whatsapp.WhatsApp(types.SimpleNamespace(_generate=lambda contents, **kw: as
 chats = [{"chat": "1@c.us", "name": "Sam Lee"}, {"chat": "2@c.us", "name": "Sam"}, {"chat": "3@c.us", "name": "Maya"}]
 
 
+page_history = [None]
+
+
 def fake_page(cmd, timeout=30, **args):
     page_calls.append((cmd, args))
     if cmd == "history":
-        return [{"id": "m1", "me": False, "text": "hey, you around?", "at": 0}]
+        return page_history[0] or [{"id": "m1", "me": False, "text": "hey, you around?", "at": 0}]
     if cmd == "send":
         return f"sent{len(page_calls)}"
     if cmd == "chats":
@@ -4496,6 +5128,25 @@ wa.event({"ev": "msg", "id": "u1", "chat": "3@c.us", "me": True, "text": "omw", 
 wa_says(chat="3@c.us", name="Maya")
 time.sleep(0.3)
 assert len(sends()) == 1 and "you're chatting with them" in wa_logs[-1]  # the user is talking to Maya themselves
+# ...and after a restart, when only the chat's own messages say so (Jarvis introduced itself mid-conversation)
+wa.user_wrote.clear()
+page_history[0], n = [{"id": "u1", "me": True, "text": "omw", "at": time.time() - 300}, {"id": "m9", "me": False, "text": "ok!", "at": time.time()}], len(wa_logs)
+wa_says(chat="3@c.us", name="Maya")
+time.sleep(0.3)
+page_history[0] = None
+assert len(sends()) == 1 and len(wa_logs) == n + 1 and "you're chatting with them" in wa_logs[-1]
+# a send waits longer than the helper's own 60 s (at 30 it was "failed" while it still went out)
+waits, real_ask = [], wa.ask
+wa.ask = lambda cmd, timeout=30, **args: waits.append((cmd, timeout)) or "id9"
+wa.send("3@c.us", "hi")
+wa.ask = real_ask
+assert waits == [("send", whatsapp.SEND_WAIT)] and whatsapp.SEND_WAIT > 60
+# a call's report survives the summary failing (no model just then): the user was told nothing, and the transcript was lost
+def no_model(contents, **kw):
+    raise brain.NoModel("no model could answer")
+working, wa.brain._generate = wa.brain._generate, no_model
+assert "meeting moved to 3" in wa.summary("Maya", "Maya: the meeting moved to 3 pm\nJarvis: I'll tell them")
+wa.brain._generate = working
 wa.replies = [(time.time(), "x")] * whatsapp.REPLY_LIMIT
 wa_says(chat="2@c.us", name="Sam")
 time.sleep(0.3)
@@ -4787,6 +5438,24 @@ sb_task = brain.Task()
 assert sb._ask("say hi in the chat", lambda n: None, None, sb_task) == "Sent it." and len(seen_turns) == 3 and "save the way with skill" in seen_turns[2]
 assert sb_task.screen
 brain.screen_lock.release()  # (ask() lets go of the screen when a task ends; _ask alone doesn't)
+# a model reply with nothing in it (a blocked prompt, a malformed tool call) isn't an answer: the step is asked again, and a
+# task that never got one says so. It ended as "Done.": said for something that was never started
+empties = [[], [{"text": "", "thought": True}], [{"text": "Sent the report."}]]
+sb._generate = lambda msgs, **kw: empties.pop(0)
+sb_task = brain.Task()
+assert sb._ask("send the report", lambda n: None, None, sb_task) == "Sent the report." and not empties
+assert [t["role"] for t in sb_task.contents] == ["user", "model"], sb_task.contents  # (the empty turns aren't kept)
+sb._generate = lambda msgs, **kw: []
+assert "nothing was done" in sb._ask("send the report", lambda n: None, None, brain.Task())
+# a reply that asks the user something is never nudged to "do it": the nudge was the go-ahead nobody gave
+asks_first = []
+sb._generate = lambda msgs, **kw: asks_first.append(1) or [{"text": "I'll send 'I quit' to Sam on WhatsApp. Shall I go ahead?"}]
+assert sb._ask("tell Sam I quit", lambda n: None, None, brain.Task()).endswith("go ahead?") and len(asks_first) == 1
+half = [[{"functionCall": {"name": "skill", "args": {"action": "list"}}}]]
+sb._generate = lambda msgs, **kw: half.pop(0) if half else []
+sb_task = brain.Task()
+out = sb._ask("send the report", lambda n: None, None, sb_task)
+assert "can't say" in out and sb_task.contents[-1] == {"role": "model", "parts": [{"text": out}]}, out
 # a task doesn't die because every model was busy for one moment (64 steps into a download, a single "no model could
 # answer" ended it and threw the lot away): the step is asked again after a wait. Not when nothing could ever answer
 # (no key), not once it's stopped, and not for ever
@@ -4813,6 +5482,28 @@ for failures, left, stopped in (([brain.NoModel("no model could answer (x: busy)
         raise AssertionError("answered with no model")
     except brain.NoModel:
         assert len(busy) == left and len(t.contents) == 0, (len(busy), left)  # (and no half-finished turn left behind)
+# ...but one that fails after steps ran keeps them, and the failure names them: the conversation held nothing of the first
+# run, so "try again" sent the message a second time
+went = [[{"functionCall": {"name": "whatsapp_send", "args": {"to": "Sam", "text": "on my way"}}}]]
+
+
+def then_nothing(msgs, **kw):
+    if went:
+        return went.pop(0)
+    raise brain.NoModel("no model could answer (x: busy)", False)
+
+
+sb._generate, sb._run_tool = then_nothing, lambda name, args, task=None: ({"result": "sent to Sam"}, None)
+fb = brain.Brain.__new__(brain.Brain)
+fb.__dict__.update(sb.__dict__)
+fb.contents, fb.joined, real_asked, brain.on_asked[0] = [], 0, brain.on_asked[0], lambda contents: None
+try:
+    fb.ask("tell Sam I'm on my way")
+    raise AssertionError("answered with no model")
+except brain.NoModel as e:
+    assert "whatsapp_send" in str(e) and [m["role"] for m in fb.contents] == ["user", "model", "user", "model"], (e, fb.contents)
+    assert "stopped here" in fb.contents[-1]["parts"][0]["text"] and "functionResponse" in fb.contents[2]["parts"][0]
+brain.on_asked[0] = real_asked
 brain.PATIENCE = real_patience
 # a long job that reaches the step limit says what it did and what's left (it said "that's taking more steps than I'd
 # like" and nothing else), and its work stays in the conversation, so "continue" carries on from there
@@ -5087,7 +5778,7 @@ for cmd in ("which rm", "ls /usr/bin/rm", "man rm", "echo 'rm is a command'", "g
     assert not brain.risky_command(cmd), cmd
 # the agent can't disconnect accounts through Composio's own tool: only the Accounts page does that
 managed, composio = [], brain.McpServer("composio", {"url": "https://connect.composio.dev/mcp"}, None, print)
-composio.call = lambda tool, args, limit=20000: managed.append(args) or {"result": "{}"}
+composio.call = lambda tool, args, limit=20000, **kw: managed.append(args) or {"result": "{}"}
 agent = brain.Brain.__new__(brain.Brain)
 agent.tool_owner, agent.app_tools, agent.plugins = {"COMPOSIO_MANAGE_CONNECTIONS": (composio, "COMPOSIO_MANAGE_CONNECTIONS")}, {}, {}
 gone = agent._run_tool("COMPOSIO_MANAGE_CONNECTIONS", {"toolkits": [{"name": "gmail", "action": "remove", "account_id": "a1"}]})[0]
@@ -5174,6 +5865,58 @@ wa.dialing = True
 wa._ring({"id": "c10", "name": "Sam Lee", "video": False, "group": False, "contact": True})
 wa.dialing = False
 assert "another call" in wa_logs[-1] and not wa.call, wa_logs[-1]
+# its voice comes up before it picks up: with Gemini Live out of reach the call is left ringing (the caller was cut off
+# at once, or left in silence)
+def no_voice():
+    raise LookupError("no Gemini key")
+
+
+ring = lambda call: wa._ring({"id": call, "name": "Sam Lee", "video": False, "group": False, "contact": True})
+real_key, brain.api_key, n = brain.api_key, no_voice, len(page_calls)
+wa.calls["c20"] = "ringing"
+ring("c20")
+assert "couldn't pick up" in wa_logs[-1] and not wa.call and not any(cmd == "accept" for cmd, _ in page_calls[n:]), wa_logs[-1]
+# with it in reach, the voice is connected first and says nothing until the call is picked up
+from google import genai as real_genai
+order = []
+
+
+class FakeLive:
+    async def __aenter__(self):
+        order.append("voice")
+        return self
+
+    async def __aexit__(self, *a):
+        return False
+
+    async def send_realtime_input(self, **kw):
+        order.append("greets")
+
+    async def receive(self):
+        await asyncio.sleep(0.05)
+        return
+        yield
+
+
+real_client, brain.api_key = real_genai.Client, lambda: "AIza-call-key-000001"
+real_genai.Client = lambda api_key: types.SimpleNamespace(aio=types.SimpleNamespace(live=types.SimpleNamespace(
+    connect=lambda **kw: FakeLive())))
+wa.ask = lambda cmd, timeout=30, **args: order.append(cmd) or fake_page(cmd, **args)
+wa.calls["c21"] = "ringing"
+threading.Timer(1.5, wa.event, args=({"ev": "callstate", "call": "c21", "state": "over"},)).start()  # (they hang up)
+wa_told.clear()
+ring("c21")
+assert order[:3] == ["voice", "accept", "greets"] and not wa.call, order
+assert "nothing was said" in wa_told[-1], wa_told
+# a call Jarvis started while this one rang: it isn't picked up too (two calls ringing in the same 20 s both were,
+# and its voice went into both)
+wa.calls["c22"], n = "ringing", len(order)
+threading.Timer(0.3, setattr, args=(wa, "dialing", True)).start()
+ring("c22")
+wa.dialing = False
+assert "another call" in wa_logs[-1] and order[n:] == [] and not wa.call, (wa_logs[-1], order[n:])
+real_genai.Client, brain.api_key, wa.ask, wa.answered = real_client, real_key, fake_page, []
+wa.calls.clear()
 # a meeting's time is said in the user's time zone, not the one the event was made in
 away = "-11:00" if time.localtime().tm_gmtoff != -11 * 3600 else "+05:00"
 meet = {"summary": "Standup", "start": {"dateTime": f"2026-11-05T10:00:00{away}"}}

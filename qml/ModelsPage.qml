@@ -138,9 +138,10 @@ ScrollPage {
             spacing: 4
             Txt { kind: "small"
                   text: (/keychain/.test(page.info.storage || "keychain") ? qsTr("Keys stay in your system keychain, never in the settings file.")
-                        : qsTr("Keys stay in a private file on this PC, never in the settings file.")) }
+                        : qsTr("Keys stay in a private file on this PC, never in the settings file."))
+                        + " " + qsTr("Several keys for one provider take over from each other.")
+                  Layout.fillWidth: true }
             IconButton { symbol: "info"; size: 28; glyph: 16; color: Theme.text3; tip: page.info.storage ? qsTr("Kept in %1").arg(page.info.storage) : qsTr("Kept in your keychain") }
-            Item { Layout.fillWidth: true }
         }
         ColumnLayout {
             Layout.fillWidth: true
@@ -148,6 +149,7 @@ ScrollPage {
             Repeater {
                 model: page.info.providers.filter(p => p.key || p.local || p.name === page.adding)
                 ColumnLayout {
+                    id: prov
                     required property var modelData
                     required property int index
                     Layout.fillWidth: true
@@ -169,7 +171,7 @@ ScrollPage {
                             Layout.preferredWidth: 320
                             visible: !modelData.local
                             echoMode: TextInput.Password
-                            placeholderText: modelData.key ? qsTr("Key saved · paste a new one to replace it") : qsTr("Paste an API key")
+                            placeholderText: modelData.key ? qsTr("Paste another key") : qsTr("Paste an API key")
                             onAccepted: if (text) Api.post(`/api/keys/${modelData.name}`, { key: text }, d => { page.info = d; page.adding = ""; text = ""; Backend.toast(qsTr("Key saved"), false); page.lookUp() })
                             onActiveFocusChanged: if (!activeFocus && !text && page.adding === modelData.name) page.adding = ""
                             Component.onCompleted: if (page.adding === modelData.name) forceActiveFocus()
@@ -179,6 +181,25 @@ ScrollPage {
                               text: page.info.ollama === null ? qsTr("Ollama isn't running") : (page.info.ollama.length ? page.info.ollama.join(", ") : qsTr("No models downloaded yet")) }
                         IconButton { visible: !!modelData.custom; symbol: "trash"; color: Theme.text3; tip: qsTr("Remove this provider"); Layout.rightMargin: -8
                                      onClicked: Api.post(`/api/providers/${modelData.name}/delete`, {}, d => { page.info = d; page.lookUp() }) }
+                    }
+                    Flow {  // the saved keys, by their last four characters: orange while one rests, each removable
+                        Layout.fillWidth: true
+                        Layout.leftMargin: 20
+                        Layout.bottomMargin: 12
+                        visible: (prov.modelData.keys || []).length > 0
+                        spacing: 4
+                        Repeater {
+                            model: prov.modelData.keys || []
+                            Row {
+                                id: savedKey
+                                required property var modelData
+                                required property int index
+                                Chip { id: tail; focusPolicy: Qt.NoFocus; dot: savedKey.modelData.resting > 0 ? "working" : "ok"; text: "…" + savedKey.modelData.tail
+                                       Tip { text: qsTr("Resting (rate limited or refused): the next key answers"); visible: tail.hovered && savedKey.modelData.resting > 0 } }
+                                IconButton { symbol: "close"; size: 32; glyph: 14; color: Theme.text3; tip: qsTr("Remove")
+                                             onClicked: Api.post(`/api/keys/${prov.modelData.name}`, { remove: savedKey.index }, d => { page.info = d; page.lookUp() }) }
+                            }
+                        }
                     }
                 }
             }

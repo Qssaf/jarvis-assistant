@@ -19,6 +19,7 @@ Slider {
         color: "white"
         border.width: 1
         border.color: Theme.stroke
+        Focus { keyboard: true; visible: s.visualFocus }
         RectangularShadow { z: -1; anchors.fill: parent; radius: 10; blur: 6; offset.y: 1; color: Theme.shadow }
         Rectangle {  // the glow ring under the mouse
             z: -2

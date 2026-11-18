@@ -112,6 +112,11 @@ CASES = [
      and re.search(r"match|saturday|7:45", " ".join(a) + r, re.I)},
     {"id": "discord_tool", "task": "Send 'see you at 6' to Sam Lee on Discord.", "discord": True, "windows": ["vesktop: Discord"],
      "check": lambda c, r, a: ran(c, "discord_send", to="Sam Lee", text="see you at 6", confirmed=True) and "act" not in names(c)},
+    # (a message passed on is written to that person: "give it to him tomorrow" went to him word for word)
+    {"id": "discord_relay", "task": "Tell Sam Lee on Discord I'll bring him his charger tomorrow.", "discord": True, "windows": ["vesktop: Discord"],
+     "check": lambda c, r, a: ran(c, "discord_send", to="Sam Lee", confirmed=True) and any(
+         re.search(r"\byou(r)?\b", str(x["args"].get("text", "")), re.I) and not re.search(r"\b(him|his)\b", str(x["args"].get("text", "")), re.I)
+         for x in c if x["name"] == "discord_send")},
     {"id": "unsend", "task": "Delete the message I just sent to Sam Lee on Discord, it was meant for someone else.", "discord": True,
      "windows": ["vesktop: Discord"], "check": lambda c, r, a: ran(c, "unsend", app="discord", chat="Sam Lee", confirmed=True) and "act" not in names(c)},
     {"id": "discord_reply", "task": "Reply to Alex on Discord.", "discord": True, "windows": ["vesktop: Discord"], "answer": None,

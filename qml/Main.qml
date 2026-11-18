@@ -114,7 +114,7 @@ Window {
                 Repeater {
                     model: [["home", qsTr("Home"), "home"], ["chats", qsTr("Chats"), "chats"], ["activity", qsTr("Activity"), "activity"],
                             ["accounts", qsTr("Accounts"), "accounts"], ["plugins", qsTr("Plugins"), "plugins"], ["models", qsTr("Models"), "cpu"],
-                            ["memory", qsTr("Memory"), "memory"], ["health", qsTr("Health"), "pulse"]]
+                            ["memory", qsTr("Memory"), "memory"], ["cost", qsTr("Cost"), "coin"], ["health", qsTr("Health"), "pulse"]]
                     RailButton { required property var modelData; key: modelData[0]; label: modelData[1]; symbol: modelData[2] }
                 }
                 Item { Layout.fillHeight: true }
@@ -137,7 +137,7 @@ Window {
                 }
                 StackLayout {
                     anchors.fill: parent
-                    currentIndex: ["home", "chats", "activity", "accounts", "plugins", "models", "memory", "settings", "health"].indexOf(win.page)
+                    currentIndex: ["home", "chats", "activity", "accounts", "plugins", "models", "memory", "settings", "health", "cost"].indexOf(win.page)
                     HomePage { id: home }
                     Loader { active: win.page === "chats" || item; sourceComponent: ChatsPage { onOpened: { home.reload(); win.go("home") } } }
                     Loader { active: win.page === "activity" || item; sourceComponent: ActivityPage {} }
@@ -147,6 +147,7 @@ Window {
                     Loader { active: win.page === "memory" || item; sourceComponent: MemoryPage {} }
                     Loader { active: win.page === "settings" || item; sourceComponent: SettingsPage { onSetupAgain: win.needsSetup = true } }
                     Loader { active: win.page === "health" || item; sourceComponent: HealthPage { onGoTo: key => win.go(key) } }
+                    Loader { active: win.page === "cost" || item; sourceComponent: CostPage {} }
                 }
             }
         }
@@ -221,12 +222,15 @@ Window {
         Layout.minimumHeight: 44
         Layout.fillHeight: true  // (so it can shrink in a short window)
         hoverEnabled: true
-        focusPolicy: Qt.NoFocus
+        focusPolicy: Qt.TabFocus  // (Tab reaches it; a click leaves the typing where it was)
+        Keys.onReturnPressed: click()
+        Keys.onEnterPressed: click()
         onClicked: win.go(key)
         background: Rectangle {
             radius: 16
             color: rb.current ? Theme.accentSoft : rb.hovered ? Theme.glassHover : "transparent"
             Behavior on color { ColorAnimation { duration: Theme.fast } }
+            Focus { keyboard: true; visible: rb.visualFocus }
         }
         contentItem: Item {
             Column {

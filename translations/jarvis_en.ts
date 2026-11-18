@@ -40,6 +40,25 @@
     </message>
 </context>
 <context>
+    <name>CostPage</name>
+    <message numerus="yes">
+        <location filename="../qml/CostPage.qml" line="+112"/>
+        <source>%n model(s) have no known price, so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>%n model has no known price, so it isn&apos;t in the total.</numerusform>
+            <numerusform>%n models have no known price, so they aren&apos;t in the total.</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+25"/>
+        <source>%1 · %n request(s)</source>
+        <translation>
+            <numerusform>%1 · %n request</numerusform>
+            <numerusform>%1 · %n requests</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>HealthPage</name>
     <message numerus="yes">
         <location filename="../qml/HealthPage.qml" line="+56"/>

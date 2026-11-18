@@ -3,6 +3,16 @@
 ## Unreleased
 
 ### Added
+- **A Cost page:** what Jarvis's model use would cost at Google's paid-tier prices, for today, the last 7 or 30 days:
+  the total, a bar per day, and each model's requests, tokens and cost (the voice's audio priced as audio). Nothing is
+  billed on the free tier or through a Google sign-in; the page shows what the same use would cost with billing on.
+- **The window works from the keyboard:** Tab reaches every button, switch, chip and the side rail (a ring shows where
+  you are), Enter or Space presses it, a control further down the page scrolls into view, and Tab leaves the message
+  box instead of typing a tab. Switches without a label of their own are named for screen readers.
+- **Several API keys for one provider:** paste more than one key for Gemini, OpenAI or any other provider on the Models
+  page and they take over from each other: when one is rate limited, out of its daily quota or refused, the next
+  answers, and the voice (Gemini Live) moves to the next key too. Each saved key shows by its last four characters and
+  can be removed on its own. A key Gemini calls invalid no longer ends the whole request: the next key or model takes it.
 - **Search everything Jarvis keeps:** *"what did Sam send me about the trip?"* looks through past conversations (with
   the WhatsApp and Discord messages shown in them), your lecture and meeting notes, every WhatsApp chat, people's pages
   and memory at once, newest first.
@@ -90,6 +100,8 @@
   WhatsApp → *Tell people when I'm busy* lets it share your Google Calendar's busy times (never what they are).
 
 ### Changed
+- **Gemini 4 Hydrogen leads background tasks.** It guesses less than the Flash models. On a free key it's often slow or
+  busy, so after 8 seconds the next model is asked too, and once its daily quota is used up it's skipped until it resets.
 - **Notes hear the room and the PC together:** live notes record the microphone and what the PC plays at once, so a
   meeting in the room or on a call is caught either way (notes of "the conference" once recorded only the PC's sound,
   which held nothing but Jarvis's own voice). The notes file is written as they go, so a restart keeps the transcript,
@@ -119,6 +131,37 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
+- **Messages passed on sound like you:** *"tell him yes, but I'll give it to him tomorrow"* sends *"Yes, but I'll give it
+  to you tomorrow"* to him (it went word for word), *"tell him yes"* goes to the person you're talking with (it went to
+  someone who had written an hour before), and one request sends one message. Jarvis now sees what people wrote, not
+  only its summary, including messages that arrive while you're talking with it.
+- **Typed requests are never taken for noise:** a typed *"say yes"* got no answer at all.
+- **Tasks keep your words:** a task handed to the agent carries what you actually said, so "use commands, not my
+  screen" isn't lost in the voice's summary of it.
+- **Things going out twice:** a voice send cut off by a noise is no longer reported as "cancelled" (it had gone, and was
+  sent again), an email or event isn't re-sent when the plugin's answer is lost on the way back, a slow WhatsApp send
+  isn't called failed while it's still going out, and a task that fails partway keeps what it already did, so "try
+  again" doesn't repeat it.
+- **"Done." for nothing:** an empty reply from a model is asked again, and a task that never got an answer says so.
+  A reply that asks you something ("Shall I go ahead?") is no longer answered for you with "do it".
+- **Typing into the wrong place:** an act step naming an app that can't be brought up types nothing; the window Jarvis
+  launched only gets the keyboard back just after the launch; a plan whose look or screenshot fails still says what ran.
+- **Voice:** the reply after one cut off with Stop was silent; a lookup's answer ("let me check"...) or a failed send
+  was never spoken; Stop pressed while the backup voice writes a request down now stops it. When the connection
+  drops while Jarvis is looking something up or sending, it reconnects and tells you how it went (it used to go
+  silent). A request Gemini lets drop is asked again even while a background task is working. *"Now type it again in
+  the other box"* types it (it only clicked the box).
+- **Notes:** a recorder no longer outlives Jarvis (one filled the temp folder for a day); a piece that can't be written
+  down is tried again, and its recording kept beside the notes if it still can't.
+- **Remembering:** two facts remembered at once are both kept (one was lost, sometimes the whole memory with it).
+- **Accounts:** results over 20,000 characters are read whole (Classroom said "nothing due"), a course that can't be
+  read is an error, not an empty one, and accounts without direct tools stay connected after the Accounts page refreshes.
+- **WhatsApp:** no auto-reply after a restart in a chat you were just writing in; an answered call is still reported
+  when its summary fails, and one where nothing was said is mentioned. Jarvis picks a call up only once its voice is
+  ready (callers were cut off or left in silence when it wasn't), and never two calls at once.
+- **Background checks:** one that failed or was stopped no longer skips what arrived meanwhile.
+- A command that times out stops with everything it started; the selection is read only when the read worked.
+- Apps Jarvis opens on Wayland are no longer forced through XWayland (blurry or the wrong size on a scaled screen).
 - **"Listen to the conference with me" takes notes now:** asking Jarvis to keep listening through a meeting, class or
   conference without talking got *"I'll remain active and keep listening"*, though its microphone closes after a few
   seconds of quiet, and words from the meeting could end the conversation. It now starts its notes (from the microphone

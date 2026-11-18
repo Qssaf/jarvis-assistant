@@ -33,6 +33,18 @@ Item {
         picked = i
     }
     NumberAnimation { id: glide; target: sv.contentItem; property: "contentY"; duration: 260; easing.type: Easing.OutCubic }
+    Connections {  // a control Tab reaches that's out of sight is scrolled into view
+        target: p.Window.window
+        function onActiveFocusItemChanged() {
+            const item = p.Window.window.activeFocusItem
+            if (!item || !(item.focusReason === Qt.TabFocusReason || item.focusReason === Qt.BacktabFocusReason)) return
+            for (let up = item.parent; up !== column; up = up.parent)
+                if (!up) return  // (not on this page)
+            const y = item.mapToItem(column, 0, 0).y, top = sv.contentItem.contentY
+            if (y < top + Theme.margin) sv.contentItem.contentY = Math.max(0, y - Theme.margin)
+            else if (y + item.height > top + sv.height - Theme.margin) sv.contentItem.contentY = y + item.height - sv.height + Theme.margin
+        }
+    }
     Connections {
         target: sv.contentItem
         function onContentYChanged() { if (!glide.running) p.picked = -1 }

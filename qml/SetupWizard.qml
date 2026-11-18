@@ -431,7 +431,9 @@ Rectangle {
         Layout.fillWidth: true
         implicitHeight: chCol.implicitHeight + 32
         hoverEnabled: true
-        focusPolicy: Qt.NoFocus
+        focusPolicy: Qt.TabFocus  // (Tab reaches it; a click leaves the typing where it was)
+        Keys.onReturnPressed: click()
+        Keys.onEnterPressed: click()
         onClicked: chosen()
         background: Rectangle {
             radius: wiz.panel
@@ -439,6 +441,7 @@ Rectangle {
             border.width: 1
             border.color: ch.picked ? Theme.alpha(Theme.accent, 0.5) : Theme.stroke
             Behavior on color { ColorAnimation { duration: Theme.fast } }
+            Focus { keyboard: true; visible: ch.visualFocus }
         }
         contentItem: Item {
             Rectangle {  // the radio

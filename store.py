@@ -77,6 +77,7 @@ DEFAULT_SETTINGS = {
     "look_models": [], "point_models": [], "point_strong_models": [], "search_models": [], "image_models": [],
     "hear_models": [], "speak_models": [],
     "agent_models": [
+        "aistudio gemini-4-hydrogen low",  # (it guesses less; slow on the free tier, so only here: never "minimal", a 400)
         "antigravity gemini-3.8-flash low",  # (only when signed in with Google, on the Models page)
         "aistudio gemini-3.8-flash medium",
         "aistudio gemini-3.7-flash low",
@@ -107,7 +108,12 @@ def write_json(path, data, private=False):
     fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600 if private else 0o644)
     with os.fdopen(fd, "w") as f:
         json.dump(data, f, indent=1)
-    for wait in (0.05, 0.1, 0.2, 0.4, None):  # atomic: a crash never leaves half a file
+    _swap(tmp, path)
+
+
+def _swap(tmp, path):
+    """tmp takes path's place in one step: a crash, or someone reading at that moment, never sees half a file."""
+    for wait in (0.05, 0.1, 0.2, 0.4, None):
         try:
             os.replace(tmp, path)
             return
@@ -246,18 +252,26 @@ def memory():
         return raw.decode(locale.getpreferredencoding(False), "replace").strip()
 
 
+def _write_memory(text):  # (with _lock held; through a temp file, so a reader never finds it empty mid-write)
+    os.makedirs(DATA, exist_ok=True)
+    tmp = f"{MEMORY_FILE}.{threading.get_ident()}.tmp"
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(text.strip() + "\n" if text.strip() else "")
+    _swap(tmp, MEMORY_FILE)
+
+
 def set_memory(text):
     with _lock:
-        os.makedirs(DATA, exist_ok=True)
-        fd = os.open(MEMORY_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            f.write(text.strip() + "\n" if text.strip() else "")
+        _write_memory(text)
 
 
 def remember(fact):
     fact = " ".join(fact.split())
-    if fact and f"- {fact}".lower() not in (l.strip().lower() for l in memory().splitlines()):  # (said twice: kept once)
-        set_memory(f"{memory()}\n- {fact}")
+    with _lock:  # read and written in one go: two facts remembered at once (the voice sends both calls together) lost one,
+        # and one in five times the whole memory
+        if fact and f"- {fact}".lower() not in (l.strip().lower() for l in memory().splitlines()):  # (said twice: kept once)
+            _write_memory(f"{memory()}\n- {fact}")
     return fact
 
 
@@ -266,9 +280,10 @@ def forget(text):
     text = text.strip()
     if len(text) < 3:  # "" or a letter is in nearly every line: that would wipe the memory
         raise ValueError("give a few words from the note to forget")
-    lines = memory().splitlines()
-    keep = [l for l in lines if text.lower() not in l.lower()]
-    set_memory("\n".join(keep))
+    with _lock:
+        lines = memory().splitlines()
+        keep = [l for l in lines if text.lower() not in l.lower()]
+        _write_memory("\n".join(keep))
     return len(lines) - len(keep)
 
 
@@ -611,18 +626,23 @@ def key_storage():
     return "your system keychain" if _keyring() else f"a private file ({KEYS_FILE})"
 
 
-def secret(name):
-    """The API key saved for a provider, or ''."""
+def secrets(name):
+    """Every API key saved for a provider, in the order they were added (they're kept together, one per line)."""
     kr = _keyring()
     try:
         value = kr.get_password("jarvis", name) if kr else None
     except Exception:  # keychain locked or unavailable right now
         value = None
-    return value or read_json(KEYS_FILE, {}).get(name, "")
+    return [k for k in (value or read_json(KEYS_FILE, {}).get(name, "")).split("\n") if k]
+
+
+def secret(name):
+    """The API key saved for a provider (the first of several), or ''."""
+    return next(iter(secrets(name)), "")
 
 
 def set_secret(name, value):
-    """Save (or with '' delete) a provider's key; never in settings.json."""
+    """Save (or with '' delete) a provider's key, or several with a new line between them; never in settings.json."""
     kr = _keyring()
     with _lock:
         if kr:

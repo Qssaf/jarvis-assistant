@@ -1,7 +1,7 @@
 """Everything that depends on the operating system, behind one small interface: where files live, the microphone and
 speaker, screenshots, mouse and keyboard, windows, apps, the shell, notifications, media and starting at login.
 Windows and Linux (X11 or Wayland; KDE Plasma gets faster paths). Each function picks the best tool that's installed."""
-import functools, json, os, re, shutil, socket, struct, subprocess, sys, tempfile, threading, time
+import atexit, functools, json, os, re, shutil, socket, struct, subprocess, sys, tempfile, threading, time
 
 IS_WINDOWS = sys.platform == "win32"
 WAYLAND = not IS_WINDOWS and os.environ.get("XDG_SESSION_TYPE") == "wayland"
@@ -65,6 +65,18 @@ def run(args, timeout=15, env=None):
     return (r.stdout + r.stderr).strip()
 
 
+def _kill_tree(proc):
+    """Stop a process started in its own session, with everything it started (npx runs wrangler, which keeps the output
+    open; a shell's pipeline)."""
+    if IS_WINDOWS:
+        subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
+    else:
+        try:
+            os.killpg(proc.pid, 9)
+        except OSError:
+            pass
+
+
 def run_lines(args, on_line, cwd=None, timeout=600, halt=None, stdin_text=None):
     """A long command (npx on Windows is npx.cmd: it's found on PATH), each line it prints passed to on_line as it comes.
     Only stdin_text is typed to it (free text goes there, never in args: a .cmd's arguments go through cmd.exe, which
@@ -75,15 +87,7 @@ def run_lines(args, on_line, cwd=None, timeout=600, halt=None, stdin_text=None):
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace",
                             creationflags=subprocess.CREATE_NO_WINDOW if IS_WINDOWS else 0, start_new_session=not IS_WINDOWS)
 
-    def stop():  # with everything it started (npx runs wrangler, which keeps the output open)
-        if IS_WINDOWS:
-            subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], capture_output=True,
-                           creationflags=subprocess.CREATE_NO_WINDOW)
-        else:
-            try:
-                os.killpg(proc.pid, 9)
-            except OSError:
-                pass
+    stop = lambda: _kill_tree(proc)
     done, end = threading.Event(), time.time() + timeout
 
     def watch():
@@ -284,8 +288,28 @@ def record_audio(path, source="pc"):
     if source == "both":
         return {"path": path, "parts": [record_audio(path + ".pc.wav", "pc"), record_audio(path + ".mic.wav", "room")]}
     what = ["-P", "{ stream.capture.sink=true }"] if source == "pc" else []
-    return subprocess.Popen(["pw-record", *what, "--rate", "16000", "--channels", "1", "--format", "s16", path],
+    limit = ["timeout", "-s", "INT", str(RECORD_LIMIT)] if have("timeout") else []
+    proc = subprocess.Popen([*limit, "pw-record", *what, "--rate", "16000", "--channels", "1", "--format", "s16", path],
                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    _recording.add(proc)
+    return proc
+
+
+# a recorder writes to a file, so nothing ended it when Jarvis quit, restarted or crashed while notes were on: one went on
+# recording the PC's sound for a day. Each now ends by itself (notes cut a piece every 5 minutes), and all end with Jarvis
+RECORD_LIMIT = 600
+_recording = set()
+
+
+@atexit.register
+def end_recordings():
+    import signal
+    for proc in list(_recording):
+        _recording.discard(proc)
+        try:
+            proc.send_signal(signal.SIGINT)
+        except OSError:
+            pass
 
 
 def mix_wavs(paths, out):
@@ -332,7 +356,8 @@ def stop_recording(proc):
         for part in proc["parts"]:
             stop_recording(part)
         return mix_wavs([proc["path"] + ".pc.wav", proc["path"] + ".mic.wav"], proc["path"])
-    proc.send_signal(signal.SIGINT)  # (pw-record finishes the WAV header on SIGINT)
+    _recording.discard(proc)
+    proc.send_signal(signal.SIGINT)  # (pw-record finishes the WAV header on SIGINT; timeout passes it on)
     try:
         proc.wait(5)
     except subprocess.TimeoutExpired:
@@ -1059,10 +1084,16 @@ def shell(command, timeout=30):
     started in the background can't keep the call waiting."""
     args = (["powershell", "-NoProfile", "-NonInteractive", "-Command", command] if IS_WINDOWS else ["bash", "-lc", command])
     with tempfile.TemporaryFile() as log:
-        r = subprocess.run(args, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, timeout=timeout,
-                           **({} if IS_WINDOWS else {"start_new_session": True}))
+        proc = subprocess.Popen(args, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                                **({} if IS_WINDOWS else {"start_new_session": True}))
+        try:
+            code = proc.wait(timeout)
+        except subprocess.TimeoutExpired:  # all of it stops: a pipeline's or a sequence's other parts ran on after "timed
+            _kill_tree(proc)  # out" (the build ran twice when asked again; a risky part finishing later was never logged)
+            proc.wait()
+            raise
         log.seek(0)
-        return r.returncode, log.read().decode(errors="replace").strip()
+        return code, log.read().decode(errors="replace").strip()
 
 
 def similar_programs(name):
@@ -1136,14 +1167,19 @@ def notify(title, text):
 
 def selected_text():
     """(the text selected right now, the clipboard): Linux has both; Windows has only the clipboard, so selected is ''."""
+    def out(args, timeout=3):  # what the tool printed, only when it worked ("No selection" is its error, not the text)
+        try:
+            r = subprocess.run(args, capture_output=True, text=True, errors="replace", timeout=timeout,
+                               creationflags=subprocess.CREATE_NO_WINDOW if IS_WINDOWS else 0)
+        except (OSError, subprocess.TimeoutExpired):
+            return ""
+        return r.stdout.strip() if r.returncode == 0 else ""
     if IS_WINDOWS:
-        return "", run(["powershell", "-NoProfile", "-Command", "Get-Clipboard"], 5)
+        return "", out(["powershell", "-NoProfile", "-Command", "Get-Clipboard"], 5)
     if WAYLAND and have("wl-paste"):
-        get = lambda *flags: run(["wl-paste", "--no-newline", *flags], 3)
-        return get("--primary"), get()
+        return out(["wl-paste", "--no-newline", "--primary"]), out(["wl-paste", "--no-newline"])
     if have("xclip"):
-        get = lambda which: run(["xclip", "-o", "-selection", which], 3)
-        return get("primary"), get("clipboard")
+        return out(["xclip", "-o", "-selection", "primary"]), out(["xclip", "-o", "-selection", "clipboard"])
     return "", ""
 
 

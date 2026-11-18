@@ -10,7 +10,9 @@ AbstractButton {
     readonly property color ink: primary ? Theme.accentInk : kind === "danger" ? Theme.red
                                 : kind === "ghost" && !hovered ? Theme.text2 : Theme.text
     hoverEnabled: true
-    focusPolicy: Qt.NoFocus
+    focusPolicy: Qt.TabFocus  // (Tab reaches it; a click leaves the typing where it was)
+    Keys.onReturnPressed: click()
+    Keys.onEnterPressed: click()
     implicitHeight: 40
     implicitWidth: row.implicitWidth + (kind === "ghost" ? 24 : 36)
     opacity: enabled ? 1 : 0.45
@@ -23,6 +25,7 @@ AbstractButton {
         border.width: b.primary || b.kind === "ghost" ? 0 : 1
         border.color: b.kind === "danger" && b.hovered ? Theme.alpha(Theme.red, 0.35) : Theme.stroke
         Behavior on color { ColorAnimation { duration: Theme.fast } }
+        Focus { keyboard: true; visible: b.visualFocus }
     }
     contentItem: Item {
         Row {
