@@ -83,6 +83,10 @@ EVAL_RUNS=3 EVAL_OUT=/tmp/v.json .venv/bin/python evals/voice_eval.py [case-pref
   `ps -eo pid,args | grep '[.]venv/bin/python [^ ]*jarvis[.]py'`.
 - "It gave up", "it can't do X": read `~/.local/share/jarvis/jarvis.log` first. The cause was code more often than
   the prompt.
+- `CLAUDE.md`'s "Working on the live app" lists what past sessions learned (restarting, read-only live checks,
+  debugging memory, eval traps) and the decisions not to undo: read it before changing an area it names.
+- A second copy off screen also needs `env -u DISPLAY QT_QPA_PLATFORM=offscreen` and `brain.OPENCODE_ACCOUNTS` pointed
+  elsewhere (a fixed path: the copy otherwise uses the real Google accounts).
 - A second copy, or any run in a fresh config dir: point the XDG dirs elsewhere, set `JARVIS_HUD_PORT`, write `{}` to
   `<config>/jarvis/plugins.json` first (otherwise the default plugin opens a sign-in in the user's browser) and set
   `PYTHON_KEYRING_BACKEND=keyring.backends.fail.Keyring`.

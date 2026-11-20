@@ -32,9 +32,15 @@ pyside6-lupdate -no-obsolete qml/*.qml jarvis.py window.py -ts translations/jarv
   with `ANDROID_KEYSTORE_*` secrets, else `-debug`), and a last job attaches the zip, installer and APK to the GitHub
   release when a `v*` tag is pushed. The auto-updater (`update_now`) downloads `Jarvis-windows.zip` and checks the
   asset's `digest`: keep that name. `packaging/aur` is the Arch package (/opt install, per-user venv on first run).
-  Pushing a tag publishes a public release: ask first.
-- The GitHub repo is private (since 2026-11-13): Jarvis.exe's updater, the AUR package and the source copy's update check
-  (raw.githubusercontent.com) can't read it, so they find nothing new; making it public again restores them.
+  Pushing a tag publishes a public release: ask first. release.yml fails a `v*` tag unless `VERSION` in jarvis.py is
+  that version and `## Unreleased` in CHANGELOG.md has been renamed `## <version> ` (bump both together first; lines
+  once landed under the already-released 2.1.0).
+- The GitHub repo is public again (while private from 2026-11-13 the updater, the AUR package and the update check found
+  nothing new): every push and tag is visible.
+- `packaging/aur`: after changing PKGBUILD run `makepkg --printsrcinfo > .SRCINFO`; the tests fail when `.SRCINFO`'s
+  depends, makedepends, optdepends or source differ from PKGBUILD.
+- `AGENTS.md` is OpenCode's short copy of these notes (it loads that file instead of this one): a change to the commands
+  or rules here needs the same change there.
 - `evals/agent_eval.py` runs the real `Brain.ask` on real models against simulated tools (nothing on the PC or in
   accounts is touched) and checks the moves the agent made. Run it before and after prompt or tool changes. Keep eval
   harnesses in the repo, not a temp dir. Cases have a `kind` (`tools`, `solving`: the first try isn't the answer,
@@ -61,7 +67,7 @@ pyside6-lupdate -no-obsolete qml/*.qml jarvis.py window.py -ts translations/jarv
 - There's no test framework: `test_jarvis.py` is one script of plain `assert`s run top to bottom, so "one test" means
   running the relevant snippet in `python -c`. It points `XDG_CONFIG_HOME`/`XDG_DATA_HOME`/`APPDATA` at a temp dir
   before importing anything; keep that first so tests never touch real settings, memory or reminders. A run takes
-  about 50 s; when it hangs, `timeout -s ABRT 120 .venv/bin/python -X faulthandler test_jarvis.py` prints where.
+  about 75 s; when it hangs, `timeout -s ABRT 120 .venv/bin/python -X faulthandler test_jarvis.py` prints where.
 - `openwakeword` is installed with `--no-deps` (its tflite dependency has no current wheels); don't add it to
   `requirements.txt`.
 - Finding the running Jarvis: never `pgrep -f`/`pkill -f` with "jarvis.py" in the pattern (it matches the shell running
@@ -96,6 +102,71 @@ pyside6-lupdate -no-obsolete qml/*.qml jarvis.py window.py -ts translations/jarv
   also makes the README's pictures). Off screen it draws in software, without blur or shadows (MultiEffect); to see
   those, start a hidden compositor (`kwin_wayland --virtual --socket NAME`) and run it with `WAYLAND_DISPLAY=NAME
   QT_QPA_PLATFORM=wayland`. Apps there still register on the session's AT-SPI bus, so accessibility can be tested too.
+
+## Working on the live app (from past sessions)
+
+- The installed launcher (`~/.local/bin/jarvis`) runs this checkout's `.venv/bin/python jarvis.py` in a
+  `systemd-run --user --scope` unit `app-jarvis-<pid>`: whatever branch is checked out is what the next restart runs,
+  and other sessions' uncommitted work may sit in the same checkout (commit only your own files; never revert theirs).
+- `prompt.md` is read again on every agent request (`Brain._system`): an edit changes the running Jarvis at once and any
+  agent eval that's running. `LIVE_PROMPT` and code need a restart.
+- After a change, restart it (when idle, as above) and check it in `jarvis.log` yourself; hand back to the user only
+  what needs their phone or another person (scanning the WhatsApp QR, a real incoming call). Check it's running first
+  (the log's last line may be from the night before), and wait for the old pid to exit after SIGTERM before `setsid
+  -f`: started too early, the new one only opened the old one's window. To restart during notes, wait in the background
+  for "Your notes on ... are ready" first.
+- A second copy for benchmarks: besides the XDG/port/plugins steps above, `env -u DISPLAY QT_QPA_PLATFORM=offscreen`
+  (with `DISPLAY` set, `qt_args` passes `-platform xcb`, which beats the env var and opened real windows), and point
+  `brain.OPENCODE_ACCOUNTS` elsewhere: it is a fixed `~/.config/opencode/...` path, not an XDG one, so an "isolated"
+  copy still spent a real Google account's request.
+- Live checks against the user's real accounts stay read-only: never send a real WhatsApp/Discord message, reply,
+  reaction or call to test (dry-run the step before the send); keep requests on the signed-in Google accounts to a few
+  pings. The auto-mode classifier blocked probing `brain.Antigravity` directly and building third-party Go code
+  unasked: don't route around it.
+- The user's own `<job>_models` settings override the built-in lists (`LOOK_MODELS`, `POINT_MODELS`...): read
+  `settings.json` before judging a list change by the running app.
+- No debugger attaches (`ptrace_scope` 1, no py-spy). Memory of the whole tree: `systemctl --user show
+  app-jarvis-<pid>.scope -p MemoryCurrent` (includes page cache); the Python process alone: `/proc/<pid>/smaps_rollup`;
+  per-thread CPU: `/proc/<pid>/task/*/stat`; allocations: tracemalloc in a second copy.
+- RAM and CPU are a standing concern (1-1.3 GB drew complaints): keep heavy libraries out of the long-lived process
+  (the voice verifier trains in its own `jarvis.py --learn-voice` process; day to day `Verifier` scores `verifier.pkl` in
+  numpy, so scikit-learn/SciPy never stay loaded), and keep background features cheap (screen history reads only the
+  focused window's title).
+- Evals: times in cases are relative to now (a fixed "14:00" or "Wednesday" failed in the evening and on other days);
+  a new file of personal data goes in voice_eval's `PROTECTED` (an eval once wrote a made-up person into the real
+  `people.json`), and anything new agent_eval would read of the user's gets a stand-in (`MEMORY`, `people.index`,
+  `store.matching_skills`; a subprocess check in the tests guards it). Fix eval failures by merging rules, not one
+  bullet per case (`prompt.md` grew from 8k to 21k characters for nothing, then was merged back to ~15.6k). Known noisy
+  cases: `announcements` (wants "physics", gets the course code), `shortcut` (passes about half the runs).
+- Scrub ids taken from `jarvis.log` (Drive file ids, course codes, chat ids) before they reach a test, an eval or a
+  subagent's brief, as well as names, numbers and emails.
+- Test traps: patching `whatsapp.time.sleep` patches every module's `time.sleep` (same module object): end waits with a
+  `threading.Timer` that sets an event. Phone checks: `phone_back()` gives a fresh handshake when an earlier block left
+  the channel counter stale (AES-GCM `InvalidTag`); `_watch_floor` is cancelled when each `asyncio.run` ends.
+
+**Decisions not to undo** (each was asked for or argued out with the user):
+- WhatsApp calls must stay: that's why it's whatsmeow + WaCalls (copied into `internal/`: Go's `internal` packages
+  can't be imported from another module), not a messages-only library. Received SRTP is decrypted but its auth tag is
+  deliberately not checked (`media/srtp.go` `Unprotect`): relays may re-sign packets with a hop-by-hop key Jarvis
+  doesn't have, so checking could mute every call.
+- Coding jobs go to OpenChamber, not opencode; set up but not starting, the job fails with a clear error rather than
+  quietly switching to Claude Code.
+- Antigravity uses the user's own plugin fork (`PLUGIN_REPO`, not on npm; the npm package with a similar name is
+  someone else's: never point anyone at it). Pacing follows the Antigravity CLI: a 10-a-minute cap was built and
+  removed on request; no "hi" probes, one account at a time. Never tune it to look like Google's client or to dodge
+  enforcement. The `antigravity gemini-4-hydrogen-sonar` route is kept though Google's app shows it "Unavailable".
+- Declined: small jobs on a local Ollama model, Discord calls, switching to or merging OpenJarvis (ideas only),
+  Langfuse (the Cost page stays local), a confirm step in phone pairing, routing typed chat straight to the agent (it
+  would break typed answers to the voice's questions).
+- WhatsApp auto-replies default to "contacts" (drafts were the default and the user removed that: "I want jarvis to
+  have some freedom"): don't make defaults stricter without asking. The phone is meant to work anywhere over the
+  user's relay; direct is an extra.
+- `Brain.person` and `waiting_on_me(skip=)` take a lone near match on purpose (`person("sam")` finds "Sam Lee", pinned
+  in the tests); sending never does (`brain.pick` only lists them).
+- An outside fork was reviewed (2026-11-01) and rejected but for its Windows save retry (`store._swap`, without
+  its non-atomic `copyfile` fallback); its plain-HTTP location lookup and approval pop-ups stay out.
+- `screen_time` reads QHealth's database (`system.QHEALTH_DB`) read-only (`mode=ro`, 3 s timeout, schema checked by
+  `QHEALTH_NEEDS`); `QHEALTH_IDLE` copies QHealth's idle list and drifts if it changes. Never write to its DB or repo.
 
 ## Architecture
 
@@ -534,7 +605,8 @@ its own, so neither has Jarvis. One account at a time: `idx` (the one that answe
 requests until it can't, and on opencode's accounts it's set to the plugin's `activeIndexByFamily` one whenever that
 changes (`followed`), so the two apps aren't on two accounts at once. A refused token refresh is `Overloaded` too, never `BadRequest` (that would stop the
 whole model chain).
-Opt-in and warned about (Google may suspend accounts used this way). With no account its constructor raises
+Warned about (Google may suspend accounts used this way); not opt-in for opencode's accounts: `google_accounts` uses that
+file whenever it exists (enabled ones only; `projectId`-only accounts, added from the plugin's menu, are valid). With no account its constructor raises
 `LookupError`, so its entries (first in every built-in list) are skipped and Brain says nothing. Tests point
 `OPENCODE_ACCOUNTS` and `PLUGIN_CONSTANTS` at temp files.
 
