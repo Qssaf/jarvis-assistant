@@ -1281,7 +1281,8 @@ RISKY_COMMAND = re.compile(
     r"chown|kill|pkill|killall|shutdown|reboot|poweroff|halt|apt-get|"
     + "|".join(rf"(?:{tools})(?!{reading}|\s+(?:--version|(?-i:-[vV]))\s*(?:$|[|;&)]))" for tools, reading in RISKY_BUT_READING.items()) +
     r"|sudo|doas|su|trash-put|gio\s+trash(?!\s+--list)|tee|ln|rsync|"
-    r"git\s+(?:push|reset|clean|checkout|rebase|restore|rm|branch\s+(?:-[dD]|--delete)|stash\s+(?:drop|clear|pop))|"
+    r"git\s+(?:push|reset|clean|checkout|rebase|restore|rm|branch\s+(?:-[dD]|--delete)|stash\s+(?:drop|clear|pop)|"
+    r"config\s+--(?:global|system)\s+(?:--(?:add|unset(?:-all)?|replace-all|edit|remove-section|rename-section)\b|-e\b|(?!-)[\w.-]+\s+\S+))|"
     r"(?:sed|perl)\s(?:[^;&|\n]*\s)?(?:-[a-zA-Z]*i[\w.]*|--in-place)|tar\s+(?:-?[a-zA-Z]*x\w*|(?:[^;&|\n]*\s)?(?:-[a-zA-Z]*x\w*|--extract))|"
     r"(?:docker|podman)\s+(?:(?:container|image|volume|network|system)\s+)?(?:rm|rmi|prune|kill|stop)|kubectl\s+(?:delete|apply|replace|drain)|"
     r"Remove-Item|Move-Item|Stop-Process|Stop-Computer|Restart-Computer|Format-Volume|Clear-Content|Set-Content|del|rd|erase|format)\b"
@@ -1520,8 +1521,13 @@ def tool_jobs(action="list", job="", caller=None):
     """The tasks running now, each with its number; or stop one by its number or its words (or "all"). The task asking
     (caller) is left out: its label is the request itself, so "stop the flight search" matched it best."""
     now = [t for t in running if t is not caller]
-    if not now:
-        return {"result": "nothing is running"}
+    ended = [{"n": f["n"], "task": f["label"], "ended": f["answer"][:160] or ("done" if f["ok"] else "failed")}
+             for f in finished if time.time() - f["at"] < 7200]
+    if action == "clear":  # ("remove it from the list": Home's Finished lately; the voice said it had, having stopped nothing)
+        finished.clear()
+        return {"result": f"cleared {len(ended)} finished task(s) from Home's Finished lately list"}
+    if not now:  # (with what ended lately: "stop the coding job" after it failed isn't "stopped", and "is it done?" has an answer)
+        return {"result": "nothing is running", **({"finished lately": ended} if ended else {})}
     job = str(job).strip().lower()
     if action != "stop":
         return {"tasks": [{"n": t.n, "task": t.label, "for": f"{int(time.time() - t.started) // 60} min", "now": t.step}
@@ -2492,18 +2498,45 @@ def tool_whatsapp_send(to, text, confirmed=False):
     blocked = account_block("WHATSAPP_SEND_MESSAGE")
     if blocked:
         return {"error": blocked}
-    found, problem = wa.find(to)
+    try:
+        found, problem = wa.find(to)
+        later = False
+    except RuntimeError:  # the link is coming back (it waited for it): the message can wait too, instead of failing
+        if not wa.reconnecting():
+            raise
+        found, problem = wa.find_offline(to)
+        later = True
     if problem:
         return {**problem, "result": "nothing sent: ask the user which chat they mean"}
     if needs_yes("WHATSAPP_SEND_MESSAGE") and not confirmed:
         return {"error": NEEDS_YES, "to": found["name"]}
+    state = wa.waiting_or_went(found["chat"], text)
+    if state:  # ("try now", as it's going by itself: never twice)
+        return {"result": f"this message to {found['name']} " + ("is already waiting for WhatsApp to reconnect: it goes the moment it's back"
+                          if state == "waiting" else "already went a moment ago, when WhatsApp came back")}
+    if later:
+        wa.send_later(found, text)
+        return {"result": f"NOT SENT YET: WhatsApp is reconnecting. The message to {found['name']} is waiting and goes the moment it's "
+                          f"back (within {whatsapp_keep() // 60} minutes; the user is told when it went, or that it didn't). Say "
+                          "that; don't send it again."}
     wa.send(found["chat"], text)
-    changed(f"Sent a WhatsApp message to {found['name']}: {text[:200]}")
-    if not found.get("group"):  # (a promise the user dictated is theirs too)
-        import people
-        people.talked(found["name"], "whatsapp", True)
-        people.tracker[0] and people.tracker[0].heard("whatsapp", found["name"], text)
+    whatsapp_sent(found["name"], text, found.get("group"))
     return {"result": f"sent to {found['name']}"}
+
+
+def whatsapp_keep():
+    import whatsapp
+    return whatsapp.OUTBOX_KEEP
+
+
+def whatsapp_sent(name, text, group=False):
+    """A WhatsApp message of the user's went (now, or from the outbox once the link was back): the change log, their page
+    and what they promised in it."""
+    changed(f"Sent a WhatsApp message to {name}: {text[:200]}")
+    if not group:  # (a promise the user dictated is theirs too)
+        import people
+        people.talked(name, "whatsapp", True)
+        people.tracker[0] and people.tracker[0].heard("whatsapp", name, text)
 
 
 def tool_whatsapp_call(to, message, confirmed=False):
@@ -2640,6 +2673,116 @@ def tool_people_rules(name="", rule="", app="both"):
         changed(f"People rules: {', '.join(saved)} → {rule}")
     s = store.settings()
     return {a: {"always": s[f"{a}_always"], "never": s[f"{a}_never"]} for a in apps}
+
+
+def tool_stand_in(action="start", app="", chat="", minutes=30, how="", confirmed=False):
+    """Answer one person's chat for the user for a while, as Jarvis (whatsapp.stand_in): the same gates as a message
+    Jarvis writes itself, one-to-one chats only."""
+    import whatsapp
+    if action == "list":
+        return {"standing in": [{"chat": s["name"], "app": app_, "until": time.strftime("%H:%M", time.localtime(s["until"])),
+                                 **({"how": s["how"]} if s["how"] else {})}
+                                for (app_, key), s in list(whatsapp.stand_ins.items()) if whatsapp.standing_in(app_, key)]}
+    if action == "stop":
+        ended = whatsapp.stop_stand_in(chat)
+        if ended:
+            changed(f"Stopped answering {', '.join(ended)} for the user")
+        return {"result": "stopped answering for the user: " + ", ".join(ended) if ended else "wasn't answering anyone for the user"
+                + (f" called {chat}" if chat else "")}
+    if app not in ("whatsapp", "discord"):
+        return {"error": "app is whatsapp or discord: the one the user talks with them on"}
+    slug, label = ("WHATSAPP_SEND_MESSAGE", "WhatsApp") if app == "whatsapp" else ("DISCORD_SEND_MESSAGE", "Discord")
+    blocked = account_block(slug)
+    if blocked:
+        return {"error": blocked}
+    wa = whatsapp_link[0]
+    if app == "whatsapp":
+        if not wa:
+            return {"error": "WhatsApp isn't running"}
+        found, problem = wa.find(chat)
+        key, alone = (found or {}).get("chat"), not (found or {}).get("group")
+    else:
+        import discord
+        found, problem = discord.find(chat)
+        key, alone = (found or {}).get("id"), (found or {}).get("kind") in ("dm", "friend")
+    if problem:
+        return {**problem, "result": "not started: ask the user who they mean"}
+    if not alone:
+        return {"error": f"{found['name']} isn't a one-to-one chat: Jarvis only stands in with one person, never in a group or a server"}
+    if needs_yes(slug) and not confirmed:
+        return {"error": NEEDS_YES, "to": found["name"]}
+    until = whatsapp.stand_in(app, key, found["name"], minutes, how, wa.notify if wa else print)
+    changed(f"Answers {found['name']} on {label} for the user until {time.strftime('%H:%M', time.localtime(until))}"
+            + (f": {' '.join(str(how).split())[:120]}" if how else ""))
+    return {"result": f"answering {found['name']} on {label} for the user until {time.strftime('%H:%M', time.localtime(until))}, as "
+                      "Jarvis (never pretending to be them): their messages and each answer show in the chat, and \"stop "
+                      f"answering {found['name']}\" ends it"}
+
+
+# Jarvis's own settings the voice and the agent may change: what each is, in a few words. Everything else (safety, the
+# models, the wake word, the user's instructions, people's lists, keys) is the Settings page's: a page or an email must
+# never talk Jarvis out of its own guards
+OWN_SETTINGS = {
+    "personality": "how you talk: jarvis, friendly or brief", "voice": "your voice, by its name (Charon, Kore, Puck...)",
+    "do_not_disturb": "true: you never speak up on your own", "quiet_from": "quiet hours start, like 22:00 (empty: none)",
+    "quiet_until": "quiet hours end, like 07:00", "quiet_fullscreen": "true: nothing unprompted over a full-screen game or film",
+    "speak_typed_replies": "false: typed messages get text-only answers", "morning_briefing": "the day's briefing on the first start of a morning",
+    "evening_digest": "when the evening list is said, like 20:00 (empty: off)", "deadline_reminders": "reminders before Classroom work is due",
+    "calendar_reminders": "a reminder ten minutes before each calendar event", "track_promises": "noticing what the user promises people",
+    "learn_from_talk": "keeping lasting facts from conversations", "fast_voice": "true: you answer without thinking first (quicker, less sharp)",
+    "end_of_speech_ms": "the pause that counts as finished talking, 200-2000", "follow_up_seconds": "how long you keep listening after answering, 0-120",
+    "show_thinking": "the chat shows your tool decisions", "text_size": "the window's text, 0.9-1.5", "home_city": "the city for the weather",
+    "checks_every": "minutes between background checks, 15-1440",
+    "whatsapp_replies": "who you answer on WhatsApp by yourself: contacts, drafts (you only draft) or off",
+    "whatsapp_calls": "calls the user misses: answer, decline or off", "whatsapp_note": "what you tell people who write (\"in class until 5\")",
+    "whatsapp_share_free": "true: you may tell people when the user is busy (times only)", "discord_replies": "who you answer on Discord by yourself: friends or off",
+    "screen_history": "a private timeline of the windows the user had open",
+}
+# ...and the values that have Jarvis do more on its own, say more to people or record more: those wait for the user's yes
+DOES_MORE = {"whatsapp_replies": ("contacts",), "whatsapp_calls": ("answer",), "discord_replies": ("friends",),
+             "whatsapp_share_free": (True,), "screen_history": (True,), "whatsapp_note": None}
+TAKES_EFFECT_LATER = ("personality", "voice", "fast_voice", "end_of_speech_ms")  # (read when a voice session opens)
+
+
+def tool_settings(action="list", name="", value=None, confirmed=False):
+    """Jarvis's own settings (OWN_SETTINGS only): what they are now, or one changed."""
+    cfg = store.settings()
+    if action != "set":
+        return {"settings": {k: {"now": cfg[k], "what": what} for k, what in OWN_SETTINGS.items()},
+                "note": "anything else (safety, models, the wake word, keys) is changed on the Settings page"}
+    name = str(name).strip()
+    if name in store.DEFAULT_SETTINGS and name not in OWN_SETTINGS:  # (its guards and lists: never by a tool, this one or another)
+        return {"error": f"NOT DONE: {name} can only be changed by the user, on Jarvis's Settings page: tell them so, and don't "
+                         "try another tool for it"}
+    if name not in OWN_SETTINGS:  # (a guessed name, "be brief": the real ones, to call again with)
+        return {"error": f"there's no setting called {name!r}. Call again with one of these names: "
+                         + "; ".join(f"{k} ({what})" for k, what in OWN_SETTINGS.items())}
+    if value is None:
+        return {"error": f"say what to set {name} to ({OWN_SETTINGS[name]})"}
+    kind = type(store.DEFAULT_SETTINGS[name])
+    try:
+        if kind is bool:
+            word = str(value).strip().lower()
+            if word not in ("true", "false", "on", "off", "yes", "no"):
+                raise ValueError(f"{name} is true or false")
+            value = word in ("true", "on", "yes")
+        elif kind in (int, float):
+            value = kind(float(value))
+        else:
+            value = " ".join(str(value).split())
+        if name == "voice":  # (nothing checks it when it's saved: a name Gemini doesn't have would leave the voice unable to open)
+            value = next((v for v in store.VOICES if v.lower() == value.lower()), None)
+            if not value:
+                raise ValueError("the voices are " + ", ".join(store.VOICES))
+        more = DOES_MORE.get(name, ())
+        if (more is None and value or more and value in more) and value != cfg[name] and cfg["safety"] == "ask" and not confirmed:
+            return {"error": NEEDS_YES, "setting": name}
+        new = store.update_settings({name: value})
+    except (ValueError, TypeError) as e:
+        return {"error": f"not changed: {e} ({OWN_SETTINGS[name]})"}
+    changed(f"Setting {name}: {cfg[name]!r} → {new[name]!r}")
+    return {"result": f"{name} is now {new[name]!r}" + (" (from your next conversation: the one open now keeps the old one)"
+                                                       if name in TAKES_EFFECT_LATER else "")}
 
 
 def tool_skill(action, name="", task="", steps=""):
@@ -2827,6 +2970,24 @@ TOOLS.update({
                      "With no name: the lists. The user saying it is the yes: no confirmation needed.",
                      obj(name={"type": "string"}, rule={"type": "string", "enum": ["never", "always", "normal"]},
                          app={"type": "string", "enum": ["whatsapp", "discord", "both"]}, optional=("name", "rule", "app"))),
+    "stand_in": (tool_stand_in, "Answer one person's chat for the user for a while (\"keep talking to her for me\", \"answer him "
+                 "while I'm in class\"): for `minutes` (30 unless said, 180 at most) Jarvis replies to that one-to-one WhatsApp or "
+                 "Discord chat by itself, as Jarvis and never pretending to be the user, also while they write there themselves. "
+                 "how: what the user asked for (the tone, what to say, how to sign), in their words. action stop ends it (chat: "
+                 "who; none: all), list shows them. It sends words Jarvis writes: confirmed only when the user asked for exactly this.",
+                 obj(action={"type": "string", "enum": ["start", "stop", "list"]}, app={"type": "string", "enum": ["whatsapp", "discord"]},
+                     chat={"type": "string"}, minutes={"type": "number"}, how={"type": "string"}, confirmed={"type": "boolean"},
+                     optional=("action", "app", "chat", "minutes", "how", "confirmed"))),
+    "settings": (tool_settings, "Jarvis's own settings: list them with what each is now, or set one (\"be brief\", \"don't "
+                 "disturb me\", \"quiet hours from 11 to 7\", \"stop answering my WhatsApp\", \"change your voice to Kore\"). "
+                 "\"Be brief\" is name personality, value brief; quiet hours are quiet_from and quiet_until. "
+                 "Only its everyday ones; safety, the models, the wake word and keys are the Settings page's. One that has "
+                 "Jarvis do more on its own may wait for confirmed: true (when the user asked for exactly that).",
+                 obj(action={"type": "string", "enum": ["list", "set"]},
+                     name={"type": "string", "description": "the setting's own name: " + ", ".join(OWN_SETTINGS)
+                           + " (safety and the others aren't here: the Settings page)"},
+                     value={"type": "string", "description": "personality: jarvis, friendly or brief; true or false; a time like 23:00; a name"},
+                     confirmed={"type": "boolean"}, optional=("action", "name", "value", "confirmed"))),
     "skill": (tool_skill, "Ways screen tasks worked, kept for next time. save: after a task of three or more screen steps worked, "
               "a short name (\"submit homework on Classroom\"), the task in the user's words and the steps that worked, as you'd "
               "give them to act. When a saved way you were shown no longer works: failed (twice and it's dropped); when it "
@@ -3177,6 +3338,38 @@ def _cli_run(t, rec, task, job):
                             halt=t.cancel, stdin_text=None if flag else task) == 0
 
 
+KEEP_COPY_BYTES, KEEP_COPY_FILES = 200 * 1024 * 1024, 5000  # a folder up to this is copied before a coding job works in it
+KEEP_SKIP = ("node_modules", ".venv", "venv", "__pycache__", ".git")
+
+
+KEEP_COPY_DAYS = 14
+
+
+def drop_old_copies(now=None):
+    """Removes the "-before-" copies (by the day in their name) older than KEEP_COPY_DAYS: they're only for undoing a job."""
+    for name in os.listdir(os.path.join(system.DATA, "worktrees")):
+        made = re.search(r"-before-(\d{8})-\d{6}-\d+$", name)
+        if made and (now or time.time()) - time.mktime(time.strptime(made[1], "%Y%m%d")) > (KEEP_COPY_DAYS + 1) * 86400:
+            shutil.rmtree(os.path.join(system.DATA, "worktrees", name), ignore_errors=True)
+
+
+def small_folder(folder):
+    """Whether a folder is small enough to copy first (KEEP_COPY_BYTES, KEEP_COPY_FILES, without KEEP_SKIP): it stops
+    counting once it isn't."""
+    size = files = 0
+    for root, dirs, names in os.walk(folder):
+        dirs[:] = [d for d in dirs if d not in KEEP_SKIP]
+        for name in names:
+            files += 1
+            try:
+                size += os.lstat(os.path.join(root, name)).st_size
+            except OSError:  # (gone meanwhile, or unreadable: the copy will say)
+                pass
+            if files > KEEP_COPY_FILES or size > KEEP_COPY_BYTES:
+                return False
+    return True
+
+
 def tool_code(task, folder="", harness="", job="", confirmed=False):
     """A programming task for a coding agent, working headless in a git worktree of the project on a branch of its own.
     It answers at once: the copy, and starting OpenChamber, happen in the job's thread (they took past the voice's 60 s,
@@ -3205,14 +3398,20 @@ def tool_code(task, folder="", harness="", job="", confirmed=False):
         if not os.path.isdir(folder):
             return {"error": f"there's no folder {folder}"}
         top = system.run(["git", "-C", folder, "rev-parse", "--show-toplevel"])
-        if os.path.isdir(top):
+        # (a repository with no commit yet has nothing to copy: its job failed with "invalid reference: HEAD", twice)
+        born = os.path.isdir(top) and bool(re.fullmatch(r"[0-9a-f]{7,64}", system.run(["git", "-C", top, "rev-parse", "--verify", "-q", "HEAD"])))
+        keep = False
+        if born:
             if system.run(["git", "-C", top, "status", "--porcelain"]):
                 note = " It starts from the project's last commit: changes not committed yet aren't in it."
-        elif not confirmed and store.settings()["safety"] == "ask":
-            return {"error": f"NOT DONE: {folder} isn't a git repository, so the changes couldn't be kept apart or undone. "
-                             "Ask the user, then call again with confirmed: true."}
-        else:
-            top = ""
+        else:  # nothing to branch from: the work is done in place, with the folder as it is now copied first when it's small
+            why = "is a git repository with no commit yet" if os.path.isdir(top) else "isn't a git repository"
+            keep, top = small_folder(folder), ""
+            if keep:
+                note = f" The folder {why}, so it works in place, and a copy of the folder as it is now is kept first."
+            elif not confirmed and store.settings()["safety"] == "ask":
+                return {"error": f"NOT DONE: {folder} {why} and is too big to copy first, so the changes couldn't be kept apart "
+                                 "or undone: they'd be made in place. Ask the user, then call again with confirmed: true."}
     with code_lock:
         if old and old["busy"]:
             return {"error": f"coding job {job} is still working: the follow-up can go once it's done (or the user stops it)"}
@@ -3223,7 +3422,8 @@ def tool_code(task, folder="", harness="", job="", confirmed=False):
             old = {"cwd": os.path.normpath(os.path.join(wt, os.path.relpath(folder, top))), "branch": branch, "base": "",
                    "copy": (top, wt)}
         elif not old:
-            old = {"cwd": folder, "branch": "", "base": ""}
+            old = {"cwd": folder, "branch": "", "base": "", **({"keep": os.path.join(
+                system.DATA, "worktrees", f"{os.path.basename(folder)}-before-{time.strftime('%Y%m%d-%H%M%S')}-{n}")} if keep else {})}
         if "task" not in old:
             old.update(task=task, harness=harness, session="")
         old["busy"] = True
@@ -3250,13 +3450,18 @@ def _code_run(t, n, rec, task):
                 if not os.path.isdir(wt):
                     raise OSError(f"couldn't make a copy of the project to work in: {out[-300:]}")
                 rec["base"] = system.run(["git", "-C", wt, "rev-parse", "HEAD"])
+            if rec.get("keep") and not rec.get("kept"):  # (a new job in a folder that isn't a repository: how it was, before it's touched)
+                shutil.copytree(rec["cwd"], rec["keep"], symlinks=True, ignore=shutil.ignore_patterns(*KEEP_SKIP))
+                rec["kept"] = rec["keep"]
+                drop_old_copies()
             ok = not t.cancel.is_set() and (_chamber_run if rec["harness"] == "openchamber" else _cli_run)(t, rec, task, job)
         except Exception as e:  # (any failure is told: one that slipped through left the user with no news at all)
             ok, job["lines"] = False, [describe(e)]
         rec["session"] = job["session"]
         if t.cancel.is_set():
             return
-        changes = f"made in place in {rec['cwd']} (not a git repository)"
+        changes = f"made in place in {rec['cwd']} (not a git repository with commits)" + (
+            f"; for {KEEP_COPY_DAYS} days the folder as it was before is kept in {rec['kept']}" if rec.get("kept") else "")
         if rec["branch"] and rec["base"]:
             wt = system.run(["git", "-C", rec["cwd"], "rev-parse", "--show-toplevel"])
             who = [] if system.run(["git", "-C", wt, "config", "user.email"]) else ["-c", "user.name=Jarvis", "-c", "user.email=jarvis@localhost"]
@@ -3293,8 +3498,9 @@ TOOLS["code"] = (tool_code, "Hand any change to a project's files (fix a bug, ad
                      confirmed={"type": "boolean"}, optional=("folder", "harness", "job", "confirmed")))
 TOOLS["jobs"] = (tool_jobs, "Jarvis's tasks running now, side by side (background tasks, phone requests, scheduled tasks, "
                  "coding jobs): list them (each with its number, what it's doing and for how long), or stop one by its "
-                 "number or a word from it (\"all\" stops every one).",
-                 obj(action={"type": "string", "enum": ["list", "stop"]}, job={"type": "string"}, optional=("action", "job")))
+                 "number or a word from it (\"all\" stops every one). With nothing running, list says what finished "
+                 "lately; clear empties that list (Home's Finished lately).",
+                 obj(action={"type": "string", "enum": ["list", "stop", "clear"]}, job={"type": "string"}, optional=("action", "job")))
 TOOLS["ask_user"] = (None, "Ask the user something only they can tell you, out loud, and wait for the answer (up to two "
                      "minutes), then carry on: which of two close matches they meant, the words to send, a yes before "
                      "something irreversible. Never for what you can find out yourself.", obj(question={"type": "string"}))
@@ -3763,6 +3969,60 @@ def account_policy():
                                    + ". Every other account: confirm before changing anything.") if modes else "", free]))
 
 
+app_version = [""]  # set by the app: Jarvis's version
+BACKUP_DIR = ""  # where backup saves its zip: the home folder unless set
+REPLY_MODES = {"contacts": "you answer saved contacts' messages that don't need the user",
+               "friends": "you answer friends' direct messages that don't need the user",
+               "drafts": "you only draft answers, for the user to send", "off": "off, messages are only shown"}
+CALL_MODES = {"answer": "you pick up and take a message", "decline": "you decline them", "off": "left ringing"}
+
+
+def about():
+    """What Jarvis is and how it's set up right now, for both prompts. Asked whether it could be backed up it "operated
+    on external servers", it searched the web for one of its own models' names, it promised to keep answering a chat
+    with auto-replies off, and it made up a project folder."""
+    cfg = store.settings()
+
+    def names(job, most=3):
+        return ", ".join(list(dict.fromkeys(e[1] for e in models_for(job)))[:most]) or "none"
+    log = os.path.join(system.DATA, "jarvis.log").replace(HOME, "~", 1)
+    projects = system.projects()
+    said = lambda modes, key: modes.get(cfg[key], cfg[key])  # (a mode with no wording here is named as it is: never a prompt that fails)
+    return (
+        "# About yourself\n"
+        f"- You are Jarvis{' ' + app_version[0] if app_version[0] else ''}, a program on this PC that the user built and "
+        "develops: your files, settings and memory are here, and only your models run elsewhere. Your window's pages: Home "
+        "(the day, tasks at work and finished lately), Chats, Activity (what you changed), Accounts, Plugins, Models, "
+        f"Memory (what you remember, people, checks), Cost, Health, Settings. The wake word is \"{store.wake_phrase(cfg)}\".\n"
+        f"- Your models: the voice is {cfg['live_model']}; background tasks run on {names('agent')}; the screen is read by "
+        f"{names('look', 2)}; pictures are made by {names('image', 2)}. A name like these, even misheard, is about you: answer "
+        "from this, never a web search. The Models page changes them; Health shows which are answering.\n"
+        "- backup saves a copy of your data (settings, memory, conversations; never keys or sign-ins) as a zip in the home "
+        f"folder; Settings → Move to another computer brings one in. Your log is {log}: read it with run_command when "
+        "asked why something of yours went wrong.\n"
+        f"- What you do on your own: WhatsApp messages: {said(REPLY_MODES, 'whatsapp_replies')}; WhatsApp calls the user "
+        f"misses: {said(CALL_MODES, 'whatsapp_calls')}; Discord: {said(REPLY_MODES, 'discord_replies')}; reminders, scheduled tasks and "
+        "checks; " + ("" if cfg["learn_from_talk"] else "not ") + "keeping lasting facts from talk. Nothing else happens by "
+        "itself: between requests only a reminder, check, watch, notes, task or coding job that was really started is at "
+        "work. Settings changes these (people_rules for one person)."
+        + (f"\n- The user's projects (git folders, the one worked in last first): {', '.join(projects)}. A project named "
+           "loosely is one of these: never make a folder up." if projects else ""))
+
+
+def tool_backup():
+    """A copy of Jarvis's own data as a zip (store.export_data: never keys or sign-ins), today's over today's."""
+    path = os.path.join(BACKUP_DIR or HOME, f"Jarvis backup {time.strftime('%Y-%m-%d')}.zip")
+    count = store.export_data(path, app_version[0])
+    changed(f"saved a backup of Jarvis's data to {path}")
+    return {"saved": path, "files": count, "holds": "settings, memory, reminders, routines, conversations and wake-word clips; "
+            "never keys or sign-ins. Settings → Move to another computer → Bring one in restores it."}
+
+
+TOOLS["backup"] = (tool_backup, "Save a backup copy of Jarvis itself: its settings, memory, reminders, routines and conversations "
+                   "in one zip in the user's home folder (never keys or sign-ins). \"Back yourself up\", \"make a copy of "
+                   "yourself\".", obj())
+
+
 LEARN = ("Below is what Jarvis already remembers about the user, then a conversation between them (Jarvis's lines are there for "
          "context). List what the user said themselves that's worth keeping for good:\n"
          "- New lasting facts about the user: who they are, where they live or study, the people in their life, their likes and "
@@ -3774,7 +4034,10 @@ LEARN = ("Below is what Jarvis already remembers about the user, then a conversa
          "about (\"Lesson: in Classroom, a course's slides are under its materials\", \"Lesson: save recordings to "
          "Documents/Lectures\"). A lesson is about how Jarvis works, never news or a one-off fix (a misspelt word, one "
          "reminder's time).\n"
-         "Leave out one-off requests and the details of a single task, what Jarvis said, anything read out from messages, "
+         "Leave out one-off requests and the details of a single task (also an address, link or number they only gave to be "
+         "passed on to someone), anything they took back or corrected later in the conversation (keep the corrected one, if "
+         "it's a fact at all), what only follows from a contact's name or label (\"Knows Alex\", \"Has a teacher named "
+         "Omar\": the user didn't say it), what Jarvis said, anything read out from messages, "
          "emails or pages (other people wrote those), lines that sound like a video, a call or a meeting in the background, "
          "what's already remembered, and passwords, codes or keys. Reply with only a JSON array of at most three strings: [] "
          "when there's nothing new (most conversations).\n\nRemembered:\n{memory}\n\nConversation:\n{talk}")
@@ -4756,6 +5019,7 @@ class Brain:
             prompt += f"\n\n# The user's own instructions\n{extra}"
         if account_policy() or self.accounts_down():
             prompt += f"\n\n# Accounts\n{account_policy()}\n{self.accounts_down()}".rstrip()
+        prompt += "\n\n" + about()
         if store.memory():
             prompt += f"\n\n# What you remember about the user\n{store.memory()}"
         import people

@@ -131,6 +131,42 @@ def describe():
             "launch (firefox, dolphin, nautilus, kcalc...); media keys: act([{keys: \"XF86AudioPlay\"}])." + mine)
 
 
+PROJECT_DEPTH = 3  # folders below home a project may sit ("~/Desktop/Code/game")
+PROJECT_SKIP = {"node_modules", "venv", "site-packages", "vendor", "build", "dist", "target", "snap", "go", "AppData", "Library"}
+PROJECT_LOOKS = 3000  # folders looked at, at most (a home folder with a huge tree isn't walked)
+_projects = {}  # home -> (when looked, the list): asked for with every prompt, looked for every ten minutes
+
+
+def projects(home=None, limit=20):
+    """The user's git projects as "~/Projects/name", the one worked in last first: the models' map of where code lives
+    (asked to work "on jarvis", the voice made up ~/jarvis). Nothing hidden, nothing inside another project, and never
+    more than PROJECT_LOOKS folders looked at."""
+    home = os.path.realpath(home or os.path.expanduser("~"))
+    at, found = _projects.get(home, (0, []))
+    if time.time() - at < 600:
+        return found[:limit]
+    found, level, seen = [], [home], 0
+    for _ in range(PROJECT_DEPTH):
+        deeper = []
+        for folder in level:
+            try:
+                entries = [e for e in os.scandir(folder) if not e.name.startswith(".") and e.name not in PROJECT_SKIP
+                           and e.is_dir(follow_symlinks=False)]
+            except OSError:  # (one it may not read: the others are still looked at)
+                continue
+            for e in entries[:max(0, PROJECT_LOOKS - seen)]:
+                seen += 1
+                git = os.path.join(e.path, ".git")
+                if os.path.exists(git):
+                    found.append((os.path.getmtime(git), "~/" + os.path.relpath(e.path, home).replace(os.sep, "/")))
+                else:
+                    deeper.append(e.path)
+        level = deeper if seen < PROJECT_LOOKS else []
+    found = [name for _, name in sorted(found, reverse=True)]
+    _projects[home] = (time.time(), found)
+    return found[:limit]
+
+
 # ---------------------------------------------------------------- microphone and speaker
 def mic_frames(target=None, on_source=None):
     """16 kHz mono int16 frames of 80 ms (1280 samples): PipeWire's pw-record when there (it can use the echo canceller),

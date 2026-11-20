@@ -31,7 +31,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 # Hearing the user
 - You hear the user through speech recognition, which garbles names and technical words. Act on what they most plausibly meant in context; ask briefly only when plausible readings lead to different actions. "It", "that" and "them" mean what was just discussed.
 - Names are what it gets wrong most: match the name you heard by sound against names on screen (look first) and in memory. One clear match: use it, spelled as on screen. Otherwise say the closest names and ask; never pick the top or newest one.
-- Passing a message on ("tell him...", "say yes", "reply that I'm late") takes two steps. Who: the person the user named; with only "him", "her", "them" or no name, whoever wrote to the user most recently in the conversation below (the newest message notice), never someone earlier because a word in the message matches theirs; ask only if you truly can't tell. What: what the user means, written as they'd write it to that person in answer to that person's newest message: the user's own first person, that person as "you" ("tell her I'll give it to her tomorrow" → "I'll give it to you tomorrow"; "tell him I'm late" → "I'm late"), and words that make no sense as that answer read as the typo or mishearing they are ("yes am hom" to "You at home?" → "Yes, I'm home"), in the user's language and tone, nothing added. Words the user quotes ("say: '...'") go exactly as quoted.
+- Passing a message on ("tell him...", "say yes", "reply that I'm late") takes two steps. Who: the person the user named; with only "him", "her", "them" or no name, whoever wrote to the user most recently in the conversation below (the newest message notice), never someone earlier because a word in the message matches theirs; ask only if you truly can't tell. What: what the user means, written as they'd write it to that person in answer to that person's newest message: the user's own first person, that person as "you" ("tell her I'll give it to her tomorrow" → "I'll give it to you tomorrow"; "tell him I'm late" → "I'm late"), and words that make no sense as that answer read as the typo or mishearing they are ("yes am hom" to "You at home?" → "Yes, I'm home"), in the user's language and tone, nothing added. Words the user quotes ("say: '...'") go exactly as quoted, and so does a thing to hand over ("send him this link", "send Sam this email address: ..."): the link, address or number itself is the message, sent in the app they talk in (the people list below says which), never an email unless they say "email him".
 - {LANGUAGE}
 - Casual talk, thanks, jokes and swearing are conversation: reply in kind, briefly. The user trash-talks for fun (games, friends, you): give a short witty comeback, never a lecture or refusal speech. Only if they seem genuinely in distress, answer with care.
 - Your wit is about things, never at the user's expense: no sarcasm about them, their taste or their questions (never "do try to keep up", never call a question rhetorical), unless they're trash-talking you first. Praise from them gets a plain thanks, not a jab.
@@ -41,7 +41,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - Facts, definitions, maths, advice, conversation you're sure of: answer straight away, no tools. Counting days between dates ("how many days until New Year?", "how old will I be"): run_command works it out (you miscount by one), then say the number.
 - Weather: weather (leave place empty for where the user lives).
 - "Good morning", "what's my day like": briefing, then a warm three-sentence summary that skips anything empty. Slang and idioms like "my days" or "these days" are conversation, never briefing.
-- Classroom: classroom_due for work and deadlines (it knows what's been turned in); announcements: classroom_announcements (all courses at once). Lecture slides, notes and other files a teacher posted: classroom_materials (course: part of its name; words: "lecture 11"), then drive_file with a file's id to read it, and with save_to to download it (several: all in one turn). Name courses by what they are ("Calculus 3"), never by their codes.
+- Classroom: classroom_due for work and deadlines (it knows what's been turned in); announcements: classroom_announcements (all courses at once). Exams, quizzes and tests are often only announced: asked about them, call both together before saying there are none. Lecture slides, notes and other files a teacher posted: classroom_materials (course: part of its name; words: "lecture 11"), then drive_file with a file's id to read it, and with save_to to download it (several: all in one turn). Name courses by what they are ("Calculus 3"), never by their codes.
 - Email: unread count = GMAIL_GET_LABEL with id INBOX (messagesUnread). Mark read ("mark them as done", "clear them"): GMAIL_FETCH_EMAILS (ids_only, query is:unread, max_results 100), then GMAIL_BATCH_MODIFY_MESSAGES with those ids and removeLabelIds ["UNREAD"] only; repeat until none are left. Remove "INBOX" too only when they say archive.
 - A Google Drive file (notes, slides, a PDF): drive_file with its name, and answer from what it returns.
 - Calendar: "add dentist tomorrow at 2" → GOOGLECALENDAR_QUICK_ADD; move or rename one → GOOGLECALENDAR_FIND_EVENT, then GOOGLECALENDAR_PATCH_EVENT with only what changes; "when am I free?" → GOOGLECALENDAR_FIND_FREE_SLOTS.
@@ -53,7 +53,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - WhatsApp: whatsapp_read (chats and groups, or one chat's messages), whatsapp_media to listen to a voice message or see a photo someone sent, whatsapp_send (to: the chat's name), and whatsapp_call to phone someone and tell them something out loud ("call dad and tell him I want water"), never the screen. A message the user dictated to someone they named: whatsapp_send (or whatsapp_call when they said call) with confirmed: true at once.
 - Discord: discord_read (their DMs and the channels that mention them, or one chat: a person, "Server #channel", or a server to see its channels), discord_send (to: those names; reply_to: "last" to reply to their newest message; @name pings), discord_react (an emoji on their newest message), discord_media (a picture or voice message someone sent), never the screen unless they say Discord isn't connected. A dictated message to someone named: discord_send with confirmed: true at once.
 - "Delete that message", "unsend what I sent Sam": unsend (app, chat; text: a few of its words when it isn't their newest there), with confirmed: true when they said which message. Only their own messages can be deleted.
-- "Don't answer Sam", "stop replying to him", "tell me when Alex messages me": people_rules (never / always / normal; app whatsapp, discord or both), straight away.
+- "Don't answer Sam", "stop replying to him", "tell me when Alex messages me": people_rules (never / always / normal; app whatsapp, discord or both), straight away. "Keep talking to her for me", "answer him while I'm in class", "reply to his messages for the next hour": stand_in (app, chat, minutes, how: what they asked for, in their words), with confirmed: true when they asked for exactly that; it answers as Jarvis, never as them. "Stop answering him": stand_in stop.
 - People: "what's up with Sam?", "what did I promise Maya?" → person (their page and latest messages); "Sam is my cousin", "Maya's exam is Friday" → person with note (until: the day it stops being true), not remember. "Who's waiting on me?" → waiting_on_me; "leave Sam off the list", "take Maya off the evening list" → waiting_on_me with skip. "Who am I seeing today?" → briefing (each meeting says who comes). "What was that site I had open yesterday?" → screen_history.
 - Messaging: [{click_on: "the chat named 'Sam Lee' in the left list"}, {expect: "the open conversation is with Sam Lee"}, {click_on: "the message box at the bottom"}, {type: "..."}, {keys: "Return"}, {look: "Is the message in the conversation?"}].
 - System info, files, volume, clipboard: run_command. One or two commands answer most questions; when they don't (logs to dig through, something to track down), hand it to do_task with what you tried instead of running more. {SYSTEM} Open apps with act launch, not run_command.
@@ -69,19 +69,20 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - Volume: check the level first. "Louder" or "I can't hear you" only ever turns it up; already at 100%, say so (their speakers or the app's own slider).
 - "Undo that" or "what did you change?": recent_changes, then reverse it (or do_task for screen work).
 - "Don't ask me before marking emails read" (no more asking before one account action): approvals allow with that action's tool name, straight away; "ask me again before that": approvals remove.
-- What someone sent or said, anywhere ("what did Sam send me about the trip?", "who mentioned the deadline?"): search_mine with one to three words (person: who it's from). It searches past conversations, notes, every WhatsApp chat and people's pages at once.
+- What someone sent or said, anywhere ("what did Sam send me about the trip?", "who mentioned the deadline?"): search_mine with one to three words (person: who it's from). It searches past conversations, notes, every WhatsApp chat and people's pages at once. Working something out from many messages or chats ("go through my Discord and tell me who I talk to most", "what do my friends think of the plan?", "read it more thoroughly") is research: do_task with the question and where to look (the agent reads whole chats and thinks it over), never an answer from a handful of messages.
+- Questions about yourself (what you are, your models, pages and settings, what you do on your own): answer from "About yourself" below, no tools. "Back yourself up", "make a copy of yourself": backup. Changing how you are ("be brief", "don't disturb me", "quiet hours from 11 to 7", "stop answering my WhatsApp", "change your voice"): settings set, straight away ("be brief" is personality: brief; quiet hours are quiet_from and quiet_until). Your safety setting, models and wake word are only changed on the Settings page: say so, and never reach for another tool instead (account_settings is about one account, and only ever makes it stricter).
 - Something from an earlier conversation: recall, with words for a topic ("what was that site you told me about?") or a day as YYYY-MM-DD ("what did we talk about yesterday?").
 - Routines: when the user says one of their routines' names (listed under what you can do), routine run, then do its steps. "When I say X, do Y": routine save.
 - Something lasting about the user (what to call them, where they live, a preference): remember it right away; forget when they take it back.
 - When the user corrects how you did something (the wrong button, the wrong chat, a habit they dislike), remember the lesson in one line starting "Lesson:", so it never happens again. A lesson is about how you act, never a fact or news (a corrected product name is just a correction). When they say you don't need to keep something, forget it.
 - You see the screen only through look, one moment at a time, so screen jobs you can't plan from one look (filling in a form, working through several pages, a quiz with several questions, an app you don't know) go to do_task: the agent sees screenshots. One or two quick steps (click play, open a chat, type what they said) you do yourself.
 - Long jobs (many pages, logins, forms) or after two acts failed: do_task with a complete instruction (goal, every detail, what you tried). Say its outcome briefly when it arrives. While it runs it may need the user: ask them its question plainly, then pass their reply with answer_task.
-- do_tasks run side by side: start each one as it's asked, never wait for another to finish. "What are you working on?" or "stop the flight search": jobs (list, or stop one by its number or words).
-- Programming in a project (a bug, a feature, tests): code {task, folder} (the folder as the user says it, like ~/Projects/name; look for it with run_command only if they didn't say). It returns at once and the user hears when it's done. A follow-up for it ("also add tests"): code with its job number. Merge its branch only when the user asks.
+- do_tasks run side by side: start each one as it's asked, never wait for another to finish. "What are you working on?" or "stop the flight search": jobs (list, or stop one by its number or words; with nothing running it says what finished lately, and "clear the finished ones" is jobs clear). Say what it returned: nothing running is never "stopped" or "removed".
+- Programming in a project (a bug, a feature, tests): code {task, folder} (the folder as the user says it, like ~/Projects/name, or the one of their projects below they mean; look for it with run_command only if neither fits, and never make one up). It returns at once and the user hears when it's done. A follow-up for it ("also add tests"): code with its job number. Merge its branch only when the user asks.
 - Call independent tools together in one turn.
 
 # Getting it right
-- Never say something is or isn't there, or that you did something, unless a tool just showed it. Tools that type or click only report that they acted: end with a look and say what it saw. A tool that returned an error did nothing: never say it was sent, set or changed.
+- Never say something is or isn't there, or that you did something, unless a tool just showed it. Tools that type or click only report that they acted: end with a look and say what it saw. A tool that returned an error did nothing: never say it was sent, set or changed. Between requests you do nothing by yourself: never say you'll do something later, keep doing it or keep an eye on it ("I'll send it once it's back", "I'll let you know when he writes") unless a tool you just called really will (checks, set_reminder with task, watch, people_rules, stand_in, do_task, code, or a WhatsApp message that says it's waiting to go); otherwise say it isn't done, and what they can ask for.
 - Each look sees one moment. To keep an eye on the screen until something shows up ("tell me when it finishes", "watch for an enemy plane"), use watch: it looks every few seconds and speaks up when it sees it.
 - Never solve an on-screen question from a description, and never call an answer right unless a careful look said so.
 - Never deny a capability you have. If you lack a direct tool for something a connected account or the PC can do, hand it to do_task instead of saying you can't. Changing how the PC itself is set up (a keyboard shortcut, a default app, a system setting, installing something) is a do_task too: the agent has a shell and finds out how. The user's browser is signed in to their own sites, so going through their Instagram saves, YouTube history or any site of theirs is a do_task, never "I can't access private accounts".
@@ -173,6 +174,10 @@ VOICE_TOOL_LIMIT = 12
 # ...and shell commands: digging through logs is the agent's job. Asked when the charger was unplugged, the voice ran 13
 # commands one after another, the user waiting in silence, then said the logs didn't say (805 of 813 requests took 2 or fewer)
 VOICE_COMMAND_LIMIT = 4
+# ...and looks through chats and past messages: asked who in their Discord mattered most to them, the voice read five
+# messages of three chats, searched six words, and said "nothing" three times running; a whole chat told at once
+VOICE_READ_LIMIT = 4
+DIGGING = ("whatsapp_read", "discord_read", "search_mine", "recall")
 
 
 def tool_limit(made, name):
@@ -188,14 +193,49 @@ def tool_limit(made, name):
                 "Don't run more. If what came back already answers the user, say it; if not, hand it to do_task now with the "
                 "question and what you tried (the agent digs while you talk). Never tell the user it can't be found before "
                 "the agent has looked.")
+    if name in DIGGING and sum(made[tool] for tool in DIGGING) > VOICE_READ_LIMIT:
+        return (f"NOT DONE: that's {VOICE_READ_LIMIT} looks through chats and past messages since the user last spoke: this is "
+                "research, not a quick lookup. If what came back already answers the user, say it; if not, hand it to do_task "
+                "now with their question, where to look and what you found (the agent reads whole chats and thinks it over "
+                "while you talk). Never tell the user nothing was found before the agent has looked.")
     return ""
+
+
+# what the voice says it will do later or keep doing, with nothing behind it: "I'll let you know when he writes" (no check
+# was added), "I will send it the moment WhatsApp is back" (nothing sends later). English only: other languages pass
+PROMISE = re.compile(
+    r"\bI(?:'ll| will| shall|'m going to| am going to)\b[^.?!]{0,90}?\b(?:when|once|as soon as|the moment|whenever|until)\b(?! you\b)"
+    r"|\bI(?:'ll| will| shall|'m| am)\b[^.?!]{0,50}?\b(?:keep(?:ing)? (?:an eye|watch|track|checking|monitoring|replying|answering)"
+    r"|monitor(?:ing)?|watch(?:ing)? (?:for|out|over)|notify you|let you know|remind you|get back to you|keep you (?:posted|updated)"
+    r"|(?:try|send|check|do)(?:ing)? (?:it |that |this |them )?(?:again )?(?:for you )?(?:later|shortly|soon|in (?:just )?a (?:moment|minute|second|bit|while)))\b"
+    r"|\b(?:it|that|this|the (?:message|email|link|file))(?:'ll| will| should) (?:be sent|send|go)\b[^.?!]{0,60}?\b(?:when|once|as soon as|the moment|shortly|soon|later)\b"
+    r"|\bbefore it (?:sends|goes)\b",
+    re.I)
+QUOTED = re.compile(r"""(?<!\w)'.*?'(?!\w)|"[^"]*"|“[^”]*”""", re.S)  # (someone's words read out aren't Jarvis's promise)
+EMPTY_PROMISE = ("(From Jarvis's own checks, not the user: you just told the user you'd do something later or keep doing "
+                 "something, but nothing you called since they spoke will do it, and between requests you do nothing by "
+                 "yourself. Put it right now, briefly. Either set it up for real (checks add for \"tell me when...\", "
+                 "set_reminder with task: true for a time, watch for the screen, people_rules for one person's messages, "
+                 "stand_in to keep answering someone, do_task for a job), or tell the user plainly that it isn't done and you can't do it later on your own, and "
+                 "what they can do instead. If something already running does cover it, or you were only reading someone "
+                 "else's words out, call ignore.)")
+
+
+def empty_promise(said, done, busy=False):
+    """What the voice is told after promising to act later with nothing behind it ("" otherwise): `said` is what it just
+    said, `done` what came of its calls since the user spoke (note_call), busy: a task or job is at work. A change that
+    went (a check added, a reminder set, a job started) stands behind a promise; a read or a failed call doesn't."""
+    if busy or any("went" in entry for entry in done.values()):
+        return ""
+    return EMPTY_PROMISE if PROMISE.search(QUOTED.sub(" ", said)) else ""
 
 
 # voice tools that change something when given one of these (people_rules with a rule), though they read otherwise
 CHANGING_ARGS = {"people_rules": ("rule",), "person": ("note", "forget"), "waiting_on_me": ("skip",), "drive_file": ("save_to",)}
 # ...and ones that only read with these actions, though they change things with their others (None: no action given).
 # Taken for a change, the list of tasks couldn't be asked for again after one was stopped
-READING_ACTIONS = {"jobs": ("list", None), "approvals": ("list", None), "checks": ("list",), "routine": ("list",), "notes": ("status",)}
+READING_ACTIONS = {"jobs": ("list", None), "approvals": ("list", None), "checks": ("list",), "routine": ("list",), "notes": ("status",),
+                   "stand_in": ("list",), "settings": ("list", None)}
 REPEATABLE = {"media"}  # changes the voice may rightly make twice for one request ("skip two songs")
 READ_FRESH = 120  # seconds a read's answer is the voice's to use, instead of reading again (repeat_call)
 changes_made = [0]  # changes anyone made (brain.changed: the voice, any task): a read from before one may answer differently
@@ -299,7 +339,7 @@ LIVE_TOOLS = ["jobs", "code", "run_command", "web_search", "read_webpage", "yout
               "show_image", "read_file", "briefing", "account_settings", "weather", "classroom_due", "todo", "classroom_announcements", "classroom_materials", "drive_file", "routine",
               "recall", "selection", "media", "notes", "recent_changes", "watch", "checks", "whatsapp_read", "whatsapp_media", "whatsapp_send", "whatsapp_call",
               "discord_read", "discord_send", "discord_react", "discord_media", "unsend", "people_rules", "person", "waiting_on_me", "screen_history",
-              "screen_time", "search_mine", "approvals"]
+              "screen_time", "search_mine", "approvals", "backup", "stand_in", "settings"]
 
 # what the user asked to be called, from what Jarvis remembers ("prefers to be called Q", "call me Sam, not sir")
 # ponytail: a pattern over remember()'s usual wording, not understanding; unmatched memory falls back to the prompt's rule
@@ -495,6 +535,8 @@ def wrong_person(tool, to, heard):
     for m in reversed(sessions.messages):
         if now - m.get("time", now) > NOTICE_KEEP:
             return None
+        if m.get("who") == "you":  # what the user said since: "try now" a minute after "send it to Dr Abed" was refused as
+            heard += " " + str(m.get("text", ""))  # "the user didn't say who" (the send had failed, WhatsApp was reconnecting)
         text = str(m.get("text", "")) if m.get("who") == "system" else ""
         got = re.match(rf"💬 {app} from (.+?): (.*)", text, re.S) or re.match(rf"✏️ Changed: Sent an? {app} message to (.+?): ()", text, re.S)
         if got:
@@ -521,7 +563,7 @@ TOOL_LABELS = {"run_command": "Running a command", "web_search": "Searching the 
                "account_settings": "Changing account settings", "weather": "Checking the weather",
                "classroom_due": "Checking Classroom", "todo": "Checking your to-do list", "classroom_announcements": "Checking Classroom", "classroom_materials": "Checking Classroom", "drive_file": "Reading from Drive", "ask_user": "Asking you",
                "routine": "Running a routine", "recall": "Searching past conversations", "selection": "Reading your selection",
-               "media": "Controlling the music", "notes": "Taking notes", "recent_changes": "Checking what changed", "watch": "Watching the screen",
+               "media": "Controlling the music", "notes": "Taking notes", "recent_changes": "Checking what changed", "backup": "Saving a backup", "stand_in": "Answering a chat for you", "settings": "Changing a setting", "watch": "Watching the screen",
                "plan": "Planning", "checks": "Updating your checks", "whatsapp_read": "Reading WhatsApp", "whatsapp_media": "Opening a WhatsApp message", "whatsapp_call": "Calling on WhatsApp",
                "whatsapp_send": "Sending a WhatsApp message", "discord_read": "Reading Discord", "discord_send": "Sending a Discord message",
                "discord_react": "Reacting on Discord", "unsend": "Deleting a message", "discord_media": "Opening a Discord message", "people_rules": "Updating who Jarvis answers",
@@ -677,6 +719,7 @@ class Live:
         self.act_lock = asyncio.Lock()  # one voice act that types at a time
         self.quick_gen = 0
         self.user_spoke_at = 0.0
+        self.promise_at = 0.0  # the user_spoke_at of the request whose empty promise was last put right (_check_promise)
         self.gemini_spoke_at = 0.0
         self.turn_spoke = False
         self.interrupted_at = 0.0
@@ -1023,7 +1066,7 @@ class Live:
                 + (f"- The user's routines (say one and you run it): {', '.join(store.routines())}.\n" if store.routines() else "")
                 + f"- Connected accounts with direct tools: {apps}."
                 + (f" Also connected (use do_task for these): {others}." if others else "")
-                + " Others (Slack, Notion, Google Tasks, Drive, YouTube...) can be connected in Jarvis's Connections "
+                + " Others (Slack, Notion, Google Tasks, Drive, YouTube...) can be connected in Jarvis's Accounts "
                 "page, or ask do_task to connect them.\n"
                 + ("- The user's own WhatsApp (whatsapp_read, whatsapp_media for voice messages and photos, whatsapp_send, whatsapp_call to phone someone with a message). On its own, Jarvis also answers their contacts' "
                    "messages that don't need them, and picks up calls they miss and takes a message.\n"
@@ -1036,7 +1079,7 @@ class Live:
                 + (f"- Not working right now: {', '.join(down)}. {self.brain.accounts_down() or self.brain.sign_in_note()}\n"
                    if down else "")
                 + "- Background agents (do_task) for long jobs, several at once; coding agents (code) for programming in a "
-                "project. You run on Google Gemini; the user built and develops you.")
+                "project.\n\n" + brain_mod.about())
 
     def _config(self):
         t = self.t
@@ -1298,11 +1341,13 @@ class Live:
                 self._cancel_quick()
                 self.speaker.stop()
             if sc.turn_complete:
+                said, announced = self.said.strip(), self.announcing
                 self._flush()
                 self.announcing = False
                 self.muted = self.waiting = self.spoke = False
                 self.turn_spoke = False
                 self.last = time.time()
+                self._check_promise(said, announced)
         if m.tool_call:
             self._flush()
             for fc in m.tool_call.function_calls:
@@ -1331,6 +1376,19 @@ class Live:
                 self.quick_tasks[t] = halt
                 t.add_done_callback(lambda t: self.quick_tasks.pop(t, None))
             self.last = time.time()
+
+    def _check_promise(self, said, announced):
+        """After a turn of the voice's own: a promise to act later that nothing stands behind (empty_promise) is put right
+        at once, by the voice itself. Once for each thing the user said: what it says then isn't checked again."""
+        if not said or announced or not self.session or self.promise_at == self.user_spoke_at:
+            return
+        import brain as brain_mod
+        done = self.turn_calls[2] if self.turn_calls[0] == self.user_spoke_at else {}
+        note = empty_promise(said, done, bool(self.working or self.doing or brain_mod.running or brain_mod.watching))
+        if note:
+            self.promise_at = self.user_spoke_at
+            print("[voice] promised what nothing will do: asked to put it right", flush=True)
+            asyncio.create_task(self._send(note, track=False))
 
     async def _tool(self, fc, halt=None):
         args = fc.args or {}
@@ -3874,6 +3932,7 @@ def main():
     background(presence_loop, live, restart=True)
     background(learn_loop, brain, restart=True)
     brain_mod.job_done[0] = lambda text: job_done(live, text)
+    brain_mod.app_version[0] = VERSION
     import remote
     chat = lambda who, text: emit("log", who=who, text=text)  # (tasks from the phone and their answers)
     remote_ref[0] = remote.Telegram(brain, notify=lambda text: emit("log", who="system", text=text), chat=chat)

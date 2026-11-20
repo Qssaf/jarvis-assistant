@@ -62,6 +62,7 @@ They spend the user's model quota and are run by hand, never in CI.
 ```bash
 EVAL_RUNS=3 EVAL_OUT=/tmp/a.json .venv/bin/python evals/agent_eval.py [case id or kind ...]  # Brain.ask, simulated tools
 EVAL_RUNS=3 EVAL_OUT=/tmp/v.json .venv/bin/python evals/voice_eval.py [case-prefix ...]      # one Live session a case
+.venv/bin/python evals/learn_eval.py [case ...]   # made-up talks through Brain.learn's prompt (what's kept in memory)
 ```
 
 - A change to `prompt.md`, a tool's description or `LIVE_PROMPT`: run the cases it touches before and after, three

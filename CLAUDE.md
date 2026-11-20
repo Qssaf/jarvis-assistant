@@ -16,6 +16,7 @@ EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py
 EVAL_RUNS=3 EVAL_OUT=/tmp/x.json ...                     # both: each case three times, transcripts to a file outside the repo
 .venv/bin/python evals/whatsapp_eval.py [case ...]       # made-up chats through WhatsApp auto-replies (REPLY_PROMPT)
 .venv/bin/python evals/proactive_eval.py [case ...]      # made-up sent messages through people.Tracker's promise prompt
+.venv/bin/python evals/learn_eval.py [case ...]          # made-up talks through Brain.learn's LEARN prompt (what's kept)
 .venv/bin/python evals/wake_eval.py [max clips]          # the user's wake clips through openWakeWord, gated vs every frame (offline)
 .venv/bin/python evals/wake_vector.py                    # rewrites the app's WakeTest vector (wake.json) from openWakeWord
 (cd android && WAKE_MODELS=$PWD/../.venv/lib/python3.13/site-packages/openwakeword/resources/models ./gradlew testDebugUnitTest)
@@ -230,6 +231,22 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   Composio's failure inside the result text. A call a gate refuses is logged (`[voice] <tool> refused:`): it ran
   nothing, so no `[tool]` line said why the voice stopped. A tracked `_send` (a picked region, an announcement) starts
   a new tool count. `evals/voice_eval.py`'s cases can seed the chat (`talk`) and mirror those gates.
+- What both prompts are told beyond the conversation (`Live._config`, `Brain._system`): memory, `people.index` (people
+  with notes, then the ones talked with in the last `ACTIVE_DAYS`, with their apps: with notes only, the list was empty
+  and a misheard name had nothing to match), and `brain.about()` (Jarvis itself: version from `app_version`, the
+  window's pages, the models of each job by name, what it does on its own from settings, `system.projects()`: git
+  folders up to three levels below home, cached ten minutes). Tests and `agent_eval` stub `system.projects`. The voice's
+  honesty gates are code, mirrored in voice_eval: `empty_promise` (after a turn that promises to act later, `PROMISE`,
+  with no change that went and no task at work, `_check_promise` sends `EMPTY_PROMISE` once per request and the voice
+  puts it right itself) and `tool_limit`'s `VOICE_READ_LIMIT` (`DIGGING`: chat reads and searches past it go to do_task).
+  `jobs` with nothing running says what finished lately (`clear` empties it); `backup` is `store.export_data` into home.
+  `settings` changes only `OWN_SETTINGS` (never safety, models, the wake word, people's lists), and a `DOES_MORE` value
+  waits for `confirmed`. `stand_in` (`whatsapp.stand_ins`, memory only, `STAND_IN_MAX` minutes): one one-to-one chat is
+  answered whatever the reply settings, rules and `QUIET` say, as Jarvis (`stand_note` goes under `REPLY_PROMPT`'s own
+  rules), `too_many` with `STAND_IN_LIMIT`. A `whatsapp_send` while the link is coming back (`reconnecting`) goes into
+  `WhatsApp.outbox` (saved in whatsapp.json, sent by `_flush_outbox` on "connected", dropped and said after
+  `OUTBOX_KEEP`; `waiting_or_went` keeps "try now" from sending it twice). A `code` job in a folder with no commit to
+  branch from works in place after `small_folder` copied it to `DATA/worktrees/<name>-before-<stamp>` (`KEEP_COPY_DAYS`).
 - `Live` has resilience logic that's easy to break: request tracking (`inflight`), session resumption, `_recover`
   and `_relisten` after drops, the `_watch` silence watchdog, and half-duplex mic gating while the speaker plays.
   `_recover` and the watchdog stand back only for the request's own work (`_own_work`: a quick tool running, or a
@@ -505,7 +522,7 @@ the request was first heard, `inflight["at"]`, and a label; a ★ line at its pl
 prompt, `Notes.SUMMARY` via `_summary_prompt`, asks for a Marked moments part). `learn_pass` (every 2 min): once the session's last you/jarvis line is `LEARN_AFTER` old,
 `Brain.learn` asks the agent's models once (`LEARN`) for at most three new facts the user said or "Lesson: ..." lines
 (their corrections of how Jarvis works), reading `sessions.since(at, at)`: every conversation changed since the stamp;
-`learned.json` is stamped first, so a failing model isn't asked again (a transient `NoModel`, offline for a moment,
+`learned.json` is stamped first (`evals/learn_eval.py` checks the prompt: nothing only passed on, taken back, or read off a contact's name), so a failing model isn't asked again (a transient `NoModel`, offline for a moment,
 puts the stamp back for `LEARN_TRIES` passes and doesn't stop the loop); each pass logs one `[learn]` line;
 `learn_from_talk` turns it off. `brain.pick` matches names as written, then exactly one `plain_name` match (decorated
 letters, emoji, accents and marks dropped; "Sam & Lee" isn't "Sam Lee"); near matches are listed, never picked. Looks

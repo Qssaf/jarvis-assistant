@@ -27,6 +27,7 @@ import people  # noqa: E402
 people.index = lambda now=None, limit=40: "- Sam Lee: my cousin"  # (a stand-in for your notes about people)
 store.connector_modes = lambda: {}
 brain.system._idle_seconds = lambda: None  # (a screen step never waits for you using the PC meanwhile)
+brain.system.projects = lambda home=None, limit=20: ["~/Projects/jarvis-assistant", "~/Projects/website"]  # (not your folders)
 
 
 # ---------------------------------------------------------------- screens the agent sees (text drawn as a screenshot)
@@ -274,6 +275,29 @@ def discord_chats(args, case):
         said = {"alex": ["are you coming to the match saturday?", "it starts 7:45"], "sam lee": ["can you call me when you're free?"]}[chat]
         return {"chat": chat.title(), "messages": [{"from": chat.title(), "text": t, "at": day(0, "%a %d %b") + " 18:02"} for t in said], "note": brain.UNTRUSTED}
     return None
+
+
+def discord_history(args, case):
+    """Three chats with a history: what Maya and the user talk about every day is only there when enough of her chat is
+    read (its newest lines are "lol" and "gn"); as the real tool, the newest `count` messages (15 unless asked)."""
+    chat, count = str(args.get("chat", "")).strip().lower(), int(args.get("count") or 15)
+    stamp = lambda ago: (datetime.datetime.now() - datetime.timedelta(hours=ago)).strftime("%a %d %b %H:%M")
+    chats = {
+        "maya": [("Maya", "did you fix the arm's servo for the robotics project?"), ("me", "yes, the gripper closes now"),
+                 ("Maya", "nice, tomorrow we test the robot's line sensor"), ("me", "ok, I'll bring the battery pack"),
+                 ("Maya", "the robotics club wants our demo on Friday"), ("me", "then we need the code for the turns done"),
+                 ("Maya", "I'll write the turning code tonight"), ("me", "send me the robot wiring diagram too")] * 3
+        + [("Maya", "lol"), ("me", "gn"), ("Maya", "gn"), ("me", "ok"), ("Maya", "haha"), ("me", "lol"), ("Maya", "ok"), ("me", "see u")] * 2,
+        "alex": [("Alex", "are you coming to the match saturday?"), ("me", "maybe"), ("Alex", "it starts 7:45")],
+        "sam lee": [("Sam Lee", "happy birthday!"), ("me", "thanks!"), ("Sam Lee", "call me when you're free"), ("me", "will do")],
+    }
+    if not chat:
+        return {"chats": [{"name": name.title(), "kind": "dm", "last": said[-1][1]} for name, said in chats.items()], "note": brain.UNTRUSTED}
+    if chat not in chats:
+        return {"error": f"no chat called {args.get('chat')!r}", "close_matches": [name.title() for name in chats]}
+    said = chats[chat][-count:]
+    return {"chat": chat.title(), "messages": [{"from": who, "text": text, "at": stamp(len(said) - i)} for i, (who, text) in enumerate(said)],
+            "note": brain.UNTRUSTED}
 
 
 def discord_two_sams(args, case):
@@ -673,6 +697,10 @@ CASES += [
      "turns": ["Download my Graph notes from Drive into a folder called Physics on my desktop.", "What's the weather like?", "Who's waiting on me?",
                "Put my lab manual from Drive in the same folder as before."],
      "check": lambda c, r, a: ran(turn(c, 3), "drive_file", name="lab manual", save_to="Physics")},
+    # (working something out from chats takes reading enough of them: five messages each said "nothing" three times)
+    {"id": "chat_research", "kind": "solving", "discord": True, "windows": ["vesktop: Discord"], "world": world(discord_read=discord_history),
+     "task": "Go through my Discord chats and tell me who I talk to the most, and what about.",
+     "check": lambda c, r, a: bool(re.search(r"maya", r, re.I) and re.search(r"robot", r, re.I)) and "screenshot" not in names(c)},
     # ("him" is the one just talked about, not the first one)
     {"id": "ctx_latest_him", "kind": "context", "discord": True, "windows": ["vesktop: Discord"], "world": world(discord_read=discord_chats),
      "turns": ["What did Alex send me on Discord?", "And Sam Lee?", "Tell him I'm busy until 5."],

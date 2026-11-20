@@ -9,6 +9,9 @@ import store
 
 FILE = os.path.join(store.DATA, "people.json")
 PROMISE_DAYS = 7  # a promise with no time is on the evening list this long
+ACTIVE_DAYS = 14  # someone the user talked with this lately is in the prompts' list of people, notes or not
+ACTIVE_LINES = 25  # ...the newest of them only
+APPS = {"whatsapp": "WhatsApp", "discord": "Discord"}
 _lock = threading.Lock()
 tracker = [None]  # the app's Tracker (promises in what the user sends), filled in main()
 _stamped = {}  # (name, app, me) -> when talked() last wrote it (a chatty DM doesn't rewrite the file every message)
@@ -141,13 +144,29 @@ def done(name, what):
 
 
 def index(now=None, limit=40):
-    """One line per person with notes, for the prompts ("- Sam Lee: my cousin; exam on Friday")."""
+    """One line per person for the prompts: those with notes ("- Sam Lee (on WhatsApp): my cousin; exam on Friday"), then
+    the ones the user talked with in the last ACTIVE_DAYS, newest first ("- Maya (also maya_x; on Discord)"). With no
+    notes the models knew nobody: a misheard name had nothing to be matched against, and "send him this" no app."""
     now = now or time.time()
-    lines = []
-    for k, p in sorted(everyone().items(), key=lambda kp: -max([n["at"] for n in kp[1].get("notes", [])] or [0])):
+
+    def last(p, app=None):  # when they last wrote each other (on that app)
+        return max([at for field in ("seen", "wrote") for a, at in (p.get(field) or {}).items() if app in (None, a)] or [0])
+
+    def where(p):  # "also sam_; on WhatsApp, Discord": their other names, and the apps they talk on, the latest first
+        apps = sorted({a for field in ("seen", "wrote") for a in p.get(field) or {}}, key=lambda a: -last(p, a))
+        on = "on " + ", ".join(APPS.get(a, a.capitalize()) for a in apps) if apps else ""
+        aka = "also " + ", ".join(p["aka"][:2]) if p.get("aka") else ""
+        return f" ({'; '.join(x for x in (aka, on) if x)})" if aka or on else ""
+
+    noted, active = [], []
+    for k, p in everyone().items():
         notes = [n["text"] for n in p.get("notes", []) if not n.get("until") or n["until"] > now]
         if notes:
-            lines.append(f"- {k}: {'; '.join(notes)}"[:200])
+            noted.append((max(n["at"] for n in p["notes"]), f"- {k}{where(p)}: {'; '.join(notes)}"[:200]))
+        elif now - last(p) < ACTIVE_DAYS * 86400:
+            active.append((last(p), f"- {k}{where(p)}"[:120]))
+    lines = [line for _, line in sorted(noted, key=lambda entry: -entry[0])]
+    lines += [line for _, line in sorted(active, key=lambda entry: -entry[0])[:ACTIVE_LINES]]
     return "\n".join(lines[:limit])
 
 

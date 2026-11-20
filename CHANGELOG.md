@@ -3,6 +3,33 @@
 ## Unreleased
 
 ### Added
+- **Knows the people you talk to:** the people you wrote with on WhatsApp or Discord in the last two weeks are in
+  what both models know (name, other names, which app), not only the ones with notes. A misheard name now has
+  something to be matched against, and *"send him this"* goes to the app you talk in.
+- **Knows itself:** Jarvis knows it's a program on your PC, its version, its window's pages, which models it runs on
+  right now, what it does on its own (auto-replies, calls, checks) and your project folders. Asked *"can you back up a
+  copy of yourself?"* it said it "operates on external servers"; asked about one of its own models it searched the web.
+- **"Back yourself up":** saves a backup of Jarvis's data (never keys or sign-ins) as a zip in your home folder, the
+  same one Settings → *Move to another computer* makes.
+- **No empty promises:** when the voice says it will do something later or keep an eye on something (*"I'll let you
+  know when he writes"*, *"I'll send it the moment WhatsApp is back"*) and nothing it called will really do that, it
+  puts it right at once: it sets it up for real (a check, a reminder, a watch) or says plainly that it isn't done.
+- **Research goes to the agent:** a question that takes reading through chats (*"go through my Discord and tell me who
+  I talk to most"*) is handed to a background task after a few looks, and the agent reads whole chats before judging.
+  The voice used to read five messages of three chats and say it found nothing, three times running.
+- **"Keep answering him for me":** for the time you say (half an hour unless you say, three hours at most) Jarvis
+  answers one person's WhatsApp or Discord chat by itself, as Jarvis and the way you asked (*"keep it light, sign as
+  Jarvis"*), also while you write there yourself and with auto-replies off. Each answer shows in the chat, it tells you
+  when the time is up, and *"stop answering him"* ends it. One-to-one chats only.
+- **Messages wait for WhatsApp:** a message you ask for while WhatsApp is reconnecting isn't refused any more: it waits
+  and goes the moment the link is back (Jarvis tells you), or you're told it didn't if that takes over ten minutes.
+- **Its own settings by voice:** *"be brief"*, *"don't disturb me"*, *"quiet hours from eleven to seven"*, *"stop
+  answering my WhatsApp"*, *"change your voice"*. Safety, the models, the wake word and keys stay on the Settings page,
+  and a change that has Jarvis do more on its own waits for your yes.
+- **Coding in any folder without the question:** a folder that isn't a git repository (a course's lab folder) is
+  copied first, kept for 14 days, and the job starts at once; only a folder too big to copy still asks.
+- **"Clear the finished ones":** removes what's under Home's *Finished lately*; asked what's running with nothing
+  running, Jarvis says what ended lately instead of "I've cleared the task".
 - **Done on Today:** a promise on Home's *To do* card has a Done button that ends it for good, with its reminder
   (cancelling its reminder used to bring it straight back as a promise), and Classroom work has a button that opens it
   in Classroom.
@@ -170,6 +197,17 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
+- A shell command that changes git's settings for every project (`git config --global ...`) now waits for your yes:
+  Jarvis had set a global name and a wrong email by itself to get a test job going.
+- A message to someone you had just named was refused as "you didn't say who" when your next words didn't repeat the
+  name (*"try now"* after a send failed while someone else had written).
+- A coding job in a git repository with no commit yet failed with "invalid reference: HEAD"; it now works in the
+  folder itself, after asking, like a folder that isn't a repository.
+- Asked about exams, Jarvis looked only at Classroom's work and said there were none: it now reads the announcements
+  too, where quizzes usually are.
+- Learning from talk no longer keeps an address or number you only gave to be passed on, something you took back, or
+  "facts" that only follow from a contact's name ("Has a teacher named ...").
+- The voice's list of what it can do named a "Connections" page: it's Accounts.
 - **A task gives the keyboard back:** when you start using the keyboard or mouse while a background task works on the
   screen, it waits until you've left them alone, then looks at the screen again before its next click or keystroke
   (it used to carry on, typing into whatever window you had switched to).

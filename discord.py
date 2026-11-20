@@ -279,13 +279,14 @@ class Listener:
             people.talked(e["from"], "discord", False, aka=e["user"])
         rule = whatsapp.contact_rule([e["from"], e["user"]], "discord")
         said = f"Discord from {e['from']}" + (f" in {e['chat']}" if e["server"] or e["group"] else "") + f": {e['text'][:300]}"
-        if rule == "always":
+        stand = one and whatsapp.standing_in("discord", e["channel"], (e["from"], e["user"], e["chat"]))  # (asked for: whatever the rules)
+        if rule == "always" and not stand:
             self.tell(said, loud=True)
             return
-        if e["muted"] and rule != "never":
+        if e["muted"] and rule != "never" and not stand:
             return
         print(f"[discord] message from {e['from']}", flush=True)
-        if rule == "never" or e["server"] or e["group"] or not e["friend"] or store.settings()["discord_replies"] != "friends":
+        if not stand and (rule == "never" or e["server"] or e["group"] or not e["friend"] or store.settings()["discord_replies"] != "friends"):
             self.notify(f"💬 {said}")
             return
         self._cancel(e["channel"])
@@ -304,17 +305,19 @@ class Listener:
         self.pending.pop(chat, None)
         history = call("history", id=chat, kind="dm", count=20)
         said = " / ".join(m["text"] for m in [m for m in history if not m["me"]][-3:])[:300]
-        if time.time() - self.user_wrote.get(chat, 0) < whatsapp.QUIET:
+        stand = whatsapp.standing_in("discord", chat, (name, e["user"], e["chat"]))
+        if not stand and time.time() - self.user_wrote.get(chat, 0) < whatsapp.QUIET:
             self.notify(f"💬 Discord from {name}: {said} (you're chatting with them, so Jarvis left it)")
             return
         self.replies = [r for r in self.replies if r[0] > time.time() - 3600]
-        if len(self.replies) >= whatsapp.REPLY_LIMIT or sum(c == chat for _, c in self.replies) >= whatsapp.CHAT_LIMIT:
+        if whatsapp.too_many(self.replies, chat, stand):
             self.notify(f"💬 Discord from {name}: {said} (Jarvis has answered a lot this hour, so it left this one)")
             return
         me = self.wa._me() if self.wa else "the user"
         lines = "\n".join(f"{'Jarvis (you)' if (chat, m['text']) in self.mine else me if m['me'] else name}: {m['text'][:1000]}"
                           for m in history)
-        decision = whatsapp.decide(self.brain, "Discord", me, name, lines, *((self.wa._note(), self.wa._free()) if self.wa else ()))
+        decision = whatsapp.decide(self.brain, "Discord", me, name, lines, (self.wa._note() if self.wa else "") + whatsapp.stand_note(stand, me, name),
+                                   self.wa._free() if self.wa else "")
         reply, urgent = decision.get("reply", "").strip()[:LIMIT], decision.get("tell_user", "").strip()
         unsent = ""
         if reply:

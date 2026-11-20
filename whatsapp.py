@@ -28,6 +28,9 @@ CALL_LIMIT = 300     # seconds: Jarvis wraps a call up after this
 RING_FOR = 45        # seconds Jarvis lets its own call ring before giving up
 SEND_WAIT = 75       # seconds a send or unsend may take: longer than the helper's own 60, so its verdict is the one reported
 CONNECT_WAIT = 8     # seconds a tool waits for a link that's coming up (_need)
+OUTBOX_KEEP = 600    # seconds a message the user asked for waits for the link to come back (send_later); then it's dropped
+STAND_IN_MAX = 180   # minutes, at most, Jarvis answers one chat for the user (stand_in)
+STAND_IN_LIMIT = 40  # its answers an hour in that chat (CHAT_LIMIT would end a lively talk in minutes)
 # after the message, when Jarvis's answer to it couldn't be confirmed as sent (jarvis.wrong_person cuts it off again)
 UNSENT = " (Jarvis's answer may not have been sent)"
 # (at 30 a slow send was "failed" while it still went out: sent again, the contact got it twice)
@@ -122,6 +125,9 @@ class WhatsApp:
         self.mine = set(self.saved.get("mine", []))  # message ids Jarvis sent (kept: after a restart, still not the user's)
         self.replies = []     # (when, chat) Jarvis auto-replied, for REPLY_LIMIT and CHAT_LIMIT
         self.waited = 0.0     # when a tool last waited in vain for the link to come up (_need)
+        # messages waiting for the link to come back: [{"chat", "name", "text", "at"}] (kept over a restart)
+        self.outbox = [m for m in self.saved.get("outbox", []) if isinstance(m, dict) and {"chat", "name", "text", "at"} <= set(m)]
+        self.went = {}        # (chat, text) -> when the outbox sent it (asked again that moment, it isn't sent twice)
         self.heard = []       # when a voice message was transcribed on arrival (HEAR_LIMIT)
         self.answered = []    # (when, caller) Jarvis picked up a call (CALLER_LIMIT)
         self.free = (0, "")   # (when, what) the calendar said for {FREE}
@@ -318,8 +324,8 @@ class WhatsApp:
             people.talked(e["name"], "whatsapp", False)
         print(f"[whatsapp] message from {e['name']}", flush=True)
         mode, rule = store.settings()["whatsapp_replies"], contact_rule(e["name"])
-        if rule == "never" or (rule != "always" and (mode == "off" or not e["contact"])):  # (shown, never answered or said)
-            self.notify(f"💬 WhatsApp from {e['name']}: {e['text'][:300]}")
+        if not standing_in("whatsapp", e["chat"]) and (rule == "never" or (rule != "always" and (mode == "off" or not e["contact"]))):
+            self.notify(f"💬 WhatsApp from {e['name']}: {e['text'][:300]}")  # (shown, never answered or said)
             return
         self._cancel(e["chat"])
         timer = threading.Timer(SETTLE, self._answer, args=(e["chat"], e["name"]))
@@ -335,6 +341,8 @@ class WhatsApp:
                 self.notify("WhatsApp linked: Jarvis now looks after your messages and calls.")
             self._save(linked=True, name=e.get("name") or self.saved.get("name", ""))
             print("[whatsapp] connected", flush=True)
+            if self.outbox:  # (off the helper's reader thread: each send waits for its answer there)
+                threading.Thread(target=self._flush_outbox, daemon=True).start()
         elif e["state"] == "connecting":
             self.state = "connecting"
         elif e["state"] == "logged_out":
@@ -356,23 +364,24 @@ class WhatsApp:
         history = self.ask("history", chat=chat, count=20) or []
         recent = [m for m in history if not m["me"]][-3:]
         said = " / ".join(m["text"] for m in recent)[:300]
-        if contact_rule(name) == "always":  # (never answered by Jarvis: said to the user, even in quiet hours; the 💬 line
+        stand = standing_in("whatsapp", chat)  # the user asked Jarvis to answer this chat for a while: whatever the rules say
+        if not stand and contact_rule(name) == "always":  # (never answered by Jarvis: said to the user, even in quiet hours; the 💬 line
             self.notify(f"💬 WhatsApp from {name}: {said}")  # too: wrong_person reads who the user is talking with from it)
             self.tell(f"WhatsApp from {name}: {said}", loud=True)
             return
         # (the chat's own messages too: after a restart user_wrote is empty, and Jarvis introduced itself in the middle of
         # the user's conversation)
         wrote = max([self.user_wrote.get(chat, 0), *(m.get("at") or 0 for m in history if m["me"] and m["id"] not in self.mine)])
-        if time.time() - wrote < QUIET:
+        if not stand and time.time() - wrote < QUIET:
             self.notify(f"💬 WhatsApp from {name}: {said} (you're chatting with them, so Jarvis left it)")
             return
         self.replies = [r for r in self.replies if r[0] > time.time() - 3600]
-        if len(self.replies) >= REPLY_LIMIT or sum(c == chat for _, c in self.replies) >= CHAT_LIMIT:
+        if too_many(self.replies, chat, stand):
             self.notify(f"💬 WhatsApp from {name}: {said} (Jarvis has answered a lot this hour, so it left this one)")
             return
-        decision = self.decide(name, history)
+        decision = self.decide(name, history, stand)
         reply, urgent = decision.get("reply", "").strip()[:700], decision.get("tell_user", "").strip()
-        if reply and store.settings()["whatsapp_replies"] == "drafts":  # (not sent, nor counted in the limits: the user sends it)
+        if reply and not stand and store.settings()["whatsapp_replies"] == "drafts":  # (not sent, nor counted in the limits: the user sends it)
             # (the 💬 line too: wrong_person reads who the user is talking with from it, and an open voice session gets it)
             self.notify(f"💬 WhatsApp from {name}: {said}\nJarvis's draft (not sent): {reply}")
             draft = f'{name} wrote on WhatsApp: "{said}"\nI\'d reply: "{reply}" Shall I send it?'
@@ -393,11 +402,12 @@ class WhatsApp:
         if urgent:
             self.tell(f"WhatsApp from {name}: {urgent}")
 
-    def decide(self, name, history):
-        """What to answer: {"reply", "tell_user"} from the agent's models, with no tools and nothing private."""
+    def decide(self, name, history, stand=None):
+        """What to answer: {"reply", "tell_user"} from the agent's models, with no tools and nothing private. stand: the
+        stand-in the user asked for in this chat (stand_note)."""
         me = self._me()
         lines = "\n".join(f"{'Jarvis (you)' if m['id'] in self.mine else me if m['me'] else name}: {m['text'][:1000]}" for m in history)
-        return decide(self.brain, "WhatsApp", me, name, lines, self._note(), self._free())
+        return decide(self.brain, "WhatsApp", me, name, lines, self._note() + stand_note(stand, me, name), self._free())
 
     def _mine(self, id):
         self.mine.add(id)
@@ -461,6 +471,57 @@ class WhatsApp:
         self._need()
         self._mine(self.ask("send", timeout=SEND_WAIT, chat=chat, text=text))
         self.user_wrote[chat] = time.time()  # (the user asked for it: as if they wrote it)
+
+    # ---- a message asked for while the link is down waits for it (the voice promised "the moment it's back", and nothing sent it)
+    def reconnecting(self):
+        """Linked, the helper running, the link not up: what's sent now would fail, and can wait instead."""
+        return bool(self.proc and self.saved.get("linked") and self.state in ("starting", "connecting"))
+
+    def find_offline(self, name):
+        """find, from the chats the helper has saved (the link isn't needed for the list)."""
+        return brain.pick(name, self.ask("chats", timeout=10, count=500))
+
+    def waiting_or_went(self, chat, text):
+        """"waiting": this very message is in the outbox; "went": the outbox sent it in the last two minutes; else ""."""
+        if any(m["chat"] == chat and m["text"] == text for m in self.outbox):
+            return "waiting"
+        return "went" if time.time() - self.went.get((chat, text), 0) < 120 else ""
+
+    def send_later(self, found, text):
+        """Keep a message for a chat (find's) until the link is back: it goes the moment it's connected, and the user is
+        told; one that waited OUTBOX_KEEP isn't sent late (they're told that too)."""
+        self.outbox.append({"chat": found["chat"], "name": found["name"], "text": text, "at": time.time(), "group": bool(found.get("group"))})
+        self._save(outbox=self.outbox)
+        timer = threading.Timer(OUTBOX_KEEP + 1, self._flush_outbox, kwargs={"send": False})
+        timer.daemon = True
+        timer.start()
+
+    def _flush_outbox(self, send=True):
+        """The link is back: what waited goes, oldest first. send False (its time is up): only the too-old ones are dropped."""
+        with self.write_lock:  # (the link flapping twice in a second mustn't send one twice)
+            waiting, self.outbox = self.outbox, []
+            self._save(outbox=[])
+        keep = []
+        for m in waiting:
+            said = f'your WhatsApp message to {m["name"]} ("{m["text"][:80]}")'
+            if time.time() - m["at"] > OUTBOX_KEEP:
+                self.tell(f"WhatsApp didn't come back in time, so {said} wasn't sent.")
+            elif not send or self.state != "connected":
+                keep.append(m)
+            else:
+                self.went[(m["chat"], m["text"])] = time.time()  # (before it goes: "try now" at this very moment isn't a second one)
+                try:
+                    self.send(m["chat"], m["text"])
+                    brain.whatsapp_sent(m["name"], m["text"], m.get("group", False))
+                    self.tell(f'WhatsApp is back: sent {m["name"]} "{m["text"][:80]}"')
+                except Exception as e:  # (said, never lost: the user thinks it went)
+                    self.went.pop((m["chat"], m["text"]), None)
+                    print(f"[whatsapp] a waiting message to {m['name']} didn't go: {e!r}"[:300], flush=True)
+                    self.tell(f"WhatsApp is back, but {said} couldn't be sent: {str(e)[:120]}")
+        if keep:
+            with self.write_lock:
+                self.outbox = keep + self.outbox
+                self._save(outbox=self.outbox)
 
     def unsend(self, found, text=""):
         """Delete for everyone the user's newest message in a chat (or the newest holding these words): its text, or None
@@ -620,6 +681,57 @@ def contact_rule(names, app="whatsapp"):
     cfg = store.settings()
     names = {n.strip().lower() for n in ([names] if isinstance(names, str) else names) if n}
     return next((rule for rule in ("always", "never") if names & {n.lower() for n in cfg[f"{app}_{rule}"]}), "")
+
+
+# ---------------------------------------------------------------- answering one chat for the user, for a while
+stand_ins = {}  # (app, chat id) -> {"name", "until", "how", "notify"}: memory only, so a restart ends them
+
+
+def stand_in(app, chat, name, minutes, how="", notify=print):
+    """For `minutes` (STAND_IN_MAX at most) Jarvis answers this one-to-one chat as itself, also while the user writes there
+    and whatever the auto-reply settings say; notify hears when it's over. Returns when it ends."""
+    until = time.time() + max(1, min(float(minutes), STAND_IN_MAX)) * 60
+    stand_ins[(app, chat)] = {"name": name, "until": until, "how": " ".join(str(how).split())[:400], "notify": notify}
+    timer = threading.Timer(until - time.time() + 1, standing_in, args=(app, chat))  # (said when it's over, not at their next message)
+    timer.daemon = True
+    timer.start()
+    return until
+
+
+def standing_in(app, chat, names=()):
+    """The stand-in for this chat (its id, or on Discord one of the person's names), or None; one whose time is up ends
+    here, and the user is told."""
+    names = {str(n).lower() for n in names if n}
+    for key, s in list(stand_ins.items()):
+        if key[0] != app or not (key[1] == chat or s["name"].lower() in names):
+            continue
+        if time.time() < s["until"]:
+            return s
+        if stand_ins.pop(key, None):
+            s["notify"](f"Jarvis stopped answering {s['name']} for you: the time you gave it is up.")
+    return None
+
+
+def stop_stand_in(name=""):
+    """End the stand-in for that person (all of them with no name): their names."""
+    ended = [key for key, s in stand_ins.items() if not name or s["name"].lower() == name.strip().lower()]
+    return [stand_ins.pop(key)["name"] for key in ended]
+
+
+def stand_note(stand, me, who):
+    """What the reply prompt is told while Jarvis stands in ("" otherwise): the rules above it still hold."""
+    if not stand:
+        return ""
+    return (f"For now {me} has asked you to keep this conversation with {who} going for them (until "
+            f"{time.strftime('%H:%M', time.localtime(stand['until']))}): answer every message, a little longer and warmer than "
+            "usual, still as Jarvis and never as them." + (f" What they asked for: {stand['how']}" if stand["how"] else "") + "\n")
+
+
+def too_many(replies, chat, stand=None):
+    """Enough auto-replies for this hour (replies: [(when, chat)] of the last hour): REPLY_LIMIT in all, CHAT_LIMIT in one
+    chat, STAND_IN_LIMIT in one the user asked Jarvis to keep answering."""
+    mine = sum(c == chat for _, c in replies)
+    return mine >= STAND_IN_LIMIT if stand else len(replies) >= REPLY_LIMIT or mine >= CHAT_LIMIT
 
 
 def decide(brain, app, me, who, lines, note="", free=""):
