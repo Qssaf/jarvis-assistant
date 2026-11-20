@@ -743,18 +743,18 @@
         <translation>Jarvis her konuşmadan önce bunu okur. Ona “şunu hatırla…” deyin ya da buradan düzenleyin.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+41"/>
         <source>Saved</source>
         <translation>Kaydedildi</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+211"/>
+        <location line="+226"/>
         <source>Save</source>
         <translation>Kaydet</translation>
     </message>
     <message>
-        <location line="-210"/>
+        <location line="-225"/>
         <source>Memory saved</source>
         <translation>Bellek kaydedildi</translation>
     </message>
@@ -804,12 +804,12 @@
     </message>
     <message>
         <location line="+5"/>
-        <location line="+149"/>
+        <location line="+164"/>
         <source>Cancel</source>
         <translation>İptal</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-156"/>
         <source>Add a reminder or task</source>
         <translation>Hatırlatıcı veya görev ekle</translation>
     </message>
@@ -830,12 +830,12 @@
     </message>
     <message>
         <location line="+16"/>
-        <location line="+33"/>
+        <location line="+38"/>
         <source>Delete</source>
         <translation>Sil</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-30"/>
         <source>Add a routine</source>
         <translation>Rutin ekle</translation>
     </message>
@@ -855,12 +855,43 @@
         <translation>Henüz bir şey yok. “Bir ödeme başarısız olursa haber ver” deyin ya da buradan ekleyin.</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+17"/>
         <source>Paused</source>
         <translation>Duraklatıldı</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+0"/>
+        <location line="+17"/>
+        <source>Looking now…</source>
+        <translation>Şimdi kontrol ediliyor…</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <source>Try it now</source>
+        <translation>Şimdi dene</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Couldn&apos;t look at %1.</source>
+        <translation>%1 kontrolü yapılamadı.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1 and told you: %2</source>
+        <translation>Son kontrol: %1. Size bildirilen: %2</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1: nothing needed you.</source>
+        <translation>Son kontrol: %1. Size ihtiyaç olan bir şey yoktu.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Next look at %1.</source>
+        <translation>Sonraki kontrol: %1.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Add a check</source>
         <translation>Kontrol ekle</translation>
     </message>
@@ -1174,7 +1205,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3154"/>
+        <location filename="../jarvis.py" line="+3543"/>
         <source>LISTENING</source>
         <translation>DİNLİYOR</translation>
     </message>
@@ -2068,23 +2099,33 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+42"/>
+        <location line="+45"/>
         <source>Messages</source>
         <translation>Mesajlar</translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-43"/>
         <source>Answer my contacts</source>
         <translation>Kişilerimi yanıtla</translation>
     </message>
     <message>
         <location line="+0"/>
-        <location line="+42"/>
+        <source>Draft replies for me to send</source>
+        <translation>Göndermem için yanıt taslağı hazırla</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+44"/>
         <source>Just show them to me</source>
         <translation>Yalnızca bana göster</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
+        <source>Jarvis writes a reply to your contacts&apos; messages that don&apos;t need you and tells you. Nothing is sent until you say &quot;send it&quot;.</source>
+        <translation>Jarvis, kişilerinizin sizi gerektirmeyen mesajlarına bir yanıt yazar ve size haber verir. Siz “gönder” diyene kadar hiçbir şey gönderilmez.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Calls</source>
         <translation>Aramalar</translation>
     </message>
@@ -2436,11 +2477,11 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>What you say after “%1”, and screenshots when a task needs the screen, go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Memory, reminders and conversations stay on this computer.</source>
-        <translation>“%1” dedikten sonra söyledikleriniz ve bir görev ekranı gerektirdiğinde ekran görüntüleri Google Gemini&apos;ye gider. Hesap işlemleri yalnızca bağladığınız hesaplar için Composio üzerinden yapılır. Bellek, hatırlatıcılar ve konuşmalar bu bilgisayarda kalır.</translation>
+        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis keeps all of it on this computer.</source>
+        <translation>“%1” dedikten sonra söyledikleriniz ya da yazdıklarınız, yanıtlamaya yardımcı olan bellek ve son konuşma ile bir görev ekranı gerektirdiğinde alınan ekran görüntüleri Google Gemini&apos;ye gider. Hesap işlemleri yalnızca bağladığınız hesaplar için Composio üzerinden yapılır. Jarvis bunların hepsini bu bilgisayarda saklar.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Your Gemini key</source>
         <translation>Gemini anahtarınız</translation>
     </message>
@@ -2646,7 +2687,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+107"/>
+        <location filename="../qml/Today.qml" line="+109"/>
         <source>Feels %1 in %2</source>
         <translation>Hissedilen %1 · %2</translation>
     </message>
@@ -2676,9 +2717,19 @@
         <translation>Üzerinde çalışılanlar</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+0"/>
+        <source>Finished lately</source>
+        <translation>Son bitenler</translation>
+    </message>
+    <message>
+        <location line="+30"/>
         <source>Stop this task</source>
         <translation>Bu görevi durdur</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Finished at %1</source>
+        <translation>Bitiş: %1</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -2706,12 +2757,22 @@
         <translation>%1 kişisine söz verildi</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+12"/>
         <source>Cancel this reminder</source>
         <translation>Bu hatırlatıcıyı iptal et</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+0"/>
+        <source>Mark as done</source>
+        <translation>Yapıldı olarak işaretle</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Open in Classroom</source>
+        <translation>Classroom&apos;da aç</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Couldn&apos;t check %1 just now.</source>
         <translation>%1 şu an kontrol edilemedi.</translation>
     </message>
@@ -2779,7 +2840,7 @@
         <translation>Çıkış</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
         <source>Running in the tray. Say &quot;%1&quot;.</source>
         <translation>Sistem tepsisinde çalışıyor. “%1” deyin.</translation>
     </message>

@@ -67,8 +67,10 @@ def drop(name, text):
         key = _key(book, name)
         if not key:
             return 0
-        if not text.strip():
-            del book[key]
+        if not text.strip():  # (their promises' reminders go too: one still announced a promise the user had Jarvis forget)
+            for x in book.pop(key).get("promises", []):
+                if x.get("reminder"):
+                    store.cancel_reminder(x["reminder"])
             gone[0] = 1
         else:
             p = book[key]
@@ -115,10 +117,27 @@ def _open(x, now):
 
 
 def promises(now=None):
-    """The user's open promises: [{"to", "what", "due"}], soonest first."""
+    """The user's open promises: [{"to", "what", "due", "at", "reminder" (its id, if it has one)}], soonest first."""
     now = now or time.time()
-    return sorted(({"to": k, "what": x["what"], "due": x.get("due", 0), "at": x["at"]} for k, p in everyone().items()
-                   for x in p.get("promises", []) if _open(x, now)), key=lambda x: x["due"] or 9e9)
+    return sorted(({"to": k, "what": x["what"], "due": x.get("due", 0), "at": x["at"], **({"reminder": x["reminder"]} if x.get("reminder") else {})}
+                   for k, p in everyone().items() for x in p.get("promises", []) if _open(x, now)), key=lambda x: x["due"] or 9e9)
+
+
+def done(name, what):
+    """A promise kept (Home's Done): it goes from their page, with its reminder; the page stays. Returns how many went."""
+    with _lock:
+        book = everyone()
+        key = _key(book, name)
+        if not key:
+            return 0
+        kept = [x for x in book[key].get("promises", []) if x.get("what") != what]
+        for x in book[key].get("promises", []):
+            if x not in kept and x.get("reminder"):
+                store.cancel_reminder(x["reminder"])
+        gone = len(book[key].get("promises", [])) - len(kept)
+        book[key]["promises"] = kept
+        store.write_json(FILE, book, private=True)
+    return gone
 
 
 def index(now=None, limit=40):

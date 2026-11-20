@@ -15,7 +15,10 @@ handshake and nothing else: every frame after it must open with the keys only th
 
 Inside the channel, a phone asks (`ask`, `stop`), talks (`voice`, `audio`, `barge`: its microphone and speaker stand in
 for the PC's, see jarvis.PhoneVoice), reads a few of the window's pages and stops a task (`get`, `post`: PHONE_GET,
-PHONE_POST) and fetches the wake word's models (`wake`). The PC sends `event` for every line of the chat and change of state."""
+PHONE_POST) and fetches the wake word's models (`wake`). The PC sends `event` for every line of the chat and change of state.
+An `ask` carries an id its `reply` echoes. The PC keeps a phone's last KEEP answers, sent or not (the link may have
+dropped on the way), and a phone back on the link names what it still waits for (`hello`'s `waiting`): those answers
+come again after `ready`, whose `lost` lists the ones this PC doesn't know (it restarted)."""
 import asyncio, base64, hashlib, hmac, json, os, re, secrets, shutil, socket, tempfile, threading, time
 
 from cryptography.hazmat.primitives import hashes, serialization
@@ -34,6 +37,7 @@ PORT = 47800  # the direct way in (the next free one if it's taken: the pairing 
 MAX_DIRECT = 8  # direct connections at once (the relay's MAX_PHONES)
 STRANGER = 20  # seconds a direct connection has to show it's a paired phone (or to pair)
 CHUNK = 180_000  # bytes of a wake word model per frame (frames stay well under the relay's 1 MiB)
+KEEP = 20  # answers kept per phone, in memory (and as many not sent yet)
 # what a paired phone may read and do of the window's API: nothing else (settings, keys, accounts and data stay the PC's)
 PHONE_GET = ("/api/today", "/api/reminders", "/api/media", "/api/system", "/api/conversation", "/api/screen", "/api/jobs")
 PHONE_POST = re.compile(r"/api/(media/(PlayPause|Next|Previous)|jobs/\d+/stop|stop|new)")
@@ -62,6 +66,11 @@ def nonce(n):
 
 def token_hash(token):
     return hashlib.sha256(str(token).encode()).hexdigest()
+
+
+def request_id(value):
+    """An id the app gave a question (the app's are numbers): only these are kept track of."""
+    return isinstance(value, (int, str)) and not isinstance(value, bool)
 
 
 class Channel:
@@ -140,6 +149,8 @@ class PhoneLink:
         # "tries": n, "relay": came through the relay, "send": coroutine(bytes), "close": coroutine()}
         self.phones = {}
         self.pending = {}  # device -> replies it hasn't received yet (the app was closed when they came)
+        self.asked = {}    # device -> ids of its questions still being worked on
+        self.kept = {}     # device -> {id: reply} of its last KEEP answers, sent or not
 
     def save(self):
         store.write_json(STATE_FILE, self.state, private=True)
@@ -254,7 +265,8 @@ class PhoneLink:
 
     def unpair(self, device):
         self.state["devices"].pop(device, None)
-        self.pending.pop(device, None)
+        for kept in (self.pending, self.asked, self.kept):
+            kept.pop(device, None)
         self.save()
         for c, phone in list(self.phones.items()):
             if phone["device"] == device:
@@ -443,11 +455,18 @@ class PhoneLink:
             phone["device"] = device
             for old in [o for o, p in self.phones.items() if o != c and p["device"] == device]:
                 await self._drop(old)  # (the same app on a new network: the old connection is dead, and replies went into it)
+            # what the app asked before the link dropped and still waits for (an older app names nothing)
+            waiting = m.get("waiting") if isinstance(m.get("waiting"), list) else []
+            waiting = list(dict.fromkeys(i for i in waiting if request_id(i)))
+            asked, kept = self.asked.get(device, set()), self.kept.get(device, {})
             await self._send(c, {"op": "ready", "name": socket.gethostname(), "v": 2, "direct": self.direct_addresses(),
                                  "wake": self.voice.phrase() if self.voice else "",
                                  # (what the app's own Gemini session uses while this PC is off)
-                                 "live": store.settings()["live_model"], "voice_name": store.settings()["voice"]})
-            for reply in self.pending.pop(device, []):
+                                 "live": store.settings()["live_model"], "voice_name": store.settings()["voice"],
+                                 "lost": [i for i in waiting if i not in asked and i not in kept]})
+            pending = self.pending.pop(device, [])  # ...then the answers it hasn't had: those kept for no connection, and
+            # those that went out into one that was dying (the relay hadn't seen it go)
+            for reply in pending + [kept[i] for i in waiting if i in kept and kept[i] not in pending]:
                 await self._send(c, reply)
             return
         if not phone["device"] or phone["device"] not in devices:
@@ -455,6 +474,9 @@ class PhoneLink:
         if op == "ask" and str(m.get("text", "")).strip():
             text = str(m["text"]).strip()
             self.chat("you", f"📱 {text}")  # (as notices, a conversation held only from the phone was never saved)
+            if request_id(m.get("id")):
+                self.asked.setdefault(phone["device"], set()).add(m["id"])
+                self.kept.get(phone["device"], {}).pop(m["id"], None)  # (an id an older app used before its restart)
             await self._send(c, {"op": "working", "id": m.get("id")})  # (never queued: tasks run side by side)
             threading.Thread(target=self._task, args=(phone["device"], m.get("id"), text), daemon=True).start()
         elif op == "stop":
@@ -559,9 +581,16 @@ class PhoneLink:
             self._call(self._deliver(device, {"op": "reply", "text": text}))
 
     async def _deliver(self, device, message):
+        if request_id(message.get("id")):  # an answer: kept, in case the link drops before the phone has it
+            self.asked.get(device, set()).discard(message["id"])
+            kept = self.kept.setdefault(device, {})
+            kept.pop(message["id"], None)
+            kept[message["id"]] = message
+            for old in list(kept)[:-KEEP]:
+                del kept[old]
         c = next((c for c, p in self.phones.items() if p["device"] == device and p["channel"]), None)
         if c:
             await self._send(c, message)
         else:
             self.pending.setdefault(device, []).append(message)
-            del self.pending[device][:-20]
+            del self.pending[device][:-KEEP]

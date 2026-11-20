@@ -753,18 +753,18 @@
         <translation>Jarvis liest das vor jedem Gespräch. Sagen Sie „merk dir …“ oder bearbeiten Sie es hier.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+41"/>
         <source>Saved</source>
         <translation>Gespeichert</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+211"/>
+        <location line="+226"/>
         <source>Save</source>
         <translation>Speichern</translation>
     </message>
     <message>
-        <location line="-210"/>
+        <location line="-225"/>
         <source>Memory saved</source>
         <translation>Gedächtnis gespeichert</translation>
     </message>
@@ -815,12 +815,12 @@
     </message>
     <message>
         <location line="+5"/>
-        <location line="+149"/>
+        <location line="+164"/>
         <source>Cancel</source>
         <translation>Abbrechen</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-156"/>
         <source>Add a reminder or task</source>
         <translation>Erinnerung oder Aufgabe hinzufügen</translation>
     </message>
@@ -841,12 +841,12 @@
     </message>
     <message>
         <location line="+16"/>
-        <location line="+33"/>
+        <location line="+38"/>
         <source>Delete</source>
         <translation>Löschen</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-30"/>
         <source>Add a routine</source>
         <translation>Routine hinzufügen</translation>
     </message>
@@ -866,12 +866,43 @@
         <translation>Noch nichts. Sagen Sie „sag mir, wenn eine Zahlung fehlschlägt“, oder fügen Sie hier etwas hinzu.</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+17"/>
         <source>Paused</source>
         <translation>Pausiert</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+0"/>
+        <location line="+17"/>
+        <source>Looking now…</source>
+        <translation>Wird gerade geprüft…</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <source>Try it now</source>
+        <translation>Jetzt ausprobieren</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Couldn&apos;t look at %1.</source>
+        <translation>Um %1 konnte nicht geprüft werden.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1 and told you: %2</source>
+        <translation>Zuletzt um %1 geprüft und Ihnen gemeldet: %2</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1: nothing needed you.</source>
+        <translation>Zuletzt um %1 geprüft: Sie wurden nicht gebraucht.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Next look at %1.</source>
+        <translation>Nächste Prüfung um %1.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Add a check</source>
         <translation>Prüfung hinzufügen</translation>
     </message>
@@ -1187,7 +1218,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3154"/>
+        <location filename="../jarvis.py" line="+3543"/>
         <source>LISTENING</source>
         <translation>HÖRT ZU</translation>
     </message>
@@ -2084,23 +2115,33 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+42"/>
+        <location line="+45"/>
         <source>Messages</source>
         <translation>Nachrichten</translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-43"/>
         <source>Answer my contacts</source>
         <translation>Meinen Kontakten antworten</translation>
     </message>
     <message>
         <location line="+0"/>
-        <location line="+42"/>
+        <source>Draft replies for me to send</source>
+        <translation>Antworten entwerfen, die ich selbst sende</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+44"/>
         <source>Just show them to me</source>
         <translation>Nur anzeigen</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
+        <source>Jarvis writes a reply to your contacts&apos; messages that don&apos;t need you and tells you. Nothing is sent until you say &quot;send it&quot;.</source>
+        <translation>Jarvis schreibt eine Antwort auf Nachrichten Ihrer Kontakte, für die Sie nicht gebraucht werden, und sagt Ihnen Bescheid. Gesendet wird erst, wenn Sie „schick sie ab“ sagen.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Calls</source>
         <translation>Anrufe</translation>
     </message>
@@ -2452,11 +2493,11 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>What you say after “%1”, and screenshots when a task needs the screen, go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Memory, reminders and conversations stay on this computer.</source>
-        <translation>Was Sie nach „%1“ sagen, und Screenshots, wenn eine Aufgabe den Bildschirm braucht, gehen an Google Gemini. Kontoaktionen laufen über Composio, nur für die Konten, die Sie verbinden. Gedächtnis, Erinnerungen und Gespräche bleiben auf diesem Computer.</translation>
+        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis keeps all of it on this computer.</source>
+        <translation>Was Sie nach „%1“ sagen oder eintippen, das Gedächtnis und das aktuelle Gespräch, die bei der Antwort helfen, und Screenshots, wenn eine Aufgabe den Bildschirm braucht, gehen an Google Gemini. Kontoaktionen laufen über Composio, nur für die Konten, die Sie verbinden. Jarvis bewahrt all das auf diesem Computer auf.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Your Gemini key</source>
         <translation>Ihr Gemini-Schlüssel</translation>
     </message>
@@ -2662,7 +2703,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+107"/>
+        <location filename="../qml/Today.qml" line="+109"/>
         <source>Feels %1 in %2</source>
         <translation>Gefühlt %1 in %2</translation>
     </message>
@@ -2692,9 +2733,19 @@
         <translation>In Arbeit</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+0"/>
+        <source>Finished lately</source>
+        <translation>Kürzlich beendet</translation>
+    </message>
+    <message>
+        <location line="+30"/>
         <source>Stop this task</source>
         <translation>Diese Aufgabe stoppen</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Finished at %1</source>
+        <translation>Beendet um %1</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -2722,12 +2773,22 @@
         <translation>%1 versprochen</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+12"/>
         <source>Cancel this reminder</source>
         <translation>Erinnerung löschen</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+0"/>
+        <source>Mark as done</source>
+        <translation>Als erledigt markieren</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Open in Classroom</source>
+        <translation>In Classroom öffnen</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Couldn&apos;t check %1 just now.</source>
         <translation>%1 konnte gerade nicht geprüft werden.</translation>
     </message>
@@ -2795,7 +2856,7 @@
         <translation>Beenden</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
         <source>Running in the tray. Say &quot;%1&quot;.</source>
         <translation>Läuft im Infobereich. Sagen Sie „%1“.</translation>
     </message>

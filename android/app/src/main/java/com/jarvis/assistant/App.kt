@@ -49,9 +49,9 @@ object Jarvis {
     var askPermission: (permission: String, then: () -> Unit) -> Unit = { _, _ -> }
 
     private var users = 0  // the screen while it shows, the service while it runs: the link is up while either is
-    private var nextId = 1
+    private var nextId = 1  // (an ask's id: kept from one start to the next, so a late answer can't land on another)
     private var nextMsg = 1
-    private val waiting = mutableSetOf<Int>()  // asked, not answered yet
+    private val asks = Asks()  // asked, not answered yet
     private val held = mutableListOf<String>()  // asked while still connecting
     private val callbacks = mutableMapOf<Int, (JSONObject?, String) -> Unit>()  // get/post -> what to do with the answer
     private val player by lazy { Player() }
@@ -86,7 +86,8 @@ object Jarvis {
         if (::app.isInitialized) return
         app = context.applicationContext
         Trace.start(app.filesDir)
-        link = Link(prefs, ::showState, ::received)
+        nextId = prefs.getInt("next_id", 1)
+        link = Link(prefs, ::showState, ::received, asks::hello)
         app.getSystemService(ConnectivityManager::class.java)?.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 main.post { link.retryNow() }  // (home Wi-Fi just came: the direct way may work now)
@@ -118,7 +119,7 @@ object Jarvis {
         ui = Ui(
             paired = link.paired, state = link.state, note = note, pc = prefs.getString("pc_name", "") ?: "",
             relay = Uri.parse(prefs.getString("relay", "") ?: "").host ?: "", direct = link.direct, messages = messages,
-            working = waiting.isNotEmpty() && link.state == State.ONLINE, activity = activity, key = key, version = BuildConfig.VERSION_NAME,
+            working = asks.any && link.state == State.ONLINE, activity = activity, key = key, version = BuildConfig.VERSION_NAME,
             voice = voice, speaking = speaking, onPhone = via == Via.PHONE,
             wake = wakeWanted, wakePhrase = prefs.getString("wake_phrase", null) ?: "Hey Jarvis", wakeNote = wakeNote,
             background = prefs.getBoolean("background", false), weather = weather, reminders = reminders, playing = playing, stats = stats, jobs = jobs,
@@ -134,7 +135,8 @@ object Jarvis {
     // ---- the link
 
     private fun showState(state: State, detail: String) {
-        if (dropWaiting(state, waiting)) say("Your PC went offline before answering. If no reply comes once it's back, ask again.", Who.NOTE)
+        if (state == State.UNPAIRED) asks.clear()
+        else if (state != State.ONLINE && asks.dropped()) say("The link to your PC dropped while it was working on that. It carries on, and its answer comes here once the link is back.", Who.NOTE)
         if (state == State.ONLINE && detail.isNotBlank()) prefs.edit().putString("pc_name", detail).apply()
         note = if (state == State.ONLINE) "" else detail
         if (state != State.ONLINE) {
@@ -167,6 +169,7 @@ object Jarvis {
 
     fun unpair() {
         endVoice()
+        asks.clear()
         link.unpair()
         messages.clear()
         syncService()
@@ -193,8 +196,9 @@ object Jarvis {
 
     private fun send(text: String) {
         val id = nextId++
+        prefs.edit().putInt("next_id", nextId).apply()
         if (link.send(JSONObject().put("op", "ask").put("id", id).put("text", text))) {
-            waiting.add(id)  // (the PC's chat shows the question, and sends it back as an event: not added twice)
+            asks.sent(id)  // (the PC's chat shows the question, and sends it back as an event: not added twice)
         } else {
             if (messages.lastOrNull()?.let { it.who == Who.YOU && it.text == text } != true) say(text, Who.YOU)
             if (key.isBlank()) say("Your PC can't be reached right now, so nothing was done. Add a Gemini key in Settings to get answers on the phone meanwhile.", Who.NOTE)
@@ -238,23 +242,30 @@ object Jarvis {
                     gate = null
                 }
                 if (wakeWanted && gate == null) fetchWake()
-                get("/api/conversation") { data, _ -> data?.optJSONArray("messages")?.let { list ->
-                    messages.clear()
-                    for (i in 0 until list.length()) list.optJSONObject(i)?.let { shown(it.optString("who"), it.optString("text")) }
-                } }
+                val unknown = lost(m)
+                get("/api/conversation") { data, _ ->
+                    data?.optJSONArray("messages")?.let { list ->
+                        messages.clear()
+                        for (i in 0 until list.length()) list.optJSONObject(i)?.let { shown(it.optString("who"), it.optString("text")) }
+                    }
+                    // (after the PC's chat, which replaces what's shown; the answers it still had came right after the ready)
+                    if (asks.back(unknown).isNotEmpty()) say(
+                        if (unknown != null) "Your PC lost what you asked before it could answer (it restarted). It may have done it already: check on the PC before asking again."
+                        else "Your PC is back, but can't say whether it still has what you asked. If no answer comes, check on the PC before asking again.", Who.NOTE)
+                }
                 if (loaded) loadToday()
             }
             "reply" -> {
                 val text = m.optString("text")
-                waiting.remove(m.optInt("id"))
-                if (waiting.isEmpty()) activity = ""
+                asks.answered(m.optInt("id"))
+                if (!asks.any) activity = ""
                 if (messages.takeLast(6).none { it.who == Who.JARVIS && it.text == text }) say(text, Who.JARVIS)  // (unless its event came)
                 if (!foreground) notify(text)
                 if (loaded) loadJobs()
             }
             "event" -> if (m.optString("kind") == "log") shown(m.optString("who"), m.optString("text"))
             "stopped" -> {
-                waiting.clear()
+                asks.clear()
                 activity = ""
                 if (loaded) loadJobs()
             }
@@ -561,11 +572,47 @@ object Jarvis {
     }
 }
 
-/** The PC went offline: what it was asked may never be answered (a restart loses its tasks and the replies it kept), so
- *  "Working on it…" goes (it stayed up for good, with only Stop, which stops every task on the PC, to clear it). A reply
- *  that still comes is shown all the same. True if any were waiting. */
-internal fun dropWaiting(state: State, waiting: MutableCollection<Int>): Boolean {
-    if (state != State.PC_OFFLINE || waiting.isEmpty()) return false
-    waiting.clear()
-    return true
+/** What the app asked the PC and has no answer for yet, across drops of the link. The PC carries on meanwhile and keeps
+ *  its answers, so asking again would do it twice (an event made, a message sent): once the link is back the hello names
+ *  what's still waited for, the PC sends those answers again, and its ready says which it doesn't know (it restarted).
+ *  Only those are let go, or all the hello named when an older PC can't say ("Working on it…" mustn't stay for good). */
+internal class Asks {
+    private val waiting = mutableSetOf<Int>()
+    private val told = mutableSetOf<Int>()  // the app said their answers come once the link is back
+    private var named = emptySet<Int>()     // what the last hello named: the ready that follows answers for these
+
+    val any get() = waiting.isNotEmpty()
+
+    fun sent(id: Int) {
+        waiting += id
+    }
+
+    fun answered(id: Int) {
+        waiting -= id
+        told -= id
+    }
+
+    fun clear() {
+        waiting.clear()
+        told.clear()
+        named = emptySet()
+    }
+
+    /** The link is down: true the first time these are left waiting (the app says their answers will come). */
+    fun dropped(): Boolean = (waiting - told).isNotEmpty().also { told += waiting }
+
+    /** For the hello, once the link is back: what the app still waits for. */
+    fun hello(): List<Int> = waiting.sorted().also { named = it.toSet() }
+
+    /** The PC's ready: [lost] what it doesn't know of what the hello named (null: an older PC, which doesn't say).
+     *  Returns the ones no answer will come for, waited for no more. */
+    fun back(lost: Collection<Int>?): List<Int> {
+        val gone = named.filter { it in waiting && (lost == null || it in lost) }
+        gone.forEach(::answered)
+        named = emptySet()
+        return gone
+    }
 }
+
+/** A ready's `lost` (what the PC doesn't know of what the app waits for); null from an older PC, which doesn't say. */
+internal fun lost(ready: JSONObject): List<Int>? = ready.optJSONArray("lost")?.let { a -> (0 until a.length()).map { a.optInt(it) } }

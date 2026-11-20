@@ -743,18 +743,18 @@
         <translation>Jarvis 每次对话前都会读取这些内容。对它说“记住……”，或直接在这里编辑。</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+41"/>
         <source>Saved</source>
         <translation>已保存</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+211"/>
+        <location line="+226"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location line="-210"/>
+        <location line="-225"/>
         <source>Memory saved</source>
         <translation>记忆已保存</translation>
     </message>
@@ -804,12 +804,12 @@
     </message>
     <message>
         <location line="+5"/>
-        <location line="+149"/>
+        <location line="+164"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-156"/>
         <source>Add a reminder or task</source>
         <translation>添加提醒或任务</translation>
     </message>
@@ -830,12 +830,12 @@
     </message>
     <message>
         <location line="+16"/>
-        <location line="+33"/>
+        <location line="+38"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-30"/>
         <source>Add a routine</source>
         <translation>添加例行程序</translation>
     </message>
@@ -855,12 +855,43 @@
         <translation>暂无。可以说“如果有付款失败就告诉我”，或在这里添加。</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+17"/>
         <source>Paused</source>
         <translation>已暂停</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+0"/>
+        <location line="+17"/>
+        <source>Looking now…</source>
+        <translation>正在检查…</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <source>Try it now</source>
+        <translation>立即检查一次</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Couldn&apos;t look at %1.</source>
+        <translation>%1 的检查未能完成。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1 and told you: %2</source>
+        <translation>上次检查于 %1，并告诉你：%2</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1: nothing needed you.</source>
+        <translation>上次检查于 %1：没有需要你处理的事。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Next look at %1.</source>
+        <translation>下次检查于 %1。</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Add a check</source>
         <translation>添加检查</translation>
     </message>
@@ -1174,7 +1205,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3154"/>
+        <location filename="../jarvis.py" line="+3543"/>
         <source>LISTENING</source>
         <translation>聆听中</translation>
     </message>
@@ -2068,23 +2099,33 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+42"/>
+        <location line="+45"/>
         <source>Messages</source>
         <translation>消息</translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-43"/>
         <source>Answer my contacts</source>
         <translation>回复我的联系人</translation>
     </message>
     <message>
         <location line="+0"/>
-        <location line="+42"/>
+        <source>Draft replies for me to send</source>
+        <translation>起草回复，由我发送</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+44"/>
         <source>Just show them to me</source>
         <translation>只显示给我</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
+        <source>Jarvis writes a reply to your contacts&apos; messages that don&apos;t need you and tells you. Nothing is sent until you say &quot;send it&quot;.</source>
+        <translation>对于不需要你亲自处理的联系人消息，Jarvis 会写好回复并告诉你。在你说“发吧”之前，什么都不会发送。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Calls</source>
         <translation>来电</translation>
     </message>
@@ -2436,11 +2477,11 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>What you say after “%1”, and screenshots when a task needs the screen, go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Memory, reminders and conversations stay on this computer.</source>
-        <translation>你在“%1”之后说的话，以及任务需要查看屏幕时的截图，会发送到 Google Gemini。账户操作通过 Composio 进行，且仅限你连接的账户。记忆、提醒和对话都保留在这台电脑上。</translation>
+        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis keeps all of it on this computer.</source>
+        <translation>你在“%1”之后说的话或输入的内容、有助于回答的记忆和最近对话，以及任务需要查看屏幕时的截图，会发送到 Google Gemini。账户操作通过 Composio 进行，且仅限你连接的账户。Jarvis 把这些都保存在这台电脑上。</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Your Gemini key</source>
         <translation>你的 Gemini 密钥</translation>
     </message>
@@ -2646,7 +2687,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+107"/>
+        <location filename="../qml/Today.qml" line="+109"/>
         <source>Feels %1 in %2</source>
         <translation>%2 体感温度 %1</translation>
     </message>
@@ -2676,9 +2717,19 @@
         <translation>正在处理</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+0"/>
+        <source>Finished lately</source>
+        <translation>最近完成</translation>
+    </message>
+    <message>
+        <location line="+30"/>
         <source>Stop this task</source>
         <translation>停止此任务</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Finished at %1</source>
+        <translation>完成于 %1</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -2706,12 +2757,22 @@
         <translation>答应了 %1</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+12"/>
         <source>Cancel this reminder</source>
         <translation>取消此提醒</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+0"/>
+        <source>Mark as done</source>
+        <translation>标记为已完成</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Open in Classroom</source>
+        <translation>在 Classroom 中打开</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Couldn&apos;t check %1 just now.</source>
         <translation>暂时无法检查 %1。</translation>
     </message>
@@ -2779,7 +2840,7 @@
         <translation>退出</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
         <source>Running in the tray. Say &quot;%1&quot;.</source>
         <translation>正在托盘中运行。说“%1”即可唤醒。</translation>
     </message>

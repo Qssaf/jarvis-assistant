@@ -743,18 +743,18 @@
         <translation>Jarvis อ่านส่วนนี้ก่อนทุกการสนทนา บอกว่า “จำไว้ว่า…” หรือแก้ไขที่นี่</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+41"/>
         <source>Saved</source>
         <translation>บันทึกแล้ว</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+211"/>
+        <location line="+226"/>
         <source>Save</source>
         <translation>บันทึก</translation>
     </message>
     <message>
-        <location line="-210"/>
+        <location line="-225"/>
         <source>Memory saved</source>
         <translation>บันทึกความจำแล้ว</translation>
     </message>
@@ -804,12 +804,12 @@
     </message>
     <message>
         <location line="+5"/>
-        <location line="+149"/>
+        <location line="+164"/>
         <source>Cancel</source>
         <translation>ยกเลิก</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-156"/>
         <source>Add a reminder or task</source>
         <translation>เพิ่มการเตือนหรืองาน</translation>
     </message>
@@ -830,12 +830,12 @@
     </message>
     <message>
         <location line="+16"/>
-        <location line="+33"/>
+        <location line="+38"/>
         <source>Delete</source>
         <translation>ลบ</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-30"/>
         <source>Add a routine</source>
         <translation>เพิ่มรูทีน</translation>
     </message>
@@ -855,12 +855,43 @@
         <translation>ยังไม่มี ลองพูดว่า “บอกฉันถ้าการชำระเงินไม่สำเร็จ” หรือเพิ่มที่นี่</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+17"/>
         <source>Paused</source>
         <translation>หยุดชั่วคราว</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+0"/>
+        <location line="+17"/>
+        <source>Looking now…</source>
+        <translation>กำลังตรวจ…</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <source>Try it now</source>
+        <translation>ลองตรวจตอนนี้</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Couldn&apos;t look at %1.</source>
+        <translation>ตรวจไม่ได้เมื่อ %1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1 and told you: %2</source>
+        <translation>ตรวจล่าสุดเมื่อ %1 และแจ้งคุณว่า: %2</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1: nothing needed you.</source>
+        <translation>ตรวจล่าสุดเมื่อ %1: ไม่มีเรื่องที่ต้องให้คุณจัดการ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Next look at %1.</source>
+        <translation>ตรวจครั้งถัดไปเมื่อ %1</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Add a check</source>
         <translation>เพิ่มเรื่องที่ต้องจับตาดู</translation>
     </message>
@@ -1174,7 +1205,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3154"/>
+        <location filename="../jarvis.py" line="+3543"/>
         <source>LISTENING</source>
         <translation>กำลังฟัง</translation>
     </message>
@@ -2068,23 +2099,33 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+42"/>
+        <location line="+45"/>
         <source>Messages</source>
         <translation>ข้อความ</translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-43"/>
         <source>Answer my contacts</source>
         <translation>ตอบผู้ติดต่อของฉัน</translation>
     </message>
     <message>
         <location line="+0"/>
-        <location line="+42"/>
+        <source>Draft replies for me to send</source>
+        <translation>ร่างคำตอบให้ฉันส่งเอง</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+44"/>
         <source>Just show them to me</source>
         <translation>แค่แสดงให้ฉันดู</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
+        <source>Jarvis writes a reply to your contacts&apos; messages that don&apos;t need you and tells you. Nothing is sent until you say &quot;send it&quot;.</source>
+        <translation>Jarvis จะเขียนคำตอบสำหรับข้อความจากผู้ติดต่อที่ไม่จำเป็นต้องให้คุณตอบเอง แล้วบอกคุณ จะไม่มีอะไรถูกส่งจนกว่าคุณจะพูดว่า “ส่งเลย”</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Calls</source>
         <translation>การโทร</translation>
     </message>
@@ -2436,11 +2477,11 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>What you say after “%1”, and screenshots when a task needs the screen, go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Memory, reminders and conversations stay on this computer.</source>
-        <translation>สิ่งที่คุณพูดหลัง “%1” และภาพหน้าจอเมื่องานต้องใช้หน้าจอ จะส่งไปยัง Google Gemini การทำงานกับบัญชีจะผ่าน Composio เฉพาะบัญชีที่คุณเชื่อมต่อ ความจำ การเตือน และการสนทนาจะอยู่บนคอมพิวเตอร์นี้</translation>
+        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis keeps all of it on this computer.</source>
+        <translation>สิ่งที่คุณพูดหลัง “%1” หรือพิมพ์ ความจำและการสนทนาล่าสุดที่ช่วยในการตอบ และภาพหน้าจอเมื่องานต้องใช้หน้าจอ จะส่งไปยัง Google Gemini การทำงานกับบัญชีจะผ่าน Composio เฉพาะบัญชีที่คุณเชื่อมต่อ Jarvis เก็บทั้งหมดนี้ไว้บนคอมพิวเตอร์นี้</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Your Gemini key</source>
         <translation>คีย์ Gemini ของคุณ</translation>
     </message>
@@ -2646,7 +2687,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+107"/>
+        <location filename="../qml/Today.qml" line="+109"/>
         <source>Feels %1 in %2</source>
         <translation>ที่ %2 รู้สึกเหมือน %1</translation>
     </message>
@@ -2676,9 +2717,19 @@
         <translation>กำลังทำ</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+0"/>
+        <source>Finished lately</source>
+        <translation>เพิ่งเสร็จ</translation>
+    </message>
+    <message>
+        <location line="+30"/>
         <source>Stop this task</source>
         <translation>หยุดงานนี้</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Finished at %1</source>
+        <translation>เสร็จเมื่อ %1</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -2706,12 +2757,22 @@
         <translation>สัญญาไว้กับ %1</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+12"/>
         <source>Cancel this reminder</source>
         <translation>ยกเลิกการเตือนนี้</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+0"/>
+        <source>Mark as done</source>
+        <translation>ทำเครื่องหมายว่าเสร็จแล้ว</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Open in Classroom</source>
+        <translation>เปิดใน Classroom</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Couldn&apos;t check %1 just now.</source>
         <translation>ตรวจ %1 ไม่ได้ในตอนนี้</translation>
     </message>
@@ -2779,7 +2840,7 @@
         <translation>ออก</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
         <source>Running in the tray. Say &quot;%1&quot;.</source>
         <translation>ทำงานอยู่ในถาดระบบ พูดว่า &quot;%1&quot;</translation>
     </message>

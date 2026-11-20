@@ -108,7 +108,8 @@ app with a notch at the top of the screen and a native dashboard window.
 Settings → *WhatsApp* → *Link WhatsApp*, then scan the code from your phone (WhatsApp → Linked devices), the same way
 as WhatsApp Web (on Linux, Jarvis first builds its WhatsApp helper: install [Go](https://go.dev/dl)). Jarvis then:
 - answers your saved contacts' messages that don't need you, saying it's your assistant (never groups, never in a chat
-  you're writing in yourself, at most 20 replies an hour), and tells you out loud about anything urgent;
+  you're writing in yourself, at most 20 replies an hour; or only drafts the reply for you to send, if you
+  pick that), and tells you out loud about anything urgent;
 - picks up calls you don't answer within 20 seconds, talks with the caller in its own voice, takes a message and tells
   you what they wanted (or declines calls, or lets them ring);
 - reads and sends WhatsApp messages when you ask (*"what did Sam send me?"*, *"tell Maya I'm on my way"*), listens to

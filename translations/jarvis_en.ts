@@ -97,7 +97,7 @@
 <context>
     <name>MemoryPage</name>
     <message numerus="yes">
-        <location filename="../qml/MemoryPage.qml" line="+86"/>
+        <location filename="../qml/MemoryPage.qml" line="+97"/>
         <source>%n coming up.</source>
         <translation>
             <numerusform>%n coming up.</numerusform>

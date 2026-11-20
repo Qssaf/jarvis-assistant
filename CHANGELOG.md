@@ -3,6 +3,18 @@
 ## Unreleased
 
 ### Added
+- **Done on Today:** a promise on Home's *To do* card has a Done button that ends it for good, with its reminder
+  (cancelling its reminder used to bring it straight back as a promise), and Classroom work has a button that opens it
+  in Classroom.
+- **Finished lately:** a task that took a while stays on Home for two hours after it ends, with what it answered, so the
+  result isn't lost in the chat once it leaves *Working on*.
+- **Checks you can trust when they're quiet:** Memory → *Keep an eye on* says when Jarvis last looked, whether it could,
+  what it found and when it looks next, and each check has *Try it now*, which looks at once and shows what it finds
+  there (nothing is said or kept).
+- **Bookmarks in your notes:** while Jarvis takes notes of a lecture or meeting, say *"Hey Jarvis, mark that"*,
+  *"bookmark this: the exam date"* or *"that was a decision"*. The moment (from when you said it) and your words show
+  as a ★ line at that place in the transcript, saved straight away, and the summary ends with *Marked moments*: what
+  was being said around each one.
 - **Picks up where you left off:** after a restart Jarvis carries on the conversation you were in (if you or Jarvis
   spoke in it in the last 6 hours and you didn't start a new one), voice and background tasks alike. It used to start
   empty every time, twelve times on a busy day.
@@ -124,6 +136,9 @@
   WhatsApp → *Tell people when I'm busy* lets it share your Google Calendar's busy times (never what they are).
 
 ### Changed
+- **WhatsApp draft replies, if you want them:** Settings → WhatsApp → *Messages* → *Draft replies for me to send* has
+  Jarvis write the reply to a contact's message without sending it: it tells you what they wrote and what it would
+  answer, and *"send it"* sends it. Answering your contacts itself stays the default.
 - **Gemini 4 Hydrogen leads background tasks.** It guesses less than the Flash models. On a free key it's often slow or
   busy, so after 8 seconds the next model is asked too, and once its daily quota is used up it's skipped until it resets.
 - **Notes hear the room and the PC together:** live notes record the microphone and what the PC plays at once, so a
@@ -155,6 +170,32 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
+- **A task gives the keyboard back:** when you start using the keyboard or mouse while a background task works on the
+  screen, it waits until you've left them alone, then looks at the screen again before its next click or keystroke
+  (it used to carry on, typing into whatever window you had switched to).
+- **Screen history is kept two weeks at most**, as Settings says, whatever *Keep conversations* is set to.
+- **The first run says what goes to Gemini:** memory and recent conversation go with each request; it said they stay on
+  the computer. The privacy notes no longer describe WhatsApp as a hidden browser.
+- **Forgetting a person** also cancels the reminders for their promises (one still announced a promise you had Jarvis
+  forget).
+- **A coding job that failed says so:** one that ran out of turns or hit an error was announced as done when it had said
+  anything, and a commit a hook refused was reported as committed.
+- **Telegram replies that don't arrive are noticed:** a message Telegram refuses (a blocked bot, too many at once) used
+  to vanish without a word; Jarvis waits when Telegram asks it to, tries once more, and otherwise says at the PC that
+  the answer didn't reach the phone.
+- **The evening list is tried again** (15 minutes later, three times a day at most) when it can't be made, and the day's
+  sent mail failing no longer keeps it from being said.
+- **Saving a backup over an old one** keeps the old one if the new one fails halfway (it had already been emptied).
+- **"Undo that"** knows a WhatsApp or Discord message can be taken back (it said sent messages can't be).
+- **Someone you always let through on WhatsApp** now shows in the chat like any other message, so a reply you ask for
+  goes to them without being taken for the wrong person.
+- **Search keeps who said it:** the same words from two people are two results (they were merged into one).
+- The notch and chat name scrolling ("Scrolling") instead of showing the tool's name.
+- **Phone app: a dropped link no longer has you ask twice:** when the link to the PC dropped while it was working on
+  something you asked from the phone, the app said to ask again, though the PC carried on and may have done it already
+  (an event made, a message sent). Now it says the answer is on its way, and the answer comes once the link is back,
+  also one the PC sent while the phone was out of reach. Only when the PC restarted meanwhile does the app say the
+  answer is lost, and to check on the PC before asking again.
 - **Deleting through a script asks first:** a command that hands code to Python, Node, Perl, Ruby or PHP to delete, move
   or overwrite files (`python3 -c "import shutil; shutil.rmtree(...)"`) ran without your yes, a way round the check on
   `rm`. It waits for a yes now, on one line or many; code that only reads or works something out still runs.

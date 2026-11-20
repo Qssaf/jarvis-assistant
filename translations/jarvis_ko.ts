@@ -743,18 +743,18 @@
         <translation>Jarvis는 대화를 시작할 때마다 이 내용을 읽어요. “기억해 줘…”라고 말하거나 여기서 직접 고치세요.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+41"/>
         <source>Saved</source>
         <translation>저장됨</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+211"/>
+        <location line="+226"/>
         <source>Save</source>
         <translation>저장</translation>
     </message>
     <message>
-        <location line="-210"/>
+        <location line="-225"/>
         <source>Memory saved</source>
         <translation>기억을 저장했어요</translation>
     </message>
@@ -804,12 +804,12 @@
     </message>
     <message>
         <location line="+5"/>
-        <location line="+149"/>
+        <location line="+164"/>
         <source>Cancel</source>
         <translation>취소</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-156"/>
         <source>Add a reminder or task</source>
         <translation>알림 또는 작업 추가</translation>
     </message>
@@ -830,12 +830,12 @@
     </message>
     <message>
         <location line="+16"/>
-        <location line="+33"/>
+        <location line="+38"/>
         <source>Delete</source>
         <translation>삭제</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-30"/>
         <source>Add a routine</source>
         <translation>루틴 추가</translation>
     </message>
@@ -855,12 +855,43 @@
         <translation>아직 없어요. “결제가 실패하면 알려 줘”라고 말하거나 여기서 추가하세요.</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+17"/>
         <source>Paused</source>
         <translation>일시 중지됨</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+0"/>
+        <location line="+17"/>
+        <source>Looking now…</source>
+        <translation>확인하는 중…</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <source>Try it now</source>
+        <translation>지금 확인해 보기</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Couldn&apos;t look at %1.</source>
+        <translation>%1에 확인하지 못했어요.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1 and told you: %2</source>
+        <translation>%1에 마지막으로 확인하고 알려 준 내용: %2</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1: nothing needed you.</source>
+        <translation>%1에 마지막으로 확인했어요. 확인이 필요한 일은 없었어요.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Next look at %1.</source>
+        <translation>다음 확인: %1.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Add a check</source>
         <translation>지켜볼 항목 추가</translation>
     </message>
@@ -1174,7 +1205,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3154"/>
+        <location filename="../jarvis.py" line="+3543"/>
         <source>LISTENING</source>
         <translation>듣는 중</translation>
     </message>
@@ -2068,23 +2099,33 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+42"/>
+        <location line="+45"/>
         <source>Messages</source>
         <translation>메시지</translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-43"/>
         <source>Answer my contacts</source>
         <translation>연락처에 답하기</translation>
     </message>
     <message>
         <location line="+0"/>
-        <location line="+42"/>
+        <source>Draft replies for me to send</source>
+        <translation>답장 초안만 쓰고 내가 보내기</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+44"/>
         <source>Just show them to me</source>
         <translation>나에게만 보여 주기</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
+        <source>Jarvis writes a reply to your contacts&apos; messages that don&apos;t need you and tells you. Nothing is sent until you say &quot;send it&quot;.</source>
+        <translation>Jarvis가 내가 직접 답할 필요가 없는 연락처의 메시지에 답장을 써 두고 알려 줘요. “보내 줘”라고 말하기 전에는 아무것도 보내지 않아요.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Calls</source>
         <translation>전화</translation>
     </message>
@@ -2436,11 +2477,11 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>What you say after “%1”, and screenshots when a task needs the screen, go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Memory, reminders and conversations stay on this computer.</source>
-        <translation>“%1” 뒤에 말한 내용과 작업에 화면이 필요할 때의 스크린샷은 Google Gemini로 전송돼요. 계정 작업은 연결한 계정에 한해 Composio를 거쳐요. 기억, 알림, 대화는 이 컴퓨터에 남아요.</translation>
+        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis keeps all of it on this computer.</source>
+        <translation>“%1” 뒤에 말하거나 입력한 내용, 답하는 데 도움이 되는 기억과 최근 대화, 작업에 화면이 필요할 때의 스크린샷은 Google Gemini로 전송돼요. 계정 작업은 연결한 계정에 한해 Composio를 거쳐요. Jarvis는 이 모든 것을 이 컴퓨터에 보관해요.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Your Gemini key</source>
         <translation>Gemini 키</translation>
     </message>
@@ -2646,7 +2687,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+107"/>
+        <location filename="../qml/Today.qml" line="+109"/>
         <source>Feels %1 in %2</source>
         <translation>%2 체감 %1</translation>
     </message>
@@ -2676,9 +2717,19 @@
         <translation>작업 중</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+0"/>
+        <source>Finished lately</source>
+        <translation>최근 완료</translation>
+    </message>
+    <message>
+        <location line="+30"/>
         <source>Stop this task</source>
         <translation>이 작업 중지</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Finished at %1</source>
+        <translation>%1에 완료</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -2706,12 +2757,22 @@
         <translation>%1에게 약속함</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+12"/>
         <source>Cancel this reminder</source>
         <translation>이 알림 취소</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+0"/>
+        <source>Mark as done</source>
+        <translation>완료로 표시</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Open in Classroom</source>
+        <translation>Classroom에서 열기</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Couldn&apos;t check %1 just now.</source>
         <translation>지금은 %1을(를) 확인하지 못했어요.</translation>
     </message>
@@ -2779,7 +2840,7 @@
         <translation>종료</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
         <source>Running in the tray. Say &quot;%1&quot;.</source>
         <translation>트레이에서 실행 중이에요. “%1”라고 말하세요.</translation>
     </message>

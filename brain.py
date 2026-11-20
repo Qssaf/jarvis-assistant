@@ -1,7 +1,7 @@
 """Jarvis's brain: a Gemini agent with PC tools, web search, Photopea and plugins (MCP servers, e.g. Composio).
 Models come from your Google AI Studio API key (GEMINI_API_KEY, in the environment or the env file in Jarvis's config
 folder). An optional local_backends.py can add more backends (see the README). The "agent_models" setting decides the order."""
-import asyncio, base64, difflib, hashlib, ipaddress, itertools, json, logging, os, queue, random, re, select, shutil, socket, subprocess, sys, tempfile, threading, time, unicodedata, uuid
+import asyncio, base64, bisect, collections, difflib, hashlib, ipaddress, itertools, json, logging, os, queue, random, re, select, shutil, socket, subprocess, sys, tempfile, threading, time, unicodedata, uuid
 from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 from urllib.parse import parse_qs, quote, urlencode, urlparse
 
@@ -1002,9 +1002,10 @@ def chat_unchecked(steps):
     return bool(CHAT_APP.search(" ".join([front[0], *(str(s.get(k, "")) for s in steps for k in ("app", "launch"))]) + "\n" + front[1]))
 
 
-def tool_act(steps, screenshot_after=True, fast=False, halt=None):
+def tool_act(steps, screenshot_after=True, fast=False, halt=None, pause=None):
     """Several screen actions from one plan, in order, then a fresh screenshot. halt: the voice's own stop signal for this
-    plan; the agent's plans stop on interrupt_act instead, so cutting the voice off never stops the agent's work."""
+    plan; the agent's plans stop on interrupt_act instead, so cutting the voice off never stops the agent's work. pause: a
+    task's _take_screen, asked before each step that isn't a look: the plan stops when the user used the screen meanwhile."""
     done, captured, sent = [], None, False
     stopped = (halt or _interrupted).is_set
     sent_note = lambda: {"sent": "the typed text was sent with Return: never type or send it again unless a careful look shows it "
@@ -1018,8 +1019,12 @@ def tool_act(steps, screenshot_after=True, fast=False, halt=None):
         return (out, image) if image else out
     steps = act_steps(steps)
     for i, step in enumerate(steps):
-        if stopped():
+        took = True if not pause or any(step.get(k) for k in ("look", "expect", "screenshot")) else pause()
+        if stopped() or not took:
             return ended({"error": "interrupted", "done": done, **sent_note()})
+        if took is USER_MOVED:
+            return ended({"error": f"stopped before step {i + 1}: the user used the keyboard or mouse meanwhile, so what's on "
+                                   "screen may have changed: look at it before going on", "done": done, **sent_note()})
         if step.get("app") and not any(k in step for k in ("launch", "press", "set_text")):  # (those use app themselves)
             problem = system.focus_window(step["app"])
             if problem and step["app"].lower() not in (system.active_app() or "").lower():  # (it typed into whatever was in front)
@@ -1365,7 +1370,8 @@ def changed(what):
 def tool_recent_changes():
     return {"changes": store.changes(), "undo": "reverse the one meant: restore trashed files with gio trash --restore "
             "trash:///<name> (gio trash --list shows them), cancel a reminder, delete a draft or event you made, move a file back. "
-            "Sent messages and emails can't be unsent: say so."}
+            "A WhatsApp or Discord message of the user's can be taken back with unsend; other sent messages and emails can't be "
+            "unsent: say so."}
 
 
 def tool_plan(steps, task=None):
@@ -1383,8 +1389,22 @@ screen_lock = threading.Lock()  # one task (or the voice) at a time works on the
 history_lock = threading.Lock()  # the conversation: a task copies it when it starts and joins it when it's done
 SCREEN_WORK = {"screenshot", "launch", "click", "act", "look", "ui_controls", "type_text", "press_keys", "scroll",
                "focus_window", "close_window", "open_url", "photopea"}  # a task's first one takes the screen until it ends
+SCREEN_LOOKS = {"screenshot", "look", "ui_controls"}  # screen work that only looks: still run after the user used the screen
 SCREEN_IDLE = 8  # seconds the user must have left the keyboard and mouse alone before a task takes the screen, if...
 SCREEN_GRACE = 3  # ...they used them since the task started (later than this: the click or Enter that asked for it)
+USER_MOVED = "user moved"  # what _take_screen says when the user used the keyboard or mouse while the task held the screen
+MOVED = ("not run: the user used the keyboard or mouse while you worked, so what's on screen may have changed: take a "
+         "screenshot (or look) before acting again")
+
+
+FINISHED_AFTER = 20  # seconds: a task that took longer is listed on Home when it ends (a quick answer is just in the chat)
+finished = collections.deque(maxlen=5)  # those, newest first: {n, label, at, answer, ok, coding}
+
+
+def note_finished(task, answer, ok=True):
+    if time.time() - task.started >= FINISHED_AFTER:
+        finished.appendleft({"n": task.n, "label": task.label, "at": time.time(), "answer": " ".join(str(answer or "").split())[:300],
+                             "ok": ok, "coding": task.coding})
 
 
 class Task:
@@ -1960,9 +1980,10 @@ def tool_search_mine(words, person="", days=0):
             if holds(line):
                 add(os.path.getmtime(store.MEMORY_FILE), {"from": "memory", "text": line.strip("- ")[:300]})
     seen, out = set(), []
-    for _, item in sorted(found, key=lambda f: -f[0]):
-        if item.get("text", "")[:120] not in seen:
-            seen.add(item.get("text", "")[:120])
+    for _, item in sorted(found, key=lambda f: -f[0]):  # (the same words from two people are two results: who said it matters)
+        key = (item.get("by") or item.get("from"), item.get("text", "")[:120])
+        if key not in seen:
+            seen.add(key)
             out.append(item)
     screen = (activity.search(" ".join(terms), limit=5).get("windows") or []) if not who and store.settings()["screen_history"] else []
     if not out and not screen:
@@ -2006,14 +2027,25 @@ SOURCES = {"both": "what the PC plays and the microphone hears", "pc": "what the
 class Notes:
     """Records what the PC plays (a lecture, a call) or the room, transcribes it in chunks as it goes, and at the end
     writes a summary and the transcript to a file. One recording at a time; three hours at most. When several people
-    talk, turns start with **Speaker 1:** or a name, kept the same across chunks (each is told the labels used so far)."""
+    talk, turns start with **Speaker 1:** or a name, kept the same across chunks (each is told the labels used so far).
+    A bookmark ("mark that") keeps a moment and what the user called it: the transcript shows it at its place, and the
+    summary says what was said around it."""
     CHUNK, LONGEST = 300, 3 * 3600
     SPEAKER = re.compile(r"^\*\*([^*\n:]{1,40})(?::\*\*|\*\*:) ?", re.M)  # (**Name:** or **Name**:)
+    SENTENCE_END = re.compile(r"[.!?…。！？؟](?=\s|$)|\n")
+    TAKING = "(still being taken: the summary is written when they're stopped)"
+    SUMMARY = ("Write study notes from this transcript of a lecture or meeting: a two-sentence summary, then the key points as "
+               "short bullets, then any dates, deadlines, homework or action items. If lines start with who speaks (**Name:**), "
+               "say who made a key point or asked a question where it matters; otherwise don't mention speakers. Markdown, in "
+               "the transcript's language.")
 
     def __init__(self, transcribe, summarise):
-        self.transcribe, self.summarise = transcribe, summarise
-        self.on = None  # {"title", "source", "started", "stop" (Event), "parts" [text or None], "heard" [text], "thread"}
+        self.transcribe, self.summarise = transcribe, summarise  # (summarise: a prompt with the transcript in it -> notes)
+        # {"title", "source", "started", "stop" (Event), "parts" [text or None], "heard" [text], "thread", "texts" [each
+        #  piece's words, in order], "ends" [when each piece stopped], "marks" [{"at", "label"}]}
+        self.on = None
         self.pool = ThreadPoolExecutor(1)  # (one at a time, in order: each chunk needs the speakers named before it)
+        self.lock = threading.Lock()  # (the file being taken: a piece written down and a bookmark save it from two threads)
 
     def start(self, title="", source="both"):
         if self.on:  # (the voice sometimes asks twice: the notes going on is the answer, not an error)
@@ -2026,7 +2058,8 @@ class Notes:
         except Exception as e:
             shutil.rmtree(folder, ignore_errors=True)
             return {"error": f"can't record here: {e}"}
-        self.on = {"title": title, "source": source, "started": time.time(), "stop": threading.Event(), "parts": [], "heard": [], "folder": folder}
+        self.on = {"title": title, "source": source, "started": time.time(), "stop": threading.Event(), "parts": [], "heard": [],
+                   "folder": folder, "texts": [], "ends": [], "marks": []}
         self.on["thread"] = threading.Thread(target=self._record, args=(self.on, first), daemon=True)
         self.on["thread"].start()
         return {"result": f"taking notes of {SOURCES[source]}: '{title}'. Say stop the notes when it ends."}
@@ -2041,7 +2074,8 @@ class Notes:
             proc = first if n == 0 else system.record_audio(path, on["source"])
             on["stop"].wait(self.CHUNK)
             system.stop_recording(proc)
-            on["parts"].append(self.pool.submit(self._transcribe_file, path, on))
+            on["ends"].append(time.time())
+            on["parts"].append(self.pool.submit(self._piece, path, on))
             n += 1
         if not on["stop"].is_set():  # (three hours: finish by itself)
             threading.Thread(target=self.stop, daemon=True).start()
@@ -2075,8 +2109,6 @@ class Notes:
                     time.sleep(wait)
             if text.strip() != "(silence)":
                 on["heard"].append(text)
-                if on["source"] != "file":  # (saved as it goes: a restart or a crash keeps what was said)
-                    self._write(on, "(still being taken: the summary is written when they're stopped)", "\n".join(on["heard"]))
             return text
         except Exception as e:
             kept = self._keep(path, on)
@@ -2086,6 +2118,81 @@ class Notes:
                 os.remove(path)
             except OSError:
                 pass
+
+    def _piece(self, path, on):
+        """A piece of live notes written down (in order, one at a time), then the file saved with it: a restart or a crash
+        keeps what was said."""
+        text = self._transcribe_file(path, on)
+        with self.lock:
+            on["texts"].append(text)
+            if text and text.strip() != "(silence)":
+                self._save(on)
+        return text
+
+    def _save(self, on):
+        """The notes so far into their file (under the lock); what kept it from being saved, or "". A failed save loses
+        nothing: the pieces and marks stay for the write-up (raised, it ended the piece and the write-up never came)."""
+        try:
+            self._write(on, self.TAKING, self._transcript(on, on["texts"]))
+            return ""
+        except OSError as e:
+            print(f"[notes] couldn't save the notes so far: {e}", flush=True)
+            return str(e)[:150]
+
+    def mark(self, label="", at=None):
+        """A bookmark at this moment of the notes being taken ("mark that", "that was a decision"), with what the user called
+        it. `at`: when they asked (the voice's call comes seconds later), else now. Saved in the file at once."""
+        on, now = self.on, time.time()
+        if not on:
+            return {"error": "no notes are being taken, so there's nothing to mark: they have to be started first"}
+        at = min(max(float(at or now), on["started"]), now)
+        with self.lock:
+            if on.get("closing"):  # (stopped meanwhile: the summary is being written without it)
+                return {"error": "no notes are being taken any more (they were just stopped), so there's nothing to mark"}
+            on["marks"].append({"at": at, "label": " ".join(str(label or "").split())[:120]})
+            problem = self._save(on)
+        return {"result": f"Marked at {self._clock(at - on['started'])} into the recording." + (
+            f" (The notes file couldn't be saved just now: {problem}. The mark is kept for the write-up.)" if problem else "")}
+
+    @staticmethod
+    def _clock(seconds, full=False):
+        """Seconds into the recording as 12:34 or 1:02:03 (full: 00:12:34, as the notes file shows it)."""
+        h, rest = divmod(int(seconds), 3600)
+        m, s = divmod(rest, 60)
+        return f"{h:02d}:{m:02d}:{s:02d}" if full else f"{h}:{m:02d}:{s:02d}" if h else f"{m}:{s:02d}"
+
+    def _transcript(self, on, texts):
+        """The pieces' words in order (silence left out), each bookmark in the piece being recorded when it was made, after
+        the sentence being said then: placed by how far into the piece it came (a piece's end could be minutes off).
+        Bookmarks in a piece not written down yet go last."""
+        def line(m):
+            return f"★ {self._clock(m['at'] - on['started'], full=True)} {m['label']}".rstrip()
+        ends, lines = on.get("ends", []), []
+        marks = sorted(on.get("marks", []), key=lambda m: m["at"])
+        for i, text in enumerate(texts):
+            text = "" if not text or text.strip() == "(silence)" else text.strip()
+            begin = ends[i - 1] if 0 < i <= len(ends) else on["started"]  # (a file's pieces have no ends, nor marks)
+            end, cut = (ends[i] if i < len(ends) else None), 0
+            for m in (m for m in marks if bisect.bisect_left(ends, m["at"]) == i):
+                share = (m["at"] - begin) / (end - begin) if end and end > begin else 1
+                found = self.SENTENCE_END.search(text, max(cut, int(len(text) * share)))
+                upto = found.end() if found else len(text)
+                lines += [part for part in [text[cut:upto].strip()] if part] + [line(m)]
+                cut = upto
+            lines += [part for part in [text[cut:].strip()] if part]
+        return "\n".join(lines + [line(m) for m in marks if bisect.bisect_left(ends, m["at"]) >= len(texts)])
+
+    @classmethod
+    def _summary_prompt(cls, transcript, marks, started):
+        """What the model writing the notes is asked: the bookmarks listed with their times (and the clock's) if any."""
+        prompt = cls.SUMMARY
+        if marks:
+            listed = "; ".join(f"{cls._clock(m['at'] - started, full=True)} ({time.strftime('%H:%M', time.localtime(m['at']))})"
+                               + (f" {m['label']}" if m["label"] else "") for m in marks)
+            prompt += (f" The user marked these moments while it was recorded, each a ★ line in the transcript at its place: "
+                       f"{listed}. End with a part called Marked moments: one bullet per mark, with its time, its label if it "
+                       "has one, and what was being said around it.")
+        return prompt + "\n\n" + transcript[:400000]
 
     def _keep(self, path, on):
         """A piece of live notes no model could write down is kept beside the notes file (it was deleted: five minutes
@@ -2116,11 +2223,15 @@ class Notes:
                           "announced when ready)"}
 
     def _finish(self, on):
-        transcript = "\n".join(t for t in (f.result() for f in on["parts"]) if t and t.strip() != "(silence)").strip()
+        texts = [f.result() for f in on["parts"]]
+        with self.lock:  # (a bookmark from now on is too late for the summary: it's refused)
+            on["closing"] = True
+            transcript, marks = self._transcript(on, texts), list(on.get("marks", []))
         if len(set(self.SPEAKER.findall(transcript))) == 1:  # (one person after all: no labels)
             transcript = self.SPEAKER.sub("", transcript)
         try:
-            summary = self.summarise(transcript) if transcript else "Nothing was heard."
+            heard = any(t and t.strip() != "(silence)" for t in texts)
+            summary = self.summarise(self._summary_prompt(transcript, marks, on["started"])) if heard else "Nothing was heard."
         except Exception as e:
             summary = f"(the summary couldn't be written: {str(e)[:100]})"
         path = self._write(on, summary, transcript)
@@ -2176,8 +2287,10 @@ def audible(wav):
 notes = [None]  # set by Brain
 
 
-def tool_notes(action, title="", source="both"):
-    n = notes[0]
+def tool_notes(action, title="", source="both", label="", asked_at=None):
+    n = notes[0]  # (asked_at: the voice's, when the user's request was first heard)
+    if action == "mark":
+        return n.mark(label, asked_at)
     return n.start(title, source) if action == "start" else n.stop() if action == "stop" else n.status()
 
 
@@ -2649,9 +2762,13 @@ TOOLS.update({
               optional=("what", "minutes"))),
     "notes": (tool_notes, "Take notes of a lecture, meeting or video: start (it records the microphone and what the PC plays "
               "together, so it doesn't matter where the meeting is; source pc or room only when the user wants just one; a "
-              "title), stop (the summary and transcript are saved to Documents/Jarvis Notes and announced when ready), or "
-              "status.", obj(action={"type": "string", "enum": ["start", "stop", "status"]}, title={"type": "string"},
-              source={"type": "string", "enum": ["both", "pc", "room"]}, optional=("title", "source"))),
+              "title), stop (the summary and transcript are saved to Documents/Jarvis Notes and announced when ready), "
+              "status, or mark: a bookmark at this moment of the notes being taken (\"mark that\", \"bookmark this: the exam "
+              "date\", \"that was a decision\"; label: what they called it, if anything), shown at its place in the transcript, "
+              "and the summary says what was being said around it.", obj(
+                  action={"type": "string", "enum": ["start", "stop", "status", "mark"]}, title={"type": "string"},
+                  source={"type": "string", "enum": ["both", "pc", "room"]}, label={"type": "string"},
+                  optional=("title", "source", "label"))),
     "recent_changes": (tool_recent_changes, "What Jarvis changed lately (commands that changed things, account actions), newest "
                        "first, and how to reverse each: for \"undo that\" or \"what did you change?\".", obj()),
     "plan": (tool_plan, "Show the user your plan for a long task (more than three steps), before or alongside your first "
@@ -2973,8 +3090,10 @@ def harness_event(e, job):
     job["session"] = e.get("session_id") or job["session"]
     used = [c.get("name") for c in (e.get("message") or {}).get("content") or [] if c.get("type") == "tool_use"]
     job["step"] = used[-1] if used else job["step"]
-    if e.get("type") == "result":
+    if e.get("type") == "result" and not e.get("is_error"):
         job["said"] = str(e.get("result") or "")
+    elif e.get("type") == "result":  # (Claude Code's turn that failed, out of turns or with an API error: not "done")
+        job["lines"] = [str(e.get("result") or e.get("subtype") or "an error")[:500]]
 
 
 def openchamber_url(start=False):
@@ -3142,17 +3261,22 @@ def _code_run(t, n, rec, task):
             wt = system.run(["git", "-C", rec["cwd"], "rev-parse", "--show-toplevel"])
             who = [] if system.run(["git", "-C", wt, "config", "user.email"]) else ["-c", "user.name=Jarvis", "-c", "user.email=jarvis@localhost"]
             system.run(["git", "-C", wt, "add", "-A"], 60)
-            system.run(["git", "-C", wt, *who, "commit", "-qm", f"Jarvis: {task[:70]}"], 60)
+            out = system.run(["git", "-C", wt, *who, "commit", "-qm", f"Jarvis: {task[:70]}"], 60)
             changes = (f"{system.run(['git', '-C', wt, 'diff', '--shortstat', rec['base'], 'HEAD'], 60) or 'none'}, committed on "
                        f"branch {rec['branch']} (in {rec['cwd']}); nothing is merged into the project until the user says so")
-        if not ok and not job["said"]:
-            text = f'The coding job "{task}" ({CODERS[rec["harness"]]}, coding job {n}) failed: ' + (" / ".join(job["lines"])[-500:] or "no output")
+            if system.run(["git", "-C", wt, "status", "--porcelain"], 60):  # (a hook refused it: "committed" was said anyway)
+                changes += f". Some changes are not committed (git: {out[-300:] or 'no reason given'}): they're still in {wt}"
+        job_name = f'The coding job "{task}" ({CODERS[rec["harness"]]}, coding job {n})'
+        if not ok:  # (a run that failed is never "done", whatever it had said by then)
+            text = (f'{job_name} failed: ' + (" / ".join(job["lines"])[-500:] or "no output")
+                    + (f'. It had said: {job["said"][:1000]}' if job["said"] else "") + f"\nChanges: {changes}.")
         else:
-            text = (f'The coding job "{task}" ({CODERS[rec["harness"]]}, coding job {n}) is done after '
-                    f'{max(1, round((time.time() - t.started) / 60))} min. It says: {job["said"][:1500]}\nChanges: {changes}.')
+            text = (f'{job_name} is done after {max(1, round((time.time() - t.started) / 60))} min. It says: '
+                    f'{job["said"][:1500]}\nChanges: {changes}.')
     finally:
         running.remove(t)
         rec["busy"] = False
+    note_finished(t, text, ok=ok)
     job_done[0](text)
 
 
@@ -3940,11 +4064,8 @@ class Brain:
                                                                {"text": prompt}]}], entries=models_for("look"))
             return "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
 
-        def summarise(transcript):
-            parts = self._generate([{"role": "user", "parts": [{"text": "Write study notes from this transcript of a lecture or meeting: "
-                                     "a two-sentence summary, then the key points as short bullets, then any dates, deadlines, homework or "
-                                     "action items. If lines start with who speaks (**Name:**), say who made a key point or asked a question where it "
-                                     "matters; otherwise don't mention speakers. Markdown, in the transcript's language.\n\n" + transcript[:400000]}]}])
+        def summarise(prompt):  # (Notes.SUMMARY with the transcript, and the bookmarks if any)
+            parts = self._generate([{"role": "user", "parts": [{"text": prompt}]}])
             return "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
         notes[0] = Notes(transcribe, summarise)
         painter[0] = lambda contents, entries=None: self._generate(contents, entries=entries or models_for("image"), images=True)
@@ -4166,19 +4287,26 @@ class Brain:
             return out
 
         def classroom():
-            return [{"what": w["title"], "due": w["due"], "source": f"Classroom: {w['course']}", "kind": "classroom",
-                     "place": w["course"]} for w in self.classroom_work(days) if not w["done"]]
+            return [{"what": w["title"], "due": w["due"], "source": f"Classroom: {w['course']}", "kind": "classroom", "place": w["course"],
+                     **({"link": w["link"]} if str(w.get("link") or "").startswith("https://") else {})}  # (Home opens it: a web page only)
+                    for w in self.classroom_work(days) if not w["done"]]
 
         sources = [(name, fn) for name, app, fn in (("Google Tasks", "googletasks", google_tasks),
                                                      ("Google Classroom", "google_classroom", classroom)) if app in self.connected]
         found = in_parallel(*(fn for _, fn in sources), timeout=20) if sources else []
         items = [i for got in found if got for i in got]
         reminders = [r for r in store.reminders() if not r.get("task") and not r.get("off") and r["at"] < end]
-        items += [{"what": r["text"].removeprefix("🤝 "), "due": r["at"], "source": "reminder", "kind": "reminder", "place": "",
-                   "id": r["id"]} for r in reminders]
+        promised = people.promises()
+        by_reminder = {x["reminder"]: x for x in promised if x.get("reminder")}  # (a promise's reminder is that promise's row:
+        for r in reminders:  # cancelling it as a reminder took the reminder alone, and the promise came back on its own row)
+            x = by_reminder.get(r["id"])
+            items.append({"what": x["what"], "due": r["at"], "source": f"promise to {x['to']}", "kind": "promise", "place": x["to"],
+                          "id": r["id"]} if x else
+                         {"what": r["text"].removeprefix("🤝 "), "due": r["at"], "source": "reminder", "kind": "reminder", "place": "", "id": r["id"]})
         items += [{"what": x["what"], "due": x["due"] or None, "source": f"promise to {x['to']}", "kind": "promise", "place": x["to"]}
-                  for x in people.promises()
-                  if (not x["due"] or x["due"] < end) and not any(x["what"] in r["text"] for r in reminders)]
+                  for x in promised
+                  if (not x["due"] or x["due"] < end) and x.get("reminder") not in {r["id"] for r in reminders}
+                  and not any(x["what"] in r["text"] for r in reminders)]
         return {"items": sorted(items, key=lambda i: (i["due"] is None, i["due"] or 0)),
                 "couldnt_check": [name for (name, _), got in zip(sources, found) if got is None]}
 
@@ -4978,6 +5106,7 @@ class Brain:
             task.base = None if unattended else base
             task.contents = [] if unattended else [dict(m, parts=list(m["parts"])) for m in base]
         running.append(task)
+        reply = None
         try:
             reply = self._ask(text, on_tool, on_thought, task, context)
             if task.cancel.is_set():  # (stopped while the model was answering: that answer isn't wanted any more)
@@ -4985,12 +5114,15 @@ class Brain:
             if not unattended:
                 self._join(task, base, seen, reply)
             return reply
-        except Exception:
+        except Exception as e:
             if task.failed and not unattended:  # (what it did before failing stays in the conversation)
                 self._join(task, base, seen, task.failed)
+            reply = f"failed: {describe(e)}"
             raise
         finally:
             running.remove(task)
+            if not unattended:
+                note_finished(task, reply, ok=reply is not None and not reply.startswith("failed: ") and reply != "Stopped.")
             if task.screen:
                 screen_lock.release()
             system.trim_memory()  # (a task's screenshots and pages: freed, and handed back to the system)
@@ -5013,12 +5145,20 @@ class Brain:
     @staticmethod
     def _take_screen(task, on_tool):
         """A task's first screen step waits for the screen (one user of it at a time) and, if the user has used the keyboard
-        or mouse since the task started, until they've left them alone for SCREEN_IDLE seconds. False if stopped meanwhile."""
+        or mouse since the task started, until they've left them alone for SCREEN_IDLE seconds. False if stopped meanwhile.
+        A task already holding it waits the same way when the user takes them back, and then says USER_MOVED: the screen
+        may have changed under it (it went on typing into the window the user had switched to)."""
         def user_busy():
             idle = system.user_idle()
             return idle is not None and idle < SCREEN_IDLE and time.time() - idle > task.started + SCREEN_GRACE
         if task.screen:
-            return True
+            if not user_busy():
+                return True
+            on_tool("wait_screen")
+            while user_busy():
+                if task.cancel.wait(0.5):
+                    return False
+            return USER_MOVED
         if screen_lock.locked() or user_busy():
             on_tool("wait_screen")
         while not screen_lock.acquire(timeout=0.5):
@@ -5103,15 +5243,18 @@ class Brain:
                 ran = True
                 final = said.strip() and all(c["name"] in FINISHERS for c in calls)
                 def run(call):
-                    if task.cancel.is_set() or call["name"] in SCREEN_WORK and not self._take_screen(task, on_tool):
+                    took = call["name"] not in SCREEN_WORK or self._take_screen(task, on_tool)
+                    if task.cancel.is_set() or not took:
                         return {"error": "cancelled by the user"}, None
+                    if took is USER_MOVED and call["name"] not in SCREEN_LOOKS:
+                        return {"error": MOVED}, None
                     on_tool(call["name"])
                     task.step, t = call["name"], time.time()
                     args = call.get("args") or {}
                     if call["name"] == "act":  # (Stop, or the jobs tool stopping this task alone, ends it between steps)
                         if chat_unchecked(args.get("steps")):
                             return {"error": CHECK_CHAT}, None
-                        args = {**args, "halt": task.cancel}
+                        args = {**args, "halt": task.cancel, "pause": lambda: self._take_screen(task, on_tool)}
                     if task.unattended:  # (here, not in _run_tool: the voice runs its tools there meanwhile, with real yeses)
                         args = {k: v for k, v in args.items() if k != "confirmed"}
                     # a task from the voice (or the window) with a spoken passphrase set: a yes needs it too, asked with

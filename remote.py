@@ -9,6 +9,7 @@ import store
 API = "https://api.telegram.org/bot{}/{}"
 STATE_FILE = os.path.join(store.DATA, "telegram.json")  # {"chat": paired chat id, "name": who, "offset": next update}
 LIMIT = 4000  # characters per Telegram message (its limit is 4096)
+RETRY_LIMIT = 30  # seconds: the longest "too many requests" wait a reply is held for before it counts as not delivered
 REMOTE_NOTE = ("[Sent from the user's phone: they're away from the PC, can't see the screen or answer out loud. Do the task, "
                "then reply in a few short sentences, as plain text; if you need them, end with the question.] ")
 
@@ -114,17 +115,32 @@ class Telegram:
             self.send(token, chat, reply)
         except OSError as e:
             print(f"[telegram] couldn't send the reply: {e}", flush=True)
+            self.notify(f"The answer to your Telegram message didn't reach the phone ({e}); it's in the chat here.")
 
     def push(self, text):
         """Something Jarvis did or found on its own (a scheduled task, a check), sent to the paired chat."""
         token = store.secret("telegram")
         if token and self.state.get("chat"):
-            self.send(token, self.state["chat"], text)
+            self.send(token, self.state["chat"], text, patient=False)  # (from whatever thread told it: the voice's too)
 
-    def send(self, token, chat, text):
-        """Raises ConnectionError (its text never holds the token, which is in the URL: it ended up in the log) if it can't."""
+    def send(self, token, chat, text, patient=True):
+        """Raises ConnectionError (its text never holds the token, which is in the URL: it ended up in the log) if it can't,
+        or if Telegram refuses the message (its answer was never read: a refused reply was lost without a word). One that's
+        too many at once is sent again once, after the wait Telegram asks for (up to RETRY_LIMIT seconds), if patient."""
         for i in range(0, max(len(text), 1), LIMIT):
-            try:
-                self.http.post(API.format(token, "sendMessage"), json={"chat_id": chat, "text": text[i:i + LIMIT] or "Done."}, timeout=20)
-            except requests.RequestException as e:
-                raise ConnectionError(f"can't reach Telegram ({type(e).__name__})") from None
+            for again in (True, False):
+                try:
+                    r = self.http.post(API.format(token, "sendMessage"), json={"chat_id": chat, "text": text[i:i + LIMIT] or "Done."}, timeout=20)
+                except requests.RequestException as e:
+                    raise ConnectionError(f"can't reach Telegram ({type(e).__name__})") from None
+                try:
+                    body = r.json()
+                except ValueError:
+                    body = {}
+                if r.status_code == 200 and body.get("ok", True):
+                    break
+                wait = (body.get("parameters") or {}).get("retry_after") or 0
+                if again and patient and r.status_code == 429 and 0 < wait <= RETRY_LIMIT:
+                    time.sleep(wait)
+                    continue
+                raise ConnectionError(f"Telegram refused the message ({r.status_code}: {str(body.get('description') or 'no reason given')[:200]})")

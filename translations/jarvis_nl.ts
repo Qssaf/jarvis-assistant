@@ -753,18 +753,18 @@
         <translation>Jarvis leest dit vóór elk gesprek. Zeg “onthoud…” of bewerk het hier.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+41"/>
         <source>Saved</source>
         <translation>Opgeslagen</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+211"/>
+        <location line="+226"/>
         <source>Save</source>
         <translation>Opslaan</translation>
     </message>
     <message>
-        <location line="-210"/>
+        <location line="-225"/>
         <source>Memory saved</source>
         <translation>Geheugen opgeslagen</translation>
     </message>
@@ -815,12 +815,12 @@
     </message>
     <message>
         <location line="+5"/>
-        <location line="+149"/>
+        <location line="+164"/>
         <source>Cancel</source>
         <translation>Annuleren</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-156"/>
         <source>Add a reminder or task</source>
         <translation>Herinnering of taak toevoegen</translation>
     </message>
@@ -841,12 +841,12 @@
     </message>
     <message>
         <location line="+16"/>
-        <location line="+33"/>
+        <location line="+38"/>
         <source>Delete</source>
         <translation>Verwijderen</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-30"/>
         <source>Add a routine</source>
         <translation>Routine toevoegen</translation>
     </message>
@@ -866,12 +866,43 @@
         <translation>Nog niets. Zeg “laat het me weten als een betaling mislukt”, of voeg er hier een toe.</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+17"/>
         <source>Paused</source>
         <translation>Gepauzeerd</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+0"/>
+        <location line="+17"/>
+        <source>Looking now…</source>
+        <translation>Wordt nu gecontroleerd…</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <source>Try it now</source>
+        <translation>Nu proberen</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Couldn&apos;t look at %1.</source>
+        <translation>Kon om %1 niet controleren.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1 and told you: %2</source>
+        <translation>Laatst gecontroleerd om %1 en dit gemeld: %2</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1: nothing needed you.</source>
+        <translation>Laatst gecontroleerd om %1: jij was nergens voor nodig.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Next look at %1.</source>
+        <translation>Volgende controle om %1.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Add a check</source>
         <translation>Controle toevoegen</translation>
     </message>
@@ -1187,7 +1218,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3154"/>
+        <location filename="../jarvis.py" line="+3543"/>
         <source>LISTENING</source>
         <translation>LUISTERT</translation>
     </message>
@@ -2084,23 +2115,33 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+42"/>
+        <location line="+45"/>
         <source>Messages</source>
         <translation>Berichten</translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-43"/>
         <source>Answer my contacts</source>
         <translation>Mijn contacten antwoorden</translation>
     </message>
     <message>
         <location line="+0"/>
-        <location line="+42"/>
+        <source>Draft replies for me to send</source>
+        <translation>Concepten schrijven die ik zelf verstuur</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+44"/>
         <source>Just show them to me</source>
         <translation>Alleen aan mij tonen</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
+        <source>Jarvis writes a reply to your contacts&apos; messages that don&apos;t need you and tells you. Nothing is sent until you say &quot;send it&quot;.</source>
+        <translation>Jarvis schrijft een antwoord op berichten van je contacten waarvoor jij niet nodig bent en laat het je weten. Er wordt niets verstuurd totdat je “verstuur maar” zegt.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Calls</source>
         <translation>Oproepen</translation>
     </message>
@@ -2452,11 +2493,11 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>What you say after “%1”, and screenshots when a task needs the screen, go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Memory, reminders and conversations stay on this computer.</source>
-        <translation>Wat je na “%1” zegt, en schermafbeeldingen als een taak het scherm nodig heeft, gaan naar Google Gemini. Accountacties lopen via Composio, alleen voor de accounts die je koppelt. Geheugen, herinneringen en gesprekken blijven op deze computer.</translation>
+        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis keeps all of it on this computer.</source>
+        <translation>Wat je na “%1” zegt of typt, het geheugen en het recente gesprek die helpen het te beantwoorden, en schermafbeeldingen als een taak het scherm nodig heeft, gaan naar Google Gemini. Accountacties lopen via Composio, alleen voor de accounts die je koppelt. Jarvis bewaart dit allemaal op deze computer.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Your Gemini key</source>
         <translation>Je Gemini-sleutel</translation>
     </message>
@@ -2662,7 +2703,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+107"/>
+        <location filename="../qml/Today.qml" line="+109"/>
         <source>Feels %1 in %2</source>
         <translation>Gevoelstemperatuur %1 in %2</translation>
     </message>
@@ -2692,9 +2733,19 @@
         <translation>Bezig met</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+0"/>
+        <source>Finished lately</source>
+        <translation>Onlangs afgerond</translation>
+    </message>
+    <message>
+        <location line="+30"/>
         <source>Stop this task</source>
         <translation>Deze taak stoppen</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Finished at %1</source>
+        <translation>Afgerond om %1</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -2722,12 +2773,22 @@
         <translation>Beloofd aan %1</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+12"/>
         <source>Cancel this reminder</source>
         <translation>Deze herinnering annuleren</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+0"/>
+        <source>Mark as done</source>
+        <translation>Als gedaan markeren</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Open in Classroom</source>
+        <translation>In Classroom openen</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Couldn&apos;t check %1 just now.</source>
         <translation>Kon %1 nu niet controleren.</translation>
     </message>
@@ -2795,7 +2856,7 @@
         <translation>Afsluiten</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
         <source>Running in the tray. Say &quot;%1&quot;.</source>
         <translation>Actief in het systeemvak. Zeg “%1”.</translation>
     </message>

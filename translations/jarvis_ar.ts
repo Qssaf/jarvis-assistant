@@ -793,18 +793,18 @@
         <translation>يقرأ Jarvis هذا قبل كل محادثة. قل له «تذكّر…» أو عدّله هنا.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+41"/>
         <source>Saved</source>
         <translation>محفوظ</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+211"/>
+        <location line="+226"/>
         <source>Save</source>
         <translation>حفظ</translation>
     </message>
     <message>
-        <location line="-210"/>
+        <location line="-225"/>
         <source>Memory saved</source>
         <translation>حُفظت الذاكرة</translation>
     </message>
@@ -859,12 +859,12 @@
     </message>
     <message>
         <location line="+5"/>
-        <location line="+149"/>
+        <location line="+164"/>
         <source>Cancel</source>
         <translation>إلغاء</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-156"/>
         <source>Add a reminder or task</source>
         <translation>إضافة تذكير أو مهمة</translation>
     </message>
@@ -885,12 +885,12 @@
     </message>
     <message>
         <location line="+16"/>
-        <location line="+33"/>
+        <location line="+38"/>
         <source>Delete</source>
         <translation>حذف</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-30"/>
         <source>Add a routine</source>
         <translation>إضافة روتين</translation>
     </message>
@@ -910,12 +910,43 @@
         <translation>لا شيء بعد. قل «أخبرني إذا فشلت عملية دفع»، أو أضف واحدة هنا.</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+17"/>
         <source>Paused</source>
         <translation>متوقفة مؤقتًا</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+0"/>
+        <location line="+17"/>
+        <source>Looking now…</source>
+        <translation>جارٍ التحقق الآن…</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <source>Try it now</source>
+        <translation>تجربتها الآن</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Couldn&apos;t look at %1.</source>
+        <translation>تعذّر التحقق في %1.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1 and told you: %2</source>
+        <translation>آخر تحقق في %1، وقد أخبرك: %2</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1: nothing needed you.</source>
+        <translation>آخر تحقق في %1: لم يكن هناك ما يستدعي انتباهك.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Next look at %1.</source>
+        <translation>التحقق التالي في %1.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Add a check</source>
         <translation>إضافة مراقبة</translation>
     </message>
@@ -1239,7 +1270,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3154"/>
+        <location filename="../jarvis.py" line="+3543"/>
         <source>LISTENING</source>
         <translation>يستمع</translation>
     </message>
@@ -2148,23 +2179,33 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+42"/>
+        <location line="+45"/>
         <source>Messages</source>
         <translation>الرسائل</translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-43"/>
         <source>Answer my contacts</source>
         <translation>الرد على جهات اتصالي</translation>
     </message>
     <message>
         <location line="+0"/>
-        <location line="+42"/>
+        <source>Draft replies for me to send</source>
+        <translation>كتابة مسودات ردود لأرسلها بنفسي</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+44"/>
         <source>Just show them to me</source>
         <translation>اعرضها عليّ فقط</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
+        <source>Jarvis writes a reply to your contacts&apos; messages that don&apos;t need you and tells you. Nothing is sent until you say &quot;send it&quot;.</source>
+        <translation>يكتب Jarvis ردًا على رسائل جهات اتصالك التي لا تحتاج إليك ويخبرك به. لا يُرسل شيء حتى تقول «أرسله».</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Calls</source>
         <translation>المكالمات</translation>
     </message>
@@ -2516,11 +2557,11 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>What you say after “%1”, and screenshots when a task needs the screen, go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Memory, reminders and conversations stay on this computer.</source>
-        <translation>ما تقوله بعد «%1»، ولقطات الشاشة حين تحتاج مهمة إلى الشاشة، تذهب إلى Google Gemini. تمر إجراءات الحسابات عبر Composio، وللحسابات التي تربطها فقط. تبقى الذاكرة والتذكيرات والمحادثات على هذا الحاسوب.</translation>
+        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis keeps all of it on this computer.</source>
+        <translation>ما تقوله بعد «%1» أو تكتبه، والذاكرة والمحادثة الأخيرة اللتان تساعدان على الإجابة، ولقطات الشاشة حين تحتاج مهمة إلى الشاشة، تذهب إلى Google Gemini. تمر إجراءات الحسابات عبر Composio، وللحسابات التي تربطها فقط. ويحتفظ Jarvis بكل ذلك على هذا الحاسوب.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Your Gemini key</source>
         <translation>مفتاح Gemini الخاص بك</translation>
     </message>
@@ -2726,7 +2767,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+107"/>
+        <location filename="../qml/Today.qml" line="+109"/>
         <source>Feels %1 in %2</source>
         <translation>الحرارة المحسوسة %1 في %2</translation>
     </message>
@@ -2756,9 +2797,19 @@
         <translation>قيد العمل</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+0"/>
+        <source>Finished lately</source>
+        <translation>انتهت مؤخرًا</translation>
+    </message>
+    <message>
+        <location line="+30"/>
         <source>Stop this task</source>
         <translation>إيقاف هذه المهمة</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Finished at %1</source>
+        <translation>انتهت الساعة %1</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -2786,12 +2837,22 @@
         <translation>وعدتَ بها %1</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+12"/>
         <source>Cancel this reminder</source>
         <translation>إلغاء هذا التذكير</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+0"/>
+        <source>Mark as done</source>
+        <translation>تحديد كمنجز</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Open in Classroom</source>
+        <translation>فتح في Classroom</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Couldn&apos;t check %1 just now.</source>
         <translation>تعذّر التحقق من %1 الآن.</translation>
     </message>
@@ -2859,7 +2920,7 @@
         <translation>إنهاء</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
         <source>Running in the tray. Say &quot;%1&quot;.</source>
         <translation>يعمل في شريط النظام. قل «%1».</translation>
     </message>

@@ -195,7 +195,9 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   New conversation (`contents` rebound). A stopped task always answers "Stopped." (never spoken). The screen is the one
   shared thing: a task's first `SCREEN_WORK` tool takes `brain.screen_lock` until the task ends (`_take_screen`), and
   waits while the user has used keyboard or mouse since the task started (+`SCREEN_GRACE`) until `SCREEN_IDLE` s idle;
-  the voice's `VOICE_SCREEN_ACTS` take it too, or are refused. `Brain.interrupt` stops every task and returns their
+  a task already holding it waits the same way when the user takes them back, then its next call that isn't a look
+  (`SCREEN_LOOKS`) is refused once with `MOVED` (a "not run:" gate), and an agent `act` asks `pause` before each step
+  and stops when the user moved (it typed on into the window the user had switched to); the voice's `VOICE_SCREEN_ACTS` take it too, or are refused. `Brain.interrupt` stops every task and returns their
   labels (Stop says them). `jobs` lists or stops them by `Task.n` (a number kept for the task's life), never the task
   calling it (`caller`: its label is the request itself), and only "all" stops every one. A task's `ask_user` lets go of
   the screen while it waits. The voice doesn't start a `do_task` identical to one running (`Live.doing`, `task_key`).
@@ -215,6 +217,9 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   reads no prompt on stdin; its `init`/`step_update`/`result` events are read in `harness_event`). Tests use a fake server and fake
   commands: never the real ones.
 - `check_pass` counts "new since" from the last check that got an answer (`ok` in checks.json), not the last one started.
+  checks.json's `found` is what that one found ("" for NOTHING); `/api/checks`'s `last` shows it on Memory, with
+  `looking` while a pass (`CHECKS_LABEL`) runs. Memory's Try now (`/api/checks/test`, `try_check`) runs one check at once
+  and only shows its answer there. `run_unattended` returns the answer ("" for nothing), None if failed or stopped.
 - Task reminders (`task: true`) and the `checks` loop run `Brain.ask(..., unattended=True)` (`run_unattended`): its own
   empty history, and `confirmed` is dropped from every agent call (in `_ask`, not `_run_tool`: the voice
   runs its tools there meanwhile), so nothing that waits for a yes runs. A
@@ -352,7 +357,9 @@ the user's own relay (`relay/worker.js`, a Cloudflare Worker with one Durable Ob
 and with `phone_direct` the PC also listens on `phone.PORT` (only while a phone is paired or a pairing code shows) for
 phones on its own network or VPN: the pairing code and every `ready` carry `system.local_addresses()`, and the app
 races them against the relay (`Link.kt`: direct wins). `phones[c]` holds each connection's `send`/`close`, whichever way
-it came. Inside the channel: `ask`/`stop`; `get`/`post` for `PHONE_GET`/`PHONE_POST` only (never settings, keys or
+it came. An `ask`'s id comes back on its `reply`; the PC keeps each phone's last `KEEP` answers, sent or not (one sent into
+a dying link was lost), the app's `hello` names the ids it still waits for (`waiting`) and gets them again after `ready`,
+whose `lost` lists the ones this PC doesn't know (it restarted): the app then says to check on the PC before asking again. Inside the channel: `ask`/`stop`; `get`/`post` for `PHONE_GET`/`PHONE_POST` only (never settings, keys or
 data); `event` mirrors every `emit` log line and state (`PhoneLink.put` sits in `clients`); `voice`/`audio`/`barge` make
 the phone the microphone and speaker of the PC's one `Live` session (`jarvis.PhoneVoice`: `Speaker.remote` gets the
 voice, `voice_loop` stops feeding the PC's mic, half-duplex always; the PC's own wake word takes the floor back, and a
@@ -387,7 +394,8 @@ For an incoming call, a `CallAccept` means the user answered on another device. 
 Jarvis.exe (release.yml builds it), next to its source (the AUR package), or builds it into `DATA/bin` with `go` when
 missing or older than the source (install.sh does too). Auto-replies go through `brain._generate` with only that chat
 (no tools, no memory; `{FREE}`: calendar busy times when `whatsapp_share_free`), within `REPLY_LIMIT`/`CHAT_LIMIT` an
-hour; a contact's voice message is transcribed on arrival (`_listen`, `HEAR_LIMIT`) and its words saved as its text
+hour (sent ones only); with `whatsapp_replies` on "drafts" (opt-in; "contacts" is the default) the reply isn't sent but `tell`s the user (its own Attention kind, `whatsapp_draft`),
+after a 💬 line holding it (`wrong_person` reads who from that line); a contact's voice message is transcribed on arrival (`_listen`, `HEAR_LIMIT`) and its words saved as its text
 (`transcript`); the ids Jarvis sent persist in `whatsapp.json` (`mine`); answered calls are a separate Gemini Live session (`CallSession`:
 `open` connects its voice before `accept`, so a call isn't picked up without one; `_ring` and `dial` take the call under `lock`, one at a time). The agent's
 `whatsapp_read`/`whatsapp_send` reach it through `brain.whatsapp_link` (a tool waits `CONNECT_WAIT` for a link that's
@@ -421,7 +429,9 @@ Jarvis's own voice in a meeting held in the room), start the first piece in `sta
 and write their file after every piece, named by when they started (`_write`), so a restart keeps the transcript. A
 piece no model could write down is tried again (`PATIENCE`), then its WAV is kept beside the notes (`_keep`); a recorder
 ends itself after `RECORD_LIMIT` and at exit (`end_recordings`), so none outlives Jarvis. A voice
-`notes` start turns the mic off (the meeting kept the voice answering it). `learn_pass` (every 2 min): once the session's last you/jarvis line is `LEARN_AFTER` old,
+`notes` start turns the mic off (the meeting kept the voice answering it), and so does a `mark` (a bookmark: the moment
+the request was first heard, `inflight["at"]`, and a label; a ★ line at its place in the transcript, and the summary
+prompt, `Notes.SUMMARY` via `_summary_prompt`, asks for a Marked moments part). `learn_pass` (every 2 min): once the session's last you/jarvis line is `LEARN_AFTER` old,
 `Brain.learn` asks the agent's models once (`LEARN`) for at most three new facts the user said or "Lesson: ..." lines
 (their corrections of how Jarvis works), reading `sessions.since(at, at)`: every conversation changed since the stamp;
 `learned.json` is stamped first, so a failing model isn't asked again (a transient `NoModel`, offline for a moment,
@@ -447,7 +457,8 @@ a screen task worked, offered in `_ask` through `matching_skills`; a task of 3+ 
 `SKILL_NUDGE` (its answer is kept). `activity.py` (opt-in `screen_history`): `system.focused()` every `POLL` s, a line
 per change in `DATA/activity/<day>.jsonl`, never in backups.
 
-**State.** `store.py` keeps settings (unknown keys dropped, types coerced, `*_models`, `language`, `safety`... validated),
+**State.** `store.py` keeps settings (unknown keys dropped, types coerced, `*_models`, `language`, `safety`... validated;
+the file holds only values that aren't the default, so changing a default changes it for everyone who kept it),
 plugins, `memory.md`, reminders (optionally repeating: `next_time`), routines, the change log and sessions under
 `system.CONFIG` / `system.DATA`. Files holding tokens are written with `private=True`. `delete_data` removes everything
 personal by its module constants (tests point some of them elsewhere). `export_data`/`import_data` move everything but

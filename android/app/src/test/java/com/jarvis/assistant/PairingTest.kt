@@ -3,15 +3,13 @@ package com.jarvis.assistant
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.security.interfaces.ECPublicKey
 import java.util.Base64
 
 /** A pairing link can come from any web page: only one the app can really connect with is kept (a bad one crashed it at
- *  every start). And a PC that went offline doesn't leave "Working on it…" up for good. */
+ *  every start). (What a PC that went offline was asked: AsksTest.) */
 class PairingTest {
     private val b64 = Base64.getUrlEncoder().withoutPadding()
     private val key = b64.encodeToString(Crypto.raw(Crypto.fresh().public as ECPublicKey))
@@ -46,15 +44,5 @@ class PairingTest {
                            link("wss://r.example", pc = "short"), link("wss://r.example", k = "AAAA"), link("wss://r.example", p = ""),
                            "jarvis://pair#not-json"))
             assertNull(bad, Pairing.parse(bad))
-    }
-
-    @Test
-    fun letsGoOfWhatAnOfflinePcWontAnswer() {
-        val waiting = mutableSetOf(1)
-        assertFalse(dropWaiting(State.ONLINE, waiting))
-        assertEquals(1, waiting.size)
-        assertTrue(dropWaiting(State.PC_OFFLINE, waiting))
-        assertTrue(waiting.isEmpty())
-        assertFalse(dropWaiting(State.PC_OFFLINE, waiting))  // (nothing waiting: no note)
     }
 }

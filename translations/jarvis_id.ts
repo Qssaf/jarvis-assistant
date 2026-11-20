@@ -743,18 +743,18 @@
         <translation>Jarvis membaca ini sebelum setiap percakapan. Katakan “ingat…” atau sunting di sini.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+41"/>
         <source>Saved</source>
         <translation>Tersimpan</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+211"/>
+        <location line="+226"/>
         <source>Save</source>
         <translation>Simpan</translation>
     </message>
     <message>
-        <location line="-210"/>
+        <location line="-225"/>
         <source>Memory saved</source>
         <translation>Memori disimpan</translation>
     </message>
@@ -804,12 +804,12 @@
     </message>
     <message>
         <location line="+5"/>
-        <location line="+149"/>
+        <location line="+164"/>
         <source>Cancel</source>
         <translation>Batal</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-156"/>
         <source>Add a reminder or task</source>
         <translation>Tambah pengingat atau tugas</translation>
     </message>
@@ -830,12 +830,12 @@
     </message>
     <message>
         <location line="+16"/>
-        <location line="+33"/>
+        <location line="+38"/>
         <source>Delete</source>
         <translation>Hapus</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-30"/>
         <source>Add a routine</source>
         <translation>Tambah rutinitas</translation>
     </message>
@@ -855,12 +855,43 @@
         <translation>Belum ada. Ucapkan “beri tahu saya jika ada pembayaran gagal”, atau tambahkan di sini.</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+17"/>
         <source>Paused</source>
         <translation>Dijeda</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+0"/>
+        <location line="+17"/>
+        <source>Looking now…</source>
+        <translation>Sedang memeriksa…</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <source>Try it now</source>
+        <translation>Coba sekarang</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Couldn&apos;t look at %1.</source>
+        <translation>Tidak bisa memeriksa pada %1.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1 and told you: %2</source>
+        <translation>Terakhir diperiksa pada %1 dan memberi tahu Anda: %2</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1: nothing needed you.</source>
+        <translation>Terakhir diperiksa pada %1: tidak ada yang perlu Anda tangani.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Next look at %1.</source>
+        <translation>Pemeriksaan berikutnya pada %1.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Add a check</source>
         <translation>Tambah pemantauan</translation>
     </message>
@@ -1174,7 +1205,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3154"/>
+        <location filename="../jarvis.py" line="+3543"/>
         <source>LISTENING</source>
         <translation>MENDENGARKAN</translation>
     </message>
@@ -2068,23 +2099,33 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+42"/>
+        <location line="+45"/>
         <source>Messages</source>
         <translation>Pesan</translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-43"/>
         <source>Answer my contacts</source>
         <translation>Jawab kontak saya</translation>
     </message>
     <message>
         <location line="+0"/>
-        <location line="+42"/>
+        <source>Draft replies for me to send</source>
+        <translation>Buat draf balasan untuk saya kirim</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+44"/>
         <source>Just show them to me</source>
         <translation>Cukup tampilkan ke saya</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
+        <source>Jarvis writes a reply to your contacts&apos; messages that don&apos;t need you and tells you. Nothing is sent until you say &quot;send it&quot;.</source>
+        <translation>Jarvis menulis balasan untuk pesan kontak Anda yang tidak memerlukan Anda, lalu memberi tahu Anda. Tidak ada yang dikirim sampai Anda bilang “kirim”.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Calls</source>
         <translation>Panggilan</translation>
     </message>
@@ -2436,11 +2477,11 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>What you say after “%1”, and screenshots when a task needs the screen, go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Memory, reminders and conversations stay on this computer.</source>
-        <translation>Ucapan Anda setelah “%1”, serta tangkapan layar saat tugas memerlukan layar, dikirim ke Google Gemini. Tindakan akun melalui Composio, hanya untuk akun yang Anda hubungkan. Memori, pengingat, dan percakapan tetap di komputer ini.</translation>
+        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis keeps all of it on this computer.</source>
+        <translation>Ucapan Anda setelah “%1” atau yang Anda ketik, memori dan percakapan terbaru yang membantu menjawabnya, serta tangkapan layar saat tugas memerlukan layar, dikirim ke Google Gemini. Tindakan akun melalui Composio, hanya untuk akun yang Anda hubungkan. Jarvis menyimpan semuanya di komputer ini.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Your Gemini key</source>
         <translation>Kunci Gemini Anda</translation>
     </message>
@@ -2646,7 +2687,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+107"/>
+        <location filename="../qml/Today.qml" line="+109"/>
         <source>Feels %1 in %2</source>
         <translation>Terasa %1 di %2</translation>
     </message>
@@ -2676,9 +2717,19 @@
         <translation>Sedang dikerjakan</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+0"/>
+        <source>Finished lately</source>
+        <translation>Baru selesai</translation>
+    </message>
+    <message>
+        <location line="+30"/>
         <source>Stop this task</source>
         <translation>Hentikan tugas ini</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Finished at %1</source>
+        <translation>Selesai pukul %1</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -2706,12 +2757,22 @@
         <translation>Dijanjikan ke %1</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+12"/>
         <source>Cancel this reminder</source>
         <translation>Batalkan pengingat ini</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+0"/>
+        <source>Mark as done</source>
+        <translation>Tandai selesai</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Open in Classroom</source>
+        <translation>Buka di Classroom</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Couldn&apos;t check %1 just now.</source>
         <translation>Tidak bisa memeriksa %1 saat ini.</translation>
     </message>
@@ -2779,7 +2840,7 @@
         <translation>Keluar</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
         <source>Running in the tray. Say &quot;%1&quot;.</source>
         <translation>Berjalan di baki. Ucapkan &quot;%1&quot;.</translation>
     </message>

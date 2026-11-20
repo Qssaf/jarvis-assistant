@@ -13,6 +13,8 @@ ScrollPage {
     property var routines: []
     property var checks: []
     property int checksEvery: 60
+    property var checksLast: null  // how the last background look went: {at, answered, ok, found, next}
+    property var tried: ({})  // Try now, by check: {busy} while it looks, then {answer} or {error}
     property string saved: ""
     property string editing: ""  // the row whose editor is open ("reminder <id>", "routine new"...)
 
@@ -23,7 +25,16 @@ ScrollPage {
     function lists() {  // (not the notes: they may have unsaved edits)
         Api.get("/api/reminders", d => reminders = d)
         Api.get("/api/routines", d => routines = d)
-        Api.get("/api/checks", d => { checks = d.checks; checksEvery = d.every })
+        Api.get("/api/checks", d => { checks = d.checks; checksEvery = d.every; checksLast = d.last })
+    }
+    function tryCheck(text) {  // one check at once: what it finds shows under it (never said, never kept)
+        const put = v => { const t = Object.assign({}, tried); t[text] = v; tried = t }
+        put({ busy: true })
+        Api.post("/api/checks/test", { text: text }, put, e => put({ error: e.error }))
+    }
+    function stamp(t) {  // a time today, else the day too
+        const d = new Date(t * 1000)
+        return Qt.formatDateTime(d, d.toDateString() === new Date().toDateString() ? "HH:mm" : "ddd HH:mm")
     }
     // From an editor: closes it once saved; a refused one stays open with what you typed.
     function save(path, body) { Api.post(path, body, () => { editing = ""; lists() }, e => Backend.toast(e.error, true)) }
@@ -162,7 +173,12 @@ ScrollPage {
                         off: !modelData.on
                         symbol: "search"
                         title: modelData.text
-                        detail: modelData.on ? "" : qsTr("Paused")
+                        id: checkRow
+                        readonly property var trial: page.tried[modelData.text]
+                        detail: !modelData.on ? qsTr("Paused") : !trial ? "" : trial.busy ? qsTr("Looking now…")
+                                : trial.error ? trial.error : trial.answer
+                        IconButton { symbol: "play"; tip: qsTr("Try it now"); size: 32; glyph: 18; color: Theme.text3
+                                     enabled: !(checkRow.trial && checkRow.trial.busy); onClicked: page.tryCheck(modelData.text) }
                         Toggle { checked: modelData.on; Layout.preferredWidth: 44; Accessible.name: modelData.text
                                  onToggled: page.change("/api/checks", { text: modelData.text, old: modelData.text, on: checked }) }
                         Edit { onClicked: page.editing = "check " + modelData.text }
@@ -171,6 +187,16 @@ ScrollPage {
                     CheckForm { r: modelData; key: "check " + modelData.text }
                 }
             }
+        }
+        Txt {  // (a quiet check is no longer a guess: it looked and found nothing, or it couldn't look)
+            kind: "small"; color: page.checksLast && !page.checksLast.ok && !page.checksLast.looking ? Theme.warm : Theme.text3
+            Layout.fillWidth: true
+            visible: page.checks.length > 0 && !!page.checksLast
+            text: !page.checksLast ? "" : page.checksLast.looking ? qsTr("Looking now…")
+                  : (!page.checksLast.ok ? qsTr("Couldn't look at %1.").arg(page.stamp(page.checksLast.at))
+                     : page.checksLast.found ? qsTr("Last looked at %1 and told you: %2").arg(page.stamp(page.checksLast.at)).arg(page.checksLast.found)
+                     : qsTr("Last looked at %1: nothing needed you.").arg(page.stamp(page.checksLast.at)))
+                    + " " + qsTr("Next look at %1.").arg(page.stamp(page.checksLast.next))
         }
         CheckForm { r: ({ on: true }); key: "check new" }
         RowLayout {

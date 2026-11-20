@@ -37,9 +37,10 @@ everything Jarvis keeps about me* removes memory, conversations, reminders, rout
   chat you paired is answered.
 - **The Jarvis app** (only if you pair a phone): tasks and replies pass through the relay you deploy on your own
   Cloudflare account, end-to-end encrypted: the relay only forwards ciphertext and can't read them.
-- **WhatsApp** (only if you link it in Settings): Jarvis runs WhatsApp Web in a hidden browser on this computer, with
-  its own profile in the data folder (`whatsapp`). To answer a message it sends that chat's recent messages to the
-  agent's models (not your memory or other chats); voice messages and photos you ask about go to the models too. A call
+- **WhatsApp** (only if you link it in Settings): Jarvis's own helper (`jarvis-wa`, no browser) is linked to your account
+  the way WhatsApp Web is, and keeps its login and the messages it has seen in the data folder (`whatsapp.db`). To answer
+  a message (or draft an answer) it sends that chat's recent messages to the agent's models (not your memory or other
+  chats); voice messages and photos you ask about go to the models too. A call
   it picks up or places goes to Gemini Live, which is told only your name and what you want people told; a summary is
   shown to you, and the transcript is kept with the conversation so you can ask about it. The names you put in its
   *Always let through* and *Never answer* lists stay in your settings on this computer (and out of bug reports). Unlink

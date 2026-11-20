@@ -117,7 +117,8 @@ enum class State { UNPAIRED, CONNECTING, ONLINE, PC_OFFLINE, NO_RELAY }
 
 /** The connection to the PC, kept up while the app or its service runs. Every way to the PC is tried at once: its
  *  addresses on its own networks (the same Wi-Fi, a VPN) and the relay; a direct one wins when it answers. */
-class Link(private val prefs: SharedPreferences, private val onState: (State, String) -> Unit, private val onMessage: (JSONObject) -> Unit) {
+class Link(private val prefs: SharedPreferences, private val onState: (State, String) -> Unit, private val onMessage: (JSONObject) -> Unit,
+           private val waiting: () -> List<Int> = { emptyList() }) {
     // (a write may wait 30 s: a phone's internet stalled for seconds at a time and the link dropped at the default 10 s;
     // the pings still find a connection that's really gone)
     private val http = OkHttpClient.Builder().pingInterval(25, TimeUnit.SECONDS).connectTimeout(6, TimeUnit.SECONDS)
@@ -296,7 +297,7 @@ class Link(private val prefs: SharedPreferences, private val onState: (State, St
         tries.filter { it !== t }.forEach { it.ws?.close(1000, null) }
         tries = listOf(t)
         val token = prefs.getString("token", null)
-        val hello = if (token != null) JSONObject().put("op", "hello").put("token", token)
+        val hello = if (token != null) greeting(token, waiting())
             else JSONObject().put("op", "pair").put("secret", prefs.getString("secret", "")).put("name", "${Build.MANUFACTURER} ${Build.MODEL}")
         t.ws?.send(t.channel!!.seal(hello).toByteString())
     }
@@ -317,7 +318,7 @@ class Link(private val prefs: SharedPreferences, private val onState: (State, St
             when (m.optString("op")) {
                 "paired" -> {
                     prefs.edit().putString("token", m.getString("token")).remove("secret").apply()
-                    t.ws?.send(t.channel!!.seal(JSONObject().put("op", "hello").put("token", m.getString("token"))).toByteString())
+                    t.ws?.send(t.channel!!.seal(greeting(m.getString("token"), waiting())).toByteString())
                 }
                 "ready" -> {
                     wait = 2000L
@@ -338,6 +339,11 @@ class Link(private val prefs: SharedPreferences, private val onState: (State, St
         }
     }
 }
+
+/** Who the app is (its token), and the ids of what it asked and still waits for (the PC sends those answers again: the
+ *  link may have dropped while they were on the way). An older PC ignores them. */
+internal fun greeting(token: String, waiting: List<Int>): JSONObject =
+    JSONObject().put("op", "hello").put("token", token).put("waiting", JSONArray(waiting))
 
 /** The system's DNS, keeping each host's last answer for when a lookup fails: a phone's private DNS timed out for
  *  minutes while the relay's address stayed the same, and the app couldn't reconnect. */

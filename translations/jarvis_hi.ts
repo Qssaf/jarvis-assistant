@@ -753,18 +753,18 @@
         <translation>Jarvis हर बातचीत से पहले इसे पढ़ता है। उससे “याद रखना…” कहें या यहाँ बदलें।</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+41"/>
         <source>Saved</source>
         <translation>सहेजा गया</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+211"/>
+        <location line="+226"/>
         <source>Save</source>
         <translation>सहेजें</translation>
     </message>
     <message>
-        <location line="-210"/>
+        <location line="-225"/>
         <source>Memory saved</source>
         <translation>मेमोरी सहेजी गई</translation>
     </message>
@@ -815,12 +815,12 @@
     </message>
     <message>
         <location line="+5"/>
-        <location line="+149"/>
+        <location line="+164"/>
         <source>Cancel</source>
         <translation>रद्द करें</translation>
     </message>
     <message>
-        <location line="-141"/>
+        <location line="-156"/>
         <source>Add a reminder or task</source>
         <translation>रिमाइंडर या काम जोड़ें</translation>
     </message>
@@ -841,12 +841,12 @@
     </message>
     <message>
         <location line="+16"/>
-        <location line="+33"/>
+        <location line="+38"/>
         <source>Delete</source>
         <translation>हटाएँ</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-30"/>
         <source>Add a routine</source>
         <translation>रूटीन जोड़ें</translation>
     </message>
@@ -866,12 +866,43 @@
         <translation>अभी कुछ नहीं। कहें “अगर कोई पेमेंट फ़ेल हो तो बताना”, या यहाँ जोड़ें।</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+17"/>
         <source>Paused</source>
         <translation>रुका हुआ</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+0"/>
+        <location line="+17"/>
+        <source>Looking now…</source>
+        <translation>जाँच हो रही है…</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <source>Try it now</source>
+        <translation>अभी आज़माएँ</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Couldn&apos;t look at %1.</source>
+        <translation>%1 पर जाँच नहीं हो सकी।</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1 and told you: %2</source>
+        <translation>पिछली जाँच %1 पर हुई और आपको बताया: %2</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last looked at %1: nothing needed you.</source>
+        <translation>पिछली जाँच %1 पर हुई: आपकी ज़रूरत नहीं थी।</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Next look at %1.</source>
+        <translation>अगली जाँच %1 पर।</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>Add a check</source>
         <translation>जाँच जोड़ें</translation>
     </message>
@@ -1187,7 +1218,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3154"/>
+        <location filename="../jarvis.py" line="+3543"/>
         <source>LISTENING</source>
         <translation>सुन रहा</translation>
     </message>
@@ -2084,23 +2115,33 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+42"/>
+        <location line="+45"/>
         <source>Messages</source>
         <translation>संदेश</translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-43"/>
         <source>Answer my contacts</source>
         <translation>मेरे संपर्कों को जवाब दें</translation>
     </message>
     <message>
         <location line="+0"/>
-        <location line="+42"/>
+        <source>Draft replies for me to send</source>
+        <translation>मेरे भेजने के लिए जवाब तैयार करें</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+44"/>
         <source>Just show them to me</source>
         <translation>बस मुझे दिखाएँ</translation>
     </message>
     <message>
-        <location line="-41"/>
+        <location line="-42"/>
+        <source>Jarvis writes a reply to your contacts&apos; messages that don&apos;t need you and tells you. Nothing is sent until you say &quot;send it&quot;.</source>
+        <translation>Jarvis आपके संपर्कों के उन संदेशों का जवाब लिखता है जिनमें आपकी ज़रूरत नहीं, और आपको बताता है। जब तक आप “भेज दो” नहीं कहते, कुछ नहीं भेजा जाता।</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Calls</source>
         <translation>कॉल</translation>
     </message>
@@ -2452,11 +2493,11 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>What you say after “%1”, and screenshots when a task needs the screen, go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Memory, reminders and conversations stay on this computer.</source>
-        <translation>“%1” के बाद आप जो कहते हैं, और जब किसी काम के लिए स्क्रीन चाहिए तो स्क्रीनशॉट, Google Gemini को जाते हैं। खातों के काम Composio से होते हैं, सिर्फ़ उन खातों के लिए जो आप जोड़ते हैं। मेमोरी, रिमाइंडर और बातचीत इसी कंप्यूटर पर रहती हैं।</translation>
+        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis keeps all of it on this computer.</source>
+        <translation>“%1” के बाद आप जो कहते हैं या टाइप करते हैं, जवाब देने में मदद करने वाली मेमोरी और हाल की बातचीत, और जब किसी काम के लिए स्क्रीन चाहिए तो स्क्रीनशॉट, Google Gemini को जाते हैं। खातों के काम Composio से होते हैं, सिर्फ़ उन खातों के लिए जो आप जोड़ते हैं। Jarvis यह सब इसी कंप्यूटर पर रखता है।</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Your Gemini key</source>
         <translation>आपकी Gemini कुंजी</translation>
     </message>
@@ -2662,7 +2703,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+107"/>
+        <location filename="../qml/Today.qml" line="+109"/>
         <source>Feels %1 in %2</source>
         <translation>%2 में %1 जैसा लगता है</translation>
     </message>
@@ -2692,9 +2733,19 @@
         <translation>चल रहे काम</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+0"/>
+        <source>Finished lately</source>
+        <translation>हाल में पूरे हुए</translation>
+    </message>
+    <message>
+        <location line="+30"/>
         <source>Stop this task</source>
         <translation>यह काम रोकें</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Finished at %1</source>
+        <translation>%1 पर पूरा हुआ</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -2722,12 +2773,22 @@
         <translation>%1 से वादा किया</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+12"/>
         <source>Cancel this reminder</source>
         <translation>यह रिमाइंडर रद्द करें</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+0"/>
+        <source>Mark as done</source>
+        <translation>पूरा हुआ चिह्नित करें</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Open in Classroom</source>
+        <translation>Classroom में खोलें</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>Couldn&apos;t check %1 just now.</source>
         <translation>अभी %1 जाँच नहीं सका।</translation>
     </message>
@@ -2795,7 +2856,7 @@
         <translation>बाहर निकलें</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
         <source>Running in the tray. Say &quot;%1&quot;.</source>
         <translation>ट्रे में चल रहा है। &quot;%1&quot; कहें।</translation>
     </message>

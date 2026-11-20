@@ -1,7 +1,7 @@
 """Screen history (Settings → screen_history, off by default): which window was in front and when, so "what was that site
 I had open yesterday?" has an answer. Only the app and the window's title, read every POLL seconds (a few milliseconds
 each: no screenshots, no text recognition), kept on this PC in DATA/activity/<day>.jsonl and never in backups. Private
-browsing and password managers are skipped; days go after keep_days (14 when that keeps everything)."""
+browsing and password managers are skipped; days go after keep_days, or KEEP_DAYS if that's sooner."""
 import json, os, re, time
 
 import store
@@ -85,9 +85,10 @@ def search(query="", day="", limit=40):
 
 
 def tidy(now=None):
-    """Days older than keep_days go (KEEP_DAYS when keep_days keeps everything)."""
+    """Days older than keep_days go, and never later than KEEP_DAYS: Settings promises two weeks at most (a year of
+    conversations kept a year of window titles, which search never reads past KEEP_DAYS anyway)."""
     now = now or time.time()
-    days = store.settings()["keep_days"] or KEEP_DAYS
+    days = min(store.settings()["keep_days"] or KEEP_DAYS, KEEP_DAYS)
     if not os.path.isdir(FOLDER):
         return
     for name in os.listdir(FOLDER):

@@ -507,7 +507,10 @@ ScrollPage {
         Row2 {
             Setting { label: qsTr("Messages")
                 Select { Layout.fillWidth: true; value: page.s.whatsapp_replies || "contacts"; onPicked: v => page.set("whatsapp_replies", v)
-                         model: [{ value: "contacts", label: qsTr("Answer my contacts") }, { value: "off", label: qsTr("Just show them to me") }] } }
+                         model: [{ value: "contacts", label: qsTr("Answer my contacts") }, { value: "drafts", label: qsTr("Draft replies for me to send") },
+                                 { value: "off", label: qsTr("Just show them to me") }] }
+                Txt { kind: "small"; Layout.fillWidth: true; visible: page.s.whatsapp_replies === "drafts"
+                      text: qsTr("Jarvis writes a reply to your contacts' messages that don't need you and tells you. Nothing is sent until you say \"send it\".") } }
             Setting { label: qsTr("Calls")
                 Select { Layout.fillWidth: true; value: page.s.whatsapp_calls || "answer"; onPicked: v => page.set("whatsapp_calls", v)
                          model: [{ value: "answer", label: qsTr("Pick up if I don't (20 s)") }, { value: "decline", label: qsTr("Decline them") },

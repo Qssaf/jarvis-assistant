@@ -176,7 +176,8 @@ def simulated(case, name, args):
     if name == "notes":
         what = brain.SOURCES.get(args.get("source", "both"), brain.SOURCES["both"])
         return {"start": {"result": f"taking notes of {what}: '{args.get('title') or 'Notes'}'"},
-                "stop": {"result": "stopped after 48 min; writing up the notes (they'll be announced when ready)"}}.get(
+                "stop": {"result": "stopped after 48 min; writing up the notes (they'll be announced when ready)"},
+                "mark": {"error": "no notes are being taken, so there's nothing to mark: they have to be started first"}}.get(
             args.get("action"), {"taking_notes": None})
     if name == "watch":
         return {"result": f"watching the screen for {args.get('what')}, up to 10 minutes: it's said out loud when it shows up"} \
@@ -359,6 +360,16 @@ def tasks(calls):
 
 def plain(text):
     return " ".join(text.strip("'\" .!").lower().split())
+
+
+def marks(calls):
+    """The notes bookmarks the voice made (their arguments)."""
+    return [x[1] for x in calls if x[0] == "notes" and x[1].get("action") == "mark"]
+
+
+def restarted(calls):
+    """Notes started or stopped: a bookmark asked for while they're being taken is neither."""
+    return any(x[0] == "notes" and x[1].get("action") in ("start", "stop") for x in calls)
 
 
 def jokes(calls):
@@ -593,6 +604,11 @@ CASES = [
      lambda c, s: (arg(c, "notes", "action") == "start" and arg(c, "notes", "source", "both") in ("room", "both")) or "notes start, with the microphone"),
     ("notes_listen_with_me", ["I want you to listen to the conference with me."],
      lambda c, s: (arg(c, "notes", "action") == "start") or "notes start"),
+    # (woken mid-lecture with notes being taken: a bookmark with their words, not a new start or a stop)
+    ("notes_mark_label", ["Mark that, the exam date."],
+     lambda c, s: ("exam" in " ".join(str(m.get("label", "")) for m in marks(c)).lower() and not restarted(c)) or "notes mark, labelled the exam date"),
+    ("notes_mark_decision", ["That was a decision."],
+     lambda c, s: ("decision" in " ".join(str(m.get("label", "")) for m in marks(c)).lower() and not restarted(c)) or "notes mark, labelled a decision"),
     ("search_mine_trip", ["What did Sam send me about the trip?"],
      lambda c, s: ("trip" in str(arg(c, "search_mine", "words", "")).lower()) or "search_mine for the trip"),
     ("approvals_allow", ["Don't ask me before marking my emails as read anymore."],
@@ -704,7 +720,24 @@ def discord_named(args, case):
             "note": brain.UNTRUSTED}
 
 
+def notes_on(args, case):
+    """Notes being taken for 13 minutes: a bookmark is made, status says so (anything else as the plain simulation)."""
+    if args.get("action") == "mark":
+        return {"result": "Marked at 12:34 into the recording."}
+    if args.get("action") == "status":
+        return {"taking_notes": case["talk"][0]["text"].split("this ")[-1].rstrip("."), "minutes": 13}
+    return {"result": "already taking notes (13 min so far): they go on"} if args.get("action") == "start" else \
+        {"result": "stopped after 13 min; writing up the notes (they'll be announced when ready)"}
+
+
+def notes_talk(what):
+    return [{"who": "you", "text": f"Take notes of this {what}."},
+            {"who": "jarvis", "text": f"Taking notes of the {what}. Say \"Hey Jarvis, stop the notes\" when it ends."}]
+
+
 EXTRA = {  # what the simulated screen, selection, routines and earlier chat hold, per case
+    "notes_mark_label": {"talk": notes_talk("lecture"), "tools": {"notes": notes_on}},
+    "notes_mark_decision": {"talk": notes_talk("meeting"), "tools": {"notes": notes_on}},
     "ctx_that_file": {"tools": {
         "classroom_materials": classroom_materials, "classroom_announcements": {"announcements": []},
         "drive_file": lambda args, case: ({"file": "MTH201_Lec11_Sequences.pdf", "text": "Lecture 11. Sequences: limits of sequences, the squeeze theorem, bounded monotone sequences."}

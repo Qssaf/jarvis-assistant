@@ -15,6 +15,7 @@ ScrollView {
     property var media: ({})
     property var stats: ({})
     property var jobs: []
+    property var finished: []  // /api/jobs/done: the longer tasks that ended lately, with what each answered
     property var todo: null  // /api/todo: {items, couldnt_check}
     readonly property var todoRows: (todo ? todo.items : (info.reminders || []).map(r => ({ what: r.text, when: r.when, id: r.id, kind: "reminder" })))
                                     .slice(0, 5)
@@ -37,6 +38,7 @@ ScrollView {
         Api.get("/api/media", d => media = d)
         Api.get("/api/system", d => stats = d)
         Api.get("/api/jobs", d => jobs = d)
+        Api.get("/api/jobs/done", d => finished = d)
     }
     function clock(seconds) {  // 3:07, 1:02:45
         const s = Math.max(0, Math.floor(seconds)), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60
@@ -172,12 +174,13 @@ ScrollView {
         // what Jarvis is working on: each task that's running, and Stop for that one only
         Card {
             Layout.fillWidth: true
-            visible: today.jobs.length > 0
+            visible: today.jobs.length > 0 || today.finished.length > 0
             padding: 0
             ColumnLayout {
                 width: parent.width
                 spacing: 0
-                Txt { kind: "label"; text: qsTr("Working on"); Layout.leftMargin: Theme.pad; Layout.topMargin: 16; Layout.bottomMargin: 4 }
+                Txt { kind: "label"; text: today.jobs.length ? qsTr("Working on") : qsTr("Finished lately")
+                      Layout.leftMargin: Theme.pad; Layout.topMargin: 16; Layout.bottomMargin: 4 }
                 Repeater {
                     model: today.jobs
                     Item {
@@ -208,6 +211,35 @@ ScrollView {
                             anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
                             size: 28; glyph: 14; symbol: "close"; tip: qsTr("Stop this task")
                             onClicked: Api.post(`/api/jobs/${job.modelData.n}/stop`, {}, today.live)
+                        }
+                    }
+                }
+                Repeater {  // (what a longer task answered, so it isn't lost in the chat once it's off "Working on")
+                    model: today.finished
+                    Item {
+                        id: ended
+                        required property var modelData
+                        required property int index
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: Math.max(56, endedText.height + 20)
+                        Rectangle { visible: ended.index > 0 || today.jobs.length > 0; x: Theme.pad; width: parent.width - 2 * Theme.pad; height: 1; color: Theme.stroke }
+                        Rectangle {
+                            id: endedWell
+                            anchors { left: parent.left; leftMargin: Theme.pad; verticalCenter: parent.verticalCenter }
+                            width: 36; height: 36; radius: 18
+                            color: ended.modelData.ok ? Theme.accentSoft : Theme.warmSoft
+                            Icon { anchors.centerIn: parent; name: ended.modelData.ok ? "check" : "alert"; size: 18
+                                   color: ended.modelData.ok ? Theme.accent : Theme.warm }
+                        }
+                        Column {
+                            id: endedText
+                            anchors { left: endedWell.right; leftMargin: 12; right: parent.right; rightMargin: Theme.pad; verticalCenter: parent.verticalCenter }
+                            spacing: 1
+                            Txt { text: ended.modelData.label; width: parent.width; elide: Text.ElideRight; wrapMode: Text.NoWrap }
+                            Txt { kind: "small"; width: parent.width; elide: Text.ElideRight; maximumLineCount: 2; wrapMode: Text.Wrap
+                                  color: ended.modelData.ok ? Theme.text2 : Theme.warm
+                                  text: qsTr("Finished at %1").arg(Qt.formatDateTime(new Date(ended.modelData.at * 1000), "HH:mm"))
+                                        + (ended.modelData.answer ? " · " + ended.modelData.answer : "") }
                         }
                     }
                 }
@@ -246,7 +278,7 @@ ScrollView {
                                    name: ({ task: "check", promise: "accounts", classroom: "calendar" })[row.modelData.kind] || "bell" }
                         }
                         Column {
-                            anchors { left: well.right; leftMargin: 12; right: cancel.left; rightMargin: 4; verticalCenter: parent.verticalCenter }
+                            anchors { left: well.right; leftMargin: 12; right: rowAction.left; rightMargin: 4; verticalCenter: parent.verticalCenter }
                             spacing: 1
                             Txt { text: row.modelData.what; width: parent.width; elide: Text.ElideRight; wrapMode: Text.NoWrap }
                             Txt { kind: "small"; width: parent.width; elide: Text.ElideRight; wrapMode: Text.NoWrap
@@ -258,14 +290,25 @@ ScrollView {
                                          row.modelData.kind === "promise" ? qsTr("Promised to %1").arg(row.modelData.place || "")
                                          : row.modelData.kind === "classroom" ? row.modelData.place || "" : ""].filter(x => x).join(" · ") }
                         }
-                        IconButton {
-                            id: cancel
+                        IconButton {  // a promise: Done (it ends, with its reminder); Classroom work: open it; a reminder: cancel it
+                            id: rowAction
+                            readonly property bool promise: row.modelData.kind === "promise"
                             anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
-                            visible: !!row.modelData.id
-                            opacity: over.hovered ? 1 : 0
+                            visible: promise || !!row.modelData.link || !!row.modelData.id
+                            opacity: over.hovered || activeFocus ? 1 : 0  // (Tab reaches it: it shows then too)
                             Behavior on opacity { NumberAnimation { duration: Theme.fast } }
-                            size: 28; glyph: 14; symbol: "close"; tip: qsTr("Cancel this reminder")
-                            onClicked: Api.post(`/api/reminders/${row.modelData.id}/cancel`, {}, () => { today.load(); today.loadTodo() })
+                            size: 28; glyph: 14
+                            symbol: promise ? "check" : row.modelData.link ? "external" : "close"
+                            tip: promise ? qsTr("Mark as done") : row.modelData.link ? qsTr("Open in Classroom") : qsTr("Cancel this reminder")
+                            onClicked: {
+                                const reload = () => { today.load(); today.loadTodo() }
+                                if (promise)
+                                    Api.post("/api/promises/done", { to: row.modelData.place, what: row.modelData.what }, reload)
+                                else if (row.modelData.link)
+                                    Qt.openUrlExternally(row.modelData.link)
+                                else
+                                    Api.post(`/api/reminders/${row.modelData.id}/cancel`, {}, reload)
+                            }
                         }
                     }
                 }

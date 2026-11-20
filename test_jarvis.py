@@ -319,6 +319,46 @@ assert a.ask("send 'see you at 6' to Sam Lee on Discord") == "Sent." and SendsBl
 assert [len(steps) for _, steps in acted] == [4] and acted[0][1][1] == {"expect": "the open chat is with Sam Lee"}, acted
 del a._run_tool, a._take_screen
 system.focused = real_focused
+# a task holding the screen yields it when the user takes the keyboard or mouse back: its next screen step waits until
+# they've left them alone, a look still runs, anything else is refused until it has looked again (it typed on, into the
+# window the user had switched to), and an act stops before its next step
+yt = brain.Task("fill the form")
+yt.started -= 60
+waited = []
+assert brain.Brain._take_screen(yt, waited.append) is True and yt.screen and brain.screen_lock.locked()
+idle_now = [1.0]
+system._idle_seconds = lambda: idle_now[0]
+threading.Timer(0.7, lambda: idle_now.__setitem__(0, 30.0)).start()
+assert brain.Brain._take_screen(yt, waited.append) is brain.USER_MOVED and waited == ["wait_screen"]
+assert brain.Brain._take_screen(yt, waited.append) is True and waited == ["wait_screen"]  # (left alone since: on it goes)
+system._idle_seconds = lambda: None
+brain.screen_lock.release()
+moved = brain.tool_act([{"click": [10, 10]}, {"type": "hi"}], screenshot_after=False, halt=threading.Event(),
+                       pause=lambda: brain.USER_MOVED)
+assert "keyboard or mouse" in moved["error"] and moved["done"] == [], moved
+
+
+class AfterTheUser:
+    back = []
+
+    def generate(self, contents, model, thinking, **kw):
+        if "functionResponse" in contents[-1]["parts"][0]:
+            self.back.append(contents[-1]["parts"][0]["functionResponse"]["response"])
+        if len(self.back) == 2:
+            return [{"text": "Looked first."}]
+        return [{"functionCall": {"name": "screenshot", "args": {}} if self.back else {"name": "click", "args": {"x": 1, "y": 2}}}]
+a.backends, ran = {"x": AfterTheUser()}, []
+a._take_screen = lambda task, on_tool: brain.USER_MOVED
+a._run_tool = lambda name, args, task=None: ran.append(name) or ({"result": "done"}, None)  # (never the real screen)
+assert a.ask("click the button") == "Looked first." and ran == ["screenshot"] and AfterTheUser.back[0] == {"error": brain.MOVED}, (ran, AfterTheUser.back)
+del a._run_tool, a._take_screen
+# Home lists the tasks that ended lately and took a while (a quick answer is just in the chat), with what each answered
+real_after, brain.FINISHED_AFTER = brain.FINISHED_AFTER, 0
+a.ask("summarise the report")
+assert brain.finished[0]["label"] == "summarise the report" and brain.finished[0]["answer"] == "Looked first." and brain.finished[0]["ok"], brain.finished
+brain.FINISHED_AFTER = real_after
+a.ask("what time is it")
+assert brain.finished[0]["label"] == "summarise the report"  # (quick: not listed)
 # agent loop: checkpoints, plan, deeper steps, model tiers, lessons
 # a task is stopped every CHECKPOINT_EVERY steps, and sooner when it looks stuck, to look back at the goal: one spiralled
 # through twenty commands after a click did nothing. The note rides with the step's results (never a turn of its own:
@@ -822,6 +862,9 @@ print(123, flush=True)  # (JSON, but no event: a line like any other, it mustn't
 print(json.dumps({"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Edit", "input": {}}]}}), flush=True)
 if "slow" in task:
     time.sleep(30)
+if "fail" in task:
+    print(json.dumps({"type": "result", "subtype": "error_max_turns", "is_error": True, "result": "Ran out of turns.", "session_id": "sess-1"}))
+    sys.exit(1)
 open("README.md", "w").write("hello\\n")
 print(json.dumps({"type": "result", "subtype": "success", "is_error": False, "result": "Fixed the typo.", "session_id": "sess-1"}))
 """)
@@ -907,6 +950,15 @@ wrote = git("show", f"{brain.code_jobs[n]['branch']}:notes.txt").splitlines()
 assert wrote == ['-|write "notes & more"', "then stop", "conv-1|add a line"], wrote
 brain.tool_code("break it", repo, harness="antigravity")
 assert "failed: model unavailable" in finished(before + 3) and "is done" not in done[-1], done  # (whatever it said before failing)
+# Claude Code's turn that failed (out of turns, an API error) isn't "done" either, and a commit a hook refused is told
+brain.tool_code("fail it", repo)
+assert "failed: Ran out of turns." in finished(before + 4) and "is done" not in done[-1], done
+hook = os.path.join(repo, ".git", "hooks", "pre-commit")
+open(hook, "w").write("#!/bin/sh\necho 'lint failed' >&2\nexit 1\n")
+os.chmod(hook, 0o755)
+brain.tool_code("fix the typo in the readme", repo)
+assert "Some changes are not committed" in finished(before + 5) and "lint failed" in done[-1], done
+os.remove(hook)
 job = {"session": "", "said": "", "step": "", "lines": []}  # (the tool it's using shows in "what are you working on?")
 brain.harness_event({"event": "step_update", "step_update": {"step_type": "tool", "state": "ACTIVE", "tool_info": {"name": "run_command"}}}, job)
 assert job["step"] == "run_command", job
@@ -1632,6 +1684,11 @@ assert [f["from"] for f in brain.tool_search_mine("zanzibar", days=1)["found"]] 
 assert brain.tool_search_mine("zanzibar june")["found"][0]["text"] == "Book the Zanzibar trip for June"  # (every word)
 assert "try fewer" in brain.tool_search_mine("quetzal")["note"]
 assert "error" in brain.tool_search_mine(" ")  # (no words: not everything there is)
+# the same words from two people are two results (who said it is often the point)
+brain.whatsapp_link[0] = types.SimpleNamespace(search=lambda text, n: [
+    {"name": "Class group", "me": False, "by": "Sam Lee", "text": "zanzibar trip is off", "at": 4100},
+    {"name": "Alex Kim", "me": False, "by": None, "text": "zanzibar trip is off", "at": 4050}])
+assert [f.get("by") for f in brain.tool_search_mine("zanzibar off")["found"]] == ["Sam Lee", "Alex Kim"]
 brain.whatsapp_link[0] = types.SimpleNamespace(search=lambda text, n: 1 / 0)
 assert "error" in brain.tool_search_mine("zanzibar")["found"][-1] and len(brain.tool_search_mine("zanzibar")["found"]) == 6
 store.set_connector_mode("whatsapp", "paused")
@@ -2711,7 +2768,11 @@ canned = {"/api/health": {"checks": [{"name": "Microphone", "ok": False, "detail
           "/api/todo": {"items": [{"what": "Quiz 3", "due": time.time() + 86400, "source": "Classroom: Calculus 3", "kind": "classroom",
                                    "place": "Calculus 3"}, {"what": "Return the drill", "due": time.time() - 86400, "source": "Google Tasks",
                                    "kind": "task", "place": "My Tasks"}, {"what": "call Maya back", "due": None, "source": "promise to Maya",
-                                   "kind": "promise", "place": "Maya"}], "couldnt_check": ["Google Classroom"]}}
+                                   "kind": "promise", "place": "Maya"}], "couldnt_check": ["Google Classroom"]},
+          # (a check row with its Try now and the last look's line; a task that ended: a QML slip there showed no warning)
+          "/api/checks": {"checks": [{"text": "tell me if a payment fails", "on": True}], "every": 60,
+                          "last": {"at": time.time() - 600, "answered": time.time() - 4200, "ok": False, "found": "", "next": time.time() + 3000}},
+          "/api/jobs/done": [{"n": 2, "label": "summarise the reports", "at": time.time() - 300, "ok": True, "coding": False, "answer": "Done."}]}
 win = window.Window(get=lambda path: canned.get(path) or jarvis.api_get(path, stub), post=lambda path, data: {"ok": True}, tool_label=jarvis.tool_label,
                     live=live, shown_state=jarvis.shown_state, version="test", show=True)
 root = win.engine.rootObjects()[0]
@@ -4263,6 +4324,30 @@ store.write_json(jarvis.CHECKS_STAMP, {**store.read_json(jarvis.CHECKS_STAMP, {}
 check_live.brain.ask, reply = working, ["Nothing."]
 jarvis.check_pass(check_live)
 assert since in check_asks[-1][0] and time.time() - store.read_json(jarvis.CHECKS_STAMP, {})["ok"] < 5, check_asks[-1][0][:200]
+# the window says how the last look went (when, whether it got an answer, what it found) and when the next one is, so a
+# quiet check isn't a guess; Try now runs one check at once and shows its answer there, without telling or keeping it
+status = jarvis.api_get("/api/checks", None)["last"]
+assert status["ok"] and status["found"] == "" and status["next"] > time.time() + 25 * 60, status
+store.write_json(jarvis.CHECKS_STAMP, {**store.read_json(jarvis.CHECKS_STAMP, {}), "at": time.time() - 1801})
+check_live.brain.ask = failing
+jarvis.check_pass(check_live)
+status = jarvis.api_get("/api/checks", None)["last"]
+assert not status["ok"] and status["answered"] < status["at"] and status["found"] == "", status
+looking = brain.Task("your standing checks")  # (a look still running isn't one that couldn't look)
+brain.running.append(looking)
+assert jarvis.api_get("/api/checks", None)["last"]["looking"]
+brain.running.remove(looking)
+assert not jarvis.api_get("/api/checks", None)["last"]["looking"]
+check_live.brain.ask, reply = working, ["The landlord wrote about the boiler."]
+told_before, turns_before = len(told), len(turns)
+got = jarvis.api_post("/api/checks/test", {"text": "tell me if the landlord emails"}, check_live, None)
+assert got == {"answer": "The landlord wrote about the boiler."} and len(told) == told_before and len(turns) == turns_before, got
+assert check_asks[-1][0].endswith("- tell me if the landlord emails") and check_asks[-1][1]  # (that one only, unattended)
+reply = ["NOTHING"]
+assert "Nothing needs you" in jarvis.api_post("/api/checks/test", {"text": "tell me if the landlord emails"}, check_live, None)["answer"]
+check_live.brain.ask = failing
+assert "no model could answer" in jarvis.api_post("/api/checks/test", {"text": "tell me if the landlord emails"}, check_live, None)["error"]
+check_live.brain.ask = working
 store.update_settings({"checks": []})
 # what happens on WhatsApp joins it too ("call him back" from the phone called the person Jarvis had phoned last)
 jarvis.system.notify = lambda *a: None
@@ -4818,6 +4903,17 @@ assert store.memory() == "- The user's name is José, 名前 🙂"
 store.export_data(backup + ".zip", jarvis.VERSION)
 with zipfile.ZipFile(backup + ".zip") as z:
     assert z.read("memory.md").decode("utf-8").strip() == "- The user's name is José, 名前 🙂"
+# an export that fails halfway leaves the backup it was saved over as it was (it had emptied it first), and no part file
+kept_backup, real_memory = open(backup + ".zip", "rb").read(), store.memory
+store.memory = lambda: (_ for _ in ()).throw(OSError("No space left on device"))
+try:
+    store.export_data(backup + ".zip", jarvis.VERSION)
+    raise AssertionError("no error")
+except OSError:
+    pass
+store.memory = real_memory
+assert open(backup + ".zip", "rb").read() == kept_backup and zipfile.ZipFile(backup + ".zip").namelist()
+assert not [n for n in os.listdir(os.path.dirname(backup)) if n.startswith(os.path.basename(backup) + ".zip.")]
 with open(store.MEMORY_FILE, "rb") as f:
     assert f.read().decode("utf-8").strip() == "- The user's name is José, 名前 🙂"
 import locale
@@ -4908,6 +5004,7 @@ class FakeTelegram:
 
     def post(self, url, json=None, timeout=None):
         self.sent.append((json["chat_id"], json["text"]))
+        return types.SimpleNamespace(status_code=200, json=lambda: {"ok": True})
 fake_tg, asked_remote = FakeTelegram(), []
 tb = types.SimpleNamespace(interrupt=lambda: asked_remote.append("stop"),
                            ask=lambda text, remote=False, label="": asked_remote.append((text, remote)) or "It's 21°C and sunny.")
@@ -5071,6 +5168,71 @@ live.mic, system.record_audio = True, no_record
 assert "error" in asyncio.run(type(live)._tool(live, start)) and live.mic  # (it couldn't record: the voice keeps listening)
 system.record_audio = fake_record
 live.brain, brain.notes[0] = real_brain, None
+# bookmarks ("mark that", "bookmark this: the exam date"): the moment and its label at its place in the transcript, saved
+# at once, and the summary is asked what was said around each one
+n = brain.Notes(transcribe=lambda audio, prompt: "(silence)", summarise=lambda prompt: "")
+brain.notes[0] = n
+assert "no notes are being taken" in n.mark("the exam date")["error"] and "no notes are being taken" in brain.tool_notes("mark")["error"]
+on = {"started": 1000.0, "ends": [1300.0, 1600.0, 1900.0], "marks": [  # (a piece's place by its share of the piece's time)
+    {"at": 1450.0, "label": ""}, {"at": 1290.0, "label": "end of one"}, {"at": 1700.0, "label": "in the quiet part"},
+    {"at": 1950.0, "label": "being recorded"}]}
+assert n._transcript(on, ["One. Two. Three.", "Four. Five. Six.", "(silence)"]) == (
+    "One. Two. Three.\n★ 00:04:50 end of one\nFour. Five.\n★ 00:07:30\nSix.\n★ 00:11:40 in the quiet part\n★ 00:15:50 being recorded")
+assert n._transcript({"started": 1000.0}, ["One.", "", "(silence)", "Two."]) == "One.\nTwo."  # (a file's pieces: as before)
+assert "Marked moments" not in summarised[0]  # (no marks: the summary is asked for as before)
+pieces, asked, done[:] = iter(["Welcome. Today: graphs. Trees have no cycles.", "The exam is on the twelfth. Bring a pencil."]), [], []
+n = brain.Notes(transcribe=lambda audio, prompt: next(pieces, "(silence)"),
+                summarise=lambda prompt: asked.append(prompt) or "Graphs; the exam is on the 12th.")
+n.CHUNK, brain.notes[0] = 0.3, n
+n.start("Graphs", "room")
+end = time.time() + 3
+while not n.on["texts"] and time.time() < end:
+    time.sleep(0.02)
+assert n.mark("  the exam\ndate ", n.on["ends"][0] + 0.01) == {"result": "Marked at 0:00 into the recording."}
+early = glob.glob(os.path.join(brain.NOTES_DIR, "*Graphs.md"))
+assert len(early) == 1 and "★ 00:00:00 the exam date" in open(early[0], encoding="utf-8").read()  # (saved at once)
+while len(n.on["texts"]) < 2 and time.time() < end:
+    time.sleep(0.02)
+assert brain.tool_notes("mark")["result"].startswith("Marked at 0:0")  # (the agent's: the call's own time)
+n.stop()
+assert "no notes are being taken" in n.mark("late")["error"]
+end = time.time() + 3
+while not done and time.time() < end:
+    time.sleep(0.05)
+saved = open(done[0][1], encoding="utf-8").read()
+assert done[0][1] == early[0] and "The exam is on the twelfth.\n★ 00:00:00 the exam date\nBring a pencil." in saved, saved
+assert saved.count("★ ") == 2 and "Graphs; the exam is on the 12th." in saved and "still being taken" not in saved
+assert "Marked moments" in asked[0] and re.search(r"00:00:00 \(\d\d:\d\d\) the exam date", asked[0]) and "★ 00:00:00 the exam date" in asked[0]
+# notes that can't be saved as they go keep the piece and the mark for the write-up (a failed save once ended the
+# piece's future with an error, and the write-up never came)
+n = brain.Notes(transcribe=lambda audio, prompt: "Words.", summarise=lambda prompt: "")
+on = n.on = {"title": "Unsaved", "source": "room", "started": time.time(), "heard": [], "texts": [], "ends": [], "marks": []}
+real_notes_dir, brain.NOTES_DIR = brain.NOTES_DIR, os.path.join(early[0], "not a folder")  # (a file where the folder goes)
+open(piece, "wb").write(b"RIFF" + b"\1" * 40000)
+assert n._piece(piece, on) == "Words." and on["texts"] == ["Words."]
+got = n.mark("x")
+assert got["result"].startswith("Marked at 0:00 into the recording.") and "couldn't be saved" in got["result"] and len(on["marks"]) == 1
+brain.NOTES_DIR, n.on = real_notes_dir, None
+# the voice's mark is for when the request was first heard (the call comes seconds later), and the voice stops listening
+# again (the lecture goes on); with nothing recording it says so and keeps listening
+n = brain.Notes(transcribe=lambda audio, prompt: "(silence)", summarise=lambda prompt: "")
+n.CHUNK, brain.notes[0], done[:] = 0.15, n, []
+live.brain = types.SimpleNamespace(_run_tool=lambda name, args: (brain.TOOLS[name][0](**args), None), app_tools={})
+mark = types.SimpleNamespace(name="notes", args={"action": "mark", "label": "a decision"})
+live.mic, live.user_spoke_at, live.inflight = True, time.time(), None
+assert "no notes are being taken" in asyncio.run(type(live)._tool(live, mark))["error"] and live.mic
+n.start("Budget", "room")
+n.on["started"] -= 600.4
+live.mic, live.user_spoke_at = True, time.time()
+live.inflight = {"text": None, "heard": "that was a decision", "since": time.time(), "at": time.time() - 5, "tool": False,
+                 "answered": False, "recovered": False}
+assert asyncio.run(type(live)._tool(live, mark)) == {"result": "Marked at 9:55 into the recording."} and not live.mic
+assert "asked_at" not in jarvis.work_line("notes", {"action": "mark", "label": "a decision", "asked_at": 1.0}, {"result": "Marked."})
+n.stop()
+end = time.time() + 3
+while not done and time.time() < end:  # (written up before the notes folder is the real one again)
+    time.sleep(0.05)
+live.brain, brain.notes[0], live.inflight = real_brain, None, None
 # a recording on disk (a voice recorder's): a short one's words come back at once, a long one is written up as notes
 real_chunks, wanted = system.audio_chunks, [1]
 def fake_chunks(path, folder, seconds):
@@ -5158,6 +5320,7 @@ ab.run_app_tool("GMAIL_FETCH_EMAILS", {"query": "x"})
 latest = brain.tool_recent_changes()["changes"]
 assert [c["what"] for c in latest[:2]] == ['GMAIL_CREATE_EMAIL_DRAFT: {"to": "a@b.c"}', "ran: gio trash ~/Downloads/a.tmp"], latest
 assert len(shown) == 2 and "gio trash --restore" in brain.tool_recent_changes()["undo"]
+assert "unsend" in brain.tool_recent_changes()["undo"]  # (it said sent messages can't be unsent: WhatsApp's and Discord's can)
 assert brain.tool_plan(["open the site", "log in", "fill the form", "submit"])["result"].startswith("the plan is shown") and planned[0][2] == "fill the form"
 system.shell = real_shell
 
@@ -6216,6 +6379,55 @@ def phone_back():
 
 
 assert phone_back()["v"] == 2
+# the link drops while the PC works on what the phone asked: no answer is lost (one sent into a connection the relay
+# hadn't seen die yet, one that found no connection), the app names what it still waits for once it's back and gets
+# those answers, once each, and the PC says which it doesn't know (a restart lost them). The app used to say "ask
+# again", which did it twice
+real_brain = link.brain
+gates = {"make the event": threading.Event(), "still going": threading.Event(), "while away": threading.Event()}
+link.brain = types.SimpleNamespace(ask=lambda text, remote=False, label="": gates[label].wait(5) and f"did: {label}",
+                                   interrupt=lambda: None)
+
+
+def answered(label):
+    """The task asked as `label` finishes: what reaches the phone's connection (the reply comes from the link's loop)."""
+    frames.clear()
+    gates[label].set()
+    for _ in range(300):
+        if frames:
+            break
+        time.sleep(0.01)
+    return [chan_new.open(f[36:]) for f in frames]
+
+
+for i, label in ((41, "make the event"), (43, "still going"), (45, "while away")):
+    assert phone_asks({"op": "ask", "id": i, "text": label}) == [{"op": "working", "id": i}]
+assert answered("make the event") == [{"op": "reply", "id": 41, "text": "did: make the event"}]  # (the phone never got it)
+asyncio.run(link._frame(json.dumps({"t": "close", "c": c_new})))  # the relay saw the phone go
+gates["while away"].set()
+for _ in range(300):
+    if link.pending:
+        break
+    time.sleep(0.01)
+hello, finish = phone.connect(phone.raw(link.enc_key.public_key()))  # the phone is back
+asyncio.run(link._frame(c_new.encode() + hello))
+chan_new = finish(frames[-1][36:])
+back = phone_asks({"op": "hello", "token": reply["token"], "waiting": [41, 42, 43, 45, 41, [1], {"x": 1}]}, n=3)
+assert back[0]["op"] == "ready" and back[0]["lost"] == [42], back
+assert back[1:] == [{"op": "reply", "id": 45, "text": "did: while away"}, {"op": "reply", "id": 41, "text": "did: make the event"}], back
+assert answered("still going") == [{"op": "reply", "id": 43, "text": "did: still going"}]  # (still working: it comes when done)
+assert phone_back()["lost"] == []  # (an older app names nothing: nothing is sent again)
+restarted = phone.PhoneLink(real_brain)  # the PC restarted: the questions and answers it kept are gone
+restarted_said = []
+
+
+async def restarted_send(data):
+    restarted_said.append(data)
+restarted.phones["r"] = {"channel": types.SimpleNamespace(seal=lambda m: m), "device": None, "tries": 0, "relay": True,
+                         "send": restarted_send, "close": lambda: None}
+asyncio.run(restarted._handle("r", restarted.phones["r"], {"op": "hello", "token": reply["token"], "waiting": [43]}))
+assert restarted_said[0]["op"] == "ready" and restarted_said[0]["lost"] == [43] and len(restarted_said) == 1, restarted_said
+link.brain = real_brain
 assert phone_asks({"op": "get", "id": 7, "path": "/api/today"}) == [{"op": "got", "id": 7, "data": {"read": "/api/today"}}]
 assert phone_asks({"op": "post", "id": 8, "path": "/api/media/Next", "data": {"a": 1}})[0]["data"] == {"did": "/api/media/Next", "a": 1}
 # its PC page lists the tasks running and stops one of them (the app could only stop them all)
@@ -6401,6 +6613,19 @@ assert pc_side.open(vb("phone_frame")) == {"op": "hello"} and phone.Channel(to_p
 # WhatsApp: Jarvis answers saved contacts after a burst of messages, leaves chats the user is writing in, keeps to its
 # hourly limit, and never sends to a name that isn't exactly one chat (jarvis-wa itself is faked: no account)
 import sys, threading, types, whatsapp
+# Jarvis answers contacts by default (the user wants it free to); drafts and off are the user's to pick
+real_settings_file, store.SETTINGS_FILE = store.SETTINGS_FILE, os.path.join(tempfile.mkdtemp(), "settings.json")
+assert store.settings()["whatsapp_replies"] == "contacts"  # (nothing saved yet)
+store.write_json(store.SETTINGS_FILE, {"whatsapp_replies": "off"})
+assert store.settings()["whatsapp_replies"] == "off"
+assert store.update_settings({"whatsapp_replies": "drafts"})["whatsapp_replies"] == "drafts"
+try:
+    store.update_settings({"whatsapp_replies": "maybe"})
+    raise AssertionError("a bad WhatsApp replies setting was saved")
+except ValueError:
+    pass
+store.SETTINGS_FILE = real_settings_file
+store.update_settings({"whatsapp_replies": "contacts"})  # (the checks below send; "drafts" has its own further down)
 whatsapp.SETTLE, whatsapp.ANSWER_AFTER = 0.05, 0.05
 decided = ['{"reply": "Hi, it\'s Jarvis, Q\'s assistant!", "tell_user": ""}']
 asked_model = []
@@ -6514,6 +6739,7 @@ for _ in range(50):
         break
     time.sleep(0.02)
 assert wa_told[-1] == "WhatsApp from Maya: hey, you around?" and wa_told_how[-1] == {"loud": True} and len(sends()) == 1
+assert "💬 WhatsApp from Maya: hey, you around?" in wa_logs  # (the chat line too: who the user is talking with is read from it)
 wa_says(chat="9@c.us", name="Stranger")
 time.sleep(0.2)
 assert "9@c.us" not in wa.pending and wa_logs[-1] == "💬 WhatsApp from Stranger: hey" and len(sends()) == 1
@@ -6523,6 +6749,44 @@ try:
 except ValueError:
     pass
 store.update_settings({"whatsapp_always": [], "whatsapp_never": []})
+# "drafts": the same decision and reply, but nothing is sent or counted against the limits: the user is told the draft
+# (kept in the agent's history, so "send it" from the phone knows what), and the chat line names who for "send it"
+store.update_settings({"whatsapp_replies": "drafts"})
+decided[0], before, n_replies = '{"reply": "Hi, it\'s Jarvis, Q\'s assistant!", "tell_user": ""}', len(sends()), len(wa.replies)
+wa_told.clear()
+
+
+def wa_drafts(**e):
+    wa_says(**e)
+    for _ in range(100):
+        if not wa.pending:
+            break
+        time.sleep(0.02)
+    time.sleep(0.1)
+
+
+wa_drafts()
+assert len(sends()) == before and len(wa.replies) == n_replies, sends()
+assert wa_told == ['Sam Lee wrote on WhatsApp: "hey, you around?"\nI\'d reply: "Hi, it\'s Jarvis, Q\'s assistant!" Shall I send it?'], wa_told
+# (kept: not keep=False, and not loud; drafts the user lets pass don't silence WhatsApp's urgent news, their own kind)
+assert wa_told_how[-1] == {"kind": "whatsapp_draft"}, wa_told_how[-1]
+assert wa_logs[-1] == "💬 WhatsApp from Sam Lee: hey, you around?\nJarvis's draft (not sent): Hi, it's Jarvis, Q's assistant!", wa_logs[-1]
+jarvis.sessions.add({"who": "system", "text": wa_logs[-1]})
+assert jarvis.wrong_person("whatsapp_send", "Sam Lee", "send it") is None
+assert '(their newest: "hey, you around?"), not Maya' in jarvis.wrong_person("whatsapp_send", "Maya", "send it")
+jarvis.sessions.new()
+# something urgent comes with the draft, in one line; with nothing to answer, the message is only shown
+decided[0] = '{"reply": "I\'ll pass it on.", "tell_user": "Sam Lee needs a lift"}'
+wa_told.clear()
+wa_drafts()
+assert wa_told == ['WhatsApp from Sam Lee: Sam Lee needs a lift\nSam Lee wrote on WhatsApp: "hey, you around?"\nI\'d reply: "I\'ll pass it on." '
+                   'Shall I send it?'] and len(sends()) == before and wa_told_how[-1] == {}, wa_told
+decided[0] = '{"reply": "", "tell_user": ""}'
+wa_told.clear()
+wa_drafts()
+assert not wa_told and wa_logs[-1] == "💬 WhatsApp from Sam Lee: hey, you around?" and len(sends()) == before
+assert len(wa.replies) == n_replies and not wa.pending
+store.update_settings({"whatsapp_replies": "contacts"})
 # auto-replies keep to the user's languages
 asked_model.clear()
 store.update_settings({"languages": ["fr-FR"]})
@@ -6681,7 +6945,8 @@ lists = {"GOOGLETASKS_LIST_TASK_LISTS": {"items": [{"id": "L1", "title": "My Tas
                                               gtask("Learn Go"), gtask("Next year", 400)]}}
 asked_tasks = []
 td.app_data = lambda slug, args: asked_tasks.append((slug, args)) or lists.get(slug)
-td.classroom_work = lambda days=7: [{"title": "Quiz 3", "course": "Calculus 3", "due": now + 86400, "done": False},
+td.classroom_work = lambda days=7: [{"title": "Quiz 3", "course": "Calculus 3", "due": now + 86400, "done": False,
+                                     "link": "https://classroom.google.com/c/1/a/2"},
                                     {"title": "HW 1", "course": "Calculus 3", "due": now + 3600, "done": True}]
 store.add_reminder(now + 2 * 86400, "check the inbox and tell me what matters", task=True)
 got = td.todo_items(7)
@@ -6692,6 +6957,24 @@ assert sum("send Sam the notes" in w for w in whats) == 1 and by["Quiz 3"]["sour
 assert by["Pay rent"]["source"] == "Google Tasks: My Tasks" and time.localtime(by["Pay rent"]["due"]).tm_hour == 23  # (a date: its whole day)
 assert (by["Pay rent"]["kind"], by["Quiz 3"]["place"], by["call Maya back"]["kind"], by["call Maya back"]["place"]) == ("task", "Calculus 3", "promise", "Maya")
 assert all(i["id"] for i in got["items"] if i["kind"] == "reminder")  # (Home's card cancels a reminder by it)
+# a promise on Today is a promise row whether it has a reminder or not, and Done there ends it for good, with its
+# reminder (the row's cancel took only the reminder, and it came back as a promise); Classroom work carries its link
+sam = next(i for i in got["items"] if "send Sam the notes" in i["what"])
+assert (sam["kind"], sam["what"], sam["place"]) == ("promise", "send Sam the notes", "Sam Lee") and sam["id"] and sam["due"], sam
+assert by["Quiz 3"]["link"] == "https://classroom.google.com/c/1/a/2" and "link" not in by["Pay rent"]
+book = store.read_json(people.FILE, {})
+done_rid = store.add_reminder(now + 3600, "🤝 You promised Alex Kim: return the charger")["id"]
+book["Alex Kim"] = {"promises": [{"what": "return the charger", "at": now, "due": now + 3600, "reminder": done_rid}]}
+store.write_json(people.FILE, book, private=True)
+assert "return the charger" in [i["what"] for i in td.todo_items(7)["items"]]
+jarvis.api_post("/api/promises/done", {"to": "Alex Kim", "what": "return the charger"}, None, td)
+assert "return the charger" not in [i["what"] for i in td.todo_items(7)["items"]] and not any(r["id"] == done_rid for r in store.reminders())
+assert "return the charger" not in [p["what"] for p in people.promises()] and "Alex Kim" in store.read_json(people.FILE, {})
+real_work = td.classroom_work
+td.classroom_work = lambda days=7: [{"title": "Essay", "course": "English", "due": now + 7200, "done": False, "link": "file:///etc/passwd"}]
+assert "link" not in next(i for i in td.todo_items(7)["items"] if i["what"] == "Essay")  # (only a web page opens)
+td.classroom_work = real_work
+assert any(j["label"] == "summarise the report" and j["answer"] == "Looked first." for j in jarvis.api_get("/api/jobs/done", td))
 assert ("GOOGLETASKS_LIST_TASKS", {"tasklist_id": "L1", "showCompleted": False, "maxResults": 100}) in asked_tasks, asked_tasks
 spoken = td.todo(7)
 assert spoken["todo"][0]["what"] == "Return the drill" and spoken["todo"][0]["due"].startswith("overdue") and spoken["todo"][-1]["due"] == "no date"
@@ -6710,6 +6993,12 @@ assert not tracker.queue
 store.update_settings({"track_promises": True})
 # "forget that promise": it goes, with its reminder
 assert people.drop("Sam Lee", "notes") == 1 and not any("send Sam the notes" in r["text"] for r in store.reminders())
+# forgetting the whole person: their promises' reminders go too (one still announced a promise the user had forgotten)
+forget_rid = store.add_reminder(time.time() + 3600, "🤝 call Alex back")["id"]
+book = store.read_json(people.FILE, {})
+book["Alex Kim"] = {"promises": [{"what": "call Alex back", "at": time.time(), "reminder": forget_rid}]}
+store.write_json(people.FILE, book, private=True)
+assert people.drop("Alex Kim", "") == 1 and not any(r["id"] == forget_rid for r in store.reminders())
 # the person tool: a note with an end date, and the page (no app linked here)
 real_wa, brain.whatsapp_link[0] = brain.whatsapp_link[0], None
 discord.call = lambda cmd, **args: (_ for _ in ()).throw(RuntimeError("Vesktop isn't running"))
@@ -6919,10 +7208,33 @@ assert activity.search("recipe")["windows"][0].endswith("firefox: Pasta recipes 
 assert len(activity.search(day=day)["windows"]) == 3 and activity.search("nothing like it")["windows"] == []
 assert activity.PRIVATE.search("Mozilla Firefox Private Browsing") and activity.PRIVATE.search("KeePassXC")
 store.update_settings({"screen_history": False})
+# (kept two weeks at most, as Settings says: a year of conversations kept a year of window titles)
+ago = lambda n: time.strftime("%Y-%m-%d", time.localtime(time.time() - n * 86400))
+for n in (3, 10, 30):
+    open(os.path.join(activity.FOLDER, f"{ago(n)}.jsonl"), "w").write("{}\n")
+store.update_settings({"keep_days": 365})
+activity.tidy()
+assert {f"{ago(10)}.jsonl", f"{ago(3)}.jsonl"} <= set(os.listdir(activity.FOLDER)) and f"{ago(30)}.jsonl" not in os.listdir(activity.FOLDER)
+store.update_settings({"keep_days": 7})
+activity.tidy()
+assert f"{ago(3)}.jsonl" in os.listdir(activity.FOLDER) and f"{ago(10)}.jsonl" not in os.listdir(activity.FOLDER)
+store.update_settings({"keep_days": 0})
+# the first run says what goes to Gemini: memory and the talk too (it said they "stay on this computer"); WhatsApp is the helper
+wizard = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "qml", "SetupWizard.qml"), encoding="utf-8").read()
+assert "stay on this computer" not in wizard and "memory and recent conversation" in wizard
+assert "hidden browser" not in open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "PRIVACY.md"), encoding="utf-8").read()
 # screen time comes from QHealth (the user's screen-time app): its own database, opened read-only, never written
 import sqlite3, datetime
 assert brain.TOOLS["screen_time"][0] is brain.tool_screen_time
 assert "screen_time" in jarvis.LIVE_TOOLS and "screen_time" in jarvis.QUERY_TOOLS and "screen_time" in jarvis.TOOL_LABELS
+# the tool lists agree: every tool has a label for the notch and chat (scroll had none), and every list that names tools
+# names real ones (a renamed tool left behind in one of them silently loses its gate or its spoken answer)
+known = set(brain.TOOLS) | set(jarvis.LIVE_TOOLS)
+assert not set(brain.TOOLS) - set(jarvis.TOOL_LABELS), set(brain.TOOLS) - set(jarvis.TOOL_LABELS)
+assert set(jarvis.QUERY_TOOLS) <= set(jarvis.LIVE_TOOLS) and brain.SCREEN_LOOKS <= brain.SCREEN_WORK
+for listed in (jarvis.ONCE_TOOLS, jarvis.REPEATABLE, jarvis.SCREEN_TOOLS, jarvis.VOICE_SCREEN_ACTS, brain.FINISHERS, brain.OUTSIDE_CONTENT,
+               brain.PARALLEL_TOOLS, brain.SCREEN_WORK, set(jarvis.TOOL_LABELS) - {"wait_screen"}):
+    assert set(listed) <= known, set(listed) - known
 real_qhealth = system.QHEALTH_DB
 system.QHEALTH_DB = os.path.join(_home, "qhealth", "qhealth.db")
 assert "isn't on this PC" in brain.tool_screen_time()["error"] and not os.path.exists(os.path.dirname(system.QHEALTH_DB))
@@ -7329,6 +7641,43 @@ for attempt in (lambda: offline.send(bot_token, 42, "x"), lambda: offline.set_to
         raise AssertionError("no error")
     except (OSError, ValueError) as e:
         assert bot_token not in str(e), e
+# a message Telegram refuses is an error (its answer was never read: the reply was lost without a word), told at the PC;
+# one that's too many at once waits as long as Telegram asks and goes again
+
+
+class Refusing:
+    def __init__(self, *answers):
+        self.answers, self.sent = list(answers), []
+
+    def post(self, url, json=None, timeout=None):
+        self.sent.append(json["text"])
+        code, body = self.answers.pop(0) if len(self.answers) > 1 else self.answers[0]
+        return types.SimpleNamespace(status_code=code, json=lambda: body)
+told_pc = []
+refused = remote.Telegram(tb, notify=told_pc.append, chat=lambda who, text: None)
+refused.http = Refusing((403, {"ok": False, "description": "Forbidden: bot was blocked by the user"}))
+with contextlib.redirect_stdout(io.StringIO()):
+    refused._task(bot_token, 42, "hi")
+assert len(told_pc) == 1 and "blocked by the user" in told_pc[0] and bot_token not in told_pc[0], told_pc
+refused.http = Refusing((429, {"ok": False, "parameters": {"retry_after": 1}}), (200, {"ok": True}))
+t0 = time.time()
+refused.send(bot_token, 42, "hello")
+assert refused.http.sent == ["hello", "hello"] and time.time() - t0 >= 1
+refused.http = Refusing((429, {"ok": False, "parameters": {"retry_after": 1}}), (200, {"ok": True}))  # a push (a reminder, a check's
+refused.state["chat"] = 42  # news) doesn't wait: it's sent from whatever thread told it, the voice's included
+store.set_secret("telegram", bot_token)
+try:
+    refused.push("hello")
+    raise AssertionError("no error")
+except ConnectionError:
+    pass
+store.set_secret("telegram", "")
+refused.http = Refusing((429, {"ok": False, "parameters": {"retry_after": 3600}}))  # (longer than RETRY_LIMIT: not held)
+try:
+    refused.send(bot_token, 42, "hello")
+    raise AssertionError("no error")
+except ConnectionError as e:
+    assert "429" in str(e) and refused.http.sent == ["hello"], e
 # the bug report leaves out the user's checks, what WhatsApp tells people, names in tool errors, tokens and the home folder
 with open(log_path, "w") as f:
     f.write(f"10:00 [tool] whatsapp_send 0.1s error: no single chat called 'Granny'\n10:01 [telegram] url: /bot{bot_token}/sendMessage\n"
@@ -7675,6 +8024,7 @@ def wa_gone(cmd, timeout=None, **args):
 
 
 unsent_wa.ask = wa_gone
+store.update_settings({"whatsapp_replies": "contacts"})  # (sending: drafts are never sent)
 with contextlib.redirect_stdout(io.StringIO()):
     unsent_wa._answer("1@c.us", "Sam Lee")
 assert wa_shown == ["💬 WhatsApp from Sam Lee: hey, you around?" + whatsapp.UNSENT] and not unsent_wa.replies, wa_shown
@@ -7842,7 +8192,9 @@ rl._hang_up = no_hang_up
 # said is in the chat, both sides
 asyncio.run(rl._handle(rl.session, server(heard="what's the ")))
 assert rl.inflight["text"] is None and rl.inflight["heard"] == "what's the " and not rl.inflight["answered"] and rl.user_spoke_at > 0
+first_heard = rl.inflight["at"]
 asyncio.run(rl._handle(rl.session, server(heard="weather?")))
+assert rl.inflight["at"] == first_heard <= rl.inflight["since"]  # (when the request began: a "mark that" bookmark's moment)
 rl.utterance.append(b"\0" * 320)
 asyncio.run(rl._handle(rl.session, server(audio=b"\1\2", said="Sunny, ")))
 assert rl.inflight["answered"] and rl.spoke and said_aloud == [b"\1\2"] and not rl.utterance and rl.turn_spoke and not rl.waiting
@@ -8188,9 +8540,22 @@ digest_live.brain.waiting_on_me = lambda listing=False: (_ for _ in ()).throw(Ru
 with contextlib.redirect_stdout(io.StringIO()) as printed:
     assert not jarvis.digest_pass(digest_live, on(14, "20:30")) and not jarvis.digest_pass(digest_live, on(14, "20:31"))
 assert printed.getvalue().count("[digest] couldn't make the evening list: WhatsApp is still connecting") == 1 and len(told_digest) == 2
+# ...but tried again 15 min later, three times at most (stamped before it was made, one hiccup lost the day's list), and
+# the day's sent mail failing doesn't keep the list from being said
+with contextlib.redirect_stdout(io.StringIO()) as printed:
+    assert not jarvis.digest_pass(digest_live, on(14, "20:45"))
+    digest_live.brain.waiting_on_me = lambda listing=False: {"waiting on whatsapp": ["Sam Lee (5 h ago): are you coming?"]}
+    jarvis.promises_in_sent_mail = lambda b: 1 / 0
+    assert jarvis.digest_pass(digest_live, on(14, "21:00")) and len(told_digest) == 3 and not jarvis.digest_pass(digest_live, on(14, "21:30"))
+assert printed.getvalue().count("couldn't make the evening list") == 1 and "couldn't read the day's sent mail" in printed.getvalue()
+jarvis.promises_in_sent_mail = lambda b: mail_read.append(True)
+digest_live.brain.waiting_on_me = lambda listing=False: (_ for _ in ()).throw(RuntimeError("WhatsApp is still connecting"))
+with contextlib.redirect_stdout(io.StringIO()) as printed:
+    assert not any(jarvis.digest_pass(digest_live, on(16, hm)) for hm in ("20:00", "20:15", "20:30", "20:45", "21:00"))
+assert printed.getvalue().count("couldn't make the evening list") == 3  # (three tries a day)
 store.update_settings({"evening_digest": ""})  # (switched off)
 digest_live.brain.waiting_on_me = lambda listing=False: {"waiting on whatsapp": ["Sam Lee (5 h ago): are you coming?"]}
-assert not jarvis.digest_pass(digest_live, on(15, "20:30")) and len(told_digest) == 2
+assert not jarvis.digest_pass(digest_live, on(15, "20:30")) and len(told_digest) == 3
 store.update_settings({"evening_digest": was_digest})
 jarvis.DIGEST_STAMP, jarvis.tell, jarvis.promises_in_sent_mail = real_stamp, real_tell, real_sent_mail
 

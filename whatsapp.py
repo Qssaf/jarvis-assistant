@@ -1,8 +1,8 @@
 """Jarvis on the user's own WhatsApp, as a linked device (like WhatsApp Web): it sees new messages, answers the ones that
-don't need the user (saying it's Jarvis, their assistant), and picks up calls the user doesn't, talking with the caller in
-its own voice. WhatsApp itself is jarvis-wa (whatsapp-helper/, Go: whatsmeow for messages, WaCalls' call code for calls),
-~30 MB where WhatsApp Web in a headless browser took ~1 GB: it reports messages and calls as JSON lines, answers
-commands, and carries call audio both ways.
+don't need the user (saying it's Jarvis, their assistant; on "drafts" it only tells the user what it would say), and
+picks up calls the user doesn't, talking with the caller in its own voice. WhatsApp itself is jarvis-wa
+(whatsapp-helper/, Go: whatsmeow for messages, WaCalls' call code for calls), ~30 MB where WhatsApp Web in a headless
+browser took ~1 GB: it reports messages and calls as JSON lines, answers commands, and carries call audio both ways.
 
 Not an official API: WhatsApp may ban numbers that act like bots, so Jarvis only answers saved contacts, never groups,
 waits for a burst of messages to end, and keeps to REPLY_LIMIT replies an hour."""
@@ -104,8 +104,8 @@ goodbye and call end_call.
 
 class WhatsApp:
     def __init__(self, brain, notify=print, tell=lambda text, **kw: print(text), name=lambda: ""):
-        # notify: the chat log; tell(text, keep=True, transcript="", loud=False): out loud (loud: even in quiet hours), to the
-        # phones and (keep) the agent's history
+        # notify: the chat log; tell(text, keep=True, transcript="", loud=False, kind="whatsapp"): out loud (loud: even in
+        # quiet hours; kind: jarvis.Attention's), to the phones and (keep) the agent's history
         self.brain, self.notify, self.tell = brain, notify, tell
         self.name = name  # what the user likes to be called (from memory), for "I'm Jarvis, <name>'s assistant"
         self.saved = store.read_json(STATE_FILE, {})
@@ -356,7 +356,8 @@ class WhatsApp:
         history = self.ask("history", chat=chat, count=20) or []
         recent = [m for m in history if not m["me"]][-3:]
         said = " / ".join(m["text"] for m in recent)[:300]
-        if contact_rule(name) == "always":  # (never answered by Jarvis: said to the user, even in quiet hours)
+        if contact_rule(name) == "always":  # (never answered by Jarvis: said to the user, even in quiet hours; the 💬 line
+            self.notify(f"💬 WhatsApp from {name}: {said}")  # too: wrong_person reads who the user is talking with from it)
             self.tell(f"WhatsApp from {name}: {said}", loud=True)
             return
         # (the chat's own messages too: after a restart user_wrote is empty, and Jarvis introduced itself in the middle of
@@ -371,6 +372,15 @@ class WhatsApp:
             return
         decision = self.decide(name, history)
         reply, urgent = decision.get("reply", "").strip()[:700], decision.get("tell_user", "").strip()
+        if reply and store.settings()["whatsapp_replies"] == "drafts":  # (not sent, nor counted in the limits: the user sends it)
+            # (the 💬 line too: wrong_person reads who the user is talking with from it, and an open voice session gets it)
+            self.notify(f"💬 WhatsApp from {name}: {said}\nJarvis's draft (not sent): {reply}")
+            draft = f'{name} wrote on WhatsApp: "{said}"\nI\'d reply: "{reply}" Shall I send it?'
+            if urgent:
+                self.tell(f"WhatsApp from {name}: {urgent}\n{draft}")
+            else:  # (its own kind: drafts the user lets pass mustn't hush WhatsApp's urgent news, jarvis.Attention)
+                self.tell(draft, kind="whatsapp_draft")
+            return
         unsent = ""
         if reply:
             try:

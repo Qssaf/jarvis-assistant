@@ -52,7 +52,8 @@ DEFAULT_SETTINGS = {
     "checks": [],                  # things Jarvis keeps an eye on in the background ("tell me if a payment fails"), one per line
     "checks_every": 60,            # minutes between those checks (each one is a few agent requests)
     "checks_paused": [],           # checks switched off in the window (kept, but not looked into)
-    "whatsapp_replies": "contacts",  # contacts: Jarvis answers saved contacts' messages that don't need you; off: just shows them
+    "whatsapp_replies": "contacts",  # contacts: Jarvis answers saved contacts' messages that don't need you; drafts: it
+                                     # writes the reply and tells you (you send it); off: just shows them
     "whatsapp_calls": "answer",    # answer: picks up contacts' calls you don't and talks with them; decline; off: lets them ring
     "whatsapp_note": "",           # what Jarvis tells people on WhatsApp ("I'm in class until 5")
     "whatsapp_share_free": False,  # on: Jarvis may tell people when you're busy today (Google Calendar times only, never what)
@@ -212,8 +213,8 @@ def _update_settings(changes):
             raise ValueError("the pause must be 200-2000 ms")
         if key == "checks_every" and not 15 <= value <= 1440:
             raise ValueError("check every 15-1440 minutes")
-        if key == "whatsapp_replies" and value not in ("contacts", "off"):
-            raise ValueError("WhatsApp replies are contacts or off")
+        if key == "whatsapp_replies" and value not in ("drafts", "contacts", "off"):
+            raise ValueError("WhatsApp replies are drafts, contacts or off")
         if key == "discord_replies" and value not in ("friends", "off"):
             raise ValueError("Discord replies are friends or off")
         if key == "languages":
@@ -970,6 +971,18 @@ def export_data(path, version):
     the change log, conversations and wake-word clips to a .zip; returns how many files it holds. Never keys, sign-ins,
     WhatsApp or the phone's pairing: they're in the keychain or in files this leaves out."""
     import zipfile
+    tmp = f"{path}.{threading.get_ident()}.tmp"  # (written beside it, then put in its place: saved over yesterday's backup,
+    try:  # an export that failed halfway had already emptied it)
+        count = _write_backup(tmp, version, zipfile)
+        _swap(tmp, path)
+        return count
+    except BaseException:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        raise
+
+
+def _write_backup(path, version, zipfile):
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_BINARY", 0), 0o600)  # (it's as private as what it holds)
     with os.fdopen(fd, "wb") as f, zipfile.ZipFile(f, "w", zipfile.ZIP_DEFLATED) as z:
         z.writestr("manifest.json", json.dumps({"format": BACKUP_FORMAT, "jarvis": version, "made": time.time()}))

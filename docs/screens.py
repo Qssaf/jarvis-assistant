@@ -58,6 +58,8 @@ CANNED = {
                    "artist": "The Arcs of Light", "art": "", "length": 214.0},
     "/api/jobs": [{"n": 3, "label": "Find flights to Lisbon for the first week of June", "since": NOW - 187, "now": "web_search", "coding": False},
                   {"n": 4, "label": "Fix the failing date test", "since": NOW - 1425, "now": "", "coding": True}],
+    "/api/jobs/done": [{"n": 2, "label": "Summarise the three reports in Downloads", "at": NOW - 540, "ok": True, "coding": False,
+                        "answer": "Done: the notes are in Documents/report-notes.md. The second report has no figures for March."}],
     "/api/system": {"cpu": 18.0, "mem_used": 9.1e9, "mem_total": 16e9, "disk_used": 300e9, "disk_total": 512e9, "uptime": 7200},
     "/api/sessions": {"current": SESSIONS[0]["id"], "sessions": SESSIONS},
     "/api/conversation": {"id": SESSIONS[0]["id"], "title": "What's due this week?", "created": NOW - 600, "updated": NOW - 50,
@@ -72,7 +74,8 @@ CANNED = {
                         "repeat": "weekly", "off": True}],
     "/api/checks": {"checks": [{"text": "Tell me if a payment fails", "on": True},
                                {"text": "Tell me if my professor emails about the exam", "on": True},
-                               {"text": "Watch for cheap flights home in December", "on": False}], "every": 60},
+                               {"text": "Watch for cheap flights home in December", "on": False}], "every": 60,
+                    "last": {"at": NOW - 1260, "answered": NOW - 1260, "ok": True, "found": "", "next": NOW + 2340}},
     "/api/routines": [{"name": "study mode", "steps": "close Discord, open my notes, set a 50-minute timer"},
                       {"name": "good night", "steps": "lower the volume, lock the screen"}],
     "/api/workspaces": [{"slug": s, "name": n, "connected": c, "account": a, "mode": m} for s, n, c, a, m in [
@@ -93,7 +96,8 @@ CANNED = {
     "/api/report": {"text": "Jarvis test · everything looks fine"},
     "/api/todo": {"couldnt_check": [], "items": [
         {"what": "Return the library books", "due": time.time() - 86400, "kind": "task", "place": "My Tasks", "source": "Google Tasks"},
-        {"what": "Quiz 3", "due": time.time() + 26 * 3600, "kind": "classroom", "place": "Calculus 3", "source": "Classroom: Calculus 3"},
+        {"what": "Quiz 3", "due": time.time() + 26 * 3600, "kind": "classroom", "place": "Calculus 3", "source": "Classroom: Calculus 3",
+         "link": "https://classroom.google.com/"},
         {"what": "Stretch", "due": time.time() + 20 * 60, "kind": "reminder", "place": "", "source": "reminder", "id": "r1"},
         {"what": "send Sam the trip photos", "due": None, "kind": "promise", "place": "Sam Lee", "source": "promise to Sam Lee"}]},
 }
