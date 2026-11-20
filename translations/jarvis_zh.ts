@@ -331,6 +331,13 @@
         <source>%1 tokens at paid-tier prices</source>
         <translation>%1 个 token，按付费层级价格计算</translation>
     </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n request(s) came back without token counts (most from before Jarvis started counting them), so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>%n 次请求返回时没有 token 计数（大多在 Jarvis 开始计数之前），因此未计入总额。</numerusform>
+        </translation>
+    </message>
     <message>
         <location line="+22"/>
         <source>%1: %2</source>
@@ -1167,7 +1174,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3146"/>
+        <location filename="../jarvis.py" line="+3154"/>
         <source>LISTENING</source>
         <translation>聆听中</translation>
     </message>
@@ -2639,7 +2646,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+98"/>
+        <location filename="../qml/Today.qml" line="+107"/>
         <source>Feels %1 in %2</source>
         <translation>%2 体感温度 %1</translation>
     </message>
@@ -2674,22 +2681,42 @@
         <translation>停止此任务</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Up next</source>
-        <translation>接下来</translation>
+        <location line="+17"/>
+        <source>To do</source>
+        <translation>待办</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Nothing scheduled. Try “remind me in 20 minutes to stretch”.</source>
-        <translation>暂无安排。试试说“20 分钟后提醒我伸展一下”。</translation>
+        <source>Nothing to do this week. Try “remind me in 20 minutes to stretch”.</source>
+        <translation>本周没有待办事项。试试说“20 分钟后提醒我伸展一下”。</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+28"/>
+        <source>No date</source>
+        <translation>无日期</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Overdue since %1</source>
+        <translation>自 %1 起逾期</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Promised to %1</source>
+        <translation>答应了 %1</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Cancel this reminder</source>
         <translation>取消此提醒</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+6"/>
+        <source>Couldn&apos;t check %1 just now.</source>
+        <translation>暂时无法检查 %1。</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>This PC</source>
         <translation>本机</translation>
     </message>

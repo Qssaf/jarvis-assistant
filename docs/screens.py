@@ -91,6 +91,11 @@ CANNED = {
     "/api/setup/key": {"ok": False, "detail": "no key yet"},
     "/api/update": {"update": False, "version": "test"},
     "/api/report": {"text": "Jarvis test · everything looks fine"},
+    "/api/todo": {"couldnt_check": [], "items": [
+        {"what": "Return the library books", "due": time.time() - 86400, "kind": "task", "place": "My Tasks", "source": "Google Tasks"},
+        {"what": "Quiz 3", "due": time.time() + 26 * 3600, "kind": "classroom", "place": "Calculus 3", "source": "Classroom: Calculus 3"},
+        {"what": "Stretch", "due": time.time() + 20 * 60, "kind": "reminder", "place": "", "source": "reminder", "id": "r1"},
+        {"what": "send Sam the trip photos", "due": None, "kind": "promise", "place": "Sam Lee", "source": "promise to Sam Lee"}]},
 }
 STUB = types.SimpleNamespace(
     plugin_status=lambda: [{"name": "composio", "config": {"url": "https://connect.composio.dev/mcp"}, "enabled": True, "status": "ready",
@@ -111,7 +116,7 @@ def cost(days):
     spread = spread[:days]
     stamps = [time.strftime("%Y-%m-%d", time.localtime(time.time() - i * 86400)) for i in range(days - 1, -1, -1)]
     total = sum(sum(c or 0 for *_, c in day) * f for f in spread)
-    return {"total": round(total, 6), "tokens": int(sum((i + o) for _, _, i, o, _ in day) * sum(spread)), "unpriced": 1,
+    return {"total": round(total, 6), "tokens": int(sum((i + o) for _, _, i, o, _ in day) * sum(spread)), "unpriced": 1, "unmeasured": 0,
             "days": [{"day": d, "cost": round(sum(c or 0 for *_, c in day) * f, 6)} for d, f in zip(stamps, spread)],
             "models": [{"key": k, "requests": int(r * sum(spread)), "input": int(i * sum(spread)), "output": int(o * sum(spread)),
                         "cost": None if c is None else round(c * sum(spread), 6)} for k, r, i, o, c in day]}

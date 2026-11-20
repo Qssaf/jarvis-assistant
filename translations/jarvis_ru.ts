@@ -339,6 +339,15 @@
         <source>%1 tokens at paid-tier prices</source>
         <translation>%1 токенов по ценам платного тарифа</translation>
     </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n request(s) came back without token counts (most from before Jarvis started counting them), so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>%n запрос вернулся без подсчёта токенов (скорее всего, ещё до того, как Jarvis начал их считать), поэтому он не входит в итог.</numerusform>
+            <numerusform>%n запроса вернулись без подсчёта токенов (в основном до того, как Jarvis начал их считать), поэтому они не входят в итог.</numerusform>
+            <numerusform>%n запросов вернулись без подсчёта токенов (в основном до того, как Jarvis начал их считать), поэтому они не входят в итог.</numerusform>
+        </translation>
+    </message>
     <message>
         <location line="+22"/>
         <source>%1: %2</source>
@@ -1191,7 +1200,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3146"/>
+        <location filename="../jarvis.py" line="+3154"/>
         <source>LISTENING</source>
         <translation>СЛУШАЮ</translation>
     </message>
@@ -2669,7 +2678,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+98"/>
+        <location filename="../qml/Today.qml" line="+107"/>
         <source>Feels %1 in %2</source>
         <translation>%2: ощущается как %1</translation>
     </message>
@@ -2704,22 +2713,42 @@
         <translation>Остановить эту задачу</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Up next</source>
-        <translation>Ближайшее</translation>
+        <location line="+17"/>
+        <source>To do</source>
+        <translation>Дела</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Nothing scheduled. Try “remind me in 20 minutes to stretch”.</source>
-        <translation>Ничего не запланировано. Попробуйте «напомни через 20 минут размяться».</translation>
+        <source>Nothing to do this week. Try “remind me in 20 minutes to stretch”.</source>
+        <translation>На этой неделе дел нет. Попробуйте «напомни через 20 минут размяться».</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+28"/>
+        <source>No date</source>
+        <translation>Без даты</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Overdue since %1</source>
+        <translation>Просрочено с %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Promised to %1</source>
+        <translation>Обещано: %1</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Cancel this reminder</source>
         <translation>Отменить это напоминание</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+6"/>
+        <source>Couldn&apos;t check %1 just now.</source>
+        <translation>Сейчас не удалось проверить: %1.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>This PC</source>
         <translation>Этот ПК</translation>
     </message>

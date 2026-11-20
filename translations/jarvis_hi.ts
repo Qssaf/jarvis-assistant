@@ -335,6 +335,14 @@
         <source>%1 tokens at paid-tier prices</source>
         <translation>पेड टियर की कीमतों पर %1 टोकन</translation>
     </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n request(s) came back without token counts (most from before Jarvis started counting them), so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>%n अनुरोध बिना टोकन गिनती के लौटा (शायद Jarvis के गिनना शुरू करने से पहले का), इसलिए यह कुल में शामिल नहीं है।</numerusform>
+            <numerusform>%n अनुरोध बिना टोकन गिनती के लौटे (ज़्यादातर Jarvis के गिनना शुरू करने से पहले के), इसलिए ये कुल में शामिल नहीं हैं।</numerusform>
+        </translation>
+    </message>
     <message>
         <location line="+22"/>
         <source>%1: %2</source>
@@ -1179,7 +1187,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3146"/>
+        <location filename="../jarvis.py" line="+3154"/>
         <source>LISTENING</source>
         <translation>सुन रहा</translation>
     </message>
@@ -2654,7 +2662,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+98"/>
+        <location filename="../qml/Today.qml" line="+107"/>
         <source>Feels %1 in %2</source>
         <translation>%2 में %1 जैसा लगता है</translation>
     </message>
@@ -2689,22 +2697,42 @@
         <translation>यह काम रोकें</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Up next</source>
-        <translation>आगे क्या है</translation>
+        <location line="+17"/>
+        <source>To do</source>
+        <translation>करने के काम</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Nothing scheduled. Try “remind me in 20 minutes to stretch”.</source>
-        <translation>कुछ भी शेड्यूल नहीं। आज़माएँ “20 मिनट बाद स्ट्रेच करने की याद दिलाना”।</translation>
+        <source>Nothing to do this week. Try “remind me in 20 minutes to stretch”.</source>
+        <translation>इस हफ़्ते कुछ करने को नहीं। आज़माएँ “20 मिनट बाद स्ट्रेच करने की याद दिलाना”।</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+28"/>
+        <source>No date</source>
+        <translation>कोई तारीख नहीं</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Overdue since %1</source>
+        <translation>%1 से बाकी</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Promised to %1</source>
+        <translation>%1 से वादा किया</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Cancel this reminder</source>
         <translation>यह रिमाइंडर रद्द करें</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+6"/>
+        <source>Couldn&apos;t check %1 just now.</source>
+        <translation>अभी %1 जाँच नहीं सका।</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>This PC</source>
         <translation>यह PC</translation>
     </message>

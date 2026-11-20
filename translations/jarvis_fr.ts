@@ -335,6 +335,14 @@
         <source>%1 tokens at paid-tier prices</source>
         <translation>%1 jetons aux tarifs du niveau payant</translation>
     </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n request(s) came back without token counts (most from before Jarvis started counting them), so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>%n requête est revenue sans nombre de jetons (sans doute d&apos;avant que Jarvis ne les compte), elle n&apos;est donc pas dans le total.</numerusform>
+            <numerusform>%n requêtes sont revenues sans nombre de jetons (surtout d&apos;avant que Jarvis ne les compte), elles ne sont donc pas dans le total.</numerusform>
+        </translation>
+    </message>
     <message>
         <location line="+22"/>
         <source>%1: %2</source>
@@ -1179,7 +1187,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3146"/>
+        <location filename="../jarvis.py" line="+3154"/>
         <source>LISTENING</source>
         <translation>ÉCOUTE</translation>
     </message>
@@ -2654,7 +2662,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+98"/>
+        <location filename="../qml/Today.qml" line="+107"/>
         <source>Feels %1 in %2</source>
         <translation>Ressenti %1 à %2</translation>
     </message>
@@ -2689,22 +2697,42 @@
         <translation>Arrêter cette tâche</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Up next</source>
-        <translation>À venir</translation>
+        <location line="+17"/>
+        <source>To do</source>
+        <translation>À faire</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Nothing scheduled. Try “remind me in 20 minutes to stretch”.</source>
-        <translation>Rien de prévu. Essayez «&#xa0;rappelle-moi dans 20 minutes de m&apos;étirer&#xa0;».</translation>
+        <source>Nothing to do this week. Try “remind me in 20 minutes to stretch”.</source>
+        <translation>Rien à faire cette semaine. Essayez «&#xa0;rappelle-moi dans 20 minutes de m&apos;étirer&#xa0;».</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+28"/>
+        <source>No date</source>
+        <translation>Sans date</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Overdue since %1</source>
+        <translation>En retard depuis le %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Promised to %1</source>
+        <translation>Promis à %1</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Cancel this reminder</source>
         <translation>Annuler ce rappel</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+6"/>
+        <source>Couldn&apos;t check %1 just now.</source>
+        <translation>Impossible de vérifier %1 pour l&apos;instant.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>This PC</source>
         <translation>Ce PC</translation>
     </message>

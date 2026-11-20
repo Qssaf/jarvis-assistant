@@ -56,8 +56,8 @@ app with a notch at the top of the screen and a native dashboard window.
   several at once (screen work takes turns, and waits while you're using the PC). *"What are you working on?"* lists
   them; Stop stops them all and says what it stopped. While you're away, their news waits until you're back.
 - **Coding jobs**: *"fix the login bug in my project"* becomes a session in your OpenChamber
-  (or goes to Claude Code without it), working on its own in a copy of the project on a branch of its own; Jarvis tells
-  you when it's done and what changed, and never merges by itself.
+  (or goes to Claude Code without it, or to Google Antigravity when you ask for it), working on its own in a copy of
+  the project on a branch of its own; Jarvis tells you when it's done and what changed, and never merges by itself.
 - **Memory and reminders**: *"Remember that I prefer short answers"*, *"Remind me in 20 minutes to stretch"*,
   *"every weekday at 8"*. *"What was that site you told me about?"* searches past conversations.
 - **Notes**: *"Take notes of this lecture"* records what's playing (or the room), transcribes it as it goes, and saves a

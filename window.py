@@ -4,7 +4,7 @@ import json, os
 from concurrent.futures import ThreadPoolExecutor
 
 from PySide6.QtCore import Property, QByteArray, QCoreApplication, QLocale, QObject, QRectF, Qt, QTimer, QTranslator, Signal, Slot, QUrl
-from PySide6.QtGui import QColor, QFont, QFontDatabase, QGuiApplication, QPainter, QPixmap
+from PySide6.QtGui import QColor, QFont, QFontDatabase, QGuiApplication, QPainter, QPixmap, QWindow
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PySide6.QtQml import QJSEngine, QQmlApplicationEngine, QQmlNetworkAccessManagerFactory, qmlRegisterSingletonType
 from PySide6.QtQuick import QQuickImageProvider
@@ -286,7 +286,7 @@ class Window:
         qmlRegisterSingletonType(Backend, "Jarvis", 1, 0, "Backend", singleton)
         from PySide6.QtQuickControls2 import QQuickStyle
         QQuickStyle.setStyle("Basic")  # (Windows' native style ignores the custom look of fields, menus and sliders)
-        self.engine, self.translators = None, []
+        self.engine, self.translators, self.seen = None, [], ""
         self.network = LocalOnlyFactory()  # (kept: the engine doesn't own it)
         self.release = QTimer()
         self.release.setSingleShot(True)
@@ -310,7 +310,10 @@ class Window:
             raise RuntimeError("the window couldn't be loaded (see the log)")
         root = self.engine.rootObjects()[0]  # the 30 fps poll only while the window is up (hidden, it was ~1% of a core)
         root.visibleChanged.connect(self.shown)
+        root.visibilityChanged.connect(self.placed)
+        root.activeChanged.connect(self.placed)
         self.shown(root.isVisible())
+        self.placed()
 
     def shown(self, visible):
         import shiboken6
@@ -322,10 +325,15 @@ class Window:
         else:
             self.release.start(self.RELEASE)
 
+    def placed(self, *_):  # (on Qt's thread; seen is read from any thread)
+        import shiboken6  # (at exit the engine can go before its window says it changed)
+        root = self.engine.rootObjects()[0] if self.engine and shiboken6.isValid(self.engine) else None
+        self.seen = placement(root.visibility(), root.isActive()) if root else ""
+
     def free(self):
         if self.engine and not self.engine.rootObjects()[0].isVisible():
             import shiboken6  # (now, not deleteLater: the Backend singleton goes to a new engine only once the old one is gone)
-            engine, self.engine = self.engine, None
+            engine, self.engine, self.seen = self.engine, None, ""
             shiboken6.delete(engine)
 
     def languages(self, codes):
@@ -352,6 +360,19 @@ class Window:
 
     def present(self):
         self.backend.openRequested.emit()  # (safe from any thread: open runs on Qt's)
+
+
+def placement(visibility, active):
+    """Where the window is, for look to leave it out of the screen: "front" (it has the focus), "open" (maybe behind
+    others) or "" (hidden or minimised)."""
+    if visibility in (QWindow.Visibility.Hidden, QWindow.Visibility.Minimized):
+        return ""
+    return "front" if active else "open"
+
+
+def on_screen():
+    """placement of the one window, from any thread."""
+    return current[0].seen if current else ""
 
 
 def show():

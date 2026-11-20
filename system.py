@@ -18,6 +18,9 @@ else:
     CONFIG = os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "jarvis")
     DATA = os.path.join(os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share"), "jarvis")
 PICTURES = os.path.join(os.path.expanduser("~"), "Pictures", "Jarvis")
+# QHealth (the user's screen-time app) keeps its data here, by its own paths.py (not XDG_DATA_HOME); Jarvis only reads it
+QHEALTH_DB = (os.path.join(os.environ.get("LOCALAPPDATA") or os.path.expanduser(r"~\AppData\Local"), "QHealth", "qhealth.db")
+              if IS_WINDOWS else os.path.expanduser("~/.local/share/qhealth/qhealth.db"))
 
 
 def have(program):
@@ -55,14 +58,14 @@ def trim_memory():
             pass
 
 
-def run(args, timeout=15, env=None):
-    """A short command's output (stdout and stderr), '' if it isn't installed."""
+def run(args, timeout=15, env=None, strip=True):
+    """A short command's output (stdout and stderr), '' if it isn't installed. strip: without the blank lines around it."""
     try:
         r = subprocess.run(args, capture_output=True, text=True, errors="replace", timeout=timeout, env=env,  # (a copied picture isn't UTF-8)
                            creationflags=subprocess.CREATE_NO_WINDOW if IS_WINDOWS else 0)  # (Jarvis.exe has no console: no window pops up)
     except (OSError, subprocess.TimeoutExpired):
         return ""
-    return (r.stdout + r.stderr).strip()
+    return (r.stdout + r.stderr).strip() if strip else r.stdout + r.stderr
 
 
 def _kill_tree(proc):
@@ -895,7 +898,8 @@ def active_app():
 
 def list_windows():
     if KDE and WAYLAND and have("kdotool"):  # one call for all of them (each kdotool call costs ~0.3 s)
-        out = _kdo("search", ".", "getwindowclassname", "%@", "getwindowname", "%@").splitlines()
+        # (not stripped: a window with no title, like the desktop's own, is an empty line, and the last ones were lost)
+        out = run(["kdotool", "search", ".", "getwindowclassname", "%@", "getwindowname", "%@"], strip=False).split("\n")[:-1]
         if len(out) % 2 == 0:
             n = len(out) // 2
             return [f"{app}: {title}" for app, title in zip(out[:n], out[n:])]

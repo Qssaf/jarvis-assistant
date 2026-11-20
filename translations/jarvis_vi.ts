@@ -331,6 +331,13 @@
         <source>%1 tokens at paid-tier prices</source>
         <translation>%1 token theo giá gói trả phí</translation>
     </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n request(s) came back without token counts (most from before Jarvis started counting them), so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>%n yêu cầu trả về không có số token (phần lớn từ trước khi Jarvis bắt đầu đếm), nên không được tính vào tổng.</numerusform>
+        </translation>
+    </message>
     <message>
         <location line="+22"/>
         <source>%1: %2</source>
@@ -1167,7 +1174,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3146"/>
+        <location filename="../jarvis.py" line="+3154"/>
         <source>LISTENING</source>
         <translation>ĐANG NGHE</translation>
     </message>
@@ -2639,7 +2646,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+98"/>
+        <location filename="../qml/Today.qml" line="+107"/>
         <source>Feels %1 in %2</source>
         <translation>Cảm giác như %1 tại %2</translation>
     </message>
@@ -2674,22 +2681,42 @@
         <translation>Dừng tác vụ này</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Up next</source>
-        <translation>Sắp tới</translation>
+        <location line="+17"/>
+        <source>To do</source>
+        <translation>Việc cần làm</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Nothing scheduled. Try “remind me in 20 minutes to stretch”.</source>
-        <translation>Chưa có lịch nào. Thử nói “20 phút nữa nhắc tôi vươn vai”.</translation>
+        <source>Nothing to do this week. Try “remind me in 20 minutes to stretch”.</source>
+        <translation>Tuần này không có việc gì. Thử nói “20 phút nữa nhắc tôi vươn vai”.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+28"/>
+        <source>No date</source>
+        <translation>Không có hạn</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Overdue since %1</source>
+        <translation>Quá hạn từ %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Promised to %1</source>
+        <translation>Đã hứa với %1</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Cancel this reminder</source>
         <translation>Hủy lời nhắc này</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+6"/>
+        <source>Couldn&apos;t check %1 just now.</source>
+        <translation>Hiện không kiểm tra được %1.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>This PC</source>
         <translation>Máy tính này</translation>
     </message>

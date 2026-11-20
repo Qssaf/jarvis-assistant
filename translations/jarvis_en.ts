@@ -42,7 +42,15 @@
 <context>
     <name>CostPage</name>
     <message numerus="yes">
-        <location filename="../qml/CostPage.qml" line="+112"/>
+        <location filename="../qml/CostPage.qml" line="+58"/>
+        <source>%n request(s) came back without token counts (most from before Jarvis started counting them), so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>%n request came back without token counts (likely from before Jarvis started counting them), so it isn&apos;t in the total.</numerusform>
+            <numerusform>%n requests came back without token counts (most from before Jarvis started counting them), so they aren&apos;t in the total.</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+56"/>
         <source>%n model(s) have no known price, so they aren&apos;t in the total.</source>
         <translation>
             <numerusform>%n model has no known price, so it isn&apos;t in the total.</numerusform>

@@ -3,6 +3,30 @@
 ## Unreleased
 
 ### Added
+- **Picks up where you left off:** after a restart Jarvis carries on the conversation you were in (if you or Jarvis
+  spoke in it in the last 6 hours and you didn't start a new one), voice and background tasks alike. It used to start
+  empty every time, twelve times on a busy day.
+- **The voice and background tasks see each other's work:** a short line per finished tool call from the last 30
+  minutes goes with the conversation to both, so a follow-up knows what was just found or done.
+- **Tasks take stock:** a long background task looks back at its goal (and the plan it showed) every few steps, and
+  sooner when it looks stuck (every call failing, the same click doing nothing again, command after command); the next
+  step thinks harder. A stuck task says what's in its way instead of trying thirty commands.
+- **Learns from your corrections:** *"no, the slides are under materials"* or *"always save lectures to Desktop/Uni"*
+  is kept in memory as a lesson, and a task that only worked after some wrong turns keeps the way that worked as a
+  *"How to:"* line when it wasn't obvious.
+- **Quicker screen checks:** watching the screen (*"tell me when the download finishes"*) and the check before typing
+  into a chat ask Gemini's Decisions API first (about half a second, no output tokens) when your clicking models are
+  Google AI Studio's. When it isn't sure, or can't answer, the vision model decides as before.
+- **One to-do list:** *"what do I have to do this week?"* answers from everywhere things to do are kept: your Google
+  Tasks, your reminders, the promises Jarvis noticed in your messages and Classroom work not turned in, overdue first.
+  Home's *To do* card shows the same list (it used to show reminders only). A source that can't be reached is named, so
+  it's never taken for "nothing to do".
+- **Word and PowerPoint files:** `.docx` and `.pptx` files (a lecture's slides, a report) are read like PDFs, slide by
+  slide (they were turned down as "a binary file").
+- **Screen time from QHealth:** "how long was I on my PC today?", "how much did I game this week?", "what did I use most
+  yesterday?" are answered from QHealth's own records (time per category and app, active time only). Jarvis only reads
+  QHealth's database, never changes it, and says so when QHealth isn't installed, has no records that far back or
+  seems to have stopped.
 - **A Cost page:** what Jarvis's model use would cost at Google's paid-tier prices, for today, the last 7 or 30 days:
   the total, a bar per day, and each model's requests, tokens and cost (the voice's audio priced as audio). Nothing is
   billed on the free tier or through a Google sign-in; the page shows what the same use would cost with billing on.
@@ -59,7 +83,7 @@
   isn't open), working on its own in a copy of the project (a git worktree on its own branch): watch it and answer its
   questions there. Jarvis tells you when it's done and what changed; nothing is merged until you say so. *"Also add
   tests"* continues the same session. Without OpenChamber, Claude Code does it (only editing files while safety is on
-  "ask").
+  "ask"), and *"do it in Antigravity"* hands it to Google Antigravity's `agy` (Jarvis said it wasn't available).
 - **News waits for you:** while you're away from the PC, finished tasks and their questions wait, and are said when
   you're back (*"While you were away: ..."*). Long answers (research) are shown in full in the chat; the voice says the
   gist.
@@ -131,11 +155,83 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
+- **Deleting through a script asks first:** a command that hands code to Python, Node, Perl, Ruby or PHP to delete, move
+  or overwrite files (`python3 -c "import shutil; shutil.rmtree(...)"`) ran without your yes, a way round the check on
+  `rm`. It waits for a yes now, on one line or many; code that only reads or works something out still runs.
+- **Gemini 4 Hydrogen stops "timing out":** on an AI Studio key it takes 17 to 40 seconds for any answer, and Jarvis cut
+  replies off at 20, so about half were thrown away and it was reported as not answering. It gets a minute there now,
+  and the same model through a Google sign-in (3 seconds a step) is in the built-in list for background tasks.
+- **A typed message always gets its answer:** typed while Jarvis was about to say something on its own (a reminder,
+  the evening list), the answer was left out of the chat, and with spoken replies off for typed text nothing came back
+  at all.
+- **Messages still show when Jarvis's own answer couldn't be sent:** with Vesktop slow or WhatsApp's link gone, the
+  person's message was dropped without a word. It's shown now, with a note that the answer may not have been sent.
+- **A send that failed isn't reported as sent:** when an account action failed inside the service's reply, the second
+  try was refused as "already done" and Jarvis said it had gone. It's tried once more, and after two failures Jarvis
+  says it didn't go.
+- **Long tasks survive an empty reply:** only three empty model replies in a row end a task (they were counted over
+  the whole task, so the third ended it wherever it came).
+- **Tool results stay in view in long conversations:** the newest tool calls keep a quarter of the context the models
+  get; a long conversation used to leave room for one of them or none.
+- **Smaller ones:** the weather where your network gives coordinates and no town; WhatsApp just after start-up (a tool
+  waits a few seconds for the link instead of failing); a chat found by its own id; the list of running tasks after
+  one was stopped; what you asked Jarvis to learn isn't lost to an offline moment (it's tried again); a question about
+  a picked part of the screen no longer finds the voice's tools used up by the request before it. Background tasks
+  get clearer errors: an account action that isn't a direct tool, a Drive file's id given as a path, a slow command
+  stopped at its timeout.
+- **Your name in messages:** a memory like *"Call the user Kai instead of sir"* made auto-replies and the voice call you
+  *"Kai instead of sir"*, also in messages to other people. Only the name is used now, and a note about someone else
+  (*"the professor wants to be addressed as Dr. Karam"*) is no longer taken for yours.
+- **Your words win over the voice's summary:** a background task reads what you said first and the voice's summary
+  after it, so *"half past six"* isn't sent as *"at 5"* when the summary got it wrong.
+- **Background tasks use the stronger models:** lite models answer a task's step only when the stronger ones fail, one
+  at a time (raced alongside, they carried whole tasks, which then gave up), and Jarvis tells you once a day when that
+  happens. Gemini 4 Hydrogen is no longer first in the built-in list: it answered none of 191 steps there, and each
+  step waited 8 seconds for it.
+- **No more asking the same thing over and over:** the voice no longer repeats the same lookup, failing read or change
+  within one request (it looks again after anything that may have changed the answer), and after 12 tools it hands
+  the job to a background task instead of asking you where to look.
+- **"yea" is a yes** when Jarvis asks you to confirm.
+- **A message on screen checks the chat first:** a background task that types a message and presses Enter in a chat
+  app without checking whose chat is open is stopped before anything is typed.
+- **Decorated names:** WhatsApp and Discord chats with fancy or fullwidth letters, emoji, accents or Arabic vowel marks
+  are found by their plain name; a near miss still picks nothing.
+- **"What's on my screen" means yours:** looking at the screen no longer describes Jarvis's own window.
 - **Messages passed on sound like you:** *"tell him yes, but I'll give it to him tomorrow"* sends *"Yes, but I'll give it
   to you tomorrow"* to him (it went word for word), *"tell him yes"* goes to the person you're talking with (it went to
   someone who had written an hour before), and one request sends one message. Jarvis now sees what people wrote, not
   only its summary, including messages that arrive while you're talking with it.
-- **Typed requests are never taken for noise:** a typed *"say yes"* got no answer at all.
+- **Typed requests are never taken for noise:** a typed *"say yes"* got no answer at all, and a typed *"go now"* ended
+  the conversation in silence.
+- **Lecture files from Classroom:** slides and notes a teacher posts as a course's materials are found (Jarvis looked
+  through the work and announcements over and over, then said no files were posted), and one is read or saved under
+  its own name, as the kind of file it is. *"The latest lecture"* and *"my calculus class"* (a course whose name is
+  only its code) are found too.
+- **Long lists from your accounts:** a list too long to come back whole (a course's 25 lectures, a busy course's
+  announcements) arrived as a sample and a file Jarvis can't reach: the voice went looking for that file on your PC,
+  then said the slides were downloaded, and announcements said "couldn't check". Jarvis now reads such lists page by
+  page, and a result that was cut says so instead of passing for the whole of it.
+- **"Continue" after a long job** carries on from where it stopped: it used to start over, because the request and
+  everything done so far had been dropped from what Jarvis remembers of the conversation.
+- **No more silent digging by voice:** asked *"when did I unplug my charger?"*, the voice ran 13 commands in a row
+  while you waited, then said the logs didn't say. After 4 commands it hands the digging to the agent, which finds it.
+- **Knows when it has the answer:** a file that isn't there, or one whose owner turned off downloading, is reported
+  after a couple of tries, with the rest of the job done. Jarvis used to hunt for it through every tool it has (20
+  steps for one missing file), and once wrote scripts to fetch a refused file anyway. Setting something up (a keyboard
+  shortcut) takes about a third of the steps, and what was changed only to try it out (a muted microphone) is put back.
+- **Looking at your PC takes no yes:** *"why isn't Bluetooth working?"* and *"which version of ffmpeg do I have?"*
+  are answered from a look (`systemctl status`, `pacman -Q`, `pip list`, `crontab -l` and the like). Jarvis treated
+  those as commands that change things, so it asked first, or passed the yes itself. Starting, stopping, installing
+  and removing still wait for your yes.
+- **Small edits in a project go to the coding agent too:** *"fix the typo in my project's README"* was edited in place
+  with `sed`, then handed to the coding agent as well. Any change to a project's files now goes to the coding agent,
+  in its own copy.
+- A coding job whose OpenChamber was closed says so, instead of "failed: no output".
+- A reminder set *"at 10:00"* on the day before the clocks change rang an hour off.
+- More commands that change things wait for a yes: `\rm`, `X=1 rm`, `xargs -I {} rm {}`, `timeout -s INT 5 rm`,
+  `find -execdir rm`, `python -m pip`, `busybox rm`. `command -v npm` ("is it installed?") no longer asks.
+- KDE: with windows that have no title (the desktop's own), listing the open windows took seconds, or gave apps each
+  other's titles.
 - **Tasks keep your words:** a task handed to the agent carries what you actually said, so "use commands, not my
   screen" isn't lost in the voice's summary of it.
 - **Things going out twice:** a voice send cut off by a noise is no longer reported as "cancelled" (it had gone, and was

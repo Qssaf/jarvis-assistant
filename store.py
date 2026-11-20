@@ -77,9 +77,12 @@ DEFAULT_SETTINGS = {
     "look_models": [], "point_models": [], "point_strong_models": [], "search_models": [], "image_models": [],
     "hear_models": [], "speak_models": [],
     "agent_models": [
-        "aistudio gemini-4-hydrogen low",  # (it guesses less; slow on the free tier, so only here: never "minimal", a 400)
         "antigravity gemini-3.8-flash low",  # (only when signed in with Google, on the Models page)
         "aistudio gemini-3.8-flash medium",
+        "antigravity gemini-4-hydrogen-sonar low",  # (Hydrogen as a Google sign-in serves it: 3 s a step, against 17-40 below)
+        # (it guesses less, but takes 35-40 s on the free tier and has about ten requests a day: first in line, every step
+        # waited out its hedge for it and it answered none. Never "minimal": a 400)
+        "aistudio gemini-4-hydrogen low",
         "aistudio gemini-3.7-flash low",
         "aistudio gemini-3.5-flash-lite minimal",
         "aistudio gemini-3.1-flash-lite minimal",
@@ -675,9 +678,14 @@ def said_passphrase(text):
     return bool(p and p.search(text or ""))
 
 
-def hide_passphrase(text):
+def passphrase_hider():
+    """hide_passphrase with the keychain read once, for the many pieces of one thing (each read is a D-Bus round trip)."""
     p = _passphrase()
-    return p.sub("•••", text) if p and text else text
+    return lambda text: p.sub("•••", text) if p and text else text
+
+
+def hide_passphrase(text):
+    return passphrase_hider()(text)
 
 
 # ---------------------------------------------------------------- your own OpenAI-compatible providers (name -> base URL)
@@ -770,8 +778,19 @@ def recall(query="", limit=5, day=""):
     return [{k: v for k, v in f.items() if k != "updated"} for f in found[:limit]]
 
 
+WORK_MAX = 40  # finished tool calls kept with a conversation (the models get the newest: jarvis.recent_talk)
+
+
+def _readable(s, sid):
+    """A saved conversation shaped as what's read from it expects (import_data lets through any list of messages)."""
+    return isinstance(s, dict) and s.get("id") == sid and isinstance(s.get("title"), str) and _number(s.get("updated")) and \
+        all(isinstance(s.get(k, []), list) for k in ("messages", "agent", "work")) and \
+        all(isinstance(m, dict) and _number(m.get("time", 0)) for k in ("messages", "work") for m in s.get(k, [])) and \
+        all(isinstance(m, dict) and isinstance(m.get("parts"), list) for m in s.get("agent", []))
+
+
 class Sessions:
-    """Each conversation is a JSON file: what was said (for the app) plus the agent's own history."""
+    """Each conversation is a JSON file: what was said (for the app), the agent's own history, and the tools' work log."""
 
     def __init__(self):
         os.makedirs(DATA, mode=0o700, exist_ok=True)
@@ -785,9 +804,33 @@ class Sessions:
             raise ValueError("bad session id")
         return os.path.join(self.dir, f"{sid}.json")
 
-    def new(self):
+    def _left(self):  # the one the user last ended themselves (not a .json: Chats, tidy and backups skip it)
+        return os.path.join(self.dir, "left")
+
+    def new(self, leave=False):
+        """leave: the user ended the current one themselves (New conversation), so a restart doesn't pick it up again.
+        That's noted beside it, not in it: rewriting it would date it now (Chats' order, tidy's keep_days)."""
+        if leave and os.path.exists(self._path(self.current["id"])):
+            write_json(self._left(), self.current["id"], private=True)
         self.current = {"id": time.strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:6], "title": "New conversation",
-                        "created": time.time(), "updated": time.time(), "messages": [], "agent": []}
+                        "created": time.time(), "updated": time.time(), "messages": [], "agent": [], "work": []}
+
+    def resume(self, within):
+        """After a restart: the last conversation written becomes the current one again if the user or Jarvis spoke in it
+        less than within seconds ago (notices alone would keep an old one going for days) and the user didn't leave it.
+        Returns it, or None: the new empty one stays. Only that file is read; ValueError if it's damaged."""
+        names = [n for n in os.listdir(self.dir) if n.endswith(".json")]
+        if not names:
+            return None
+        name = max(names, key=lambda n: (os.path.getmtime(os.path.join(self.dir, n)), n))
+        s = read_json(os.path.join(self.dir, name), None)
+        if not _readable(s, name[:-5]):
+            raise ValueError(f"{name} isn't a conversation Jarvis can read")
+        spoke = max((m.get("time", 0) for m in s.get("messages", []) if m.get("who") in ("you", "jarvis")), default=0)
+        if s["id"] == read_json(self._left(), None) or time.time() - spoke >= within:
+            return None
+        self.current = s
+        return s
 
     @property
     def messages(self):
@@ -799,6 +842,17 @@ class Sessions:
             s["messages"].append({**msg, "time": time.time()})
             if msg.get("who") == "you" and s["title"] == "New conversation":
                 s["title"] = msg["text"][:60]
+        self.save()
+
+    def log_work(self, who, text, sid=None):
+        """A finished tool call (who: "voice" or "task"), for the models' context: kept with the conversation, never a
+        chat message. sid: the conversation it was made in; once the user has left that one, the line isn't wanted."""
+        with _lock:
+            if sid and self.current["id"] != sid:
+                return
+            work = self.current.setdefault("work", [])  # (conversations saved before there was one)
+            work.append({"who": who, "text": text, "time": time.time()})
+            del work[:-WORK_MAX]
         self.save()
 
     def save(self, agent=None):
@@ -821,6 +875,20 @@ class Sessions:
 
     def list(self):
         return sorted((summary for summary, _ in self._all()), key=lambda s: -s["updated"])
+
+    def since(self, after, changed_after):
+        """Messages newer than after, oldest first: the current conversation's, and those of the saved ones changed since
+        changed_after (one left for a new conversation or at a restart)."""
+        out = list(self.current["messages"])
+        for name in os.listdir(self.dir):
+            path = os.path.join(self.dir, name)
+            try:
+                if not name.endswith(".json") or name == f"{self.current['id']}.json" or os.path.getmtime(path) <= changed_after:
+                    continue
+            except FileNotFoundError:  # (deleted meanwhile)
+                continue
+            out += (read_json(path, None) or {}).get("messages", [])
+        return sorted((m for m in out if m.get("time", 0) > after), key=lambda m: m["time"])
 
     def search(self, query):
         """Saved conversations whose title or messages contain the query (case-insensitive), newest first."""
@@ -847,6 +915,8 @@ class Sessions:
 
     def open(self, sid):
         self.current = self.get(sid)
+        if read_json(self._left(), None) == sid:  # (opened again: a restart may pick it up)
+            os.remove(self._left())
         return self.current
 
     def delete(self, sid):

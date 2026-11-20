@@ -316,10 +316,15 @@ class Listener:
                           for m in history)
         decision = whatsapp.decide(self.brain, "Discord", me, name, lines, *((self.wa._note(), self.wa._free()) if self.wa else ()))
         reply, urgent = decision.get("reply", "").strip()[:LIMIT], decision.get("tell_user", "").strip()
+        unsent = ""
         if reply:
-            self.mine.append((chat, reply))
-            call("send", id=chat, kind="dm", text=reply)
-            self.replies.append((time.time(), chat))
-        self.notify(f"💬 Discord from {name}: {said}" + (f"\nJarvis replied: {reply}" if reply else ""))
+            self.mine.append((chat, reply))  # (kept if the send fails too: after a timeout it may still have gone)
+            try:
+                call("send", id=chat, kind="dm", text=reply)
+                self.replies.append((time.time(), chat))
+            except Exception as e:  # Vesktop closed or slow: the thread died here, and the user never saw the message
+                print(f"[discord] the answer to {name} may not have been sent: {e!r}"[:300], flush=True)
+                reply, unsent = "", whatsapp.UNSENT
+        self.notify(f"💬 Discord from {name}: {said}" + (f"\nJarvis replied: {reply}" if reply else unsent))
         if urgent:
             self.tell(f"Discord from {name}: {urgent}")

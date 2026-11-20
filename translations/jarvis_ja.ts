@@ -331,6 +331,13 @@
         <source>%1 tokens at paid-tier prices</source>
         <translation>有料ティアの料金で%1トークン</translation>
     </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n request(s) came back without token counts (most from before Jarvis started counting them), so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>リクエスト%n回はトークン数なしで返ってきたため（ほとんどはJarvisが数え始める前のもの）、合計に含まれていません。</numerusform>
+        </translation>
+    </message>
     <message>
         <location line="+22"/>
         <source>%1: %2</source>
@@ -1167,7 +1174,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3146"/>
+        <location filename="../jarvis.py" line="+3154"/>
         <source>LISTENING</source>
         <translation>聞き取り中</translation>
     </message>
@@ -2639,7 +2646,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+98"/>
+        <location filename="../qml/Today.qml" line="+107"/>
         <source>Feels %1 in %2</source>
         <translation>%2の体感温度 %1</translation>
     </message>
@@ -2674,22 +2681,42 @@
         <translation>このタスクを停止</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Up next</source>
-        <translation>この後の予定</translation>
+        <location line="+17"/>
+        <source>To do</source>
+        <translation>やること</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Nothing scheduled. Try “remind me in 20 minutes to stretch”.</source>
-        <translation>予定はありません。「20分後にストレッチするようリマインドして」と言ってみてください。</translation>
+        <source>Nothing to do this week. Try “remind me in 20 minutes to stretch”.</source>
+        <translation>今週やることはありません。「20分後にストレッチするようリマインドして」と言ってみてください。</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+28"/>
+        <source>No date</source>
+        <translation>期限なし</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Overdue since %1</source>
+        <translation>%1から期限切れ</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Promised to %1</source>
+        <translation>%1に約束</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Cancel this reminder</source>
         <translation>このリマインダーを取り消す</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+6"/>
+        <source>Couldn&apos;t check %1 just now.</source>
+        <translation>今は%1を確認できませんでした。</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>This PC</source>
         <translation>このPC</translation>
     </message>

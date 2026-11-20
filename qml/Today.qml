@@ -15,6 +15,9 @@ ScrollView {
     property var media: ({})
     property var stats: ({})
     property var jobs: []
+    property var todo: null  // /api/todo: {items, couldnt_check}
+    readonly property var todoRows: (todo ? todo.items : (info.reminders || []).map(r => ({ what: r.text, when: r.when, id: r.id, kind: "reminder" })))
+                                    .slice(0, 5)
     property var now: new Date()
     readonly property var weather: info.weather || {}
     readonly property bool shown: visible && Window.window !== null && Window.window.visible
@@ -25,6 +28,11 @@ ScrollView {
     ScrollBar.vertical: Scroller { parent: today; x: today.width - width; height: today.availableHeight }
 
     function load() { Api.get("/api/today", t => { info = t; wake(t.wake || "Hey Jarvis") }) }
+    function loadTodo() { Api.get("/api/todo", d => todo = d) }
+    function when(t) {  // a time today, else the day too
+        const d = new Date(t * 1000)
+        return Qt.formatDateTime(d, d.toDateString() === today.now.toDateString() ? "HH:mm" : "ddd d MMM, HH:mm")
+    }
     function live() {
         Api.get("/api/media", d => media = d)
         Api.get("/api/system", d => stats = d)
@@ -41,11 +49,12 @@ ScrollView {
     }
     Component.onCompleted: { load(); live() }
     Timer { interval: 60000; running: true; repeat: true; onTriggered: today.load() }
+    Timer { interval: 600000; running: today.shown; repeat: true; triggeredOnStart: true; onTriggered: today.loadTodo() }
     Timer { interval: 3000; running: today.shown; repeat: true; triggeredOnStart: true; onTriggered: today.live() }
     Timer { interval: 1000; running: today.shown; repeat: true; triggeredOnStart: true; onTriggered: today.now = new Date() }
     Connections {
         target: Backend
-        function onEvent(json) { if (JSON.parse(json).kind === "log" && json.indexOf("Reminder") >= 0) today.load() }
+        function onEvent(json) { if (JSON.parse(json).kind === "log" && json.indexOf("Reminder") >= 0) { today.load(); today.loadTodo() } }
     }
 
     Glass {
@@ -206,22 +215,24 @@ ScrollView {
             }
         }
 
-        // what's next
+        // what's next: everything to do this week, from Google Tasks, reminders, promises and Classroom (only reminders
+        // until that list arrives: it reads the accounts, so it's fetched when Home shows and every 10 minutes)
         Card {
             Layout.fillWidth: true
             padding: 0
             ColumnLayout {
                 width: parent.width
                 spacing: 0
-                Txt { kind: "label"; text: qsTr("Up next"); Layout.leftMargin: Theme.pad; Layout.topMargin: 16; Layout.bottomMargin: 4 }
-                Txt { kind: "small"; color: Theme.text3; text: qsTr("Nothing scheduled. Try “remind me in 20 minutes to stretch”.")
-                      visible: !(today.info.reminders || []).length; Layout.fillWidth: true; Layout.margins: Theme.pad; Layout.topMargin: 4 }
+                Txt { kind: "label"; text: qsTr("To do"); Layout.leftMargin: Theme.pad; Layout.topMargin: 16; Layout.bottomMargin: 4 }
+                Txt { kind: "small"; color: Theme.text3; text: qsTr("Nothing to do this week. Try “remind me in 20 minutes to stretch”.")
+                      visible: !today.todoRows.length; Layout.fillWidth: true; Layout.margins: Theme.pad; Layout.topMargin: 4 }
                 Repeater {
-                    model: today.info.reminders || []
+                    model: today.todoRows
                     Item {
                         id: row
                         required property var modelData
                         required property int index
+                        readonly property bool late: !!modelData.due && modelData.due * 1000 < today.now.getTime()
                         Layout.fillWidth: true
                         Layout.preferredHeight: 56
                         HoverHandler { id: over }
@@ -230,25 +241,37 @@ ScrollView {
                             id: well
                             anchors { left: parent.left; leftMargin: Theme.pad; verticalCenter: parent.verticalCenter }
                             width: 36; height: 36; radius: 18
-                            color: Theme.accentSoft
-                            Icon { anchors.centerIn: parent; name: "bell"; size: 18; color: Theme.accent }
+                            color: row.late ? Theme.warmSoft : Theme.accentSoft
+                            Icon { anchors.centerIn: parent; size: 18; color: row.late ? Theme.warm : Theme.accent
+                                   name: ({ task: "check", promise: "accounts", classroom: "calendar" })[row.modelData.kind] || "bell" }
                         }
                         Column {
                             anchors { left: well.right; leftMargin: 12; right: cancel.left; rightMargin: 4; verticalCenter: parent.verticalCenter }
                             spacing: 1
-                            Txt { text: row.modelData.text; width: parent.width; elide: Text.ElideRight; wrapMode: Text.NoWrap }
-                            Txt { kind: "small"; text: String(row.modelData.when).replace(/^./, ch => ch.toUpperCase()); width: parent.width; elide: Text.ElideRight; wrapMode: Text.NoWrap }
+                            Txt { text: row.modelData.what; width: parent.width; elide: Text.ElideRight; wrapMode: Text.NoWrap }
+                            Txt { kind: "small"; width: parent.width; elide: Text.ElideRight; wrapMode: Text.NoWrap
+                                  color: row.late ? Theme.warm : Theme.text2
+                                  text: [row.modelData.when !== undefined ? String(row.modelData.when).replace(/^./, ch => ch.toUpperCase())
+                                         : !row.modelData.due ? (row.modelData.kind === "promise" ? "" : qsTr("No date"))
+                                         : row.late ? qsTr("Overdue since %1").arg(Qt.formatDateTime(new Date(row.modelData.due * 1000), "ddd d MMM"))
+                                         : today.when(row.modelData.due),
+                                         row.modelData.kind === "promise" ? qsTr("Promised to %1").arg(row.modelData.place || "")
+                                         : row.modelData.kind === "classroom" ? row.modelData.place || "" : ""].filter(x => x).join(" · ") }
                         }
                         IconButton {
                             id: cancel
                             anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
+                            visible: !!row.modelData.id
                             opacity: over.hovered ? 1 : 0
                             Behavior on opacity { NumberAnimation { duration: Theme.fast } }
                             size: 28; glyph: 14; symbol: "close"; tip: qsTr("Cancel this reminder")
-                            onClicked: Api.post(`/api/reminders/${row.modelData.id}/cancel`, {}, today.load)
+                            onClicked: Api.post(`/api/reminders/${row.modelData.id}/cancel`, {}, () => { today.load(); today.loadTodo() })
                         }
                     }
                 }
+                Txt { kind: "small"; color: Theme.text3; visible: !!today.todo && today.todo.couldnt_check.length > 0
+                      text: qsTr("Couldn't check %1 just now.").arg(today.todo ? today.todo.couldnt_check.join(", ") : "")
+                      Layout.fillWidth: true; Layout.leftMargin: Theme.pad; Layout.rightMargin: Theme.pad; Layout.topMargin: 4 }
                 Item { Layout.preferredHeight: 6 }
             }
         }

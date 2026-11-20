@@ -331,6 +331,13 @@
         <source>%1 tokens at paid-tier prices</source>
         <translation>Ücretli katman fiyatlarıyla %1 token</translation>
     </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n request(s) came back without token counts (most from before Jarvis started counting them), so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>%n istek token sayısı olmadan döndü (çoğu Jarvis saymaya başlamadan önceki), bu yüzden toplama dahil değil.</numerusform>
+        </translation>
+    </message>
     <message>
         <location line="+22"/>
         <source>%1: %2</source>
@@ -1167,7 +1174,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3146"/>
+        <location filename="../jarvis.py" line="+3154"/>
         <source>LISTENING</source>
         <translation>DİNLİYOR</translation>
     </message>
@@ -2639,7 +2646,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+98"/>
+        <location filename="../qml/Today.qml" line="+107"/>
         <source>Feels %1 in %2</source>
         <translation>Hissedilen %1 · %2</translation>
     </message>
@@ -2674,22 +2681,42 @@
         <translation>Bu görevi durdur</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Up next</source>
-        <translation>Sırada</translation>
+        <location line="+17"/>
+        <source>To do</source>
+        <translation>Yapılacaklar</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Nothing scheduled. Try “remind me in 20 minutes to stretch”.</source>
-        <translation>Planlanmış bir şey yok. “20 dakika sonra germe hareketleri yapmamı hatırlat” deneyin.</translation>
+        <source>Nothing to do this week. Try “remind me in 20 minutes to stretch”.</source>
+        <translation>Bu hafta yapılacak bir şey yok. “20 dakika sonra germe hareketleri yapmamı hatırlat” deneyin.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+28"/>
+        <source>No date</source>
+        <translation>Tarih yok</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Overdue since %1</source>
+        <translation>%1 tarihinden beri gecikmiş</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Promised to %1</source>
+        <translation>%1 kişisine söz verildi</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Cancel this reminder</source>
         <translation>Bu hatırlatıcıyı iptal et</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+6"/>
+        <source>Couldn&apos;t check %1 just now.</source>
+        <translation>%1 şu an kontrol edilemedi.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>This PC</source>
         <translation>Bu bilgisayar</translation>
     </message>

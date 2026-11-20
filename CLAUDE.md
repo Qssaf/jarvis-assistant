@@ -11,8 +11,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 .venv/bin/python jarvis.py --no-voice # run without the microphone; the window opens
 jarvis --listen                       # tell a running instance to start listening (--region: ask about a dragged area)
 jarvis --task "..." / --say "..."     # have it do a task (prints the reply) or say something; jarvis --mcp: the same as an MCP server
-EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py [case ...]  # agent eval (spends model requests)
-.venv/bin/python evals/voice_eval.py [case-prefix ...]   # ~150 real-life requests to the voice model (one Live session each)
+EVAL_MODELS="aistudio gemini-3.8-flash low" .venv/bin/python evals/agent_eval.py [case or kind ...]  # agent eval (spends model requests)
+.venv/bin/python evals/voice_eval.py [case-prefix ...]   # ~175 real-life requests to the voice model (one Live session each)
+EVAL_RUNS=3 EVAL_OUT=/tmp/x.json ...                     # both: each case three times, transcripts to a file outside the repo
 .venv/bin/python evals/whatsapp_eval.py [case ...]       # made-up chats through WhatsApp auto-replies (REPLY_PROMPT)
 .venv/bin/python evals/proactive_eval.py [case ...]      # made-up sent messages through people.Tracker's promise prompt
 .venv/bin/python evals/wake_eval.py [max clips]          # the user's wake clips through openWakeWord, gated vs every frame (offline)
@@ -36,11 +37,26 @@ pyside6-lupdate -no-obsolete qml/*.qml jarvis.py window.py -ts translations/jarv
   (raw.githubusercontent.com) can't read it, so they find nothing new; making it public again restores them.
 - `evals/agent_eval.py` runs the real `Brain.ask` on real models against simulated tools (nothing on the PC or in
   accounts is touched) and checks the moves the agent made. Run it before and after prompt or tool changes. Keep eval
-  harnesses in the repo, not a temp dir.
+  harnesses in the repo, not a temp dir. Cases have a `kind` (`tools`, `solving`: the first try isn't the answer,
+  `context`: `turns` that lean on earlier ones, `safety`, `honesty`). The right moves in more than `REQUESTS` model
+  requests (a case's own `requests`) is `SLOW`, and doesn't pass. A case's `world` has to answer as a real PC would
+  (what a tool saved is in `ls`, what `kwriteconfig6` wrote reads back, `echo` echoes, `grep -B` shows the lines above):
+  an agent going round in circles may be a world that printed nothing, or the wrong thing (`shortcut` and
+  `ps_unplugged` were), or one that stood still: a look after the change has to show it (`ps_wrong_name`'s `ls` kept the
+  old name after `mv`, `discord_send`'s screen kept the old chat after the click: each was 31 requests of "it didn't
+  work"). Read the trace and fix the world before the prompt, then take the "before" again. A check can take a fourth
+  argument, the world as the agent left it (a microphone left muted, who a message went to: a case with `chat` is a
+  small chat app, `chat_step`). A new check is tried on a made-up good trace and a lazy one before it's trusted.
+  The default shell answers basics (`basics()`: `ps`/`which`/`env`/`echo`, input tools "command not found"), and a
+  chat plan the real `chat_unchecked` refuses shows in the trace as `act refused` (`brain.system.focused` is stubbed
+  to the case's first window).
 - `evals/voice_eval.py` types real-life requests to the real voice model with the real prompt, memory and accounts:
   reads run for real, changes and screen/PC actions are simulated behind the real safety gates, and every `store`
   write and `system` action function is patched to raise first. Its transcripts hold personal data: `EVAL_OUT` goes
-  outside the repo. Run it after `LIVE_PROMPT` or voice tool changes.
+  outside the repo. Run it after `LIVE_PROMPT` or voice tool changes. `ctx_` cases lean on the talk before (`talk`
+  seeds it), `solve_` ones aren't answered by the first try; `run_tool` applies `jarvis.tool_limit` as `Live._tool`
+  does. Live turns sessions away (1011) after about a dozen in 15 minutes: the case waits `EVAL_WAIT` seconds (600) and
+  runs again.
 
 - There's no test framework: `test_jarvis.py` is one script of plain `assert`s run top to bottom, so "one test" means
   running the relevant snippet in `python -c`. It points `XDG_CONFIG_HOME`/`XDG_DATA_HOME`/`APPDATA` at a temp dir
@@ -68,7 +84,8 @@ pyside6-lupdate -no-obsolete qml/*.qml jarvis.py window.py -ts translations/jarv
 - Tests should use the real objects (e.g. `jarvis.Speaker()`) rather than hand-made fakes: a fake with an old
   attribute once hid a crash that killed voice after the first wake word. Tests that build `Brain.__new__` or
   `Live.__new__` set the attributes they need by hand (`contents`, `asking`, `quick_tasks` as a dict...): a new
-  attribute on those classes usually needs adding there.
+  attribute on those classes usually needs adding there. The file's last section builds a real `jarvis.Live` (its
+  `Speaker.play` replaced, `brain.asker` put back) for the request tracking: `_handle`, `_recover`, `_watch`, `_task`.
 - Windows CI runs the same file: a check of a Linux-only path must force it (`system.IS_WINDOWS = False`, then restore),
   and timestamps must stay before the year 3000 (Windows can't format later ones). Its temp folder is a short 8.3 name
   (`C:\Users\RUNNER~1`): compare real paths (a symlinked `TMPDIR` reproduces it here); and nothing makes the XDG config
@@ -100,25 +117,57 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   no text and no call is asked again (three in a row: the task says it got no answer, never "Done."). A task that
   fails after steps ran keeps them (`Task.failed` ends its history, joined by `ask`), and the error names what ran.
   Independent calls (accounts, plugins, `PARALLEL_TOOLS`) run in parallel; screen tools keep their order.
+- A task's steps go through `Progress`: every `CHECKPOINT_EVERY` steps, and on a stall signal (3 steps all `failed`, a
+  step whose non-`blind` calls all repeat an earlier `outcome`, 5 run_commands in a row), `_ask` appends a `checkpoint`
+  note (goal + `Task.plan`, which `plan` now keeps) to that step's tool results, and the next step runs `deeper`: one
+  thinking level up (`one_up`), hedged at twice its level's HEDGE; a model that 400s the raised level is asked as listed
+  and kept in `refused_levels`. Gate refusals (`refused`: "not run:"/"NOT DONE") are neither failures nor stall signals.
+  `_generate(agent=True)` (task steps only) sorts `is_lite` entries last and never hedges into one (looks, points and
+  search keep lite-first racing); a step a lite entry answers `notify`s once per model per day (`lite_told`). Jarvis's
+  own notes in a task start with `NOTE`, and `trim` never cuts there; `LESSON_NUDGE` follows a task with 2+ real
+  failures, no remember/skill and an answer that isn't a question. A voice task's turn has the talk first and the
+  voice's summary after it, named as one (given the summary first, "at 5" was sent where the user said half past six).
+  Tests building `Brain.__new__` that reach agent steps set `lite_told` and `refused_levels`.
 - A voice call of a change (`ONCE_TOOLS`, or an account tool that isn't `is_read_action`) goes through `_send_once`: the
   same arguments again before the user speaks are refused (the model re-calls a send right after it worked), and so is
   one whose first answer never reached the model (`told`, set when `_quick` delivers): a cut-off call still finishes
-  (shielded), so `_quick` answers it "NOT stopped", never "cancelled" (only an act that types nothing really stops).
+  (shielded), so `_quick` answers it "NOT stopped", never "cancelled" (only an act that types nothing really stops). It went only
+  if `call_error` finds no failure (an email that failed inside Composio's result was "just done" on the second try, and
+  the user was told it was sent); one that failed twice isn't tried a third time.
   A result is SILENT after Gemini spoke only for a change that worked: reads (`QUERY_TOOLS`, account reads) and errors are said.
 - Context: `recent_talk` is the conversation as both models get it ("HH:MM who: text", newest last; notices only from
   the last `NOTICE_KEEP`). `_config` puts it in the voice's prompt; a do_task passes it as `Brain.ask(context=)` (its
   task text is the voice's summary: the user's words win); people's messages and calls shown while a session is open go
-  in as `Live.notice` (client content, `turn_complete=False`, at a quiet moment or before the next request). A voice
+  in as `Live.notice` (client content, `turn_complete=False`, at a quiet moment or before the next request). The work log:
+  one line per finished tool call (`work_line`: keys and passphrase hidden, <= 180 chars) in `sessions.current["work"]`
+  via `log_work`, never a chat message; the voice's from `Live._answer` (conversation id taken before the call), tasks'
+  through `brain.on_done`, only while `self.contents is task.base`, under `history_lock` as `_join`; `recent_talk` merges
+  the last `WORK_KEEP` of them by time: the newest are sure of a quarter of the limit (`WORK_SHARE`: a long talk fills
+  whatever it's given, and left room for one of them or none), older ones take the room the talk leaves; nothing
+  `log_work` does may fail the call. At
+  startup `pick_up` makes the newest conversation current again (`Sessions.resume(RESUME_WITHIN)`, newest file by
+  mtime, checked by `_readable`) unless the user ended it with New conversation (`sessions/left` holds that id). A voice
   `whatsapp_send`/`discord_send` to someone the user didn't name while they're talking with someone else there is
   refused once (`wrong_person`), a different second message to the same chat for one request always (`sent_to`), and
-  typed text is never `ignore`d. `evals/voice_eval.py`'s cases can seed the chat (`talk`) and mirror those gates.
+  typed text is never `ignore`d. After `VOICE_TOOL_LIMIT` tools for one request the voice is told to stop and say
+  what's in the way and hand the job to do_task, and after `VOICE_COMMAND_LIMIT` `run_command`s to hand the digging to
+  do_task (`tool_limit`, a pure function). `repeat_call`/`note_call` (pure, mirrored in voice_eval's `run_tool`) refuse a
+  voice call identical to one since the user spoke: a read once its answer reached the model (`told`) and within
+  `READ_FRESH`, a call that failed twice, a change that went (`REPEATABLE`: media); `forget_reads` drops the reads on any
+  change (the voice's, a task's via `note_change`), a do_task result, a notice, an unprompted `_send` or a session opened
+  without resumption. `CHANGING_ARGS` make a read a change and `READING_ACTIONS` a list a read (`jobs list` after a stop); `call_error` sees
+  Composio's failure inside the result text. A call a gate refuses is logged (`[voice] <tool> refused:`): it ran
+  nothing, so no `[tool]` line said why the voice stopped. A tracked `_send` (a picked region, an announcement) starts
+  a new tool count. `evals/voice_eval.py`'s cases can seed the chat (`talk`) and mirror those gates.
 - `Live` has resilience logic that's easy to break: request tracking (`inflight`), session resumption, `_recover`
   and `_relisten` after drops, the `_watch` silence watchdog, and half-duplex mic gating while the speaker plays.
   `_recover` and the watchdog stand back only for the request's own work (`_own_work`: a quick tool running, or a
   do_task this request started, kept in `inflight["tasks"]`), never for another request's task; quick tools whose
   answers can't be sent because the session closed reopen one and hand them over (`_hand_over`, as `_task` does).
   A tool reply sent with `scheduling="SILENT"` (always for `stop_listening` and `ignore`, the voice's "say nothing" for noise) gets no spoken answer, so the request
-  must be cleared (`inflight = None`) or the watchdog reconnects 12 s later and re-asks. Something Jarvis says on its
+  must be cleared (`inflight = None`) or the watchdog reconnects 12 s later and re-asks. A tracked `_send` that isn't an
+  announcement clears `announcing`: typed while an announcement was still to be said, the answer was kept out of the
+  chat as announced text (and with `speak_typed_replies` off nothing came back at all). Something Jarvis says on its
   own (`announce`: reminders, scheduled tasks, `--say`) waits 25 s instead, and never asks the user to repeat it. Code in `_run`'s `except`
   that schedules a reconnect must read `self.mic` first: the `finally` turns it off before the callback runs.
 - Quiet hours (`store.quiet_now`: the `quiet_from`/`quiet_until` schedule or `do_not_disturb`): `announce` says nothing
@@ -161,7 +210,10 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
   `POST /session/<id>/interrupt`. Its permissions are OpenChamber's own settings; a failed or empty poll is retried for
   2 min (`CHAMBER_POLL`). Without it, `HARNESSES` (`claude -p --output-format stream-json`, `acceptEdits` unless safety
   is "full"), with the task on stdin (`run_lines(stdin_text=)`: npm's `claude.cmd` goes through cmd.exe, which splits
-  free text at quotes, `&` or a new line). Tests use a fake server: never the real one.
+  free text at quotes, `&` or a new line), or Antigravity when the user names it or `claude` isn't installed (`agy
+  --output-format stream-json --mode accept-edits -p=<task>`, `--conversation <id>` to continue: `TASK_FLAG`, since agy
+  reads no prompt on stdin; its `init`/`step_update`/`result` events are read in `harness_event`). Tests use a fake server and fake
+  commands: never the real ones.
 - `check_pass` counts "new since" from the last check that got an answer (`ok` in checks.json), not the last one started.
 - Task reminders (`task: true`) and the `checks` loop run `Brain.ask(..., unattended=True)` (`run_unattended`): its own
   empty history, and `confirmed` is dropped from every agent call (in `_ask`, not `_run_tool`: the voice
@@ -172,18 +224,25 @@ thread, and everything else runs on daemon threads: the wake-word loop (`voice_l
 **Tools.** Files a tool fetches for the user (`drive_file` with `save_to`, a WhatsApp document) go through `save_file`:
 only into `own_folder`s (the home folder, nothing hidden), under a `safe_name`, never over another file.
 `brain.TOOLS` maps a name to `(function, description, JSON schema)`. A function returns a dict, or
-`(dict, jpeg_bytes)` to attach a screenshot. `briefing`, `classroom_due`, `classroom_announcements`, `drive_file`, `ask_user` and
+`(dict, jpeg_bytes)` to attach a screenshot. `briefing`, `classroom_due`, `todo` (`todo_items`: Google Tasks, reminders, promises, Classroom; Home's To do card), `classroom_announcements`, `classroom_materials`, `drive_file`, `ask_user` and
 `account_settings`, `approvals` (entries with `None`) are Brain methods dispatched in `Brain._dispatch` (behind
 `_run_tool`'s key guard). Results from outside
 sources (`OUTSIDE_CONTENT`, accounts, plugins) get the `UNTRUSTED` note. To add a tool: put it in `TOOLS`, in
 `LIVE_TOOLS` if the voice model should run it directly (`QUERY_TOOLS` if its result must be spoken), and in
 `TOOL_LABELS` for the notch/chat label. brain.py never imports jarvis.py: what a tool needs from the app is a
 module-level one-item list the app fills in `main()` (`asker`, `on_image`, `on_change`, `on_plan`, `on_asked`, `notes_done`, `job_done`), and
-Brain fills the model ones (`vision`, `pointer`, `painter`, `grounder`, `notes`).
+Brain fills the model ones (`vision`, `pointer`, `painter`, `grounder`, `notes`, `decider`). `decider` is Gemini's
+Decisions API (`AIStudio.decide`, yes/no probabilities, no output tokens), used only while the point models include
+`aistudio`: `screen_yes` feeds `watch` and `act`'s `expect`, which trust it from `SURE` and ask `pointer` otherwise.
 
 **Safety in code, not only prompts.** With the `safety` setting on "ask" (the default), risky shell commands
 (`RISKY_COMMAND`) and account changes in "ask" mode (`needs_yes`: not `is_read_action`) are refused until the model
-passes `confirmed: true` (`with_confirmed` adds it to those schemas; it's stripped before Composio sees it). A plain
+passes `confirmed: true` (`with_confirmed` adds it to those schemas; it's stripped before Composio sees it). A tool
+that changes things isn't risky in its reading forms (`RISKY_BUT_READING`: `systemctl status`, `pacman -Q`, `pip list`,
+`crontab -l`; only options that take no value may come before the reading word, so `systemctl -p status stop x` still
+asks): a look that needs a yes teaches the model to pass `confirmed` itself. Code handed to an interpreter that deletes, moves or overwrites is risky too (`INLINE_CODE` and `CODE_CHANGES`, two one-pass
+patterns over the whole command: `python3 -c "import shutil; shutil.rmtree(...)"` ran unasked, on one line, several, or
+in a here-document); code that only reads or works something out still runs. A plain
 `rm` is rewritten to `gio trash` unless `permanent: true`. `launch` (and `act`'s launch step) runs in a shell too, so it
 refuses risky commands in "ask" mode (use `run_command`). Every change that runs is logged (`brain.changed` →
 `store.log_change`) for `recent_changes` / "undo that".
@@ -193,7 +252,9 @@ phone tasks are exempt). `emit` and `ask_user` replace it with `•••`, so i
 `Brain._run_tool` (the real dispatcher is `_dispatch`) refuses a call whose arguments hold a saved key or sign-in token
 (`saved_secrets`: keychain provider keys and Telegram, the Google, opencode, plugin and `DATA/mcp` token files; 16+
 characters, read again every 30 s) and hides them in every result (`hide_secrets`), for the voice and the agent alike.
-Remembered approvals (`store.approvals`, `approvals.json` in CONFIG, never in backups): `needs_yes` skips a slug the user
+An agent `act` plan that types and then presses Return in a chat app (`CHAT_APP`: the window in front or the plan's
+`app`/`launch`) with no `expect` step before the Return is refused with `CHECK_CHAT` (`chat_unchecked`, in `_ask`'s
+`run`, whatever the safety setting; the voice has its own checks in `Live._type_once`). Remembered approvals (`store.approvals`, `approvals.json` in CONFIG, never in backups): `needs_yes` skips a slug the user
 lifted, and `approvals allow` passes only `may_stop_asking`: the user's latest own words (`user_said`, the app's
 `live.last_heard`; a phone task's label; never an unattended task's) say not to ask (`NO_ASK`), name the app
 (`APP_WORDS`), and hold the passphrase when one is set (not needed from the phone).
@@ -213,13 +274,20 @@ entry is marked down (a network blip) the first "not answering" one is tried any
 per model for the Health page. Every backend also records its reply's tokens (`count_tokens` with `gemini_usage` /
 `openai_usage`; Gemini Live's per-request `usage_metadata` through `count_live`, WhatsApp calls too) in `usage.json`
 (90 days); `cost_report` prices them from `PRICES` (Google's paid tier, dated tiers, per modality) for the Cost page.
-Gemini 4 Hydrogen leads `agent_models` only: it refuses "minimal" thinking with a 400 (which ends the chain), and on
-the free key it answered in 35-40 s, hit 503s and used its daily quota up in about ten requests.
+Gemini 4 Hydrogen's speed depends on the route (measured 2026-11-20): `antigravity gemini-4-hydrogen-sonar` answers a task
+step or a look in about 3 s, `aistudio gemini-4-hydrogen` in 17-25 s whatever the prompt or thinking, so that route has
+60 s in `SLOW_ROUTES` (at "low"'s 20 s half its replies were cut off, and the "hi" probes ate its quota). Both are in
+`agent_models` only, after aistudio gemini-3.8-flash medium: it refuses "minimal" thinking with a
+400, and on the free key it answered in 35-40 s, hit 503s and used its daily quota up in about ten requests (first in
+the list it answered 0 of 191 task steps, and each step waited 8 s for it).
 
 **Accounts and plugins.** Plugins are MCP servers (`McpServer`: streamable HTTP with OAuth, or a stdio command). Each
 keeps one connection, and concurrent calls open their own. A call that fails is sent again once after reconnecting,
 but a change (`call(again=False)`: not `is_read_action`) only when it surely never arrived (`unsent`). `app_data` reads
-results whole (`limit=None`; the model's copy is capped at 20,000 characters). Composio is the default plugin. For connected toolkits,
+results whole (`limit=None`; the model's copy is capped at 20,000 characters, and says where it was cut). A list too
+long for Composio comes back as a sample plus a file in its own sandbox (`remote_file_info`): nothing here can read it,
+so `whole` turns that into an error saying what works (`TOO_LARGE`: less at a time), and `app_data` reads `pageSize`
+lists page by page instead. Composio is the default plugin. For connected toolkits,
 `APP_TOOLS` slugs are loaded as direct tools via `COMPOSIO_GET_TOOL_SCHEMAS` and run through
 `COMPOSIO_MULTI_EXECUTE_TOOL`; `app_data` unwraps Composio's double-wrapped results (None when a call failed: keep
 that distinct from "nothing there", as `briefing` and `classroom_work` do). Remote logins are renewed `REFRESH_EARLY`
@@ -260,7 +328,8 @@ screenshot. The voice model can't see images, so `act` from voice refuses coordi
 - Voice persona: `LIVE_PROMPT` in jarvis.py. The agent's instructions: `prompt.md`.
 - Both contain `{SYSTEM}`, replaced at runtime with `system.describe()` (OS-specific hints). Keep them generic:
   nothing about a particular user, machine or distro. `LIVE_PROMPT` also has `{ADDRESS}`, filled from
-  `preferred_name(memory)` (the persona otherwise drifts back to "sir"), `{LANGUAGE}` (`language` and `languages`) and
+  `preferred_name(memory)` (the persona otherwise drifts back to "sir"; it reads memory line by line, and a name is quoted
+  text or capitalised words ending at any other word: "Kai instead of sir" reached people's auto-replies), `{LANGUAGE}` (`language` and `languages`) and
   `{PERSONA}` (`PERSONAS[personality]`). `prompt.md` changes are checked with `evals/agent_eval.py`.
 - Messaging on screen relies on `act`'s `expect` step (a vision yes/no that stops the plan) and on `locate` refusing
   near-miss names: together they keep a misheard name from sending a message to the wrong chat.
@@ -321,7 +390,9 @@ missing or older than the source (install.sh does too). Auto-replies go through 
 hour; a contact's voice message is transcribed on arrival (`_listen`, `HEAR_LIMIT`) and its words saved as its text
 (`transcript`); the ids Jarvis sent persist in `whatsapp.json` (`mine`); answered calls are a separate Gemini Live session (`CallSession`:
 `open` connects its voice before `accept`, so a call isn't picked up without one; `_ring` and `dial` take the call under `lock`, one at a time). The agent's
-`whatsapp_read`/`whatsapp_send` reach it through `brain.whatsapp_link`; sending follows the `whatsapp` account mode and
+`whatsapp_read`/`whatsapp_send` reach it through `brain.whatsapp_link` (a tool waits `CONNECT_WAIT` for a link that's
+coming up, `_need`; `brain.pick` takes a chat's own id too; an auto-reply whose send fails still shows the message,
+with `UNSENT`, in Discord's `_answer` as well); sending follows the `whatsapp` account mode and
 `confirmed`, and a name must match exactly one chat. What WhatsApp `tell`s the user joins the agent's history
 (`add_turn`, with a call's transcript), except rings (`keep=False`): the history is capped at 80 messages. A 2.1 browser
 profile (`DATA/whatsapp`) is deleted on start and the user is asked to link again.
@@ -351,8 +422,14 @@ and write their file after every piece, named by when they started (`_write`), s
 piece no model could write down is tried again (`PATIENCE`), then its WAV is kept beside the notes (`_keep`); a recorder
 ends itself after `RECORD_LIMIT` and at exit (`end_recordings`), so none outlives Jarvis. A voice
 `notes` start turns the mic off (the meeting kept the voice answering it). `learn_pass` (every 2 min): once the session's last you/jarvis line is `LEARN_AFTER` old,
-`Brain.learn` asks the agent's models once (`LEARN`) for at most three new facts the user said; `learned.json` is
-stamped first, so a failing model isn't asked again; `learn_from_talk` turns it off.
+`Brain.learn` asks the agent's models once (`LEARN`) for at most three new facts the user said or "Lesson: ..." lines
+(their corrections of how Jarvis works), reading `sessions.since(at, at)`: every conversation changed since the stamp;
+`learned.json` is stamped first, so a failing model isn't asked again (a transient `NoModel`, offline for a moment,
+puts the stamp back for `LEARN_TRIES` passes and doesn't stop the loop); each pass logs one `[learn]` line;
+`learn_from_talk` turns it off. `brain.pick` matches names as written, then exactly one `plain_name` match (decorated
+letters, emoji, accents and marks dropped; "Sam & Lee" isn't "Sam Lee"); near matches are listed, never picked. Looks
+leave Jarvis's own window out: `own_window` (window.on_screen) makes `own_note` add `OWN_WINDOW` to `tool_look` and
+`screen_yes` (`tool_look(whole=False)` for a dragged region).
 
 **People, promises, attention.** `people.py`: `people.json` holds a page per person (notes with an optional `until`,
 `seen`/`wrote` per app from one-to-one WhatsApp and Discord messages via `talked`, which writes at most every 5 min per
@@ -457,7 +534,7 @@ brain.py, may register more classes in `brain.BACKENDS` and prepend entries to t
 ## Skill plan
 Stack: Python 3.13 (core), Qt Quick/QML (window), Go (whatsapp-helper/), Kotlin/Compose (android/), JS Worker (relay/),
 Remotion/TSX + Manim (video/: the trailer, see video/README.md)
-Always: verification-before-completion, karpathy-guidelines
+Always: verification-before-completion
 Stack skills: python-patterns
 Chains: feature=brainstorming → writing-plans → test-driven-development (asserts in test_jarvis.py first) →
 verification-before-completion → requesting-code-review; bug=systematic-debugging → test-driven-development (a check
@@ -467,10 +544,8 @@ verified with docs/screens.py (one screenshot of the finished state); prompt/too
 evals/agent_eval.py (and voice_eval.py for LIVE_PROMPT) before and after; video=remotion-best-practices → manim-video → emil-design-eng,
 verified with rendered frames (one contact sheet); decision=council →
 architecture-decision-records; big work=writing-plans → subagent-driven-development
-Sizes: every size runs the full chain; size sets depth only (tiny=brief steps, large=deep steps + subagents)
 Overlays: security-checklist (safety gates, secrets, serve_app API, phone handshake, plugin OAuth); search-first (new
 integration); claude-api only when code calls Anthropic models
-Agents: verification-before-completion→tester, requesting-code-review→code-reviewer (not installed → inline)
 Not for this project: cpp-coding-standards, cpp-testing, fastapi-patterns, react-patterns, mysql-patterns,
 motion-foundations, motion-advanced, minecraft-architect, web-design-guidelines,
 frontend-design
@@ -481,4 +556,8 @@ Missing: Go, Kotlin/Compose → vault: none → find-skills if wanted
 - Tests and evals must stub the real desktop (`system._idle_seconds`, `system.fullscreen`): a full-screen game failed the suite, and the window load read the desktop's real media player (`canned` in the test now answers `/api/media`). verification-before-completion includes CI: after a push, check the run really ran and passed (`gh run list`): an unparsable workflow is red with no jobs, unseen for three pushes.
 - Evals: the default chain (no EVAL_MODELS) worked when one model was 503; `EVAL_OUT` is a file path; a new change tool must be simulated in voice_eval first (it runs real tools); Live closes with 1006 once the key's daily quota is gone; 1011 "Resource has been exhausted" after ~12 sessions in 15 min is a short window (back in ~10 min; the running Jarvis shares the key); a spoken-reply check must strip "\u200b" (the model "says" it). A voice-prompt rule alone fixed a relay case in 2 of 5 runs: run eval cases 3+ times, and back a must-hold behaviour with a code gate (mirrored in voice_eval's simulation).
 - OpenChamber: drive it through its own local `/api` (port in its settings.json); never read its opencode server's password (blocked as credential digging, rightly).
+- A review that starts from `jarvis.log` pays: tracebacks, `[tool] ... error:` counted by tool, requests with nothing
+  within 30 s, and the exchanges before a frustrated request gave 9 of 15 bugs (a typed answer lost behind an
+  announcement, auto-reply threads dying at the send). Tests written for code that already works are tried on
+  mutations of it in a temp copy before they're trusted (34 tried: one too-loose assert, one bad mutation).
 - "Gives up / can't do X / rate limited" reports: read the logs first (`jarvis.log`; for Google accounts also the opencode plugin's `antigravity-logs/` and the accounts file's limits); the causes were code (a model outage killing the task, a tool missing a capability, the plugin saving 503 "No capacity" as a rate limit) more than the prompt or Google.

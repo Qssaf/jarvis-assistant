@@ -11,12 +11,12 @@ ScrollPage {
     title: qsTr("Cost")
     hint: qsTr("What Jarvis's model use would cost at Google's paid-tier prices.")
     property int days: 1
-    property var report: ({ total: 0, tokens: 0, unpriced: 0, days: [], models: [] })
+    property var report: ({ total: 0, tokens: 0, unpriced: 0, unmeasured: 0, days: [], models: [] })
     readonly property real most: Math.max(...report.days.map(d => d.cost), 0)
 
     function load() { Api.get("/api/cost?days=" + days, d => report = d, e => Backend.toast(e.error, true)) }
-    function money(c) {  // (cents; tenths of a cent below one)
-        return c === null ? qsTr("no price") : "$" + (c > 0 && c < 0.01 ? c.toFixed(3) : c.toFixed(2))
+    function money(c) {  // (cents; a few calls cost fractions of one, which mustn't read as free)
+        return c === null ? qsTr("no price") : c > 0 && c < 0.0001 ? "<$0.0001" : "$" + (c > 0 && c < 0.01 ? c.toFixed(4) : c.toFixed(2))
     }
     function count(n) {
         return n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + "M" : n >= 1e3 ? (n / 1e3).toFixed(n >= 1e4 ? 0 : 1) + "K" : String(n)
@@ -54,6 +54,8 @@ ScrollPage {
                     Txt { kind: "title"; text: page.money(page.report.total); font.features: { "tnum": 1 }; Layout.fillWidth: true }
                     Txt { kind: "small"; Layout.fillWidth: true
                           text: qsTr("%1 tokens at paid-tier prices").arg(page.count(page.report.tokens)) }
+                    Txt { kind: "small"; Layout.fillWidth: true; color: Theme.warm; visible: page.report.unmeasured > 0
+                          text: qsTr("%n request(s) came back without token counts (most from before Jarvis started counting them), so they aren't in the total.", "", page.report.unmeasured) }
                 }
             }
             // a bar per day: how the period's cost was spread

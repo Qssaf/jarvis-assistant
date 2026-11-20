@@ -331,6 +331,13 @@
         <source>%1 tokens at paid-tier prices</source>
         <translation>%1 โทเคนตามราคาระดับชำระเงิน</translation>
     </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n request(s) came back without token counts (most from before Jarvis started counting them), so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>%n คำขอกลับมาโดยไม่มีจำนวนโทเคน (ส่วนใหญ่มาจากก่อนที่ Jarvis จะเริ่มนับ) จึงไม่รวมอยู่ในยอดรวม</numerusform>
+        </translation>
+    </message>
     <message>
         <location line="+22"/>
         <source>%1: %2</source>
@@ -1167,7 +1174,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3146"/>
+        <location filename="../jarvis.py" line="+3154"/>
         <source>LISTENING</source>
         <translation>กำลังฟัง</translation>
     </message>
@@ -2639,7 +2646,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+98"/>
+        <location filename="../qml/Today.qml" line="+107"/>
         <source>Feels %1 in %2</source>
         <translation>ที่ %2 รู้สึกเหมือน %1</translation>
     </message>
@@ -2674,22 +2681,42 @@
         <translation>หยุดงานนี้</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Up next</source>
-        <translation>รายการถัดไป</translation>
+        <location line="+17"/>
+        <source>To do</source>
+        <translation>สิ่งที่ต้องทำ</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Nothing scheduled. Try “remind me in 20 minutes to stretch”.</source>
-        <translation>ยังไม่มีอะไรในกำหนดการ ลองพูดว่า “อีก 20 นาทีเตือนให้ยืดเส้นยืดสาย”</translation>
+        <source>Nothing to do this week. Try “remind me in 20 minutes to stretch”.</source>
+        <translation>สัปดาห์นี้ไม่มีอะไรต้องทำ ลองพูดว่า “อีก 20 นาทีเตือนให้ยืดเส้นยืดสาย”</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+28"/>
+        <source>No date</source>
+        <translation>ไม่มีวันกำหนด</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Overdue since %1</source>
+        <translation>เลยกำหนดตั้งแต่ %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Promised to %1</source>
+        <translation>สัญญาไว้กับ %1</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Cancel this reminder</source>
         <translation>ยกเลิกการเตือนนี้</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+6"/>
+        <source>Couldn&apos;t check %1 just now.</source>
+        <translation>ตรวจ %1 ไม่ได้ในตอนนี้</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>This PC</source>
         <translation>พีซีเครื่องนี้</translation>
     </message>

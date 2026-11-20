@@ -331,6 +331,13 @@
         <source>%1 tokens at paid-tier prices</source>
         <translation>유료 등급 가격 기준 토큰 %1개</translation>
     </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n request(s) came back without token counts (most from before Jarvis started counting them), so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>요청 %n회는 토큰 수 없이 돌아와서(대부분 Jarvis가 세기 시작하기 전의 것) 합계에 포함되지 않았습니다.</numerusform>
+        </translation>
+    </message>
     <message>
         <location line="+22"/>
         <source>%1: %2</source>
@@ -1167,7 +1174,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3146"/>
+        <location filename="../jarvis.py" line="+3154"/>
         <source>LISTENING</source>
         <translation>듣는 중</translation>
     </message>
@@ -2639,7 +2646,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+98"/>
+        <location filename="../qml/Today.qml" line="+107"/>
         <source>Feels %1 in %2</source>
         <translation>%2 체감 %1</translation>
     </message>
@@ -2674,22 +2681,42 @@
         <translation>이 작업 중지</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Up next</source>
-        <translation>다음 일정</translation>
+        <location line="+17"/>
+        <source>To do</source>
+        <translation>할 일</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Nothing scheduled. Try “remind me in 20 minutes to stretch”.</source>
-        <translation>예정된 일이 없어요. “20분 뒤에 스트레칭하라고 알려 줘”라고 해 보세요.</translation>
+        <source>Nothing to do this week. Try “remind me in 20 minutes to stretch”.</source>
+        <translation>이번 주에 할 일이 없어요. “20분 뒤에 스트레칭하라고 알려 줘”라고 해 보세요.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+28"/>
+        <source>No date</source>
+        <translation>날짜 없음</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Overdue since %1</source>
+        <translation>%1부터 기한 지남</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Promised to %1</source>
+        <translation>%1에게 약속함</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Cancel this reminder</source>
         <translation>이 알림 취소</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+6"/>
+        <source>Couldn&apos;t check %1 just now.</source>
+        <translation>지금은 %1을(를) 확인하지 못했어요.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>This PC</source>
         <translation>이 PC</translation>
     </message>

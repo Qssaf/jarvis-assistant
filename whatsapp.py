@@ -27,6 +27,9 @@ ANSWER_AFTER = 20    # seconds a call rings before Jarvis picks up (time for the
 CALL_LIMIT = 300     # seconds: Jarvis wraps a call up after this
 RING_FOR = 45        # seconds Jarvis lets its own call ring before giving up
 SEND_WAIT = 75       # seconds a send or unsend may take: longer than the helper's own 60, so its verdict is the one reported
+CONNECT_WAIT = 8     # seconds a tool waits for a link that's coming up (_need)
+# after the message, when Jarvis's answer to it couldn't be confirmed as sent (jarvis.wrong_person cuts it off again)
+UNSENT = " (Jarvis's answer may not have been sent)"
 # (at 30 a slow send was "failed" while it still went out: sent again, the contact got it twice)
 HEAR = ("Transcribe this voice message word for word, in the language it's spoken in. Answer with only its words, or "
         "\"(no words)\" if nobody speaks.")
@@ -118,6 +121,7 @@ class WhatsApp:
         self.user_wrote = {}  # chat -> when the user last wrote there (not Jarvis)
         self.mine = set(self.saved.get("mine", []))  # message ids Jarvis sent (kept: after a restart, still not the user's)
         self.replies = []     # (when, chat) Jarvis auto-replied, for REPLY_LIMIT and CHAT_LIMIT
+        self.waited = 0.0     # when a tool last waited in vain for the link to come up (_need)
         self.heard = []       # when a voice message was transcribed on arrival (HEAR_LIMIT)
         self.answered = []    # (when, caller) Jarvis picked up a call (CALLER_LIMIT)
         self.free = (0, "")   # (when, what) the calendar said for {FREE}
@@ -367,10 +371,15 @@ class WhatsApp:
             return
         decision = self.decide(name, history)
         reply, urgent = decision.get("reply", "").strip()[:700], decision.get("tell_user", "").strip()
+        unsent = ""
         if reply:
-            self._mine(self.ask("send", timeout=SEND_WAIT, chat=chat, text=reply))
-            self.replies.append((time.time(), chat))
-        self.notify(f"💬 WhatsApp from {name}: {said}" + (f"\nJarvis replied: {reply}" if reply else ""))
+            try:
+                self._mine(self.ask("send", timeout=SEND_WAIT, chat=chat, text=reply))
+                self.replies.append((time.time(), chat))
+            except Exception as e:  # the helper gone or slow: the thread died here, and the user never saw the message
+                print(f"[whatsapp] the answer to {name} may not have been sent: {e!r}"[:300], flush=True)
+                reply, unsent = "", UNSENT
+        self.notify(f"💬 WhatsApp from {name}: {said}" + (f"\nJarvis replied: {reply}" if reply else unsent))
         if urgent:
             self.tell(f"WhatsApp from {name}: {urgent}")
 
@@ -455,6 +464,14 @@ class WhatsApp:
         return m["text"]
 
     def _need(self):
+        # coming up (just started, or the link dropped a moment ago): wait for it rather than fail a request made in
+        # those seconds, which worked when asked again; once a wait was in vain, not again for a minute
+        if self.state in ("starting", "connecting") and self.saved.get("linked") and time.time() - self.waited > 60:
+            until = time.time() + CONNECT_WAIT
+            while self.state != "connected" and time.time() < until:
+                time.sleep(0.1)
+            if self.state != "connected":
+                self.waited = time.time()
         if self.state != "connected":
             raise RuntimeError("WhatsApp isn't linked: link it in Settings → WhatsApp" if not self.saved.get("linked")
                                else "WhatsApp is still connecting")

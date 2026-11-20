@@ -351,6 +351,18 @@
         <source>%1 tokens at paid-tier prices</source>
         <translation>%1 من الرموز بأسعار الفئة المدفوعة</translation>
     </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n request(s) came back without token counts (most from before Jarvis started counting them), so they aren&apos;t in the total.</source>
+        <translation>
+            <numerusform>%n طلب عاد دون عدد للرموز (معظمها من قبل أن يبدأ Jarvis بعدّها)، لذا لا تدخل في الإجمالي.</numerusform>
+            <numerusform>طلب واحد عاد دون عدد للرموز (على الأرجح من قبل أن يبدأ Jarvis بعدّها)، لذا لا يدخل في الإجمالي.</numerusform>
+            <numerusform>طلبان عادا دون عدد للرموز (على الأرجح من قبل أن يبدأ Jarvis بعدّها)، لذا لا يدخلان في الإجمالي.</numerusform>
+            <numerusform>%n طلبات عادت دون عدد للرموز (معظمها من قبل أن يبدأ Jarvis بعدّها)، لذا لا تدخل في الإجمالي.</numerusform>
+            <numerusform>%n طلبًا عاد دون عدد للرموز (معظمها من قبل أن يبدأ Jarvis بعدّها)، لذا لا تدخل في الإجمالي.</numerusform>
+            <numerusform>%n طلب عاد دون عدد للرموز (معظمها من قبل أن يبدأ Jarvis بعدّها)، لذا لا تدخل في الإجمالي.</numerusform>
+        </translation>
+    </message>
     <message>
         <location line="+22"/>
         <source>%1: %2</source>
@@ -1227,7 +1239,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3146"/>
+        <location filename="../jarvis.py" line="+3154"/>
         <source>LISTENING</source>
         <translation>يستمع</translation>
     </message>
@@ -2714,7 +2726,7 @@
 <context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+98"/>
+        <location filename="../qml/Today.qml" line="+107"/>
         <source>Feels %1 in %2</source>
         <translation>الحرارة المحسوسة %1 في %2</translation>
     </message>
@@ -2749,22 +2761,42 @@
         <translation>إيقاف هذه المهمة</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source>Up next</source>
-        <translation>القادم</translation>
+        <location line="+17"/>
+        <source>To do</source>
+        <translation>المهام</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Nothing scheduled. Try “remind me in 20 minutes to stretch”.</source>
-        <translation>لا شيء مجدول. جرّب «ذكّرني بعد 20 دقيقة بأداء تمارين الإطالة».</translation>
+        <source>Nothing to do this week. Try “remind me in 20 minutes to stretch”.</source>
+        <translation>لا شيء لتفعله هذا الأسبوع. جرّب «ذكّرني بعد 20 دقيقة بأداء تمارين الإطالة».</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+28"/>
+        <source>No date</source>
+        <translation>بلا تاريخ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Overdue since %1</source>
+        <translation>متأخرة منذ %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Promised to %1</source>
+        <translation>وعدتَ بها %1</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Cancel this reminder</source>
         <translation>إلغاء هذا التذكير</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+6"/>
+        <source>Couldn&apos;t check %1 just now.</source>
+        <translation>تعذّر التحقق من %1 الآن.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>This PC</source>
         <translation>هذا الحاسوب</translation>
     </message>
