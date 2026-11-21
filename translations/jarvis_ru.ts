@@ -283,7 +283,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+324"/>
+        <location filename="../window.py" line="+327"/>
         <source>Copied</source>
         <translation>Скопировано</translation>
     </message>
@@ -901,7 +901,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../qml/SettingsPage.qml" line="+831"/>
+        <location filename="../qml/SettingsPage.qml" line="+902"/>
         <source>Accounts</source>
         <translation>Аккаунты</translation>
     </message>
@@ -1566,7 +1566,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3789"/>
+        <location filename="../jarvis.py" line="+3945"/>
         <source>LISTENING</source>
         <translation>СЛУШАЮ</translation>
     </message>
@@ -1597,9 +1597,22 @@
     </message>
 </context>
 <context>
+    <name>PasswordField</name>
+    <message>
+        <location filename="../qml/PasswordField.qml" line="+16"/>
+        <source>Hide it</source>
+        <translation>Скрыть</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show what you typed</source>
+        <translation>Показать введённое</translation>
+    </message>
+</context>
+<context>
     <name>PeoplePage</name>
     <message>
-        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <location filename="../qml/PeoplePage.qml" line="+80"/>
         <source>just now</source>
         <translation>только что</translation>
     </message>
@@ -1656,12 +1669,13 @@
         <translation>Пока слишком мало сообщений от этого человека, чтобы что-то сказать. Jarvis попробует снова, когда вы больше пообщаетесь.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-56"/>
+        <location line="+58"/>
         <source>Something went wrong</source>
         <translation>Что-то пошло не так</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+33"/>
         <source>People</source>
         <translation>Люди</translation>
     </message>
@@ -1671,13 +1685,48 @@
         <translation>С кем вы общаетесь, что Jarvis понимает о них из ваших чатов, а также ваши заметки и обещания.</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+17"/>
+        <source>This page is locked</source>
+        <translation>Эта страница заблокирована</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Give its password to see who you talk with and what Jarvis knows about them.</source>
+        <translation>Введите пароль, чтобы увидеть, с кем вы общаетесь и что Jarvis о них знает.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password</source>
+        <translation>Пароль</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Password for the People page</source>
+        <translation>Пароль для страницы «Люди»</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Unlock</source>
+        <translation>Разблокировать</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Forgot it? Run “jarvis --reset-people-lock” in a terminal.</source>
+        <translation>Забыли? Выполните «jarvis --reset-people-lock» в терминале.</translation>
+    </message>
+    <message>
+        <location line="+21"/>
         <location line="+1"/>
         <source>Search people</source>
         <translation>Поиск людей</translation>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="+65"/>
+        <source>Hidden</source>
+        <translation>Скрыто</translation>
+    </message>
+    <message>
+        <location line="+27"/>
         <source>No one matches that</source>
         <translation>Никто не подходит</translation>
     </message>
@@ -1685,6 +1734,16 @@
         <location line="+0"/>
         <source>No one here yet</source>
         <translation>Здесь пока никого нет</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Add a password</source>
+        <translation>Добавить пароль</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lock this page now</source>
+        <translation>Заблокировать страницу сейчас</translation>
     </message>
     <message>
         <location line="+46"/>
@@ -1702,7 +1761,7 @@
         <translation>Что понимает Jarvis</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Reading your chats…</source>
         <translation>Чтение ваших чатов…</translation>
     </message>
@@ -1717,7 +1776,17 @@
         <translation>Переписать сейчас по последним личным сообщениям с этим человеком</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
+        <source>Put it right yourself</source>
+        <translation>Исправить вручную</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Write it yourself</source>
+        <translation>Написать вручную</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Forget this</source>
         <translation>Забыть</translation>
     </message>
@@ -1731,8 +1800,13 @@
         <source>Profile forgotten</source>
         <translation>Профиль забыт</translation>
     </message>
+    <message>
+        <location line="+25"/>
+        <source>You wrote this %1. Jarvis leaves it as it is unless you press Refresh.</source>
+        <translation>Вы написали это %1. Jarvis оставляет текст как есть, пока вы не нажмёте «Обновить».</translation>
+    </message>
     <message numerus="yes">
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Updated %1, from %n message(s)</source>
         <translation>
             <numerusform>Обновлено %1, по %n сообщению</numerusform>
@@ -1742,6 +1816,11 @@
     </message>
     <message>
         <location line="+5"/>
+        <source>You told Jarvis not to get to know them: it doesn&apos;t read your chats with them for this. You can still write it yourself.</source>
+        <translation>Вы попросили Jarvis не узнавать этого человека: для этого он не читает ваши чаты с ним. Написать профиль вручную по-прежнему можно.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>You had Jarvis forget what it understood of them. It won&apos;t write it again unless you press Refresh.</source>
         <translation>По вашей просьбе Jarvis забыл, что понял об этом человеке. Он не напишет это снова, пока вы не нажмёте «Обновить».</translation>
     </message>
@@ -1826,7 +1905,37 @@
         <translation>Отметить обещание как выполненное</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+11"/>
+        <source>Privacy</source>
+        <translation>Конфиденциальность</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Let Jarvis get to know them</source>
+        <translation>Разрешить Jarvis узнавать этого человека</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Off: what it understood from their chats is forgotten and it never reads them for a profile again. Your notes and promises stay.</source>
+        <translation>Выкл.: всё, что он понял из чатов с этим человеком, забывается, и он больше никогда не читает их для профиля. Ваши заметки и обещания остаются.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Hide from this page</source>
+        <translation>Скрыть с этой страницы</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Encrypted on this PC with your secret password and left off this list. To see the people you hid, type that password in the search box and press Enter; the same again puts them away.</source>
+        <translation>Зашифровано на этом PC вашим секретным паролем и не показывается в этом списке. Чтобы увидеть скрытых людей, введите этот пароль в поле поиска и нажмите Enter; то же самое ещё раз снова их скроет.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 is hidden. Your secret password in the search box, then Enter, shows the people you hid.</source>
+        <translation>Скрыто: %1. Введите секретный пароль в поле поиска и нажмите Enter, чтобы увидеть скрытых людей.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <location line="+5"/>
         <source>Forget this person</source>
         <translation>Забыть этого человека</translation>
@@ -1857,7 +1966,36 @@
         <translation>Люди появляются здесь, когда вы переписываетесь с кем-то один на один в WhatsApp или Discord или рассказываете о ком-то Jarvis: «Sam — мой двоюродный брат».</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+47"/>
+        <source>Who they are, in one line: cousin; warm, writes in French</source>
+        <translation>Кто это, одной строкой: двоюродная сестра; тёплая, пишет по-французски</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Who they are, in one line</source>
+        <translation>Кто это, одной строкой</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>One point a line, up to 8:
+Talks about her exams lately
+Don&apos;t bring up grades</source>
+        <translation>По одному пункту на строку, до 8:
+В последнее время говорит об экзаменах
+Не заводить разговор об оценках</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>What else Jarvis should understand, one point a line</source>
+        <translation>Что ещё следует понимать Jarvis, по одному пункту на строку</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Your words are kept as you write them, and Jarvis doesn&apos;t rewrite them by itself.</source>
+        <translation>Ваши слова сохраняются так, как вы их пишете, и Jarvis сам их не переписывает.</translation>
+    </message>
+    <message>
+        <location line="+20"/>
         <source>e.g. My cousin, studies medicine in Lyon</source>
         <translation>например: Мой двоюродный брат, учится на медицинском в Лионе</translation>
     </message>
@@ -1877,12 +2015,14 @@
         <translation>С датой вроде 2026-12-31 заметка исчезнет после этого дня.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Cancel</source>
         <translation>Отмена</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Save</source>
         <translation>Сохранить</translation>
     </message>
@@ -2076,7 +2216,7 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="-677"/>
+        <location filename="../qml/SettingsPage.qml" line="-734"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
@@ -2086,7 +2226,7 @@
         <translation>Изменения сохраняются сразу. Модели и ключи API — на странице «Модели».</translation>
     </message>
     <message>
-        <location line="-109"/>
+        <location line="-121"/>
         <source>Checking…</source>
         <translation>Проверка…</translation>
     </message>
@@ -2101,7 +2241,27 @@
         <translation>Не удалось обновить: %1</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
+        <source>The People page asks for its password now</source>
+        <translation>Страница «Люди» теперь спрашивает пароль</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Password removed: the People page is open</source>
+        <translation>Пароль удалён: страница «Люди» открыта</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>People you hide are encrypted with this password now</source>
+        <translation>Скрытые вами люди теперь шифруются этим паролем</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Secret password removed: nobody is hidden any more</source>
+        <translation>Секретный пароль удалён: больше никто не скрыт</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Passphrase saved</source>
         <translation>Кодовая фраза сохранена</translation>
     </message>
@@ -2376,19 +2536,21 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+290"/>
+        <location line="+347"/>
         <location line="+117"/>
         <source>Save</source>
         <translation>Сохранить</translation>
     </message>
     <message>
-        <location line="-405"/>
+        <location line="-462"/>
         <location line="+86"/>
+        <location line="+180"/>
+        <location line="+29"/>
         <source>Remove</source>
         <translation>Убрать</translation>
     </message>
     <message>
-        <location line="-82"/>
+        <location line="-291"/>
         <location line="+7"/>
         <source>Push to talk</source>
         <translation>Нажми и говори</translation>
@@ -2648,7 +2810,93 @@
         </translation>
     </message>
     <message>
-        <location line="+145"/>
+        <location line="+3"/>
+        <source>Asked for before the People page shows anyone. The page locks again after 5 minutes unused, when the window is put away and at every start. It keeps the page from someone at your screen. Forgot it: “jarvis --reset-people-lock” in a terminal takes both passwords here off.</source>
+        <translation>Запрашивается, прежде чем страница «Люди» кого-либо покажет. Страница снова блокируется после 5 минут без использования, когда окно убрано, и при каждом запуске. Это защищает страницу от того, кто окажется у вашего экрана. Забыли: «jarvis --reset-people-lock» в терминале снимает здесь оба пароля.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Password for the People page</source>
+        <translation>Пароль для страницы «Люди»</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lock private security hide</source>
+        <translation>блокировка личное безопасность скрыть пароль</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Current password</source>
+        <translation>Текущий пароль</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Current password for the People page</source>
+        <translation>Текущий пароль для страницы «Люди»</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password set · type a new one to change it</source>
+        <translation>Пароль задан · введите новый, чтобы изменить его</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A password only you know, 4 characters or more</source>
+        <translation>Пароль, который знаете только вы, от 4 символов</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New password for the People page</source>
+        <translation>Новый пароль для страницы «Люди»</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set password</source>
+        <translation>Задать пароль</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>A second password, for the people you hide on the People page: they&apos;re encrypted with it, and listed only when you type it in that page&apos;s search box and press Enter (the same again puts them away). Until you type it after a start, Jarvis doesn&apos;t know them either. Forget it and they stay encrypted until it&apos;s typed again.</source>
+        <translation>Второй пароль — для людей, которых вы скрываете на странице «Люди»: они шифруются им и показываются в списке, только когда вы вводите его в поле поиска этой страницы и нажимаете Enter (то же самое ещё раз снова их скроет). Пока вы не введёте его после запуска, Jarvis тоже их не знает. Если вы его забудете, они останутся зашифрованными, пока его не введут снова.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Secret password, for people you hide</source>
+        <translation>Секретный пароль для скрытых людей</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>hidden secret encrypt private</source>
+        <translation>скрытые секрет шифрование личное</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+0"/>
+        <source>Current secret password</source>
+        <translation>Текущий секретный пароль</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Secret password set · type a new one to change it</source>
+        <translation>Секретный пароль задан · введите новый, чтобы изменить его</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A second password only you know, 4 characters or more</source>
+        <translation>Второй пароль, который знаете только вы, от 4 символов</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New secret password</source>
+        <translation>Новый секретный пароль</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set secret password</source>
+        <translation>Задать секретный пароль</translation>
+    </message>
+    <message>
+        <location line="+152"/>
         <source>Jarvis on Telegram</source>
         <translation>Jarvis в Telegram</translation>
     </message>
@@ -2789,7 +3037,9 @@
         <translation>Подключение…</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-105"/>
+        <location line="+29"/>
+        <location line="+60"/>
         <location line="+19"/>
         <source>Change</source>
         <translation>Изменить</translation>
@@ -2818,7 +3068,7 @@
         <translation>В приложении Jarvis нажмите «Pair» и отсканируйте этот код. Он одноразовый и действует десять минут.</translation>
     </message>
     <message>
-        <location line="-246"/>
+        <location line="-303"/>
         <source>WhatsApp</source>
         <translation>WhatsApp</translation>
     </message>
@@ -3024,7 +3274,7 @@
     </message>
     <message>
         <location line="-452"/>
-        <location line="+658"/>
+        <location line="+715"/>
         <source>Your data</source>
         <translation>Ваши данные</translation>
     </message>
@@ -3059,14 +3309,14 @@
         <translation>Хранить разговоры и журналы</translation>
     </message>
     <message>
-        <location line="-198"/>
-        <location line="+200"/>
+        <location line="-255"/>
+        <location line="+257"/>
         <source>A week</source>
         <translation>Неделю</translation>
     </message>
     <message>
-        <location line="-199"/>
-        <location line="+199"/>
+        <location line="-256"/>
+        <location line="+256"/>
         <source>A month</source>
         <translation>Месяц</translation>
     </message>
@@ -3719,7 +3969,7 @@
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+124"/>
+        <location filename="../jarvis.py" line="+130"/>
         <source>Open Jarvis</source>
         <translation>Открыть Jarvis</translation>
     </message>

@@ -4,7 +4,10 @@ import QtQuick.Layouts
 import Jarvis
 
 // The people Jarvis knows: who they are to you, what it understood of them from your one-to-one chats, your notes and
-// promises. The list on the left (search it), the person picked on the right.
+// promises. The list on the left (search it), the person picked on the right. With a password set (Settings), the page
+// shows no one until it's given; it locks again by itself (the app decides: jarvis.PageLock) and when the window hides.
+// People you hid are nowhere on it, and nothing says there are any: the secret password typed in the search box, then Enter,
+// lists them (the app checks it), and the same again puts them away.
 Item {
     id: page
     objectName: "peoplePage"
@@ -14,7 +17,13 @@ Item {
     property string selected: ""
     property var working: ({})  // name -> {busy} while its profile is written again, then {text, bad} if it says why
     property string editing: ""  // the note being edited ("new" for one being added), on the person shown
-    readonly property var blank: ({ name: "", aka: [], apps: [], last: 0, seen: {}, wrote: {}, notes: [], promises: [], profile: null, forgot: false })
+    property bool editingProfile: false  // what Jarvis understands of the person shown is being put right
+    property bool locked: false   // the page's password hasn't been given: nobody is listed
+    property bool lockSet: false  // there is a password
+    property string lockError: ""
+    property bool revealed: false  // the people you hid are listed too (the password went into the search box)
+    readonly property var blank: ({ name: "", aka: [], apps: [], last: 0, seen: {}, wrote: {}, notes: [], promises: [], profile: null, forgot: false,
+                                    hidden: false, know: true })
     readonly property var person: people.find(p => p.name === selected) || null
     readonly property var p: person || blank
     readonly property var status: working[p.name] || ({})
@@ -25,13 +34,37 @@ Item {
     })
 
     function load() {
-        Api.get("/api/people", d => { people = d.people; profilesOn = d.profiles; keep() })
+        Api.get("/api/people", d => {
+            locked = d.locked; lockSet = d.lock; revealed = d.revealed; people = d.people; profilesOn = d.profiles
+            keep()
+        })
+    }
+    function unlock() {
+        Api.post("/api/people/unlock", { password: pass.text }, () => { pass.text = ""; lockError = ""; load() },
+                 e => { lockError = e.error || qsTr("Something went wrong"); pass.selectAll() })
+    }
+    function tryReveal() {  // Enter in the search box: with the password in it, the hidden are shown, or put away again
+        if (search.text === "") return
+        Api.post("/api/people/reveal", { password: search.text }, d => { if (d.ok) { search.text = ""; load() } }, () => {})
+    }
+    function lockNow() {  // (nothing of anyone stays in the page)
+        people = []; selected = ""; editing = ""; editingProfile = false; search.text = ""
+        Api.post("/api/people/lock", {}, load, load)
+    }
+    function setFlag(path, key, on, done) {  // your say about the person shown: seen at once, then as the app kept it
+        const who = p.name
+        people = people.map(e => e.name === who ? Object.assign({}, e, { [key]: on }) : e)
+        Api.post(path, { name: who, on: on }, () => { if (done) done(who); load() }, e => { Backend.toast(e.error, true); load() })
+    }
+    function saveProfile(gist, text) {  // (refused: the editor stays open, with what you typed)
+        Api.post("/api/people/profile", { name: p.name, gist: gist, lines: text.split("\n") }, () => { editingProfile = false; load() },
+                 e => Backend.toast(e.error, true))
     }
     function keep() {  // the one shown stays picked while it's in the list; else the first
         if (!shown.some(e => e.name === selected)) pick(shown.length ? shown[0].name : "")
     }
     function pick(name) {
-        if (name !== selected) editing = ""
+        if (name !== selected) { editing = ""; editingProfile = false }
         selected = name
     }
     function step(i) {  // the arrow keys in the list: the person above or below, shown, with the keyboard's ring on it
@@ -76,7 +109,19 @@ Item {
                  e => Backend.toast(e.error, true))
     }
     onVisibleChanged: if (visible) load()
+    onLockedChanged: if (locked) { editing = ""; editingProfile = false; if (visible) pass.forceActiveFocus() }
     Component.onCompleted: load()
+    Timer {  // open, it locks by itself after a while unused: the page finds out and lets go of everyone
+        interval: 15000; repeat: true; running: page.visible && page.lockSet && !page.locked
+        onTriggered: Api.get("/api/people/lock", d => { if (d.locked) { page.people = []; page.selected = ""; page.locked = true } })
+    }
+    Connections {  // the window put away (closed to the tray, or minimised): locked
+        target: page.Window.window
+        function onVisibilityChanged() {
+            const v = page.Window.window.visibility
+            if (page.lockSet && !page.locked && (v === Window.Hidden || v === Window.Minimized)) page.lockNow()
+        }
+    }
     Shortcut { sequence: "Ctrl+F"; enabled: page.visible; onActivated: { search.forceActiveFocus(Qt.ShortcutFocusReason); search.selectAll() } }
 
     ColumnLayout {
@@ -91,7 +136,43 @@ Item {
             hint: qsTr("Who you talk with, what Jarvis understands of them from your chats, and what you've noted or promised.")
         }
 
+        Card {  // locked: only the way in
+            visible: page.locked
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            ColumnLayout {
+                anchors.centerIn: parent
+                width: Math.min(360, parent.width - 48)
+                spacing: 14
+                Rectangle {
+                    Layout.alignment: Qt.AlignHCenter
+                    width: 44; height: 44; radius: 22
+                    color: Theme.accentSoft
+                    Icon { anchors.centerIn: parent; name: "lock"; size: 20; color: Theme.accent }
+                }
+                Txt { kind: "heading"; Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter; text: qsTr("This page is locked") }
+                Txt { kind: "small"; Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter
+                      text: qsTr("Give its password to see who you talk with and what Jarvis knows about them.") }
+                PasswordField {
+                    id: pass
+                    Layout.fillWidth: true
+                    Layout.topMargin: 4
+                    placeholderText: qsTr("Password")
+                    Accessible.name: qsTr("Password for the People page")
+                    onAccepted: if (text !== "") page.unlock()
+                    onTextEdited: page.lockError = ""
+                }
+                Txt { kind: "small"; color: Theme.red; Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter; textFormat: Text.PlainText
+                      visible: page.lockError !== ""; text: page.lockError; Accessible.role: Accessible.AlertMessage }
+                Pill { Layout.alignment: Qt.AlignHCenter; kind: "primary"; symbol: "lock"; text: qsTr("Unlock"); enabled: pass.text !== ""
+                       onClicked: page.unlock() }
+                Txt { kind: "small"; color: Theme.text3; Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter
+                      text: qsTr("Forgot it? Run “jarvis --reset-people-lock” in a terminal.") }
+            }
+        }
+
         RowLayout {
+            visible: !page.locked
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: Theme.gap
@@ -112,6 +193,7 @@ Item {
                         leftPadding: LayoutMirroring.enabled ? 14 : 40  // (paddings don't mirror by themselves; the icon's anchors do)
                         rightPadding: LayoutMirroring.enabled ? 40 : 14
                         onTextChanged: page.keep()
+                        onAccepted: page.tryReveal()
                         Keys.onShortcutOverride: e => e.accepted = e.key === Qt.Key_Escape && text !== ""  // (Esc clears it rather than stopping Jarvis)
                         Keys.onEscapePressed: clear()
                         Keys.onDownPressed: page.step(Math.max(0, page.shown.findIndex(e => e.name === page.selected)))
@@ -171,6 +253,8 @@ Item {
                                         spacing: 6
                                         Txt { text: row.modelData.name; weight: 500; elide: Text.ElideRight; wrapMode: Text.NoWrap
                                               Layout.fillWidth: true; Layout.maximumWidth: implicitWidth + 1 }
+                                        Icon { name: "eye-off"; size: 13; visible: row.modelData.hidden; color: Theme.text3
+                                               Layout.preferredWidth: size; Layout.preferredHeight: size; Accessible.name: qsTr("Hidden") }
                                         Repeater {
                                             model: row.modelData.apps
                                             Icon { required property string modelData; name: page.appIcon(modelData); size: 13
@@ -199,6 +283,15 @@ Item {
                             Txt { Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter; kind: "small"
                                   text: search.text ? qsTr("No one matches that") : qsTr("No one here yet") }
                         }
+                    }
+                    RowLayout {  // the lock
+                        Layout.fillWidth: true
+                        Layout.leftMargin: 4; Layout.rightMargin: 4
+                        spacing: 4
+                        Item { Layout.fillWidth: true }
+                        LinkButton { visible: !page.lockSet; text: qsTr("Add a password"); onClicked: page.goTo("settings") }
+                        IconButton { visible: page.lockSet; symbol: "lock"; tip: qsTr("Lock this page now"); size: 32; glyph: 16; color: Theme.text3
+                                     onClicked: page.lockNow() }
                     }
                 }
             }
@@ -270,26 +363,31 @@ Item {
                                 Txt { kind: "heading"; text: qsTr("What Jarvis understands"); Layout.fillWidth: true }
                                 Pill {
                                     kind: "ghost"; symbol: "refresh"
+                                    visible: page.p.know && !page.editingProfile
                                     text: page.status.busy ? qsTr("Reading your chats…") : qsTr("Refresh")
                                     enabled: !page.status.busy
                                     Accessible.description: qsTr("Write it again now from your latest one-to-one messages with them")
                                     onClicked: page.refresh(page.p.name)
                                 }
+                                IconButton { symbol: "edit"; size: 32; glyph: 16; color: Theme.text3; visible: !page.editingProfile
+                                             tip: page.p.profile ? qsTr("Put it right yourself") : qsTr("Write it yourself")
+                                             onClicked: page.editingProfile = true }
                                 ConfirmButton {
-                                    visible: !!page.p.profile
+                                    visible: !!page.p.profile && !page.editingProfile
                                     label: qsTr("Forget this"); again: qsTr("Click again to forget it")
                                     onConfirmed: page.change("/api/people/profile/forget", {}, () => Backend.toast(qsTr("Profile forgotten"), false))
                                 }
                             }
+                            ProfileForm { open: page.editingProfile }
                             Txt {
-                                visible: !!page.p.profile
+                                visible: !!page.p.profile && !page.editingProfile
                                 Layout.fillWidth: true
                                 weight: 500
                                 textFormat: Text.PlainText
                                 text: page.p.profile ? page.p.profile.gist : ""
                             }
                             Repeater {
-                                model: page.p.profile ? page.p.profile.lines : []
+                                model: page.p.profile && !page.editingProfile ? page.p.profile.lines : []
                                 RowLayout {
                                     required property string modelData
                                     Layout.fillWidth: true
@@ -300,18 +398,21 @@ Item {
                             }
                             Txt {
                                 kind: "small"; color: Theme.text3; Layout.fillWidth: true
-                                visible: !!page.p.profile
-                                text: page.p.profile ? qsTr("Updated %1, from %n message(s)", "", page.p.profile.count).arg(page.ago(page.p.profile.at)) : ""
+                                visible: !!page.p.profile && !page.editingProfile
+                                text: !page.p.profile ? "" : page.p.profile.edited
+                                      ? qsTr("You wrote this %1. Jarvis leaves it as it is unless you press Refresh.").arg(page.ago(page.p.profile.at))
+                                      : qsTr("Updated %1, from %n message(s)", "", page.p.profile.count).arg(page.ago(page.p.profile.at))
                             }
                             Txt {
                                 kind: "small"; Layout.fillWidth: true
-                                visible: !page.p.profile
-                                text: page.p.forgot ? qsTr("You had Jarvis forget what it understood of them. It won't write it again unless you press Refresh.")
+                                visible: !page.p.profile && !page.editingProfile
+                                text: !page.p.know ? qsTr("You told Jarvis not to get to know them: it doesn't read your chats with them for this. You can still write it yourself.")
+                                      : page.p.forgot ? qsTr("You had Jarvis forget what it understood of them. It won't write it again unless you press Refresh.")
                                       : page.profilesOn ? qsTr("Nothing yet. Every so often Jarvis reads your latest one-to-one messages with someone and writes a short profile of them, once there are enough messages.")
                                       : qsTr("Jarvis doesn't read your chats to understand people: profiles are off.")
                             }
                             RowLayout {  // (off, with or without an old one)
-                                visible: !page.profilesOn
+                                visible: !page.profilesOn && page.p.know
                                 Layout.fillWidth: true
                                 spacing: 6
                                 Txt { kind: "small"; visible: !!page.p.profile; text: qsTr("Profiles are off, so this one isn't updated."); wrapMode: Text.NoWrap }
@@ -403,6 +504,31 @@ Item {
                         }
 
                         Line {}
+                        ColumnLayout {  // your say about this person
+                            Layout.fillWidth: true
+                            spacing: 0
+                            Txt { kind: "heading"; text: qsTr("Privacy"); Layout.fillWidth: true; Layout.bottomMargin: 4 }
+                            Toggle {
+                                Layout.fillWidth: true
+                                text: qsTr("Let Jarvis get to know them")
+                                hint: qsTr("Off: what it understood from their chats is forgotten and it never reads them for a profile again. Your notes and promises stay.")
+                                checked: page.p.know
+                                // (a click moves the switch by itself and lets go of the line above: it's tied back)
+                                onClicked: { page.setFlag("/api/people/know", "know", !page.p.know); checked = Qt.binding(() => page.p.know) }
+                            }
+                            Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Theme.stroke }
+                            Toggle {
+                                Layout.fillWidth: true
+                                text: qsTr("Hide from this page")
+                                hint: qsTr("Encrypted on this PC with your secret password and left off this list. To see the people you hid, type that password in the search box and press Enter; the same again puts them away.")
+                                checked: page.p.hidden
+                                onClicked: { const hide = !page.p.hidden
+                                             page.setFlag("/api/people/hide", "hidden", hide, who => { if (hide) Backend.toast(qsTr("%1 is hidden. Your secret password in the search box, then Enter, shows the people you hid.").arg(who), false) })
+                                             checked = Qt.binding(() => page.p.hidden) }
+                            }
+                        }
+
+                        Line {}
                         RowLayout {  // the whole page goes
                             Layout.fillWidth: true
                             Layout.bottomMargin: 4
@@ -470,6 +596,63 @@ Item {
         background: Rectangle { radius: 6; color: "transparent"; Focus { keyboard: true; visible: lb.visualFocus } }
         contentItem: Item {
             Txt { id: label; anchors.centerIn: parent; kind: "small"; text: lb.text; color: Theme.accent; wrapMode: Text.NoWrap; font.underline: lb.hovered }
+        }
+    }
+    // What Jarvis understands, in your words: who they are in one line, then a point a line. Escape cancels.
+    component ProfileForm: ColumnLayout {
+        id: pf
+        property bool open
+        visible: open
+        onOpenChanged: if (open) { gistText.text = page.p.profile ? page.p.profile.gist : ""
+                                   linesText.text = page.p.profile ? page.p.profile.lines.join("\n") : ""; gistText.forceActiveFocus() }
+        Layout.fillWidth: true
+        spacing: 10
+        Field { id: gistText; Layout.fillWidth: true; maximumLength: 110
+                placeholderText: qsTr("Who they are, in one line: cousin; warm, writes in French")
+                Accessible.name: qsTr("Who they are, in one line")
+                onAccepted: page.saveProfile(gistText.text, linesText.text)
+                Keys.onShortcutOverride: e => e.accepted = e.key === Qt.Key_Escape  // (Esc closes the editor rather than stopping Jarvis)
+                Keys.onEscapePressed: page.editingProfile = false }
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 150
+            radius: Theme.radiusControl
+            color: Theme.glass
+            border.width: 1
+            border.color: linesText.activeFocus ? Theme.accent : Theme.stroke
+            Behavior on border.color { ColorAnimation { duration: Theme.fast } }
+            Focus { visible: linesText.activeFocus }
+            ScrollView {
+                anchors.fill: parent
+                anchors.margins: 1
+                clip: true
+                TextArea {
+                    id: linesText
+                    placeholderText: qsTr("One point a line, up to 8:\nTalks about her exams lately\nDon't bring up grades")
+                    placeholderTextColor: Theme.text3
+                    Accessible.name: qsTr("What else Jarvis should understand, one point a line")
+                    color: Theme.text
+                    font.family: Theme.font
+                    font.pixelSize: Theme.px(14)
+                    wrapMode: TextEdit.Wrap
+                    selectionColor: Theme.alpha(Theme.accent, 0.4)
+                    selectedTextColor: Theme.text
+                    background: null
+                    padding: 12
+                    KeyNavigation.priority: KeyNavigation.BeforeItem
+                    KeyNavigation.tab: cancelProfile
+                    Keys.onShortcutOverride: e => e.accepted = e.key === Qt.Key_Escape
+                    Keys.onEscapePressed: page.editingProfile = false
+                }
+            }
+        }
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 10
+            Txt { kind: "small"; color: Theme.text3; Layout.fillWidth: true
+                  text: qsTr("Your words are kept as you write them, and Jarvis doesn't rewrite them by itself.") }
+            Pill { id: cancelProfile; text: qsTr("Cancel"); kind: "ghost"; onClicked: page.editingProfile = false }
+            Pill { text: qsTr("Save"); kind: "primary"; symbol: "check"; onClicked: page.saveProfile(gistText.text, linesText.text) }
         }
     }
     // A note's editor, in its row's place (or under the list, for a new one): its words, an optional last day, then

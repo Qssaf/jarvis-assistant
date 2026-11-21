@@ -4,8 +4,12 @@ WhatsApp or Discord; what the user promised them), and the promises spotted in w
 people.json (DATA, owner-only): {"Sam Lee": {"aka": ["sam_"], "notes": [{"text", "at", "until"?}], "seen": {app: when
 they last wrote}, "wrote": {app: when the user last wrote}, "promises": [{"what", "at", "due", "app", "reminder"}],
 "profile"?: {"gist", "text" (its lines), "at": when written, "upto": the newest message read, "count": messages read},
-"looked"?: {"at", "upto", "why": "few"|"empty"|"forgot"}: read and too little to say, or a profile the user forgot}}."""
-import json, os, re, threading, time
+"looked"?: {"at", "upto", "why": "few"|"empty"|"forgot"}: read and too little to say, or a profile the user forgot,
+"no_profile"?: true (the user's "don't get to know them")}}; a profile the user edited has "edited": true and is never
+written over by the pass. People the user hid aren't among those pages: they're under HIDDEN, encrypted with a key made
+from the secret password ({"kdf": {...}, "nonce", "data", "ids": salted hashes of their names, to know a hidden person's
+message without the key}); everyone() gives them back, marked "hidden", while the key is held."""
+import base64, hashlib, hmac, json, os, re, threading, time
 
 import store
 
@@ -14,14 +18,150 @@ PROMISE_DAYS = 7  # a promise with no time is on the evening list this long
 ACTIVE_DAYS = 14  # someone the user talked with this lately is in the prompts' list of people, notes or not
 ACTIVE_LINES = 25  # ...the newest of them only
 APPS = {"whatsapp": "WhatsApp", "discord": "Discord"}
-_lock = threading.Lock()
+_lock = threading.RLock()
 tracker = [None]  # the app's Tracker (promises in what the user sends), filled in main()
 _stamped = {}  # (name, app, me) -> when talked() last wrote it (a chatty DM doesn't rewrite the file every message)
 
 
-def everyone():
+# ---------------------------------------------------------------- the hidden ones: encrypted with the secret password
+HIDDEN = "\x00hidden"  # the book's key for the encrypted part (no name holds a NUL)
+SEALED = b"jarvis-people-hidden-1"
+SCRYPT = {"n": 2 ** 15, "r": 8, "p": 1}  # ~0.1 s and 32 MB a try
+_keys = {"salt": None, "key": None, "other": False}  # held from the first time the password is given in a run until Jarvis
+# quits; other: the page's password was given and didn't open the hidden part (they were hidden under an earlier one)
+EARLIER = ("people hidden under an earlier secret password are still in the file: type that password in the People page's search "
+           "box once, and they move under the one you have now")
+_waiting = []  # changes to hidden people's pages made while no key was held (who wrote when, a promise): for hold()
+
+
+class Locked(RuntimeError):
+    """It would change what's encrypted, and the key isn't held (or it's under another password)."""
+
+
+def _raw():
     book = store.read_json(FILE, {})
     return book if isinstance(book, dict) else {}
+
+
+def _derive(password, salt, kdf=None):
+    kdf = kdf or SCRYPT
+    return hashlib.scrypt(str(password).encode("utf-8"), salt=salt, n=kdf["n"], r=kdf["r"], p=kdf["p"], maxmem=2 ** 27, dklen=32)
+
+
+def _opened(env, key=None):
+    """The hidden pages in the file's encrypted part, with this key (the held one); None if it doesn't open it."""
+    from cryptography.exceptions import InvalidTag
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    try:
+        if key is None:
+            if _keys["key"] is None or env["kdf"]["salt"] != _keys["salt"]:
+                return None
+            key = _keys["key"]
+        pages = json.loads(AESGCM(key).decrypt(bytes.fromhex(env["nonce"]), base64.b64decode(env["data"]), SEALED))
+        return pages if isinstance(pages, dict) else None
+    except (InvalidTag, KeyError, TypeError, ValueError):  # (another password's, or damaged: left as it is)
+        return None
+
+
+def _name_id(salt, name):
+    return hmac.new(bytes.fromhex(salt), " ".join(str(name).split()).lower().encode("utf-8"), "sha256").hexdigest()[:20]
+
+
+def _sealed(pages):
+    """Hidden pages as the file's encrypted part, under the held key."""
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    nonce, ids = os.urandom(12), os.urandom(16).hex()
+    data = AESGCM(_keys["key"]).encrypt(nonce, json.dumps(pages, ensure_ascii=False).encode("utf-8"), SEALED)
+    return {"kdf": {**SCRYPT, "salt": _keys["salt"]}, "nonce": nonce.hex(), "data": base64.b64encode(data).decode("ascii"), "ids_salt": ids,
+            "ids": sorted({_name_id(ids, n) for k, p in pages.items() for n in (k, *p.get("aka", []))})}
+
+
+def _is_hidden(env, *names):
+    """Whether one of these names is someone in the encrypted part (told from their names' salted hashes, with no key)."""
+    return bool(env) and any(n and _name_id(env.get("ids_salt", "00"), n) in env.get("ids", ()) for n in names)
+
+
+def hidden_stored():
+    """Whether the file holds people hidden under some password."""
+    return HIDDEN in _raw()
+
+
+def forget_keys():
+    """As after a restart: no key held."""
+    _keys.update(salt=None, key=None, other=False)
+
+
+def hold(password, current=False):
+    """The secret password was just given: Jarvis gets the hidden people back for this run (or, with none hidden yet, a
+    key to hide someone with), and what waited for them goes into their pages. False if the people in the file were
+    hidden under another password. current: this is the secret password there is now, so people opened with an earlier
+    one move under it."""
+    with _lock:
+        env = _raw().get(HIDDEN)
+        if env is None:
+            salt = os.urandom(16).hex()
+            _keys.update(salt=salt, key=_derive(password, bytes.fromhex(salt)))
+        else:
+            try:
+                key = _derive(password, bytes.fromhex(env["kdf"]["salt"]), env["kdf"])
+            except (KeyError, TypeError, ValueError):
+                return False
+            if _opened(env, key) is not None:
+                _keys.update(salt=env["kdf"]["salt"], key=key)
+            elif current and _opened(env) is not None:
+                book = everyone()
+                salt = os.urandom(16).hex()
+                _keys.update(salt=salt, key=_derive(password, bytes.fromhex(salt)))
+                _save(book, moved=True)
+            else:
+                _keys["other"] = _keys["other"] or current
+                return False
+        _keys["other"] = False
+        if any(isinstance(p, dict) and p.get("hidden") for k, p in _raw().items() if k != HIDDEN):
+            _save(everyone())  # (marked hidden in the open before there was a key: encrypted now)
+        waited, _waiting[:] = _waiting[:], []
+        for name, change, aka in waited:
+            _update(name, change, aka)
+        return True
+
+
+def show_all():
+    """Everyone hidden becomes an ordinary page again (the secret password is being taken off: it has just been given)."""
+    with _lock:
+        book = everyone()
+        for p in book.values():
+            p.pop("hidden", None)
+        _save(book)
+        forget_keys()
+
+
+def everyone():
+    """Every page, the hidden ones (marked "hidden") among them while their key is held."""
+    book = _raw()
+    env = book.pop(HIDDEN, None)
+    for name, page in (_opened(env) or {}).items() if env else ():
+        book[name] = {**page, "hidden": True}
+    return book
+
+
+def _save(book, moved=False):
+    """The pages as everyone() gave them, changed, back in the file: the hidden ones encrypted. An encrypted part that
+    isn't open (no key held, another password's, damaged) is carried along as it is, never dropped or written over:
+    Jarvis knowing nobody hidden isn't nobody being hidden. With no key held, a page marked hidden in the open (from
+    before hidden people were encrypted) stays as it is until hold(); set_flag never makes a new one. moved: the key was
+    just changed, and the old part's pages are in book."""
+    env = _raw().get(HIDDEN)
+    shut = env is not None and not moved and _opened(env) is None
+    if shut or _keys["key"] is None:
+        out = dict(book)
+        if shut:
+            out[HIDDEN] = env
+    else:
+        out = {k: p for k, p in book.items() if not p.get("hidden")}
+        hidden = {k: {f: v for f, v in p.items() if f != "hidden"} for k, p in book.items() if p.get("hidden")}
+        if hidden:
+            out[HIDDEN] = _sealed(hidden)
+    store.write_json(FILE, out, private=True)
 
 
 def _key(book, name):
@@ -31,15 +171,22 @@ def _key(book, name):
 
 
 def _update(name, change, aka=""):
-    """Change a person's page (made if it's new) under the lock; returns the name it's kept under."""
+    """Change a person's page (made if it's new) under the lock; returns the name it's kept under. Someone hidden whose
+    key isn't held gets no page in the open: the change waits for the password (hold)."""
     with _lock:
         book = everyone()
-        key = _key(book, name) or _key(book, aka) or " ".join(name.split())
+        key = _key(book, name) or _key(book, aka)
+        env = _raw().get(HIDDEN)
+        if not key and env is not None and _opened(env) is None and _is_hidden(env, name, aka):
+            _waiting.append((name, change, aka))
+            del _waiting[:-500]
+            return " ".join(name.split())
+        key = key or " ".join(name.split())
         page = book.setdefault(key, {})
         if aka and aka.lower() != key.lower() and aka.lower() not in (a.lower() for a in page.get("aka", [])):
             page.setdefault("aka", []).append(aka)
         change(page)
-        store.write_json(FILE, book, private=True)
+        _save(book)
         return key
 
 
@@ -87,7 +234,7 @@ def drop_note(name, text):
         if len(kept) == len(notes):
             return 0
         book[key]["notes"] = kept
-        store.write_json(FILE, book, private=True)
+        _save(book)
         return 1
 
 
@@ -119,7 +266,7 @@ def drop(name, text):
                         if x not in kept and x.get("reminder"):
                             store.cancel_reminder(x["reminder"])
                 p[field] = kept
-        store.write_json(FILE, book, private=True)
+        _save(book)
     return gone[0]
 
 
@@ -177,7 +324,7 @@ def done(name, what):
                 store.cancel_reminder(x["reminder"])
         gone = len(book[key].get("promises", [])) - len(kept)
         book[key]["promises"] = kept
-        store.write_json(FILE, book, private=True)
+        _save(book)
     return gone
 
 
@@ -224,10 +371,14 @@ def guests(e, book):
         if a.get("self") or a.get("resource") or a.get("responseStatus") == "declined":
             continue
         email = a.get("email", "")
-        key = (_key(book, a.get("displayName", "")) or _key(book, email)
-               or _key(book, re.sub(r"[._-]+", " ", email.split("@")[0])))  # (sam.lee@... is Sam Lee)
+        key = _key(book, a.get("displayName", "")) or by_email(book, email)
         out.append((key or a.get("displayName") or email, email))
     return out
+
+
+def by_email(book, email):
+    """The page an email address belongs to, if one does (sam.lee@... is Sam Lee)."""
+    return _key(book, email) or _key(book, re.sub(r"[._-]+", " ", email.split("@")[0])) if email else None
 
 
 def meeting(e, with_day=False, now=None):
@@ -288,7 +439,7 @@ def tidy(now=None):
         for p in book.values():
             p["notes"] = [n for n in p.get("notes", []) if not n.get("until") or n["until"] > now]
             p["promises"] = [x for x in p.get("promises", []) if _open(x, now)]
-        store.write_json(FILE, book, private=True)
+        _save(book)
 
 
 # ---------------------------------------------------------------- profiles: what Jarvis understands about someone
@@ -347,8 +498,8 @@ def due_profiles(book, now=None, refresh_days=7, most=PROFILES_PER_PASS, apps=No
         if now - last >= ACTIVE_DAYS * 86400 or apps is not None and not set(apps_of(p)) & set(apps):
             continue
         prof, look = p.get("profile"), p.get("looked")
-        if look and look.get("why") == "forgot":
-            continue
+        if p.get("no_profile") or prof and prof.get("edited") or look and look.get("why") == "forgot":
+            continue  # (the user's own say: not to be understood, their own words, or forgotten)
         mark = max((m for m in (prof, look) if m), key=lambda m: m.get("at", 0), default=None)
         if mark and (now - mark.get("at", 0) < (refresh_days * 86400 if mark is prof else LOOK_AGAIN) or last <= mark.get("upto", 0)):
             continue
@@ -407,7 +558,7 @@ def set_profile(name, profile):
             return None
         book[key]["profile"] = profile
         book[key].pop("looked", None)
-        store.write_json(FILE, book, private=True)
+        _save(book)
         return profile
 
 
@@ -421,24 +572,84 @@ def mark_looked(name, upto, why, now=None):
             if why == "forgot":
                 book[key].pop("profile", None)
             book[key]["looked"] = {"at": now or time.time(), "upto": upto, "why": why}
-            store.write_json(FILE, book, private=True)
+            _save(book)
         return key
 
 
-def listing(now=None):
+FLAGS = ("hidden", "no_profile")
+
+
+def set_flag(name, flag, on):
+    """The user's say about someone, kept on their page: hidden (encrypted in the file and off the People page's list
+    until the password is typed in its search box; Jarvis knows them while it holds the key) or
+    no_profile (not to be understood: what Jarvis made of their chats goes and none is written; what the user wrote
+    themself stays). Returns the page's name, None if nobody's."""
+    if flag not in FLAGS:
+        raise ValueError(flag)
+    with _lock:
+        book = everyone()
+        key = _key(book, name)
+        if not key:
+            return None
+        if on:
+            if flag == "hidden" and (_keys["key"] is None or hidden_stored() and _opened(_raw()[HIDDEN]) is None):
+                raise Locked(EARLIER if _keys["other"] else
+                             "type your secret password in the People page's search box first: someone hidden is encrypted with it"
+                             if store.people_lock(store.PEOPLE_SECRET) else
+                             "set a secret password first (Settings → Messages → People): someone hidden is encrypted with it")
+            book[key][flag] = True
+            if flag == "no_profile":
+                if not (book[key].get("profile") or {}).get("edited"):
+                    book[key].pop("profile", None)
+                book[key].pop("looked", None)
+        else:
+            book[key].pop(flag, None)
+        _save(book)
+        return key
+
+
+def edit_profile(name, gist, lines, now=None):
+    """What Jarvis understands of someone, as the user put it right: their own words, kept as written and marked edited
+    (the pass never writes over it; a refresh does). Returns the page's name, None if nobody's."""
+    if not isinstance(gist, str) or not isinstance(lines, list) or not all(isinstance(line, str) for line in lines):
+        raise ValueError("a profile is one line and a list of lines")
+    gist, lines = " ".join(gist.split()), [line for line in (" ".join(line.split()) for line in lines) if line]
+    if not gist and not lines:
+        raise ValueError("write what Jarvis should understand, or use Forget this")
+    if len(gist) > GIST_MAX or len(lines) > PROFILE_LINES or any(len(line) > 200 for line in lines):
+        raise ValueError(f"the first line is at most {GIST_MAX} characters, and there are at most {PROFILE_LINES} lines of 200")
+    now = now or time.time()
+    with _lock:
+        book = everyone()
+        key = _key(book, name)
+        if not key:
+            return None
+        old = book[key].get("profile") or {}
+        book[key]["profile"] = {"gist": gist, "text": "\n".join(lines), "at": now, "upto": old.get("upto", last_talked(book[key])),
+                                "count": old.get("count", 0), "edited": True}
+        book[key].pop("looked", None)
+        _save(book)
+        return key
+
+
+def listing(now=None, hidden=False):
     """Everyone with a page, for the window: the most recently talked with first (then the ones only noted, the newest
-    note first), each with their whole page (notes still true, open promises) and profile."""
+    note first), each with their whole page (notes still true, open promises) and profile. hidden: the ones the user hid
+    from the page too."""
     now = now or time.time()
     out = []
     for k, p in everyone().items():
+        if p.get("hidden") and not hidden:
+            continue
         prof = p.get("profile")
         out.append({"name": k, "aka": p.get("aka", []), "apps": apps_of(p), "last": last_talked(p), "seen": p.get("seen") or {},
                     "wrote": p.get("wrote") or {}, "notes": [n for n in p.get("notes", []) if not n.get("until") or n["until"] > now],
                     "promises": [{"what": x["what"], "due": x.get("due", 0), "at": x["at"], "app": x.get("app", "")}
                                  for x in p.get("promises", []) if _open(x, now)],
                     "profile": {"gist": prof["gist"], "lines": [line for line in prof["text"].split("\n") if line], "at": prof["at"],
-                                "upto": prof["upto"], "count": prof["count"]} if prof else None,
-                    "forgot": (p.get("looked") or {}).get("why") == "forgot"})
+                                "upto": prof["upto"], "count": prof["count"], "edited": bool(prof.get("edited"))} if prof else None,
+                    "forgot": (p.get("looked") or {}).get("why") == "forgot", "hidden": bool(p.get("hidden")),
+                    "know": not p.get("no_profile")})
     return sorted(out, key=lambda e: (-e["last"], -max([n["at"] for n in e["notes"]] or [0])))
 
 

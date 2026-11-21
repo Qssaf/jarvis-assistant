@@ -164,7 +164,7 @@ class PhoneLink:
             pairing = {"link": link, "qr": segno.make(link, error="m").png_data_uri(scale=6, border=2)}
         online = {p["device"] for p in list(self.phones.values())}
         return {"relay": self.state.get("relay", ""), "connected": self.connected, "error": self.error, "pairing": pairing,
-                "devices": [{"id": d, "name": v["name"], "online": d in online} for d, v in self.state["devices"].items()],
+                "devices": [{"id": d, "name": v["name"], "online": d in online} for d, v in list(self.state["devices"].items())],
                 "direct": self.direct_addresses(),
                 "setup": {**self.setup, "log": self.setup.get("log", [])[-6:]}}
 
@@ -565,7 +565,19 @@ class PhoneLink:
     async def _broadcast(self, message):
         for c, phone in list(self.phones.items()):
             if phone["device"]:
-                await self._send(c, message)
+                await self._send_or_forget(c, message)
+
+    async def _send_or_forget(self, c, message):
+        """Sent, or False: that connection died unnoticed, so it's forgotten (the first one to fail ended a broadcast to
+        the others, and a push into it was lost)."""
+        import websockets.exceptions
+        try:
+            await self._send(c, message)
+            return True
+        except (OSError, websockets.exceptions.WebSocketException) as e:
+            print(f"[phone] a connection was gone: {type(e).__name__}", flush=True)
+            self._gone(c)
+            return False
 
     def _task(self, device, request, text):
         try:
@@ -589,8 +601,6 @@ class PhoneLink:
             for old in list(kept)[:-KEEP]:
                 del kept[old]
         c = next((c for c, p in self.phones.items() if p["device"] == device and p["channel"]), None)
-        if c:
-            await self._send(c, message)
-        else:
+        if not (c and await self._send_or_forget(c, message)):
             self.pending.setdefault(device, []).append(message)
             del self.pending[device][:-KEEP]

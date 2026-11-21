@@ -6,6 +6,7 @@ dirs, canned API answers). For design work and the README's pictures:
                                                [--state idle|listening|thinking|speaking]
 
 home-attach: files attached in the message box and in a sent message (a picture, a PDF, a recording, one that's gone).
+people-locked: the People page with its password not given.
 home-new: before anything is said, with no account connected yet. home-running: the tasks at work, opened from their
 chip (a narrow window: --size 900x700).
 
@@ -131,7 +132,7 @@ PEOPLE = {  # (the People page: people.json as Jarvis keeps it, made up)
                     "notes": [], "profile": {"gist": "classmate in Physics 2; brief, plans study sessions", "at": NOW - DAY, "upto": NOW - DAY,
                                              "count": 64, "text": "Classmate in Physics 2\nShort, practical messages in English\n"
                                                                   "Lately: the lab report and Thursday's study session\nOpen: waiting on your half of the lab data"}},
-    "Sam Okafor": {"seen": {"whatsapp": NOW - 26 * HOUR}, "notes": [{"text": "Landlord", "at": NOW - 60 * DAY}]},
+    "Sam Okafor": {"seen": {"whatsapp": NOW - 26 * HOUR}, "notes": [{"text": "Landlord", "at": NOW - 60 * DAY}], "no_profile": True},
     "Alex Rivera": {"aka": ["alexr"], "seen": {"discord": NOW - 4 * DAY}, "wrote": {"discord": NOW - 4 * DAY},
                     "profile": {"gist": "friend from the climbing gym; jokes a lot, long voice notes", "at": NOW - 6 * DAY, "upto": NOW - 6 * DAY,
                                 "count": 88, "text": "Friend from the climbing gym\nJokes a lot, sends long voice notes\nLately: a weekend climbing trip"}},
@@ -238,8 +239,12 @@ def main():
         CANNED["/api/conversation"] = {**CANNED["/api/conversation"], "messages": []}
     if page == "home-new":
         CANNED["/api/today"] = {**CANNED["/api/today"], "connected": []}
-    if page == "people":
+    if page in ("people", "people-locked"):  # (locked: the page has a password, and nobody gave it)
         jarvis.store.write_json(os.path.join(jarvis.store.DATA, "people.json"), PEOPLE, private=True)
+        jarvis.people_lock.close()
+        jarvis.store.set_secret(jarvis.store.PEOPLE_LOCK, "")
+        if page == "people-locked":
+            jarvis.store.set_people_lock("made up")
     if page == "home-attach":
         files = made_up_files()
         sent = {"who": "you", "time": NOW - 20, "text": window.with_attached("Summarise the report, and where was this taken?",
@@ -252,7 +257,7 @@ def main():
     root.setProperty("height", h)
     root.setProperty("needsSetup", page == "setup")
     root.setProperty("page", "home" if page in ("home-empty", "home-new", "home-attach", "home-running", "setup") else "cost" if page == "cost-month"
-                     else "settings" if page.startswith("settings") else page)
+                     else "settings" if page.startswith("settings") else "people" if page == "people-locked" else page)
     settle = time.time() + 2.0
     while time.time() < settle:
         qt.processEvents()

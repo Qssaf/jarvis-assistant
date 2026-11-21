@@ -168,6 +168,10 @@ func handle(raw any) {
 		}
 	case *events.HistorySync:
 		history(e.Data)
+	case *events.GroupInfo: // (a group's name is kept, so a rename is too)
+		if e.Name != nil && e.Name.Name != "" {
+			db.Exec(`UPDATE jarvis_chats SET name = ? WHERE chat = ?`, e.Name.Name, e.JID.String())
+		}
 	case *events.CallOffer:
 		onOffer(e)
 	case *events.UnknownCallEvent:
@@ -216,14 +220,29 @@ func contactOf(j types.JID) types.ContactInfo {
 
 func saved(chat types.JID) bool { return contactOf(chat).FullName != "" } // (in the phone's address book)
 
+// groupName: a group's name asked of WhatsApp, "" when it can't be had now (not logged in: each list of chats waited on
+// every unnamed group while the link came up)
+var groupName = func(chat types.JID) string {
+	if !cli.IsLoggedIn() {
+		return ""
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if info, err := cli.GetGroupInfo(ctx, chat); err == nil {
+		return info.Name
+	}
+	return ""
+}
+
 func nameOf(chat types.JID) string {
 	if chat.Server == types.GroupServer {
 		var name string
 		if db.QueryRow(`SELECT name FROM jarvis_chats WHERE chat = ?`, chat.String()).Scan(&name); name != "" {
 			return name
 		}
-		if info, err := cli.GetGroupInfo(context.Background(), chat); err == nil {
-			return info.Name
+		if name = groupName(chat); name != "" {
+			db.Exec(`UPDATE jarvis_chats SET name = ? WHERE chat = ?`, name, chat.String()) // (asked once, not at every list)
+			return name
 		}
 		return chat.User
 	}

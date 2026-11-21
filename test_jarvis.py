@@ -118,6 +118,17 @@ b._mark_down(("y", "m8", "low"), brain.Overloaded("busy"), True)
 assert probes[-1] == (60, True) and told == ["m8 via y isn't answering; using backup models until it's back."], told
 b._mark_down(("z", "m7", "low"), brain.Overloaded("Google refused a@x's sign-in (HTTP 400): sign in again on the Models page"), True)
 assert "sign in again" in told[-1], told  # (only the user can fix that one: they're told why)
+# a probe ends once its mark is gone (the key changed or was removed: forget_backend): it went on every 10 min for the
+# rest of the run, and the next failure started a second one beside it
+caught = []
+brain.threading.Thread = lambda target, daemon, args=(): caught.append(target) or type("T", (), {"start": lambda self: None})()
+b._mark_down(("b", "m6", "low"), brain.Overloaded("busy"), False)
+brain.threading.Thread = real_thread
+b.forget_backend("b")
+gone_probe = real_thread(target=caught[-1], args=(0, False), daemon=True)
+gone_probe.start()
+gone_probe.join(2)
+assert not gone_probe.is_alive() and ("b", "m6", "low") not in b.down_until
 brain.threading.Thread = real_thread
 # settings validation rejects nonsense instead of saving it
 import store
@@ -217,6 +228,22 @@ asked_saved = []
 brain.on_asked[0] = asked_saved.append
 assert a.ask("12 times 12 then close it") == "144, sir. Closed it." and OneShot.calls == 1
 assert asked_saved == [a.contents]  # (saved with the conversation, whoever asked: only voice tasks were)
+# ...and the conversation still ends on the model's turn: it ended on the tool's result, and the next request made two
+# user turns in a row (Gemini's turns are to alternate)
+assert [m["role"] for m in a.contents] == ["user", "model", "user", "model"] and a.contents[-1]["parts"] == [{"text": "144, sir. Closed it."}]
+# what's saved is a copy taken under the history's lock: another task joining meanwhile changed the very list the saver
+# was writing out
+grew = []
+def saving(contents):
+    n = len(contents)
+    joining = threading.Thread(target=a.add_turn, args=("[check] the inbox", "Nothing new."))
+    joining.start()
+    joining.join(1)
+    grew.append(len(contents) - n)
+brain.on_asked[0] = saving
+a.ask("12 times 12 then close it")
+brain.on_asked[0] = asked_saved.append
+assert grew == [0], grew
 # after a check is added, "I'll tell you if one fails" is the answer: no "don't announce it" nudge (it then read the email now)
 class AddsCheck:
     calls = 0
@@ -284,7 +311,9 @@ for where, plans in {
     ("vesktop", "Discord | @Alex"): (
         [{"click": [60, 135]}, {"wait": 1}, {"click": [350, 935]}, *SEND], SEND, [{"click_on": "Sam Lee", "type": "see you at 6"}, {"keys": "Return"}],
         [{"keys": "ctrl+k"}, {"type": "Sam Lee"}, {"keys": "Return"}, *SEND], [{"look": "who is the chat with?"}, *SEND],
-        [{"set_text": "see you at 6"}, {"keys": "KP_Enter"}]),
+        [{"set_text": "see you at 6"}, {"keys": "KP_Enter"}],
+        # (any spelling key_chains turns into Return: "return", "ret" or "kp_enter" sent the message unchecked)
+        *([{"type": "see you at 6"}, {"keys": keys}] for keys in ("return", "RETURN", "ret", "enter", "kp_enter", "ctrl+a Return"))),
     ("brave", "WhatsApp - Brave"): (SEND,), ("Telegram", "Sam Lee"): (SEND,), ("signal", "Signal"): (SEND,),
     ("kate", "notes.txt"): ([{"app": "Discord", "type": "hi"}, {"keys": "Return"}], [{"launch": "vesktop"}, *SEND]),
 }.items():
@@ -297,7 +326,8 @@ for where, plans in {  # ...checked, or nothing sent, or not a chat app (whateve
         [{"keys": "ctrl+k"}, {"type": "Sam Lee"}, {"keys": "Return"}],  # (the quick switcher: a search, not a message)
         [{"keys": "ctrl+k"}, {"type": "Sam Lee"}, {"keys": "Return"}, {"expect": "the open chat is with Sam Lee"}, *SEND],
         [{"type": "see you at 6"}, {"expect": "the open chat is with Sam Lee"}, {"keys": "Return"}],
-        [{"type": "see you at 6"}], [{"keys": "Return"}], [{"click": [60, 135]}, {"wait": 0}], [{"type": "keys", "keys": "Return"}], [], None),
+        [{"type": "see you at 6"}], [{"keys": "Return"}], [{"click": [60, 135]}, {"wait": 0}], [{"type": "keys", "keys": "Return"}], [], None,
+        [{"type": "see you at 6"}, {"keys": "shift+Tab"}], [{"type": "see you at 6"}, {"keys": "Escape"}]),
     ("brave", "Signal processing - Wikipedia - Brave"): ([{"click_on": "the search box"}, {"type": "weather"}, {"keys": "Return"}],),
     ("konsole", "~ : bash"): (SEND,), ("", ""): (SEND,),
 }.items():
@@ -737,6 +767,19 @@ if not system.IS_WINDOWS:
     except subprocess.TimeoutExpired:
         time.sleep(0.8)
     assert not os.path.exists(f"{tmp}/late")
+# ...and on Windows it runs with no console window: Jarvis.exe has none, and a PowerShell window flashed up at each one
+started_with, real_popen, real_windows = [], system.subprocess.Popen, system.IS_WINDOWS
+class Started:
+    def __init__(self, args, **kw):
+        started_with.append(kw)
+    def wait(self, timeout=None):
+        return 0
+system.subprocess.Popen, system.IS_WINDOWS = Started, True
+try:
+    assert system.shell("Get-Date") == (0, "")
+finally:
+    system.subprocess.Popen, system.IS_WINDOWS = real_popen, real_windows
+assert started_with[0].get("creationflags") == 0x08000000, started_with  # (CREATE_NO_WINDOW)
 a.add_turn("[check] failed payments", "Two failed: offer a free month?")
 assert a.contents[-1] == {"role": "model", "parts": [{"text": "Two failed: offer a free month?"}]} and a.contents[-2]["role"] == "user"
 import threading
@@ -1588,6 +1631,13 @@ lrn.woke(clip); lrn.judge(True)
 lrn.woke(clip); lrn.judge(False)
 lrn.woke(clip); lrn.pending = (lrn.pending[0] - 60, clip); lrn.judge(True)  # too long ago to tell: dropped
 assert (len(os.listdir(lrn.dirs["yes"])), len(os.listdir(lrn.dirs["no"]))) == (1, 1)
+# "Delete my data" removes the clips' folders: the next wake-up's clip went to a folder that wasn't there, and the
+# FileNotFoundError ended the voice session
+import shutil
+shutil.rmtree(jarvis.WAKE_DIR)
+lrn.woke(clip); lrn.judge(True)
+lrn.other_speech(clip)
+assert (len(os.listdir(lrn.dirs["yes"])), len(os.listdir(lrn.dirs["no"]))) == (1, 1)
 # the wake word is a choice: each has its own clips and verifier ("Hey Jarvis" keeps 2.0's), a custom model by its contents
 assert jarvis.wake_folder("hey_jarvis") == jarvis.WAKE_DIR and jarvis.wake_folder("alexa") == os.path.join(jarvis.WAKE_DIR, "alexa")
 own = os.path.join(tempfile.mkdtemp(), "hey_computer_v0.1.onnx")
@@ -1718,6 +1768,17 @@ except ValueError:
     pass
 store.set_connector_mode("gmail", "ask")
 assert "gmail" not in store.connector_modes()
+# Composio turned off on the Plugins page takes its direct account tools with it: they were still offered, and each call
+# failed with "KeyError: 'composio'"; one already on its way says why
+closed = []
+b.plugins = {"composio": types.SimpleNamespace(cfg={"url": "https://connect.composio.dev/mcp"}, close=lambda: closed.append(1))}
+b.app_tools, b.app_tools_for, b.connected, b.accounts = {"GMAIL_FETCH_EMAILS": {}}, {"gmail"}, {"gmail"}, {"gmail": "me@example.com"}
+b.tools_ready = threading.Event()
+b.load_plugins()  # (plugins.json holds none here)
+assert closed and not b.active_app_tools() and not b.app_tools_for and not b.connected and not b.accounts and b.tools_ready.is_set()
+b.app_tools = {"GMAIL_FETCH_EMAILS": {}}
+assert "turned off" in b.run_app_tool("GMAIL_FETCH_EMAILS", {})["error"]
+b.app_tools = {}
 
 # "don't ask me before marking emails read" lifts that one action's yes, but only in the user's own words, about that app
 b = brain.Brain.__new__(brain.Brain)
@@ -2224,6 +2285,26 @@ assert gone.status == "error" and gone.offline and len(said) == 1 and gone.error
 missing = brain.McpServer("missing", {"command": "/no/such/mcp-server"}, mcp_loop, said.append)
 missing.connect()
 assert missing.status == "error" and not missing.offline  # (a missing command: no retry brings it back)
+# a local plugin's calls made at once while it connects share the one connection: each started its own server process,
+# and the first went on running unused
+from contextlib import asynccontextmanager
+opens = []
+class Listing:
+    async def list_tools(self):
+        return "tools"
+
+
+@asynccontextmanager
+async def slow_start():
+    opens.append(1)
+    await asyncio.sleep(0.05)
+    yield Listing()
+twin = brain.McpServer("twin", {"command": "fake-mcp"}, mcp_loop, said.append)
+twin._open = slow_start
+async def at_once():
+    return await asyncio.gather(*(twin._with(lambda s: s.list_tools()) for _ in range(3)))
+assert asyncio.run_coroutine_threadsafe(at_once(), mcp_loop).result(5) == ["tools"] * 3 and opens == [1], opens
+twin.close()
 # a change whose answer is lost on the way back isn't sent a second time (the email went out twice); a read is asked again,
 # and so is a change the server surely never got (it had ended the session)
 from contextlib import asynccontextmanager
@@ -2442,6 +2523,11 @@ assert [x["role"] for x in m] == ["system", "user", "assistant", "tool"]
 assert m[1]["content"][1]["image_url"]["url"] == "data:image/png;base64,QUJD"
 assert m[3]["tool_call_id"] == m[2]["tool_calls"][0]["id"] and "extra_content" not in m[2]["tool_calls"][0]
 assert brain.to_openai(turns, signatures=True)[1]["tool_calls"][0]["extra_content"]["google"]["thought_signature"] == "sig"
+# a model turn with nothing to say (only thoughts, or the empty one kept after a nudge) isn't sent as an assistant
+# message with no content and no tool calls: OpenAI's kind refuses one (content is required without tool_calls)
+empty_turns = [{"role": "user", "parts": [{"text": "hi"}]}, {"role": "model", "parts": [{"thought": True, "thoughtSignature": "s"}]},
+               {"role": "model", "parts": [{"text": ""}]}, {"role": "user", "parts": [{"text": "and now?"}]}]
+assert [x["role"] for x in brain.to_openai(empty_turns)] == ["user", "user"], brain.to_openai(empty_turns)
 parts = brain.from_openai({"choices": [{"message": {"content": "ok", "reasoning_content": "hmm", "tool_calls": [
     {"id": "c1", "function": {"name": "remember", "arguments": '{"fact": "x"}'}}]}}]})
 assert parts == [{"text": "hmm", "thought": True}, {"text": "ok"}, {"functionCall": {"name": "remember", "args": {"fact": "x"}, "id": "c1"}}]
@@ -3047,17 +3133,17 @@ canned = {"/api/health": {"checks": [{"name": "Microphone", "ok": False, "detail
                           "last": {"at": time.time() - 600, "answered": time.time() - 4200, "ok": False, "found": "", "next": time.time() + 3000}},
           "/api/jobs/done": [{"n": 2, "label": "summarise the reports", "at": time.time() - 300, "ok": True, "coding": False, "answer": "Done."}],
           # (People: one with a profile, notes and a promise, one with only a note, one known by talk alone)
-          "/api/people": {"profiles": True, "refresh_days": 7, "people": [
+          "/api/people": {"profiles": True, "refresh_days": 7, "lock": False, "locked": False, "revealed": False, "people": [
               {"name": "Maya Lee", "aka": ["mayal"], "apps": ["whatsapp", "discord"], "last": time.time() - 600,
-               "seen": {"whatsapp": time.time() - 600}, "wrote": {"discord": time.time() - 3600}, "forgot": False,
+               "seen": {"whatsapp": time.time() - 600}, "wrote": {"discord": time.time() - 3600}, "forgot": False, "hidden": False, "know": True,
                "notes": [{"text": "my cousin", "at": time.time() - 86400}, {"text": "exam on Friday", "at": time.time(), "until": time.time() + 86400}],
                "promises": [{"what": "send Maya the photos", "due": time.time() + 7200, "at": time.time() - 60, "app": "whatsapp"}],
                "profile": {"gist": "cousin; warm, teasing, writes in English", "lines": ["Cousin, close in age", "Writes short messages"],
-                           "at": time.time() - 3 * 86400, "upto": time.time() - 3 * 86400, "count": 120}},
+                           "at": time.time() - 3 * 86400, "upto": time.time() - 3 * 86400, "count": 120, "edited": False}},
               {"name": "Noted Only", "aka": [], "apps": [], "last": 0, "seen": {}, "wrote": {}, "notes": [{"text": "the plumber", "at": 1}],
-               "promises": [], "profile": None, "forgot": False},
+               "promises": [], "profile": None, "forgot": False, "hidden": False, "know": True},
               {"name": "Bo ✨ / B", "aka": [], "apps": ["discord"], "last": time.time() - 86400, "seen": {"discord": time.time() - 86400},
-               "wrote": {}, "notes": [], "promises": [], "profile": None, "forgot": True}]}}
+               "wrote": {}, "notes": [], "promises": [], "profile": None, "forgot": True, "hidden": False, "know": True}]}}
 win = window.Window(get=lambda path: canned.get(path) or jarvis.api_get(path, stub), post=lambda path, data: {"ok": True}, tool_label=jarvis.tool_label,
                     live=live, shown_state=jarvis.shown_state, version="test", show=True)
 root = win.engine.rootObjects()[0]
@@ -3364,6 +3450,92 @@ QMetaObject.invokeMethod(next(i for i in all_items(accounts_page) if i.property(
 settle()
 assert posted[-1] == ("/api/approvals/revoke", {"tool": "GMAIL_BATCH_MODIFY_MESSAGES"}) and "Gmail: batch modify messages" not in shown_here()
 del canned["/api/approvals"]
+# the People page: the switches and the editor send the user's say about the person shown; and a locked page shows
+# nobody, only the way in, whose password goes to the unlock route
+posted.clear()
+win.backend.post = lambda path, data: posted.append((path, data)) or {}
+root.setProperty("page", "people")
+settle()
+people_page = root.findChild(QQuickItem, "peoplePage")
+shown_here = lambda: [i.property("text") for i in all_items(people_page) if i.isVisible() and isinstance(i.property("text"), str)]
+press = lambda key, value: QMetaObject.invokeMethod(next(i for i in all_items(people_page) if i.property(key) == value and i.isVisible()), "click")
+assert {"Privacy", "Hide from this page", "Let Jarvis get to know them", "Maya Lee"} <= set(shown_here()), shown_here()
+press("text", "Let Jarvis get to know them")
+settle()
+assert posted[-1] == ("/api/people/know", {"name": "Maya Lee", "on": False}), posted
+press("text", "Hide from this page")
+settle()
+assert posted[-1] == ("/api/people/hide", {"name": "Maya Lee", "on": True}), posted
+# the people someone hid: nothing on the page says there are any, and Enter in the search box sends what's in it to be
+# looked at (the password shows them; the box is emptied so it doesn't stay on the screen)
+assert not [t for t in shown_here() if "hidden" in t.lower() and "password" not in t.lower()], shown_here()
+win.backend.post = lambda path, data: posted.append((path, data)) or {"ok": True, "revealed": True}
+search_box = next(i for i in all_items(people_page) if i.property("placeholderText") == "Search people")
+search_box.setProperty("text", "plum tart 9")
+QMetaObject.invokeMethod(search_box, "accepted")
+settle()
+assert posted[-1] == ("/api/people/reveal", {"password": "plum tart 9"}) and search_box.property("text") == "", posted[-1]
+win.backend.post = lambda path, data: posted.append((path, data)) or {"ok": False}
+search_box.setProperty("text", "maya")
+QMetaObject.invokeMethod(search_box, "accepted")
+settle()
+assert search_box.property("text") == "maya"  # (a search stays a search)
+search_box.setProperty("text", "")
+win.backend.post = lambda path, data: posted.append((path, data)) or {}
+press("tip", "Put it right yourself")
+settle()
+gist_box = next(i for i in all_items(people_page) if str(i.property("placeholderText") or "").startswith("Who they are") and i.isVisible())
+assert gist_box.property("text") == "cousin; warm, teasing, writes in English"
+gist_box.setProperty("text", "my cousin")
+press("text", "Save")
+settle()
+assert posted[-1] == ("/api/people/profile", {"name": "Maya Lee", "gist": "my cousin", "lines": ["Cousin, close in age", "Writes short messages"]}), posted[-1]
+open_people = canned["/api/people"]
+canned["/api/people"] = {**open_people, "lock": True, "locked": True, "people": []}
+QMetaObject.invokeMethod(people_page, "load")
+settle()
+assert "This page is locked" in shown_here() and not any("Maya" in t or "cousin" in t for t in shown_here()), shown_here()
+next(i for i in all_items(people_page) if i.property("placeholderText") == "Password" and i.isVisible()).setProperty("text", "plum tart 9")
+press("text", "Unlock")
+settle()
+assert ("/api/people/unlock", {"password": "plum tart 9"}) in posted and not [p for p in posted if "plum" in str(p) and p[0] not in ("/api/people/unlock", "/api/people/reveal")]
+canned["/api/people"] = open_people
+QMetaObject.invokeMethod(people_page, "load")
+settle()
+assert "Maya Lee" in shown_here() and "This page is locked" not in shown_here()
+# a password typed blind, and only once, can't be checked: one that wasn't what the user meant was "wrong" the first time
+# they came back. Both password boxes can show what's in them, and the one in Settings sends just what it holds
+from PySide6.QtCore import Q_ARG
+root.setProperty("page", "settings")
+settle()
+settings_page = root.findChild(QQuickItem, "settingsPage")
+QMetaObject.invokeMethod(settings_page, "pick", Q_ARG("QVariant", "messages"))
+settle()
+new_box = next(i for i in all_items(settings_page) if str(i.property("placeholderText") or "").startswith("A password only you know"))
+show = lambda box: next(i for i in all_items(box) if i.property("tip") in ("Show what you typed", "Hide it"))
+assert new_box.property("shown") is False and show(new_box).property("tip") == "Show what you typed"
+QMetaObject.invokeMethod(show(new_box), "click")
+settle(0.2)
+assert new_box.property("shown") is True and show(new_box).property("tip") == "Hide it"
+new_box.setProperty("text", "Plum tart 9")
+win.backend.post = lambda path, data: posted.append((path, data)) or {"lock": True, "locked": False}
+QMetaObject.invokeMethod(next(i for i in all_items(settings_page) if i.property("text") == "Set password" and i.isVisible()), "click")
+settle()
+assert posted[-1] == ("/api/people/password", {"old": "", "new": "Plum tart 9"}), posted[-1]
+assert new_box.property("text") == "" and new_box.property("shown") is False  # (emptied, and hidden again for the next one)
+secret_box = next(i for i in all_items(settings_page) if str(i.property("placeholderText") or "").startswith("A second password only you know"))
+secret_box.setProperty("text", "Nut loaf 3")
+win.backend.post = lambda path, data: posted.append((path, data)) or {"secret": True}
+QMetaObject.invokeMethod(next(i for i in all_items(settings_page) if i.property("text") == "Set secret password" and i.isVisible()), "click")
+settle()
+assert posted[-1] == ("/api/people/secret", {"old": "", "new": "Nut loaf 3"}) and secret_box.property("text") == "", posted[-1]
+QMetaObject.invokeMethod(settings_page, "pick", Q_ARG("QVariant", "voice"))  # (as the checks after this one expect it)
+canned["/api/people"] = {**open_people, "lock": True, "locked": True, "people": []}
+root.setProperty("page", "people")
+settle()
+pass_box = next(i for i in all_items(people_page) if i.property("placeholderText") == "Password" and i.isVisible())
+assert pass_box.property("shown") is False and show(pass_box).property("tip") == "Show what you typed"
+canned["/api/people"] = open_people
 win.backend.post = real_post
 root.setProperty("page", "home")
 settle(0.2)
@@ -4440,6 +4612,31 @@ bk.ask("yes", typed=True)
 settle()
 assert q["answer"] == "yes" and asks[-1].startswith("(A task you started"), (q, asks[-1])
 bl.question = None
+# the agent's question said by the backup voice: what's said while it's still being made into speech is heard too (it
+# only began listening once the question had played, and words said meanwhile went to Gemini Live's backlog)
+bk.stop()
+gate.clear()
+real_speak, bl.brain.speak = bl.brain.speak, lambda text: gate.wait(2) and (b"\1\0" * 2400, "audio/L16;codec=pcm;rate=24000")
+bl.down_until, bl.user_spoke_at, bl.backlog = time.time() + 60, time.time(), collections.deque(maxlen=125)
+asked_off = threading.Event()
+asker = threading.Thread(target=bl._ask_now, args=("Send it?", asked_off))
+asker.start()
+time.sleep(0.1)
+bl.speaker.stop()  # (nothing playing yet: the question is still being made into speech)
+bl.feed(frame(3000))
+listening_early = bk.frames
+gate.set()
+asked_off.set()
+asker.join(3)
+settle()
+assert listening_early is not None and len(listening_early) == 1 and not bl.backlog, (listening_early, len(bl.backlog))
+# ...and New conversation (or another one opened, or the data deleted) ends its listening, as it ends Gemini Live's session
+bk.listen()
+bl.mic, bl._go = True, (lambda coro: coro.close())
+bl.close()
+assert bk.frames is None and not bl.mic
+del bl._go, bl.down_until
+bl.brain.speak, bl.mic = real_speak, True
 # "that's all": the goodbye is said, and it's back to the wake word
 heard[0], replies[:] = "that's all, thanks", ["Very good, sir."]
 say_out_loud()
@@ -4772,6 +4969,10 @@ except RuntimeError:
 gb.backends["fake"].generate = lambda contents, model, thinking, **k: tried.append(model) or [{"text": model}]
 gb.down_until, tried[:] = {("fake", "m1", None): float("inf")}, []  # one is up: the down one is skipped, as before
 assert gb._generate([], entries=[("fake", "m1", None), ("fake", "m2", None)]) == [{"text": "m2"}] and tried == ["m2"]
+# ...and a listed service that can't be asked at all (no key, no Google account signed in) isn't one that's up: with one
+# in the list, the down models were refused until a probe got through
+gb.down_until, tried[:] = {("fake", "m1", None): float("inf")}, []
+assert gb._generate([], entries=[("nokey", "m0", None), ("fake", "m1", None)]) == [{"text": "m1"}] and tried == ["m1"]
 
 # what failed says whether waiting could help: models that were busy or out of reach may answer in a moment, a missing
 # key never will
@@ -4818,6 +5019,22 @@ assert gb.down_until.get(("fake", "m1", "minimal")), "the slow model's late fail
 gb.backends["fake"].generate = lambda contents, model, thinking, **k: tried.append(model) or [{"text": model}]
 gb.down_until, tried[:] = {}, []  # one that answers in time is the only one asked
 assert gb._generate([], entries=[("fake", "m1", "minimal"), ("fake", "m2", "minimal")]) == [{"text": "m1"}] and tried == ["m1"]
+# the one asked beside a slow one failing at once gets the next one asked then and there: it waited another HEDGE (at a
+# level with none, the slow one's whole timeout) and logged the failed one as slow
+slow2 = threading.Event()
+def slow_then_broken(contents, model, thinking, **k):
+    tried.append(model)
+    if model == "m1":
+        slow2.wait(5)
+        raise TimeoutError("timed out")
+    if model == "m2":
+        raise ConnectionError("refused")
+    return [{"text": model}]
+gb.backends["fake"].generate, gb.down_until, tried[:] = slow_then_broken, {}, []
+started = time.time()
+assert gb._generate([], entries=[("fake", "m1", "minimal"), ("fake", "m2", "low"), ("fake", "m3", "low")]) == [{"text": "m3"}]
+assert tried == ["m1", "m2", "m3"] and time.time() - started < 2, (tried, time.time() - started)
+slow2.set()
 brain.HEDGE = real_hedge
 
 # where wttr.in can't name the town it gives coordinates: never shown as the place (the window and the phone said "in
@@ -5089,7 +5306,16 @@ due = store.pop_due(friday8 + 60)
 assert sorted(r["text"] for r in due) == ["once", "stretch"]
 left = store.reminders()
 assert [r["text"] for r in left] == ["stretch"] and time.localtime(left[0]["at"]).tm_mday == 17 and left[0]["repeat"] == "daily"
-store.cancel_reminder(left[0]["id"])
+# whether it was there is told from the list it was taken out of: counted again after the lock, another reminder set
+# just then made a cancelled one "not found"
+real_reminders = store.reminders
+store.reminders = lambda: (store.add_reminder(friday8 + 600, "set meanwhile"), real_reminders())[1]
+try:
+    assert store.cancel_reminder(left[0]["id"]) is True
+finally:
+    store.reminders = real_reminders
+for r in store.reminders():
+    store.cancel_reminder(r["id"])
 try:
     store.add_reminder(friday8, "x", "hourly")
     raise AssertionError("a bad repeat was accepted")
@@ -5295,6 +5521,21 @@ os.remove(log_path)
 for private in ("late", "secret words", "someone@example.com", "token=abc", "Dr Who", "555", "Maya", "clinic", "noted", "passport"):
     assert private not in report, private  # (a reply's later lines, and WhatsApp names, numbers and messages, too)
 assert "[brain] fine" in report and "[ok] Microphone" in report and jarvis.VERSION in report and "calls: ready" in report
+# ...and the other lines that name someone: Discord messages, people's pages, replies and calls that went wrong (names
+# were left in the copied report)
+with open(log_path, "w") as f:
+    f.write("10:00 [discord] message from Sam Lee\n10:01 [people] wrote a profile of Robin Day from 40 messages\n"
+            "10:02 [people] Alex Fox: too little to go on yet\n10:03 [whatsapp] picking up Kim Ray: timed out\n"
+            "10:04 [discord] the answer to Jo Park may not have been sent: TimeoutError()\n"
+            "10:05 [whatsapp] no answer for Lee Moss: busy\n10:06 [whatsapp] no summary of the call with Ana Bell: busy\n"
+            "10:07 [whatsapp] a waiting message to Ty Cole didn't go: RuntimeError()\n10:08 [brain] fine\n")
+jarvis.health = lambda live, brain_: {"checks": [], "usage": {}}
+report = jarvis.diagnostics(None)
+jarvis.health = real_health_fn
+os.remove(log_path)
+for private in ("Sam Lee", "Robin Day", "Alex Fox", "Kim Ray", "Jo Park", "Lee Moss", "Ana Bell", "Ty Cole"):
+    assert private not in report, private
+assert "[brain] fine" in report and "[discord] (removed)" in report
 
 # updates: a newer version on GitHub is offered; this copy only updates itself from a clean git checkout
 real_get = jarvis.requests.get
@@ -6011,6 +6252,25 @@ def no_record(path, source):
 system.record_audio, recorded[:] = no_record, []
 n = brain.Notes(transcribe=lambda audio, prompt: "(silence)", summarise=lambda t: "")
 assert "PipeWire" in n.start("x")["error"] and n.on is None
+# ...and a recorder that can't start for a later piece (PipeWire restarted, the mic unplugged) ends the notes and writes
+# up what was recorded: the recording thread died, the notes stayed "on" for good and new ones were refused
+starts = []
+def fails_later(path, source):
+    starts.append(path)
+    if len(starts) > 1:
+        raise RuntimeError("pw-record exited")
+    return fake_record(path, source)
+system.record_audio, done[:] = fails_later, []
+broken_notes = brain.Notes(transcribe=lambda audio, prompt: "Words before it broke.", summarise=lambda t: "Short.")
+broken_notes.CHUNK = 0.1
+broken_notes.start("Broken", "room")
+end = time.time() + 3
+while not done and time.time() < end:
+    time.sleep(0.05)
+assert done and broken_notes.on is None and "pw-record exited" in done[0][0], (done, broken_notes.on)
+assert "Words before it broke." in open(done[0][1], encoding="utf-8").read()
+os.remove(done[0][1])
+system.record_audio, done[:], recorded[:] = no_record, [], []
 # a piece no model can write down at that moment is tried again, and if it still can't be, its recording is kept beside
 # the notes (one busy minute deleted five minutes of a meeting for good)
 tries, real_patience, brain.PATIENCE, real_audible, brain.audible = [], brain.PATIENCE, (0.01, 0.01), brain.audible, (lambda audio: True)
@@ -6223,6 +6483,16 @@ ab.run_app_tool("GMAIL_CREATE_EMAIL_DRAFT", {"to": "a@b.c", "confirmed": True})
 ab.run_app_tool("GMAIL_FETCH_EMAILS", {"query": "x"})
 latest = brain.tool_recent_changes()["changes"]
 assert [c["what"] for c in latest[:2]] == ['GMAIL_CREATE_EMAIL_DRAFT: {"to": "a@b.c"}', "ran: gio trash ~/Downloads/a.tmp"], latest
+# ...but not one Composio says failed, inside its result: "undo that" went after a draft that was never made
+real_cio = ab.plugins["composio"]
+ab.plugins["composio"] = types.SimpleNamespace(call=lambda tool, args, **kw: wrapped({"successful": False, "error": "503 Backend Error", "data": {}}))
+ab.tool_owner = {"COMPOSIO_MULTI_EXECUTE_TOOL": (ab.plugins["composio"], "COMPOSIO_MULTI_EXECUTE_TOOL")}
+ab.run_app_tool("GMAIL_CREATE_EMAIL_DRAFT", {"to": "sam@example.com", "confirmed": True})
+ab._dispatch("COMPOSIO_MULTI_EXECUTE_TOOL", {"tools": [{"tool_slug": "GMAIL_CREATE_EMAIL_DRAFT", "arguments": {"to": "maya@example.com"}}],
+                                             "confirmed": True})
+assert brain.tool_recent_changes()["changes"][:2] == latest[:2], brain.tool_recent_changes()["changes"][:2]
+ab.plugins["composio"] = real_cio
+del ab.tool_owner
 assert len(shown) == 2 and "gio trash --restore" in brain.tool_recent_changes()["undo"]
 assert "unsend" in brain.tool_recent_changes()["undo"]  # (it said sent messages can't be unsent: WhatsApp's and Discord's can)
 assert brain.tool_plan(["open the site", "log in", "fill the form", "submit"])["result"].startswith("the plan is shown") and planned[0][2] == "fill the form"
@@ -6972,7 +7242,34 @@ if real_windll is None:
 else:
     ctypes.windll = real_windll
 system.IS_WINDOWS, system.WAYLAND = real_windows, real_wayland
+# pressing a control by name on Windows with no app named (the focused one couldn't be told) is refused, as on Linux:
+# every window's title holds "", so the first window of all had its control pressed
+pressed_in = []
+class FakeControl:
+    element_info = types.SimpleNamespace(control_type="Button")
+    def __init__(self, window): self.window = window
+    def window_text(self): return "Send"
+    def invoke(self): pressed_in.append(self.window)
+class FakeWindow:
+    def __init__(self, title): self.title, self.element_info = title, types.SimpleNamespace(name=title, process_id=-1)
+    def window_text(self): return self.title
+    def descendants(self): return [FakeControl(self.title)]
+real_pywinauto = sys.modules.get("pywinauto")
+sys.modules["pywinauto"] = types.SimpleNamespace(Desktop=lambda backend: types.SimpleNamespace(
+    windows=lambda: [FakeWindow("Bank - Transfer"), FakeWindow("Chat - Sam")]))
+try:
+    nobody = system.WindowsAccessibility().ask({"cmd": "press", "app": "", "names": ["Send"]})
+    named = system.WindowsAccessibility().ask({"cmd": "press", "app": "chat", "names": ["Send"]})
+finally:
+    if real_pywinauto is None:
+        del sys.modules["pywinauto"]
+    else:
+        sys.modules["pywinauto"] = real_pywinauto
+assert "error" in nobody and named == {"pressed": ["Send"]} and pressed_in == ["Chat - Sam"], (nobody, pressed_in)
 assert jarvis.typed_text([{"click_on": "the box"}, {"type": "hi\n there"}, {"type": "keys", "keys": "Return"}]) == "hi there"
+# (as tool_act runs them: {type: "text", click_on: ...} is a label that types nothing, and set_text puts text in: an act
+# filling the box with it went past every typing check)
+assert jarvis.typed_text([{"type": "text", "click_on": "the box"}, {"set_text": "see you"}]) == "see you"
 
 # the voice calling the same send again (it sent one message three times): refused until the user speaks again; and
 # text a cancelled act already typed isn't typed over it when it's asked again
@@ -7009,6 +7306,17 @@ live.user_spoke_at = time.time() + 3
 brian = types.SimpleNamespace(name="act", args={"steps": [{"keys": "ctrl+k"}, {"type": "Brian"}, {"keys": "Return"},
                                                           {"type": "hello"}, {"keys": "Return"}]})
 assert "expect" in asyncio.run(live._tool(brian, halt))["error"] and len(sent_steps) == 4
+# Return in any spelling sends (system.key_chains takes "return", "ret", "RETURN"...), and so does a chain ending in it:
+# those went past the one-message-per-request check, and a sent "ctrl+a Return" wasn't kept as sent. Other keys don't
+for n, keys in enumerate(("return", "RETURN", "ret", "kp_enter", "ctrl+a Return", "shift+Tab", "Escape")):
+    live.typed, live.user_spoke_at, sends = {}, time.time() + 10 + n, keys not in ("shift+Tab", "Escape")
+    for text in ("first", "second"):
+        out = asyncio.run(live._tool(types.SimpleNamespace(name="act", args={"steps": [{"type": f"{text} {n}"}, {"keys": keys}]}), halt))
+    assert ("already sent" in str(out.get("error"))) == sends and bool(live.typed[f"first {n}"]["sent"]) == sends, (keys, out, live.typed)
+live.typed, live.user_spoke_at = {}, time.time() + 20  # (and a box filled with set_text, then sent)
+for text in ("one", "two"):
+    out = asyncio.run(live._tool(types.SimpleNamespace(name="act", args={"steps": [{"set_text": text}, {"keys": "Return"}]}), halt))
+assert "already sent" in str(out.get("error")), out
 # text an act typed and finished is typed again when the user asks ("now type it again in the Confirm box" only clicked
 # it), not when the model repeats the act by itself, nor after an act that was cut off mid-way
 box = lambda name: types.SimpleNamespace(name="act", args={"steps": [{"click_on": name}, {"type": "jo@example.com"}]})
@@ -7520,6 +7828,40 @@ real_call, link._call = link._call, lambda coro: coro.close() or link.state["dev
 link.push("The download finished.")  # ...and a phone being paired while news goes out to the paired ones
 link._call = real_call
 del link.state["devices"]["pairing-now"]
+# ...and the Settings page asking how the phones are while one is being paired (the link's thread adds it): the devices
+# are a copy there too (it failed with "dictionary changed size during iteration")
+class PairedMeanwhile(dict):
+    def __getitem__(self, key):
+        link.state["devices"].setdefault("pairing-now", {"name": "x", "hash": ""})
+        return dict.__getitem__(self, key)
+first_device = next(iter(link.state["devices"]))
+link.state["devices"][first_device] = PairedMeanwhile(link.state["devices"][first_device])
+try:
+    listed = [d["id"] for d in link.status()["devices"]]
+finally:
+    link.state["devices"][first_device] = dict(link.state["devices"][first_device])
+    link.state["devices"].pop("pairing-now", None)
+assert listed[0] == first_device, listed
+# a phone whose connection died unnoticed neither keeps the others from an event, nor loses news meant for it: the first
+# error ended the broadcast, and a push into it went nowhere (only a phone with no connection had it kept)
+import websockets.exceptions
+got_events, real_phones = [], dict(link.phones)
+async def dead_link(data):
+    raise websockets.exceptions.ConnectionClosedError(None, None)
+async def live_link(data):
+    got_events.append(data)
+sealed = types.SimpleNamespace(seal=lambda m: json.dumps(m).encode())
+link.phones.clear()
+link.phones.update({"gone": {"device": first_device, "channel": sealed, "relay": True, "send": dead_link, "close": None},
+                    "here": {"device": "another", "channel": sealed, "relay": True, "send": live_link, "close": None}})
+with contextlib.redirect_stdout(io.StringIO()):
+    asyncio.run(link._broadcast({"op": "event", "kind": "log", "text": "hi"}))
+    link.pending.pop(first_device, None)
+    asyncio.run(link._deliver(first_device, {"op": "reply", "text": "The download finished."}))
+assert got_events and link.pending.get(first_device) == [{"op": "reply", "text": "The download finished."}], (got_events, link.pending)
+link.phones.clear()
+link.phones.update(real_phones)
+link.pending.pop(first_device, None)
 # a network card Windows calls "Local Area Connection" is one a phone can reach (its name starts like "lo": skipped as loopback)
 import psutil
 real_cards = psutil.net_if_stats, psutil.net_if_addrs
@@ -7901,6 +8243,9 @@ dm = {"me": False, "channel": "c1", "chat": "Maya", "server": False, "group": Fa
 store.update_settings({"discord_always": ["maya_"]})
 listener.message(dm)
 assert told_dc == [("Discord from Maya: you there?", True)]
+# (the 💬 line too, as WhatsApp's: wrong_person reads who the user is talking with from it, and an open voice session gets it)
+assert heard_dc == ["💬 Discord from Maya: you there?"], heard_dc
+heard_dc.clear()
 store.update_settings({"discord_always": [], "discord_never": ["Maya"]})
 listener.message(dm)
 listener.message({**dm, "from": "Bo", "user": "bo", "muted": True})
@@ -7918,6 +8263,13 @@ assert "c1" in listener.pending
 listener.pending["c1"].cancel()
 listener._answer(dm)
 assert dc_calls[-1] == ("send", {"id": "c1", "kind": "dm", "text": "Hi, I'm Jarvis."}) and "Jarvis replied" in heard_dc[-1]
+# the chat unreadable when the reply is due (Vesktop closed meanwhile): the message is still shown (the timer's thread
+# died on the error, and the user never saw it)
+answering_call, discord.call = discord.call, lambda cmd, **args: (_ for _ in ()).throw(RuntimeError("Vesktop isn't running"))
+with contextlib.redirect_stdout(io.StringIO()):
+    listener._answer(dm)
+discord.call = answering_call
+assert heard_dc[-1].startswith("💬 Discord from Maya: you there? (") and "Jarvis replied" not in heard_dc[-1], heard_dc[-1]
 listener.message({**dm, "me": True, "text": "Hi, I'm Jarvis."})
 assert "c1" not in listener.user_wrote
 listener.message({**dm, "me": True, "text": "back now"})
@@ -7938,6 +8290,30 @@ assert brain.TOOLS["stand_in"][0](action="stop")["result"].startswith("stopped")
 listener.message(dm)
 assert "c1" not in listener.pending
 discord.call = real_dc_call
+# how a Discord message reads, run for real (the page's own script, in Qt's JS engine): its words with mentions named,
+# its files, stickers and links. A forwarded message has no words of its own: what it forwards is in message_snapshots,
+# and read as empty, a forward never reached Jarvis (nothing to announce, answer or find a photo in)
+from PySide6.QtQml import QJSEngine
+js = QJSEngine()
+reads = js.evaluate("(function(C, who, m) {" + discord.TEXT_JS + "; return JSON.stringify({text: text(m, null), files: files(m).map(f => f.filename)}); })")
+assert not reads.isError(), reads.toString()
+dc_stores = js.evaluate("({UserStore: {getUser: id => id === '7' ? {id: id} : null}, ChannelStore: {getChannel: id => ({name: 'general'})}})")
+dc_who = js.evaluate("(u => 'Sam')")
+def dc_text(message):
+    got = reads.call([dc_stores, dc_who, js.evaluate("(" + json.dumps(message) + ")")])
+    assert not got.isError(), got.toString()
+    return json.loads(got.toString())
+plain = {"content": "hey <@7> see <#3> <:wave:123>", "attachments": [{"filename": "a.png", "content_type": "image/png"}],
+         "sticker_items": [{"name": "Hi"}], "embeds": [{"title": "A page"}, {}]}
+assert dc_text(plain) == {"text": "hey @Sam see #general :wave: [file: a.png] [sticker: Hi] [link: A page]", "files": ["a.png"]}, dc_text(plain)
+forward = {"content": "", "attachments": [], "embeds": [], "message_reference": {"type": 1},
+           "message_snapshots": [{"message": {"content": "the exam moved to Friday <@9>", "attachments": [{"filename": "plan.jpg", "content_type": "image/jpeg"}],
+                                              "embeds": [{"title": "Timetable"}]}}]}
+assert dc_text(forward) == {"text": "[forwarded: the exam moved to Friday @someone [file: plan.jpg] [link: Timetable]]", "files": ["plan.jpg"]}, dc_text(forward)
+said_too = {**forward, "content": "look at this"}
+assert dc_text(said_too)["text"].startswith("look at this [forwarded: the exam moved")
+assert dc_text({"content": "", "attachments": [], "embeds": [], "message_snapshots": [{"message": {"content": ""}}, {}]})["text"] == "[forwarded: a message] [forwarded: a message]"
+assert discord.TEXT_JS in discord.JS and "files(m).find" in discord.JS  # (the page runs the same lines, and looks for media in forwards too)
 
 # people: a page per person (notes with an end date, when they last wrote each way, promises), and their index for prompts
 import people
@@ -8084,6 +8460,18 @@ store.update_settings({"track_promises": False})
 tracker.heard("whatsapp", "Sam Lee", "I'll call you tomorrow")
 assert not tracker.queue
 store.update_settings({"track_promises": True})
+# a sent email's promise goes on its person's page: an address alone finds the page it belongs to (sam.lee@... is Sam
+# Lee, as a calendar event's guests are found), and a mail to nobody named makes no page ("someone by email" took all)
+people._update("Sam Lee", lambda page: None)
+mail_heard, real_tracker = [], people.tracker[0]
+people.tracker[0] = types.SimpleNamespace(heard=lambda app, who, text: mail_heard.append(who), flush=lambda: [])
+sent_box = types.SimpleNamespace(connected={"gmail"}, app_data=lambda slug, args: {"messages": [
+    {"to": "sam.lee@example.com", "subject": "Slides", "messageText": "I'll send them tomorrow"},
+    {"to": "Maya Fox <maya@example.com>", "subject": "Lunch", "messageText": "I'll book it later"},
+    {"to": "", "subject": "Draft", "messageText": "I'll finish it later"}]})
+jarvis.promises_in_sent_mail(sent_box)
+people.tracker[0] = real_tracker
+assert mail_heard == ["Sam Lee", "Maya Fox"], mail_heard
 # "forget that promise": it goes, with its reminder
 assert people.drop("Sam Lee", "notes") == 1 and not any("send Sam the notes" in r["text"] for r in store.reminders())
 # forgetting the whole person: their promises' reminders go too (one still announced a promise the user had forgotten)
@@ -8391,6 +8779,285 @@ assert "Maya Lee" not in people.due_profiles(people.everyone(), time.time(), 7, 
 assert jarvis.api_post("/api/people/forget", {"name": "Sam / Lee ✨"}, None, pb)["forgot"] == 1 and "Sam / Lee ✨" not in people.everyone()
 assert not any(p.startswith("/api/people") for p in phone.PHONE_GET) and not any(
     phone.PHONE_POST.fullmatch(p) for p in ("/api/people/forget", "/api/people/note", "/api/people/refresh", "/api/people/profile/forget"))
+# what the user decides about a person on the page (hiding someone comes after the password, below). Not to be understood: their profile goes, the hourly pass never writes
+# one, a refresh says why, and their notes and promises stay. An edit of what Jarvis understands is the user's own words:
+# kept as written (no scrubbing), and never written over by the pass (only Refresh does that)
+store.write_json(people.FILE, {
+    "Maya Lee": {"notes": [{"text": "my cousin", "at": t1 - day}], "seen": {"whatsapp": t1 - 600},
+                 "profile": {"gist": "cousin", "text": "Cousin\nWrites in English", "at": t1 - 30 * day, "upto": t1 - 30 * day, "count": 12}},
+    "Bo": {"seen": {"whatsapp": t1 - 120}},
+    "Cy": {"seen": {"discord": t1 - 60}, "promises": [{"what": "call Cy", "at": t1 - 3600, "app": "discord"}]}}, private=True)
+try:  # (someone hidden is encrypted with the secret password: with none set there's nothing to hide them with)
+    jarvis.api_post("/api/people/hide", {"name": "cy", "on": True}, None, pb)
+    raise AssertionError("hidden with no password to encrypt them with")
+except ValueError as e:
+    assert "password" in str(e) and "hidden" not in people.everyone()["Cy"], e
+assert "Maya Lee" in people.due_profiles(people.everyone(), t1, 7, most=9)
+assert jarvis.api_post("/api/people/know", {"name": "Maya Lee", "on": False}, None, pb) == {"name": "Maya Lee", "know": False}
+maya = people.everyone()["Maya Lee"]
+assert "profile" not in maya and maya["no_profile"] is True and maya["notes"], maya
+assert "Maya Lee" not in people.due_profiles(people.everyone(), t1, 7, most=9) and "cousin;" not in people.index(t1)
+asked_profile.clear(), wa_calls.clear()
+try:
+    jarvis.api_post("/api/people/refresh", {"name": "Maya Lee"}, None, pb)
+    raise AssertionError("someone not to be understood was read anyway")
+except ValueError as e:
+    assert "not to" in str(e) and not asked_profile and not wa_calls, (e, asked_profile, wa_calls)  # (no model request, no chat read)
+assert "not to" in pb.person("Maya Lee", refresh=True)["error"]
+assert next(p for p in jarvis.api_get("/api/people", pb)["people"] if p["name"] == "Maya Lee")["know"] is False
+jarvis.api_post("/api/people/know", {"name": "Maya Lee", "on": True}, None, pb)
+assert "no_profile" not in people.everyone()["Maya Lee"] and "Maya Lee" in people.due_profiles(people.everyone(), t1, 7, most=9)
+edited = jarvis.api_post("/api/people/profile", {"name": "maya lee", "gist": "  my cousin,  the funny one ",
+                                                  "lines": ["Call her on 0123456789", "", "  Likes   chess "]}, None, pb)
+assert edited["person"]["profile"]["gist"] == "my cousin, the funny one" and edited["person"]["profile"]["edited"] is True, edited
+assert edited["person"]["profile"]["lines"] == ["Call her on 0123456789", "Likes chess"]  # (the user's own words: kept as written)
+assert "Maya Lee" not in people.due_profiles(people.everyone(), t1 + 400 * day, 7, most=9)  # (never written over by itself)
+assert "my cousin, the funny one" in people.index(t1)
+jarvis.api_post("/api/people/profile", {"name": "Bo", "gist": "flatmate", "lines": []}, None, pb)  # (no profile before: made)
+assert people.everyone()["Bo"]["profile"]["gist"] == "flatmate" and people.everyone()["Bo"]["profile"]["count"] == 0
+# ...and the two go together: what the user wrote about someone Jarvis isn't to get to know stays theirs, both ways round
+jarvis.api_post("/api/people/know", {"name": "Bo", "on": False}, None, pb)
+assert people.everyone()["Bo"]["profile"]["gist"] == "flatmate" and people.everyone()["Bo"]["no_profile"] is True
+jarvis.api_post("/api/people/profile", {"name": "Bo", "gist": "flatmate, night owl", "lines": []}, None, pb)
+assert people.everyone()["Bo"]["no_profile"] is True and people.everyone()["Bo"]["profile"]["gist"] == "flatmate, night owl"
+for bad in ({"name": "Bo", "gist": "", "lines": [" "]}, {"name": "Bo", "gist": "x" * 500, "lines": []}, {"name": "Bo", "gist": "ok", "lines": "one"},
+            {"name": "Bo", "gist": "ok", "lines": ["x"] * 40}, {"name": "Nobody", "gist": "ok", "lines": []}):
+    try:
+        jarvis.api_post("/api/people/profile", bad, None, pb)
+        raise AssertionError(f"saved {bad}")
+    except (ValueError, KeyError):
+        pass
+assert store.BACKUP_CHECKS["people.json"](people.everyone())
+assert not store.BACKUP_CHECKS["people.json"]({"Bo": {"hidden": "yes"}}) and not store.BACKUP_CHECKS["people.json"]({"Bo": {"no_profile": 1}})
+# the page's lock: a password of the user's own (kept as a salted hash with the keys, never the words), asked for before
+# the page shows anyone. Locked, the API gives no name and takes no change; a few wrong tries make the next ones wait; it
+# locks again by itself, and when asked to. Changing or removing it needs the password
+jarvis.people_lock = jarvis.PageLock()
+clock = [1000.0]
+jarvis.people_lock.clock = lambda: clock[0]
+assert store.people_lock() is False and jarvis.api_get("/api/people", pb)["locked"] is False
+for weak in ("", "abc", " a b "):
+    try:
+        store.set_people_lock(weak) if weak else jarvis.api_post("/api/people/password", {"new": ""}, None, pb)
+        raise AssertionError(f"took {weak!r}")
+    except ValueError:
+        pass
+assert jarvis.api_post("/api/people/password", {"new": "plum tart 9"}, None, pb) == {"lock": True, "locked": False}  # (the one who set it is in)
+kept = store.secret(store.PEOPLE_LOCK)
+assert kept.startswith("pbkdf2$") and "plum" not in kept and store.PEOPLE_LOCK in store.OTHER_SECRETS, kept[:12]
+assert store.check_people_lock("plum tart 9") and not store.check_people_lock("plum tart") and not store.check_people_lock("")
+# someone hidden is more than left off a list: their page is encrypted in the file with a key made from a second
+# password, the secret one (scrypt, AES-GCM; the page's own password opens the page and nothing else). Nothing says
+# anyone is hidden (no count, no "show hidden"), and they're listed only after the secret password is typed into the
+# page's search box, until it's typed again. Jarvis itself knows them from the first time it's given in a run until it quits
+book = people.everyone()
+in_the_open = lambda: json.dumps({k: v for k, v in json.loads(open(people.FILE, encoding="utf-8").read()).items() if k != people.HIDDEN})
+hide = lambda who, on=True: jarvis.api_post("/api/people/hide", {"name": who, "on": on}, None, pb)
+try:
+    hide("cy")
+    raise AssertionError("hidden with no secret password to encrypt them with")
+except ValueError as e:
+    assert "secret password" in str(e) and "hidden" not in people.everyone()["Cy"], e
+for weak in ({"new": "abc"}, {"new": ""}, {"new": " a b "}):
+    try:
+        jarvis.api_post("/api/people/secret", weak, None, pb)
+        raise AssertionError(f"took {weak}")
+    except ValueError:
+        pass
+assert jarvis.api_post("/api/people/secret", {"new": "nut loaf 3"}, None, pb) == {"secret": True}
+kept = store.secret(store.PEOPLE_SECRET)
+assert kept.startswith("pbkdf2$") and "nut" not in kept and store.PEOPLE_SECRET in store.OTHER_SECRETS and kept != store.secret(store.PEOPLE_LOCK)
+assert store.check_people_lock("nut loaf 3", store.PEOPLE_SECRET) and not store.check_people_lock("plum tart 9", store.PEOPLE_SECRET)
+assert not store.check_people_lock("nut loaf 3") and jarvis.api_get("/api/settings", pb)["people_secret"] is True
+assert hide("cy") == {"name": "Cy", "hidden": True}  # (whoever set it has the key)
+raw = open(people.FILE, encoding="utf-8").read()
+assert not any(word in in_the_open() for word in ("Cy", "call", "nut loaf", "plum")) and "Bo" in in_the_open() and "Maya Lee" in in_the_open(), in_the_open()[:300]
+assert not any(word in base64.b64decode(json.loads(raw)[people.HIDDEN]["data"]) for word in (b"Cy", b"call"))  # (encrypted, not just encoded)
+assert store.BACKUP_CHECKS["people.json"](json.loads(raw)) and not store.BACKUP_CHECKS["people.json"]({people.HIDDEN: {"data": 5}})
+shown = jarvis.api_get("/api/people", pb)
+assert [p["name"] for p in shown["people"]] == ["Bo", "Maya Lee"] and shown["revealed"] is False and "hidden" not in shown, shown
+try:
+    jarvis.api_get("/api/people/all", pb)
+    raise AssertionError("a way to list the hidden without the password")
+except KeyError:
+    pass
+assert pb.person("Cy")["promised"] == ["call Cy"] and "Cy" in people.index(t1)  # (the secret password was given this run: Jarvis knows them)
+people._update("Cy", lambda page: page.setdefault("seen", {}).__setitem__("discord", t1 + 1))  # (they write again: still hidden)
+assert people.everyone()["Cy"]["hidden"] is True and "Cy" not in in_the_open()
+said = lambda text: jarvis.api_post("/api/people/reveal", {"password": text}, None, pb)
+names = lambda: [p["name"] for p in jarvis.api_get("/api/people", pb)["people"]]
+assert said("cy") == {"ok": False} and names() == ["Bo", "Maya Lee"]  # (a search like any other)
+assert said("nut loaf 3") == {"ok": False}  # (a try a second at most: nobody runs a word list through the box)
+clock[0] += jarvis.REVEAL_EVERY
+assert said("plum tart 9") == {"ok": False} and names() == ["Bo", "Maya Lee"]  # (the page's password shows nobody hidden)
+clock[0] += jarvis.REVEAL_EVERY
+assert said("nut loaf 3") == {"ok": True, "revealed": True}
+assert [(p["name"], p["hidden"]) for p in jarvis.api_get("/api/people", pb)["people"]] == [("Cy", True), ("Bo", False), ("Maya Lee", False)]
+clock[0] += jarvis.REVEAL_EVERY
+assert said("nut loaf 3") == {"ok": True, "revealed": False} and names() == ["Bo", "Maya Lee"]
+# after a restart there's no key: Jarvis doesn't know the hidden ones, a message from one makes no page (it waits for the
+# secret password), nobody can be hidden, and the rest goes on as ever with the encrypted part carried along untouched.
+# Opening the page with its own password gives none of them back
+people.forget_keys()
+jarvis.people_lock = jarvis.PageLock()
+jarvis.people_lock.clock = lambda: clock[0]
+assert "Cy" not in people.everyone() and "Cy" not in people.index(t1) and people.page("Cy") is None
+people._update("Cy", lambda page: page.setdefault("seen", {}).__setitem__("whatsapp", t1 + 5), "cy_dc")
+people.add_note("Bo", "likes tea")
+after = json.loads(open(people.FILE, encoding="utf-8").read())
+assert "Cy" not in after and after["Bo"]["notes"] and after[people.HIDDEN]["kdf"] == json.loads(raw)[people.HIDDEN]["kdf"]
+hidden_part = after[people.HIDDEN]
+try:
+    people.set_flag("Bo", "hidden", True)
+    raise AssertionError("hidden with no key")
+except people.Locked as e:
+    assert "search box" in str(e), e
+people.tidy()
+assert json.loads(open(people.FILE, encoding="utf-8").read())[people.HIDDEN] == hidden_part
+assert jarvis.api_get("/api/people", pb)["locked"] is True
+assert jarvis.api_post("/api/people/unlock", {"password": "plum tart 9"}, None, pb) == {"locked": False}
+assert "Cy" not in people.everyone() and names() == ["Bo", "Maya Lee"]  # (the page is open; the hidden stay Jarvis's unknown)
+clock[0] += jarvis.REVEAL_EVERY
+assert said("nut loaf 3") == {"ok": True, "revealed": True}
+cy = people.everyone()["Cy"]
+assert cy["hidden"] is True and cy["seen"]["whatsapp"] == t1 + 5 and cy["promises"][0]["what"] == "call Cy" and "cy_dc" in cy["aka"], cy
+assert names() == ["Cy", "Bo", "Maya Lee"] and "Cy" not in in_the_open()
+# locked, the API gives no name and takes no change, the search box's way in and the secret password's own route included
+jarvis.api_post("/api/people/lock", {}, None, pb)
+locked = jarvis.api_get("/api/people", pb)
+assert locked["locked"] is True and locked["lock"] is True and locked["people"] == [] and locked["revealed"] is False, locked
+for path, body in (("/api/people/note", {"name": "Bo", "text": "x"}), ("/api/people/hide", {"name": "Bo", "on": True}),
+                   ("/api/people/forget", {"name": "Bo"}), ("/api/people/profile", {"name": "Bo", "gist": "x", "lines": []}),
+                   ("/api/people/refresh", {"name": "Bo"}), ("/api/people/know", {"name": "Bo", "on": False}),
+                   ("/api/people/reveal", {"password": "nut loaf 3"}), ("/api/people/secret", {"new": "", "old": "wrong"}),
+                   ("/api/people/password", {"new": "another one"}), ("/api/people/password", {"new": "", "old": "wrong"})):
+    try:
+        jarvis.api_post(path, body, None, pb)
+        raise AssertionError(f"{path} went through a locked page")
+    except ValueError as e:
+        assert "Bo" not in str(e), e
+assert "hidden" not in people.everyone()["Bo"] and store.check_people_lock("plum tart 9") and store.people_lock(store.PEOPLE_SECRET)
+jarvis.people_lock.fails = 0
+for i in range(jarvis.LOCK_TRIES):
+    clock[0] += 1
+    try:
+        jarvis.people_lock.unlock("wrong")
+        raise AssertionError("a wrong password opened the page")
+    except ValueError as e:
+        assert "plum" not in str(e), e
+try:
+    jarvis.people_lock.unlock("plum tart 9")  # (the right one too has to wait now)
+    raise AssertionError("no wait after the wrong tries")
+except ValueError as e:
+    assert "wait" in str(e), e
+assert jarvis.people_lock.locked()
+clock[0] += jarvis.LOCK_WAIT
+jarvis.people_lock.unlock("plum tart 9")
+assert names() == ["Bo", "Maya Lee"]  # (it locked while the hidden were shown: they're put away again)
+clock[0] += jarvis.PEOPLE_OPEN - 1
+assert not jarvis.people_lock.locked()
+clock[0] += 2
+assert jarvis.people_lock.locked()  # (by itself, after a while unused)
+assert jarvis.api_get("/api/people/lock", pb) == {"lock": True, "locked": True}
+assert jarvis.api_post("/api/people/unlock", {"password": "plum tart 9"}, None, pb) == {"locked": False}
+clock[0] += jarvis.PEOPLE_OPEN - 5
+assert jarvis.api_get("/api/people/lock", pb) == {"lock": True, "locked": False}  # (asking whether it's locked isn't using it)
+clock[0] += 10
+assert jarvis.api_get("/api/people/lock", pb)["locked"] is True and jarvis.api_get("/api/people", pb)["people"] == []
+jarvis.api_post("/api/people/unlock", {"password": "plum tart 9"}, None, pb)
+clock[0] += jarvis.PEOPLE_OPEN - 5
+jarvis.api_get("/api/people", pb)  # (used: open from now)
+clock[0] += 10
+assert jarvis.api_get("/api/people/lock", pb)["locked"] is False
+assert names() and jarvis.api_get("/api/settings", pb)["people_lock"] is True
+# the page's password changed, or taken off: the hidden ones and their key are as they were
+try:
+    jarvis.api_post("/api/people/password", {"new": "pear cake 4", "old": "not it"}, None, pb)
+    raise AssertionError("the password changed without the old one")
+except ValueError:
+    pass
+assert jarvis.api_post("/api/people/password", {"new": "pear cake 4", "old": "plum tart 9"}, None, pb) == {"lock": True, "locked": False}
+assert people.everyone()["Cy"]["hidden"] is True and json.loads(open(people.FILE, encoding="utf-8").read())[people.HIDDEN]["kdf"] == hidden_part["kdf"]
+people.forget_keys()
+assert people.hold("pear cake 4") is False and people.hold("plum tart 9") is False and "Cy" not in people.everyone()
+assert people.hold("nut loaf 3") is True and "Cy" in people.everyone()
+# a new secret password is a new key; the old one opens nothing any more
+for body in ({"new": "oat bar 55", "old": "not it"}, {"new": "oat bar 55"}, {"new": "oat bar 55", "old": "pear cake 4"}):
+    try:
+        jarvis.api_post("/api/people/secret", body, None, pb)
+        raise AssertionError(f"the secret password changed with {body}")
+    except ValueError:
+        pass
+jarvis.people_lock.fails, jarvis.people_lock.wait_until = 0, 0.0
+assert jarvis.api_post("/api/people/secret", {"new": "oat bar 55", "old": "nut loaf 3"}, None, pb) == {"secret": True}
+assert people.everyone()["Cy"]["hidden"] is True and "Cy" not in in_the_open()
+people.forget_keys()
+assert people.hold("nut loaf 3") is False and "Cy" not in people.everyone() and people.hold("oat bar 55") is True and "Cy" in people.everyone()
+# forgotten passwords: `jarvis --reset-people-lock` takes both off, and can't open what was hidden. Those stay as they
+# are in the file until the secret password they were hidden under is typed in the search box one day; nobody new can be
+# hidden meanwhile (there'd be two keys), and when the new secret password is given next they move under it
+people.forget_keys()
+jarvis.people_lock = jarvis.PageLock()
+jarvis.people_lock.clock = lambda: clock[0]
+assert jarvis.reset_people_lock() is True and not store.people_lock() and not store.people_lock(store.PEOPLE_SECRET)
+assert jarvis.reset_people_lock() is False
+assert jarvis.api_get("/api/people", pb)["locked"] is False and names() == ["Bo", "Maya Lee"] and people.HIDDEN in json.loads(open(people.FILE, encoding="utf-8").read())
+assert jarvis.api_post("/api/people/secret", {"new": "fig roll 77"}, None, pb) == {"secret": True}
+try:
+    hide("Bo")
+    raise AssertionError("hidden under a second key")
+except ValueError as e:
+    assert "earlier" in str(e), e
+clock[0] += jarvis.REVEAL_EVERY
+assert said("oat bar 55") == {"ok": True, "revealed": True} and names() == ["Cy", "Bo", "Maya Lee"]  # (the one they were hidden under)
+clock[0] += jarvis.REVEAL_EVERY
+assert said("fig roll 77") == {"ok": True, "revealed": False}  # (the one there is now: they move under it)
+people.forget_keys()
+assert people.hold("oat bar 55") is False and people.hold("fig roll 77") is True and people.everyone()["Cy"]["hidden"] is True
+assert hide("Bo") == {"name": "Bo", "hidden": True} and names() == ["Maya Lee"]
+# shown again one by one, or all at once when the secret password is taken off (which needs it): nothing stays encrypted
+clock[0] += jarvis.REVEAL_EVERY
+said("fig roll 77")
+assert hide("Bo", False) == {"name": "Bo", "hidden": False}
+assert "hidden" not in people.everyone()["Bo"] and '"Bo"' in open(people.FILE, encoding="utf-8").read()
+try:
+    jarvis.api_post("/api/people/secret", {"new": "", "old": "not it"}, None, pb)
+    raise AssertionError("the secret password came off without itself")
+except ValueError:
+    pass
+assert jarvis.api_post("/api/people/secret", {"new": "", "old": "fig roll 77"}, None, pb) == {"secret": False}
+plain = json.loads(open(people.FILE, encoding="utf-8").read())
+assert people.HIDDEN not in plain and "hidden" not in plain["Cy"] and plain["Cy"]["promises"][0]["what"] == "call Cy" and set(book) <= set(plain)
+assert store.secret(store.PEOPLE_SECRET) == "" and jarvis.api_get("/api/people", pb)["locked"] is False and names() == ["Cy", "Bo", "Maya Lee"]
+# someone marked hidden before hidden people were encrypted (a day's build wrote the mark in the open): still off the
+# list, nothing breaks while there's no key (a message from anyone used to fail the save), and the first time the secret
+# password is given they go into the encrypted part
+store.write_json(people.FILE, {**json.loads(open(people.FILE, encoding="utf-8").read()), "Old Mark": {"hidden": True, "seen": {"whatsapp": t1 - 50}}}, private=True)
+people.forget_keys()
+assert names() == ["Cy", "Bo", "Maya Lee"] and people.everyone()["Old Mark"]["hidden"] is True
+people.add_note("Bo", "a note with no key held")
+assert json.loads(open(people.FILE, encoding="utf-8").read())["Old Mark"]["hidden"] is True
+assert people.hold("nut loaf 3") is True and "Old Mark" not in in_the_open() and people.everyone()["Old Mark"]["hidden"] is True
+people.drop("Old Mark", "")
+people.drop_note("Bo", "a note with no key held")
+people.forget_keys()
+assert people.HIDDEN not in json.loads(open(people.FILE, encoding="utf-8").read())
+# a damaged encrypted part opens with no password, and is left as it is (never taken for "nobody hidden" and dropped)
+people.hold("nut loaf 3")
+people.set_flag("Cy", "hidden", True)
+sound = json.loads(open(people.FILE, encoding="utf-8").read())
+broken = {**sound, people.HIDDEN: {**sound[people.HIDDEN], "data": "AAAA" + sound[people.HIDDEN]["data"][4:]}}
+store.write_json(people.FILE, broken, private=True)
+people.forget_keys()
+assert people.hold("nut loaf 3") is False and "Cy" not in people.everyone()
+people.add_note("Bo", "still here")
+assert json.loads(open(people.FILE, encoding="utf-8").read())[people.HIDDEN] == broken[people.HIDDEN]
+store.write_json(people.FILE, {k: v for k, v in sound.items() if k != people.HIDDEN} | {"Cy": book["Cy"]}, private=True)
+for which in (store.PEOPLE_LOCK, store.PEOPLE_SECRET):
+    store.set_secret(which, "")
+people.forget_keys()
+jarvis.people_lock = jarvis.PageLock()
+assert not any(phone.PHONE_POST.fullmatch(p) for p in ("/api/people/unlock", "/api/people/password", "/api/people/hide", "/api/people/profile"))
 # the pass: nothing while profiles are off; then the two most recently talked with, one request each, one log line each
 # (never the profile or the messages); a pass that couldn't reach a model stamps nothing and is due again
 store.write_json(people.FILE, {"Maya Lee": {"seen": {"whatsapp": t1 - 60}}, "Bo": {"seen": {"whatsapp": t1 - 120}},
@@ -8422,7 +9089,7 @@ assert len(asked_profile) == 3  # (everyone known lately has one now)
 assert store.BACKUP_CHECKS["people.json"]({"Maya": {"notes": [], "profile": prof(1.0, 1.0), "looked": {"at": 1.0, "upto": 1.0, "why": "few"}}})
 assert not store.BACKUP_CHECKS["people.json"]({"Maya": {"profile": {"gist": 5, "text": "x", "at": 1.0, "upto": 1.0, "count": 1}}})
 assert not store.BACKUP_CHECKS["people.json"]({"Maya": {"profile": "nice"}})
-assert "People" in brain.about()
+assert "People" in brain.about() and "hide someone" in brain.about() and "--reset-people-lock" not in brain.about()
 people.FILE, brain.whatsapp_link[0], discord.call, discord.status = real_people_file, real_wa, real_dc_call, real_dc_status
 # what Jarvis says on its own and the user lets pass three times in a row is only shown for a while; a word back resets it
 jarvis.ATTENTION_FILE = os.path.join(_home, "attention-test.json")
@@ -8808,6 +9475,18 @@ wa._dial({"chat": "3@c.us", "name": "Maya"}, "hi", lambda: None)
 whatsapp.RING_FOR = real_ring
 assert page_calls[-1] == ("hangup", {"call": "k3"}) and wa_told == ["Maya didn't pick up my WhatsApp call."], wa_told
 wa.calls.clear()
+# ...and when it rang out on WhatsApp's side just then, the hangup finds no call: still "didn't pick up" (the helper's
+# "that call is over" was told as the call failing)
+def over_by_then(cmd, timeout=30, **args):
+    if cmd == "dial":
+        return {"id": "k5"}
+    raise RuntimeError("that call is over")
+wa_told.clear()
+prev_ask, whatsapp.RING_FOR, wa.ask = wa.ask, 0.05, over_by_then
+wa._dial({"chat": "3@c.us", "name": "Maya"}, "hi", lambda: None)
+whatsapp.RING_FOR, wa.ask = real_ring, prev_ask
+assert wa_told == ["Maya didn't pick up my WhatsApp call."], wa_told
+wa.calls.clear()
 # Jarvis's voice goes to the call it's on, and the caller talking over it hushes it
 wa.event({"ev": "callstate", "call": "k4", "state": "active"})
 heard = []
@@ -9174,13 +9853,28 @@ assert "picture" in brain.tool_show_image(sys.executable).get("error", "")
 # what the file was called ("image/x\\..\\..\\Startup\\run.bat" is a path on Windows), and any type was kept
 real_fetch, real_dir, real_on_image, shown = brain.fetch, brain.IMAGE_DIR, brain.on_image[0], []
 brain.IMAGE_DIR, brain.on_image[0] = tempfile.mkdtemp(), lambda path, caption: shown.append(path)
+def web_picture(kind, body=b"\x89PNG", read=None):  # (a streamed reply: what was read of it is counted)
+    def chunks(size):
+        for i in range(0, len(body), size):
+            if read is not None:
+                read.append(size)
+            yield body[i:i + size]
+    return types.SimpleNamespace(ok=True, status_code=200, headers={"Content-Type": kind}, iter_content=chunks, close=lambda: None)
 for kind, ok in (("image/png", True), ("image/jpeg; charset=binary", True), ("image/SVG+xml", True),
                  ("image/png\\..\\..\\Startup\\run.bat", False), ("image/x-msdownload", False), ("image/bat", False)):
     shown.clear()
-    brain.fetch = lambda url, **k: types.SimpleNamespace(ok=True, status_code=200, content=b"\x89PNG", headers={"Content-Type": kind})
+    brain.fetch = lambda url, **k: web_picture(kind)
     out = brain.tool_show_image("https://pictures.example/x")
     assert ("error" not in out) == ok and len(shown) == ok, (kind, out)
     assert not ok or (os.path.dirname(shown[0]) == brain.IMAGE_DIR and os.path.splitext(shown[0])[1] in brain.CHAT_PICTURES), shown
+# ...streamed, its type checked before the body is read, and one too large refused partway: the whole reply (a film at
+# a picture's address) was read into memory first
+asked_with, read_so_far = [], []
+brain.fetch = lambda url, **k: asked_with.append(k) or web_picture("image/png", b"\0" * (brain.PICTURE_MAX + 5 * 65536), read_so_far)
+shown.clear()
+out = brain.tool_show_image("https://pictures.example/huge.png")
+assert asked_with == [{"stream": True}] and "too large" in out.get("error", "") and not shown, (asked_with, out)
+assert sum(read_so_far) <= brain.PICTURE_MAX + 65536, sum(read_so_far)
 # "show me a picture of a red panda": a photo of something real is found by its name (Wikipedia's picture of the page),
 # and "show me my screen" puts what's on screen in the chat; it could only show a file or an address it already knew
 shown_as, asked_urls = [], []
@@ -9193,7 +9887,7 @@ def wiki(url, **k):
         found = {"query": {"pages": {"7": {"index": 2, "title": "Panda (disambiguation)"},
                                      "9": {"index": 1, "title": "Red panda", "thumbnail": {"source": "https://upload.example/red_panda.jpg"}}}}}
         return types.SimpleNamespace(ok=True, status_code=200, json=lambda: found if "red+panda" in url or "red%20panda" in url else {})
-    return types.SimpleNamespace(ok=True, status_code=200, content=b"\xff\xd8jpeg", headers={"Content-Type": "image/jpeg"})
+    return web_picture("image/jpeg", b"\xff\xd8jpeg")
 
 
 brain.fetch = wiki
@@ -9463,6 +10157,14 @@ assert wa_shown == ["💬 WhatsApp from Sam Lee: hey, you around?" + whatsapp.UN
 jarvis.sessions.add({"who": "system", "text": wa_shown[0]})
 assert '(their newest: "hey, you around?")' in jarvis.wrong_person("whatsapp_send", "Maya", "tell him yes")
 jarvis.sessions.new()
+# ...and with the chat unreadable when the reply is due (the link dropped meanwhile), the message is still shown: the
+# timer's thread died on the error, and the user never saw it
+wa_shown.clear()
+unsent_wa.ask = lambda cmd, timeout=None, **args: (_ for _ in ()).throw(RuntimeError("WhatsApp isn't running"))
+with contextlib.redirect_stdout(io.StringIO()):
+    unsent_wa._answer("1@c.us", "Sam Lee")
+    unsent_wa._answer("1@c.us", "Sam Lee", "hey, you around?")
+assert [w.split(" (")[0] for w in wa_shown] == ["💬 WhatsApp from Sam Lee: ", "💬 WhatsApp from Sam Lee: hey, you around?"], wa_shown
 # WhatsApp coming up (just started, the link dropped): a tool waits a moment for it; once in vain, not again for a minute
 coming = whatsapp.WhatsApp.__new__(whatsapp.WhatsApp)
 coming.saved, coming.state, coming.waited = {"linked": True}, "connecting", 0.0

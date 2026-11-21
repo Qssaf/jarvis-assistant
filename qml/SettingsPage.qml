@@ -16,6 +16,8 @@ Item {
     property var wakeWords: ({})
     property bool learned: false  // a verifier is learned for the chosen wake word
     property bool passphraseSet: false
+    property bool peopleLock: false  // the People page has a password
+    property bool peopleSecret: false  // ...and there's a secret one, for the people hidden on it
     property bool ownWake: false  // "Your own model" picked, before its path is in
     readonly property bool customWake: !!page.s.wake_word && !(page.s.wake_word in page.wakeWords)
     property bool confirmDelete: false
@@ -66,7 +68,7 @@ Item {
         const all = current && list.indexOf(current) < 0 ? [current].concat(list) : list
         return all.map(v => ({ value: v, label: v }))
     }
-    function took(d) { s = d.settings; wakeWords = d.wake_words; learned = d.voice_learned; passphraseSet = d.passphrase }
+    function took(d) { s = d.settings; wakeWords = d.wake_words; learned = d.voice_learned; passphraseSet = d.passphrase; peopleLock = !!d.people_lock; peopleSecret = !!d.people_secret }
     function set(key, value) {
         const change = {}
         change[key] = value
@@ -77,6 +79,18 @@ Item {
         }, e => { Backend.toast(e.error, true); load() })
     }
     function moveLanguage(i, by) { const all = s.window_languages.slice(); all.splice(i + by, 0, all.splice(i, 1)[0]); set("window_languages", all) }
+    function setPeopleLock(old, fresh) {  // (never kept in the page: both boxes are emptied)
+        Api.post("/api/people/password", { old: old, "new": fresh }, d => {
+            lockOld.text = ""; lockNew.text = ""; peopleLock = !!d.lock
+            Backend.toast(d.lock ? qsTr("The People page asks for its password now") : qsTr("Password removed: the People page is open"), false)
+        }, e => Backend.toast(e.error, true))
+    }
+    function setPeopleSecret(old, fresh) {
+        Api.post("/api/people/secret", { old: old, "new": fresh }, d => {
+            secretOld.text = ""; secretNew.text = ""; peopleSecret = !!d.secret
+            Backend.toast(d.secret ? qsTr("People you hide are encrypted with this password now") : qsTr("Secret password removed: nobody is hidden any more"), false)
+        }, e => Backend.toast(e.error, true))
+    }
     function setPassphrase(text) {
         Api.post("/api/passphrase", { passphrase: text }, d => { passphraseSet = d.passphrase; passphrase.text = ""
                  Backend.toast(d.passphrase ? qsTr("Passphrase saved") : qsTr("Passphrase removed"), false) }, e => Backend.toast(e.error, true))
@@ -560,6 +574,63 @@ Item {
                          model: [{ value: "3", label: qsTr("3 days") }, { value: "7", label: qsTr("A week") }, { value: "14", label: qsTr("Two weeks") },
                                  { value: "30", label: qsTr("A month") }].concat([3, 7, 14, 30].indexOf(page.s.people_refresh_days || 7) < 0
                                  ? [{ value: String(page.s.people_refresh_days), label: qsTr("%n day(s)", "", page.s.people_refresh_days) }] : []) } }
+            Setting {
+                id: lockRow
+                readonly property string about: qsTr("Asked for before the People page shows anyone. The page locks again after 5 minutes unused, when "
+                                                     + "the window is put away and at every start. It keeps the page from someone at your screen. "
+                                                     + "Forgot it: “jarvis --reset-people-lock” in a terminal takes both passwords here off.")
+                label: qsTr("Password for the People page")
+                also: about + " " + qsTr("lock private security hide")
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+                    Txt { kind: "small"; text: lockRow.about; Layout.fillWidth: true }
+                    PasswordField { id: lockOld; Layout.fillWidth: true; visible: page.peopleLock
+                            placeholderText: qsTr("Current password"); Accessible.name: qsTr("Current password for the People page") }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
+                        PasswordField { id: lockNew; Layout.fillWidth: true
+                                placeholderText: page.peopleLock ? qsTr("Password set · type a new one to change it") : qsTr("A password only you know, 4 characters or more")
+                                Accessible.name: qsTr("New password for the People page")
+                                onAccepted: if (savePeopleLock.enabled) page.setPeopleLock(lockOld.text, text) }
+                        Pill { id: savePeopleLock; implicitHeight: 44; text: page.peopleLock ? qsTr("Change") : qsTr("Set password")
+                               enabled: lockNew.text !== "" && (!page.peopleLock || lockOld.text !== ""); kind: enabled ? "primary" : ""
+                               onClicked: page.setPeopleLock(lockOld.text, lockNew.text) }
+                        Pill { implicitHeight: 44; kind: "ghost"; text: qsTr("Remove"); visible: page.peopleLock; enabled: lockOld.text !== ""
+                               onClicked: page.setPeopleLock(lockOld.text, "") }
+                    }
+                }
+            }
+            Setting {
+                id: secretRow
+                readonly property string about: qsTr("A second password, for the people you hide on the People page: they're encrypted with it, and "
+                                                     + "listed only when you type it in that page's search box and press Enter (the same again puts "
+                                                     + "them away). Until you type it after a start, Jarvis doesn't know them either. Forget it and "
+                                                     + "they stay encrypted until it's typed again.")
+                label: qsTr("Secret password, for people you hide")
+                also: about + " " + qsTr("hidden secret encrypt private")
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+                    Txt { kind: "small"; text: secretRow.about; Layout.fillWidth: true }
+                    PasswordField { id: secretOld; Layout.fillWidth: true; visible: page.peopleSecret
+                                    placeholderText: qsTr("Current secret password"); Accessible.name: qsTr("Current secret password") }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
+                        PasswordField { id: secretNew; Layout.fillWidth: true
+                                        placeholderText: page.peopleSecret ? qsTr("Secret password set · type a new one to change it") : qsTr("A second password only you know, 4 characters or more")
+                                        Accessible.name: qsTr("New secret password")
+                                        onAccepted: if (saveSecret.enabled) page.setPeopleSecret(secretOld.text, text) }
+                        Pill { id: saveSecret; implicitHeight: 44; text: page.peopleSecret ? qsTr("Change") : qsTr("Set secret password")
+                               enabled: secretNew.text !== "" && (!page.peopleSecret || secretOld.text !== ""); kind: enabled ? "primary" : ""
+                               onClicked: page.setPeopleSecret(secretOld.text, secretNew.text) }
+                        Pill { implicitHeight: 44; kind: "ghost"; text: qsTr("Remove"); visible: page.peopleSecret; enabled: secretOld.text !== ""
+                               onClicked: page.setPeopleSecret(secretOld.text, "") }
+                    }
+                }
+            }
         }
 
         // ================================================================ Phone

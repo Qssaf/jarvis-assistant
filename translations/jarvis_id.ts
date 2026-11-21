@@ -281,7 +281,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+324"/>
+        <location filename="../window.py" line="+327"/>
         <source>Copied</source>
         <translation>Disalin</translation>
     </message>
@@ -879,7 +879,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../qml/SettingsPage.qml" line="+831"/>
+        <location filename="../qml/SettingsPage.qml" line="+902"/>
         <source>Accounts</source>
         <translation>Akun</translation>
     </message>
@@ -1536,7 +1536,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3789"/>
+        <location filename="../jarvis.py" line="+3945"/>
         <source>LISTENING</source>
         <translation>MENDENGARKAN</translation>
     </message>
@@ -1567,9 +1567,22 @@
     </message>
 </context>
 <context>
+    <name>PasswordField</name>
+    <message>
+        <location filename="../qml/PasswordField.qml" line="+16"/>
+        <source>Hide it</source>
+        <translation>Sembunyikan</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show what you typed</source>
+        <translation>Tampilkan yang Anda ketik</translation>
+    </message>
+</context>
+<context>
     <name>PeoplePage</name>
     <message>
-        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <location filename="../qml/PeoplePage.qml" line="+80"/>
         <source>just now</source>
         <translation>baru saja</translation>
     </message>
@@ -1620,12 +1633,13 @@
         <translation>Belum cukup pesan darinya untuk dikatakan banyak. Jarvis akan mencoba lagi setelah Anda lebih banyak mengobrol dengannya.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-56"/>
+        <location line="+58"/>
         <source>Something went wrong</source>
         <translation>Terjadi kesalahan</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+33"/>
         <source>People</source>
         <translation>Orang</translation>
     </message>
@@ -1635,13 +1649,48 @@
         <translation>Siapa saja yang Anda ajak bicara, apa yang Jarvis pahami tentang mereka dari obrolan Anda, dan apa yang Anda catat atau janjikan.</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+17"/>
+        <source>This page is locked</source>
+        <translation>Halaman ini terkunci</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Give its password to see who you talk with and what Jarvis knows about them.</source>
+        <translation>Masukkan kata sandinya untuk melihat siapa saja yang Anda ajak bicara dan apa yang Jarvis ketahui tentang mereka.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password</source>
+        <translation>Kata sandi</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Password for the People page</source>
+        <translation>Kata sandi untuk halaman Orang</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Unlock</source>
+        <translation>Buka kunci</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Forgot it? Run “jarvis --reset-people-lock” in a terminal.</source>
+        <translation>Lupa? Jalankan “jarvis --reset-people-lock” di terminal.</translation>
+    </message>
+    <message>
+        <location line="+21"/>
         <location line="+1"/>
         <source>Search people</source>
         <translation>Cari orang</translation>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="+65"/>
+        <source>Hidden</source>
+        <translation>Disembunyikan</translation>
+    </message>
+    <message>
+        <location line="+27"/>
         <source>No one matches that</source>
         <translation>Tidak ada yang cocok</translation>
     </message>
@@ -1649,6 +1698,16 @@
         <location line="+0"/>
         <source>No one here yet</source>
         <translation>Belum ada siapa pun</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Add a password</source>
+        <translation>Tambah kata sandi</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lock this page now</source>
+        <translation>Kunci halaman ini sekarang</translation>
     </message>
     <message>
         <location line="+46"/>
@@ -1666,7 +1725,7 @@
         <translation>Yang Jarvis pahami</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Reading your chats…</source>
         <translation>Membaca obrolan Anda…</translation>
     </message>
@@ -1681,7 +1740,17 @@
         <translation>Tulis ulang sekarang dari pesan pribadi terbaru Anda dengannya</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
+        <source>Put it right yourself</source>
+        <translation>Perbaiki sendiri</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Write it yourself</source>
+        <translation>Tulis sendiri</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Forget this</source>
         <translation>Lupakan ini</translation>
     </message>
@@ -1695,8 +1764,13 @@
         <source>Profile forgotten</source>
         <translation>Profil dilupakan</translation>
     </message>
+    <message>
+        <location line="+25"/>
+        <source>You wrote this %1. Jarvis leaves it as it is unless you press Refresh.</source>
+        <translation>Anda menulis ini %1. Jarvis membiarkannya apa adanya kecuali Anda menekan Muat ulang.</translation>
+    </message>
     <message numerus="yes">
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Updated %1, from %n message(s)</source>
         <translation>
             <numerusform>Diperbarui %1, dari %n pesan</numerusform>
@@ -1704,6 +1778,11 @@
     </message>
     <message>
         <location line="+5"/>
+        <source>You told Jarvis not to get to know them: it doesn&apos;t read your chats with them for this. You can still write it yourself.</source>
+        <translation>Anda meminta Jarvis untuk tidak mengenal orang ini: Jarvis tidak membaca obrolan Anda dengannya untuk ini. Anda tetap bisa menulisnya sendiri.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>You had Jarvis forget what it understood of them. It won&apos;t write it again unless you press Refresh.</source>
         <translation>Anda meminta Jarvis melupakan apa yang ia pahami tentang orang ini. Ia tidak akan menulisnya lagi kecuali Anda menekan Muat ulang.</translation>
     </message>
@@ -1788,7 +1867,37 @@
         <translation>Tandai janji ini sudah ditepati</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+11"/>
+        <source>Privacy</source>
+        <translation>Privasi</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Let Jarvis get to know them</source>
+        <translation>Biarkan Jarvis mengenalnya</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Off: what it understood from their chats is forgotten and it never reads them for a profile again. Your notes and promises stay.</source>
+        <translation>Mati: apa yang dipahami dari obrolannya dilupakan dan tidak akan pernah dibaca lagi untuk profil. Catatan dan janji Anda tetap ada.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Hide from this page</source>
+        <translation>Sembunyikan dari halaman ini</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Encrypted on this PC with your secret password and left off this list. To see the people you hid, type that password in the search box and press Enter; the same again puts them away.</source>
+        <translation>Dienkripsi di PC ini dengan kata sandi rahasia Anda dan tidak ditampilkan di daftar ini. Untuk melihat orang yang Anda sembunyikan, ketik kata sandi itu di kotak pencarian lalu tekan Enter; lakukan lagi untuk menyembunyikan mereka kembali.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 is hidden. Your secret password in the search box, then Enter, shows the people you hid.</source>
+        <translation>%1 disembunyikan. Ketik kata sandi rahasia Anda di kotak pencarian, lalu tekan Enter untuk menampilkan orang yang Anda sembunyikan.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <location line="+5"/>
         <source>Forget this person</source>
         <translation>Lupakan orang ini</translation>
@@ -1819,7 +1928,36 @@
         <translation>Orang muncul di sini saat Anda mengobrol secara pribadi dengan seseorang di WhatsApp atau Discord, atau saat Anda memberi tahu Jarvis tentang mereka: “Sam sepupu saya”.</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+47"/>
+        <source>Who they are, in one line: cousin; warm, writes in French</source>
+        <translation>Siapa dia, dalam satu baris: sepupu; hangat, menulis dalam bahasa Prancis</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Who they are, in one line</source>
+        <translation>Siapa dia, dalam satu baris</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>One point a line, up to 8:
+Talks about her exams lately
+Don&apos;t bring up grades</source>
+        <translation>Satu poin per baris, hingga 8:
+Belakangan sering membahas ujiannya
+Jangan singgung soal nilai</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>What else Jarvis should understand, one point a line</source>
+        <translation>Hal lain yang perlu Jarvis pahami, satu poin per baris</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Your words are kept as you write them, and Jarvis doesn&apos;t rewrite them by itself.</source>
+        <translation>Kata-kata Anda disimpan persis seperti yang Anda tulis, dan Jarvis tidak menulis ulang sendiri.</translation>
+    </message>
+    <message>
+        <location line="+20"/>
         <source>e.g. My cousin, studies medicine in Lyon</source>
         <translation>mis. Sepupu saya, kuliah kedokteran di Lyon</translation>
     </message>
@@ -1839,12 +1977,14 @@
         <translation>Tanggal seperti 2026-12-31 membuat catatan hilang setelah hari itu.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Cancel</source>
         <translation>Batal</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Save</source>
         <translation>Simpan</translation>
     </message>
@@ -2032,7 +2172,7 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="-677"/>
+        <location filename="../qml/SettingsPage.qml" line="-734"/>
         <source>Settings</source>
         <translation>Pengaturan</translation>
     </message>
@@ -2042,7 +2182,7 @@
         <translation>Perubahan langsung disimpan. Model dan kunci API ada di halaman Model.</translation>
     </message>
     <message>
-        <location line="-109"/>
+        <location line="-121"/>
         <source>Checking…</source>
         <translation>Memeriksa…</translation>
     </message>
@@ -2057,7 +2197,27 @@
         <translation>Tidak dapat memperbarui: %1</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
+        <source>The People page asks for its password now</source>
+        <translation>Halaman Orang sekarang meminta kata sandinya</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Password removed: the People page is open</source>
+        <translation>Kata sandi dihapus: halaman Orang terbuka</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>People you hide are encrypted with this password now</source>
+        <translation>Orang yang Anda sembunyikan kini dienkripsi dengan kata sandi ini</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Secret password removed: nobody is hidden any more</source>
+        <translation>Kata sandi rahasia dihapus: tidak ada lagi yang disembunyikan</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Passphrase saved</source>
         <translation>Frasa sandi disimpan</translation>
     </message>
@@ -2332,19 +2492,21 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+290"/>
+        <location line="+347"/>
         <location line="+117"/>
         <source>Save</source>
         <translation>Simpan</translation>
     </message>
     <message>
-        <location line="-405"/>
+        <location line="-462"/>
         <location line="+86"/>
+        <location line="+180"/>
+        <location line="+29"/>
         <source>Remove</source>
         <translation>Hapus</translation>
     </message>
     <message>
-        <location line="-82"/>
+        <location line="-291"/>
         <location line="+7"/>
         <source>Push to talk</source>
         <translation>Tekan untuk bicara</translation>
@@ -2602,7 +2764,93 @@
         </translation>
     </message>
     <message>
-        <location line="+145"/>
+        <location line="+3"/>
+        <source>Asked for before the People page shows anyone. The page locks again after 5 minutes unused, when the window is put away and at every start. It keeps the page from someone at your screen. Forgot it: “jarvis --reset-people-lock” in a terminal takes both passwords here off.</source>
+        <translation>Diminta sebelum halaman Orang menampilkan siapa pun. Halaman terkunci lagi setelah 5 menit tidak dipakai, saat jendela disembunyikan, dan setiap kali dimulai. Ini menjaga halaman dari orang di depan layar Anda. Lupa: “jarvis --reset-people-lock” di terminal menghapus kedua kata sandi di sini.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Password for the People page</source>
+        <translation>Kata sandi untuk halaman Orang</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lock private security hide</source>
+        <translation>kunci privat keamanan sembunyikan kata sandi</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Current password</source>
+        <translation>Kata sandi saat ini</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Current password for the People page</source>
+        <translation>Kata sandi saat ini untuk halaman Orang</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password set · type a new one to change it</source>
+        <translation>Kata sandi sudah diatur · ketik yang baru untuk menggantinya</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A password only you know, 4 characters or more</source>
+        <translation>Kata sandi yang hanya Anda ketahui, minimal 4 karakter</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New password for the People page</source>
+        <translation>Kata sandi baru untuk halaman Orang</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set password</source>
+        <translation>Atur kata sandi</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>A second password, for the people you hide on the People page: they&apos;re encrypted with it, and listed only when you type it in that page&apos;s search box and press Enter (the same again puts them away). Until you type it after a start, Jarvis doesn&apos;t know them either. Forget it and they stay encrypted until it&apos;s typed again.</source>
+        <translation>Kata sandi kedua, untuk orang yang Anda sembunyikan di halaman Orang: mereka dienkripsi dengannya, dan hanya ditampilkan saat Anda mengetiknya di kotak pencarian halaman itu lalu menekan Enter (lakukan lagi untuk menyembunyikan mereka kembali). Sampai Anda mengetiknya setelah dimulai, Jarvis pun tidak mengenal mereka. Jika Anda melupakannya, mereka tetap terenkripsi sampai kata sandi itu diketik lagi.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Secret password, for people you hide</source>
+        <translation>Kata sandi rahasia, untuk orang yang Anda sembunyikan</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>hidden secret encrypt private</source>
+        <translation>tersembunyi rahasia enkripsi privat</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+0"/>
+        <source>Current secret password</source>
+        <translation>Kata sandi rahasia saat ini</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Secret password set · type a new one to change it</source>
+        <translation>Kata sandi rahasia sudah diatur · ketik yang baru untuk menggantinya</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A second password only you know, 4 characters or more</source>
+        <translation>Kata sandi kedua yang hanya Anda ketahui, minimal 4 karakter</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New secret password</source>
+        <translation>Kata sandi rahasia baru</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set secret password</source>
+        <translation>Atur kata sandi rahasia</translation>
+    </message>
+    <message>
+        <location line="+152"/>
         <source>Jarvis on Telegram</source>
         <translation>Jarvis di Telegram</translation>
     </message>
@@ -2743,7 +2991,9 @@
         <translation>Menghubungkan…</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-105"/>
+        <location line="+29"/>
+        <location line="+60"/>
         <location line="+19"/>
         <source>Change</source>
         <translation>Ubah</translation>
@@ -2772,7 +3022,7 @@
         <translation>Di aplikasi Jarvis, ketuk Pair lalu pindai kode ini. Hanya berlaku sekali, selama sepuluh menit.</translation>
     </message>
     <message>
-        <location line="-246"/>
+        <location line="-303"/>
         <source>WhatsApp</source>
         <translation>WhatsApp</translation>
     </message>
@@ -2978,7 +3228,7 @@
     </message>
     <message>
         <location line="-452"/>
-        <location line="+658"/>
+        <location line="+715"/>
         <source>Your data</source>
         <translation>Data Anda</translation>
     </message>
@@ -3013,14 +3263,14 @@
         <translation>Simpan percakapan dan log selama</translation>
     </message>
     <message>
-        <location line="-198"/>
-        <location line="+200"/>
+        <location line="-255"/>
+        <location line="+257"/>
         <source>A week</source>
         <translation>Seminggu</translation>
     </message>
     <message>
-        <location line="-199"/>
-        <location line="+199"/>
+        <location line="-256"/>
+        <location line="+256"/>
         <source>A month</source>
         <translation>Sebulan</translation>
     </message>
@@ -3667,7 +3917,7 @@
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+124"/>
+        <location filename="../jarvis.py" line="+130"/>
         <source>Open Jarvis</source>
         <translation>Buka Jarvis</translation>
     </message>

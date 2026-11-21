@@ -281,7 +281,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+324"/>
+        <location filename="../window.py" line="+327"/>
         <source>Copied</source>
         <translation>복사됨</translation>
     </message>
@@ -879,7 +879,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../qml/SettingsPage.qml" line="+831"/>
+        <location filename="../qml/SettingsPage.qml" line="+902"/>
         <source>Accounts</source>
         <translation>계정</translation>
     </message>
@@ -1536,7 +1536,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3789"/>
+        <location filename="../jarvis.py" line="+3945"/>
         <source>LISTENING</source>
         <translation>듣는 중</translation>
     </message>
@@ -1567,9 +1567,22 @@
     </message>
 </context>
 <context>
+    <name>PasswordField</name>
+    <message>
+        <location filename="../qml/PasswordField.qml" line="+16"/>
+        <source>Hide it</source>
+        <translation>숨기기</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show what you typed</source>
+        <translation>입력한 내용 보기</translation>
+    </message>
+</context>
+<context>
     <name>PeoplePage</name>
     <message>
-        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <location filename="../qml/PeoplePage.qml" line="+80"/>
         <source>just now</source>
         <translation>방금</translation>
     </message>
@@ -1620,12 +1633,13 @@
         <translation>아직 메시지가 적어서 말할 게 많지 않아요. 더 대화하면 Jarvis가 다시 시도해요.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-56"/>
+        <location line="+58"/>
         <source>Something went wrong</source>
         <translation>문제가 발생했어요</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+33"/>
         <source>People</source>
         <translation>사람들</translation>
     </message>
@@ -1635,13 +1649,48 @@
         <translation>대화하는 사람들, 채팅에서 Jarvis가 이해한 내용, 그리고 내가 적어 두거나 약속한 것들이에요.</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+17"/>
+        <source>This page is locked</source>
+        <translation>이 페이지는 잠겨 있어요</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Give its password to see who you talk with and what Jarvis knows about them.</source>
+        <translation>비밀번호를 입력하면 대화하는 사람들과 Jarvis가 그들에 대해 아는 내용을 볼 수 있어요.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password</source>
+        <translation>비밀번호</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Password for the People page</source>
+        <translation>사람들 페이지 비밀번호</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Unlock</source>
+        <translation>잠금 해제</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Forgot it? Run “jarvis --reset-people-lock” in a terminal.</source>
+        <translation>잊으셨나요? 터미널에서 “jarvis --reset-people-lock”을 실행하세요.</translation>
+    </message>
+    <message>
+        <location line="+21"/>
         <location line="+1"/>
         <source>Search people</source>
         <translation>사람 검색</translation>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="+65"/>
+        <source>Hidden</source>
+        <translation>숨김</translation>
+    </message>
+    <message>
+        <location line="+27"/>
         <source>No one matches that</source>
         <translation>일치하는 사람이 없어요</translation>
     </message>
@@ -1649,6 +1698,16 @@
         <location line="+0"/>
         <source>No one here yet</source>
         <translation>아직 아무도 없어요</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Add a password</source>
+        <translation>비밀번호 추가</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lock this page now</source>
+        <translation>지금 이 페이지 잠그기</translation>
     </message>
     <message>
         <location line="+46"/>
@@ -1666,7 +1725,7 @@
         <translation>Jarvis가 이해한 내용</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Reading your chats…</source>
         <translation>채팅을 읽는 중…</translation>
     </message>
@@ -1681,7 +1740,17 @@
         <translation>이 사람과의 최근 1:1 메시지로 지금 다시 작성</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
+        <source>Put it right yourself</source>
+        <translation>직접 고치기</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Write it yourself</source>
+        <translation>직접 쓰기</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Forget this</source>
         <translation>이 내용 잊기</translation>
     </message>
@@ -1695,8 +1764,13 @@
         <source>Profile forgotten</source>
         <translation>프로필을 잊었어요</translation>
     </message>
+    <message>
+        <location line="+25"/>
+        <source>You wrote this %1. Jarvis leaves it as it is unless you press Refresh.</source>
+        <translation>직접 쓴 내용이에요(%1). 새로고침을 누르지 않으면 Jarvis가 그대로 둬요.</translation>
+    </message>
     <message numerus="yes">
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Updated %1, from %n message(s)</source>
         <translation>
             <numerusform>%1 업데이트, 메시지 %n개 기반</numerusform>
@@ -1704,6 +1778,11 @@
     </message>
     <message>
         <location line="+5"/>
+        <source>You told Jarvis not to get to know them: it doesn&apos;t read your chats with them for this. You can still write it yourself.</source>
+        <translation>Jarvis에게 이 사람을 알아 가지 말라고 했어요: 그래서 이 사람과의 채팅을 읽지 않아요. 직접 쓸 수는 있어요.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>You had Jarvis forget what it understood of them. It won&apos;t write it again unless you press Refresh.</source>
         <translation>Jarvis가 이 사람에 대해 이해한 내용을 잊게 했어요. 새로고침을 누르지 않으면 다시 작성하지 않아요.</translation>
     </message>
@@ -1788,7 +1867,37 @@
         <translation>이 약속을 지킨 것으로 표시</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+11"/>
+        <source>Privacy</source>
+        <translation>개인정보 보호</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Let Jarvis get to know them</source>
+        <translation>Jarvis가 이 사람을 알아 가게 하기</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Off: what it understood from their chats is forgotten and it never reads them for a profile again. Your notes and promises stay.</source>
+        <translation>끄면: 채팅에서 이해한 내용을 잊고, 프로필을 위해 다시는 채팅을 읽지 않아요. 메모와 약속은 그대로 남아요.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Hide from this page</source>
+        <translation>이 페이지에서 숨기기</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Encrypted on this PC with your secret password and left off this list. To see the people you hid, type that password in the search box and press Enter; the same again puts them away.</source>
+        <translation>이 PC에서 시크릿 비밀번호로 암호화되어 이 목록에 나오지 않아요. 숨긴 사람을 보려면 검색창에 그 비밀번호를 입력하고 Enter 키를 누르세요. 한 번 더 하면 다시 숨겨져요.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 is hidden. Your secret password in the search box, then Enter, shows the people you hid.</source>
+        <translation>%1 님을 숨겼어요. 검색창에 시크릿 비밀번호를 입력하고 Enter 키를 누르면 숨긴 사람이 보여요.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <location line="+5"/>
         <source>Forget this person</source>
         <translation>이 사람 잊기</translation>
@@ -1819,7 +1928,36 @@
         <translation>WhatsApp이나 Discord에서 누군가와 1:1로 채팅하거나 Jarvis에게 누군가에 대해 말하면(“Sam은 내 사촌이야”) 여기에 나타나요.</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+47"/>
+        <source>Who they are, in one line: cousin; warm, writes in French</source>
+        <translation>어떤 사람인지 한 줄로: 사촌, 다정함, 프랑스어로 씀</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Who they are, in one line</source>
+        <translation>어떤 사람인지 한 줄로</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>One point a line, up to 8:
+Talks about her exams lately
+Don&apos;t bring up grades</source>
+        <translation>한 줄에 하나씩, 8개까지:
+요즘 시험 이야기를 자주 함
+성적 이야기는 꺼내지 않기</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>What else Jarvis should understand, one point a line</source>
+        <translation>Jarvis가 더 알아야 할 것, 한 줄에 하나씩</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Your words are kept as you write them, and Jarvis doesn&apos;t rewrite them by itself.</source>
+        <translation>쓴 그대로 보관되며, Jarvis가 마음대로 고쳐 쓰지 않아요.</translation>
+    </message>
+    <message>
+        <location line="+20"/>
         <source>e.g. My cousin, studies medicine in Lyon</source>
         <translation>예: 사촌, 리옹에서 의학 공부 중</translation>
     </message>
@@ -1839,12 +1977,14 @@
         <translation>2026-12-31 같은 날짜를 넣으면 그날이 지나고 메모가 사라져요.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Cancel</source>
         <translation>취소</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Save</source>
         <translation>저장</translation>
     </message>
@@ -2032,7 +2172,7 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="-677"/>
+        <location filename="../qml/SettingsPage.qml" line="-734"/>
         <source>Settings</source>
         <translation>설정</translation>
     </message>
@@ -2042,7 +2182,7 @@
         <translation>변경 사항은 바로 저장돼요. 모델과 API 키는 모델 페이지에 있어요.</translation>
     </message>
     <message>
-        <location line="-109"/>
+        <location line="-121"/>
         <source>Checking…</source>
         <translation>확인 중…</translation>
     </message>
@@ -2057,7 +2197,27 @@
         <translation>업데이트하지 못했어요: %1</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
+        <source>The People page asks for its password now</source>
+        <translation>이제 사람들 페이지에서 비밀번호를 물어요</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Password removed: the People page is open</source>
+        <translation>비밀번호를 없앴어요: 사람들 페이지가 열려 있어요</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>People you hide are encrypted with this password now</source>
+        <translation>이제 숨기는 사람은 이 비밀번호로 암호화돼요</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Secret password removed: nobody is hidden any more</source>
+        <translation>시크릿 비밀번호를 없앴어요: 이제 숨긴 사람이 없어요</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Passphrase saved</source>
         <translation>암호 문구를 저장했어요</translation>
     </message>
@@ -2332,19 +2492,21 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+290"/>
+        <location line="+347"/>
         <location line="+117"/>
         <source>Save</source>
         <translation>저장</translation>
     </message>
     <message>
-        <location line="-405"/>
+        <location line="-462"/>
         <location line="+86"/>
+        <location line="+180"/>
+        <location line="+29"/>
         <source>Remove</source>
         <translation>제거</translation>
     </message>
     <message>
-        <location line="-82"/>
+        <location line="-291"/>
         <location line="+7"/>
         <source>Push to talk</source>
         <translation>눌러서 말하기</translation>
@@ -2602,7 +2764,93 @@
         </translation>
     </message>
     <message>
-        <location line="+145"/>
+        <location line="+3"/>
+        <source>Asked for before the People page shows anyone. The page locks again after 5 minutes unused, when the window is put away and at every start. It keeps the page from someone at your screen. Forgot it: “jarvis --reset-people-lock” in a terminal takes both passwords here off.</source>
+        <translation>사람들 페이지에 누군가를 보여 주기 전에 물어요. 5분 동안 쓰지 않거나, 창을 치우거나, 시작할 때마다 다시 잠겨요. 화면 앞에 있는 다른 사람에게서 페이지를 지켜 줘요. 잊었다면: 터미널에서 “jarvis --reset-people-lock”을 실행하면 여기 있는 두 비밀번호가 모두 해제돼요.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Password for the People page</source>
+        <translation>사람들 페이지 비밀번호</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lock private security hide</source>
+        <translation>잠금 비공개 보안 숨기기 비밀번호</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Current password</source>
+        <translation>현재 비밀번호</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Current password for the People page</source>
+        <translation>사람들 페이지의 현재 비밀번호</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password set · type a new one to change it</source>
+        <translation>비밀번호 설정됨 · 바꾸려면 새 비밀번호 입력</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A password only you know, 4 characters or more</source>
+        <translation>나만 아는 비밀번호, 4자 이상</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New password for the People page</source>
+        <translation>사람들 페이지의 새 비밀번호</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set password</source>
+        <translation>비밀번호 설정</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>A second password, for the people you hide on the People page: they&apos;re encrypted with it, and listed only when you type it in that page&apos;s search box and press Enter (the same again puts them away). Until you type it after a start, Jarvis doesn&apos;t know them either. Forget it and they stay encrypted until it&apos;s typed again.</source>
+        <translation>사람들 페이지에서 숨기는 사람을 위한 두 번째 비밀번호예요: 숨긴 사람은 이 비밀번호로 암호화되고, 그 페이지의 검색창에 입력하고 Enter 키를 누를 때만 목록에 나와요(한 번 더 하면 다시 숨겨져요). 시작한 뒤 입력하기 전까지는 Jarvis도 그 사람들을 몰라요. 잊으면 다시 입력할 때까지 암호화된 채로 남아요.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Secret password, for people you hide</source>
+        <translation>시크릿 비밀번호, 숨기는 사람용</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>hidden secret encrypt private</source>
+        <translation>숨김 시크릿 암호화 비공개</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+0"/>
+        <source>Current secret password</source>
+        <translation>현재 시크릿 비밀번호</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Secret password set · type a new one to change it</source>
+        <translation>시크릿 비밀번호 설정됨 · 바꾸려면 새 비밀번호 입력</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A second password only you know, 4 characters or more</source>
+        <translation>나만 아는 두 번째 비밀번호, 4자 이상</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New secret password</source>
+        <translation>새 시크릿 비밀번호</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set secret password</source>
+        <translation>시크릿 비밀번호 설정</translation>
+    </message>
+    <message>
+        <location line="+152"/>
         <source>Jarvis on Telegram</source>
         <translation>Telegram의 Jarvis</translation>
     </message>
@@ -2743,7 +2991,9 @@
         <translation>연결 중…</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-105"/>
+        <location line="+29"/>
+        <location line="+60"/>
         <location line="+19"/>
         <source>Change</source>
         <translation>변경</translation>
@@ -2772,7 +3022,7 @@
         <translation>Jarvis 앱에서 Pair를 누르고 이 코드를 스캔하세요. 10분 동안 한 번만 쓸 수 있어요.</translation>
     </message>
     <message>
-        <location line="-246"/>
+        <location line="-303"/>
         <source>WhatsApp</source>
         <translation>WhatsApp</translation>
     </message>
@@ -2978,7 +3228,7 @@
     </message>
     <message>
         <location line="-452"/>
-        <location line="+658"/>
+        <location line="+715"/>
         <source>Your data</source>
         <translation>내 데이터</translation>
     </message>
@@ -3013,14 +3263,14 @@
         <translation>대화와 로그 보관 기간</translation>
     </message>
     <message>
-        <location line="-198"/>
-        <location line="+200"/>
+        <location line="-255"/>
+        <location line="+257"/>
         <source>A week</source>
         <translation>1주</translation>
     </message>
     <message>
-        <location line="-199"/>
-        <location line="+199"/>
+        <location line="-256"/>
+        <location line="+256"/>
         <source>A month</source>
         <translation>1개월</translation>
     </message>
@@ -3667,7 +3917,7 @@
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+124"/>
+        <location filename="../jarvis.py" line="+130"/>
         <source>Open Jarvis</source>
         <translation>Jarvis 열기</translation>
     </message>

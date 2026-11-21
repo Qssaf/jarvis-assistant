@@ -1219,8 +1219,8 @@ def shell(command, timeout=30):
     started in the background can't keep the call waiting."""
     args = (["powershell", "-NoProfile", "-NonInteractive", "-Command", command] if IS_WINDOWS else ["bash", "-lc", command])
     with tempfile.TemporaryFile() as log:
-        proc = subprocess.Popen(args, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                                **({} if IS_WINDOWS else {"start_new_session": True}))
+        proc = subprocess.Popen(args, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,  # (CREATE_NO_WINDOW: as run)
+                                **({"creationflags": 0x08000000} if IS_WINDOWS else {"start_new_session": True}))
         try:
             code = proc.wait(timeout)
         except subprocess.TimeoutExpired:  # all of it stops: a pipeline's or a sequence's other parts ran on after "timed
@@ -1561,7 +1561,9 @@ class WindowsAccessibility:
             from pywinauto import Desktop
         except ImportError:
             return {"error": "pressing controls by name needs pywinauto (pip install pywinauto)"}
-        want = cmd["app"].lower().removesuffix(".exe").split(".")[-1]
+        want = cmd["app"].lower().removesuffix(".exe").split(".")[-1].strip()
+        if not want:  # (as atspi_helper: it would match the first window of all, and press its controls)
+            return {"error": "which app? Name it: the focused one couldn't be told"}
         end = time.time() + float(cmd.get("wait", 0))
         while True:
             wins = [w for w in Desktop(backend="uia").windows() if want in (w.window_text() or "").lower()

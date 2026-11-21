@@ -3,6 +3,21 @@
 ## Unreleased
 
 ### Added
+- **Your say over the People page:** per person, *Let Jarvis get to know them* off (what it understood is forgotten and
+  their chats are never read for a profile again; your notes and promises stay), and the pencil beside *What Jarvis
+  understands* lets you put a profile right or write it yourself: your words are kept as written and never rewritten
+  by itself.
+- **A password for the People page** (Settings → Messages → People): the page shows no one until it's given, locks
+  again after 5 minutes unused, when the window is closed or minimised, and at every start; a few wrong tries make the
+  next ones wait. Its boxes have an eye that shows what you typed (typed blind and once, a slip made the password
+  "wrong" the first time it was needed). Forgot it: `jarvis --reset-people-lock`.
+- **Hidden people, under a second password:** set a *secret password* (Settings → Messages → People), and *Hide
+  from this page* encrypts a person's page on your PC with a key made from it and takes them off the list. Nothing says
+  anyone is hidden: type the secret password into the page's search box and press Enter to list them, and the same
+  again to put them away. The page's own password opens the page and nothing more. Jarvis knows hidden people only
+  from the first time you give the secret password after a start; until then a message from one makes no page in the
+  open. `jarvis --reset-people-lock` takes both passwords off, but people hidden under a forgotten secret password stay
+  encrypted until it's typed again. The chat, Home, the log and WhatsApp's own saved messages still name people.
 - **A People page:** everyone you chat with one to one on WhatsApp or Discord, and everyone you've told Jarvis about,
   each with what Jarvis understands of them (who they are to you, how they write, what you talk about lately, what's
   open between you), your notes (add, edit, delete, with an end date) and the promises you made them. The profile is
@@ -225,6 +240,39 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
+- **Sending in a chat was checked whatever the spelling of Return:** a plan pressing "return", "ret" or "kp_enter",
+  or one filling the box with set_text, skipped the "which chat is open?" check and the voice's one-message-per-request
+  check; a sent "ctrl+a Return" wasn't remembered as sent.
+- **"Delete my data" no longer breaks the voice:** the next wake-up after it ended the voice session with an error.
+- **Bug reports leave out more names:** Discord messages, people's profiles, and WhatsApp or Discord replies and calls
+  that went wrong named the person in the copied report.
+- When a model asked beside a slow one failed at once, the next one is asked right away (it waited another few seconds,
+  or for the slow one's whole timeout); a service with no key in the list no longer keeps the others from being tried
+  after a network blip; and a removed key's model isn't checked on every ten minutes for the rest of the run.
+- Turning off the Composio plugin takes its account tools with it (they were still offered and each failed), and an
+  account change Composio says failed isn't listed under recent changes, so "undo that" doesn't go after it.
+- A plugin run as a local command started once, not once per call made while it connected.
+- Notes whose recording stops partway (PipeWire restarted, the microphone unplugged) are written up with what was
+  recorded and say so; they stayed "on" for good and new notes were refused.
+- A WhatsApp call that rang out just as Jarvis gave up is told as "didn't pick up", not as the call failing.
+- A WhatsApp or Discord message is still shown when the chat can't be read as its reply is due (the link dropped or
+  Vesktop closed): it was never shown; and an "always let through" Discord message is in the chat as WhatsApp's are.
+- WhatsApp group names are asked of WhatsApp once and kept (each list of chats asked again for every unnamed group,
+  and waited on them while the link came up); a group renamed later shows its new name.
+- The backup voice hears an answer to a task's question said while the question is still being spoken, and New
+  conversation (or opening another, or deleting the data) ends its listening as it ends Gemini Live's.
+- On Windows, commands run with no console window flashing up, and pressing a control by name with no app known is
+  refused (it pressed that control in whichever window came first).
+- The phone app: the Settings page no longer fails while a phone is being paired, one dead connection no longer keeps
+  the other phones from the chat's news, and news sent into a connection that had just died is kept for the phone.
+- A picture shown from the web is checked before it's downloaded and refused over 20 MB (the whole reply was read
+  into memory first); an empty model turn no longer goes to OpenAI-style services as an invalid message; and the
+  conversation saved after a task is a consistent copy, ending on Jarvis's turn.
+- Cancelling a reminder says rightly whether it was there when another reminder is set at that moment.
+- Promises in sent emails go on the right person's page (an address alone finds its page), and an email to nobody
+  named no longer makes a "someone by email" page.
+- **Forwarded Discord messages** were read as empty: Jarvis didn't see what a forward said, or the photo in it. It
+  reads them now as "[forwarded: ...]", in chats it reads and in messages that arrive.
 - **A stray key could change a setting:** after a click on a drop-down in Settings, a typed letter or an arrow key
   changed it and saved at once (an "l" put missed WhatsApp calls on *Let them ring*, and calls went unanswered and
   unmentioned). Letters do nothing on a closed drop-down now, arrows open the list, and the mouse wheel doesn't turn it.

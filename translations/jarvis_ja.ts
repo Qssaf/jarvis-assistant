@@ -281,7 +281,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+324"/>
+        <location filename="../window.py" line="+327"/>
         <source>Copied</source>
         <translation>コピーしました</translation>
     </message>
@@ -879,7 +879,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../qml/SettingsPage.qml" line="+831"/>
+        <location filename="../qml/SettingsPage.qml" line="+902"/>
         <source>Accounts</source>
         <translation>アカウント</translation>
     </message>
@@ -1536,7 +1536,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3789"/>
+        <location filename="../jarvis.py" line="+3945"/>
         <source>LISTENING</source>
         <translation>聞き取り中</translation>
     </message>
@@ -1567,9 +1567,22 @@
     </message>
 </context>
 <context>
+    <name>PasswordField</name>
+    <message>
+        <location filename="../qml/PasswordField.qml" line="+16"/>
+        <source>Hide it</source>
+        <translation>隠す</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show what you typed</source>
+        <translation>入力した内容を表示</translation>
+    </message>
+</context>
+<context>
     <name>PeoplePage</name>
     <message>
-        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <location filename="../qml/PeoplePage.qml" line="+80"/>
         <source>just now</source>
         <translation>たった今</translation>
     </message>
@@ -1620,12 +1633,13 @@
         <translation>まだメッセージが少なく、多くはわかりません。もっとやり取りしたら、Jarvisがもう一度試します。</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-56"/>
+        <location line="+58"/>
         <source>Something went wrong</source>
         <translation>問題が発生しました</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+33"/>
         <source>People</source>
         <translation>人物</translation>
     </message>
@@ -1635,13 +1649,48 @@
         <translation>あなたが話す相手、チャットからJarvisが理解したこと、あなたが書き留めたことや約束したこと。</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+17"/>
+        <source>This page is locked</source>
+        <translation>このページはロックされています</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Give its password to see who you talk with and what Jarvis knows about them.</source>
+        <translation>パスワードを入力すると、あなたが話す相手と、Jarvisがその人について知っていることが表示されます。</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password</source>
+        <translation>パスワード</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Password for the People page</source>
+        <translation>「人物」ページのパスワード</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Unlock</source>
+        <translation>ロック解除</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Forgot it? Run “jarvis --reset-people-lock” in a terminal.</source>
+        <translation>忘れた場合は、ターミナルで「jarvis --reset-people-lock」を実行してください。</translation>
+    </message>
+    <message>
+        <location line="+21"/>
         <location line="+1"/>
         <source>Search people</source>
         <translation>人物を検索</translation>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="+65"/>
+        <source>Hidden</source>
+        <translation>非表示</translation>
+    </message>
+    <message>
+        <location line="+27"/>
         <source>No one matches that</source>
         <translation>一致する人はいません</translation>
     </message>
@@ -1649,6 +1698,16 @@
         <location line="+0"/>
         <source>No one here yet</source>
         <translation>まだ誰もいません</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Add a password</source>
+        <translation>パスワードを追加</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lock this page now</source>
+        <translation>今すぐこのページをロック</translation>
     </message>
     <message>
         <location line="+46"/>
@@ -1666,7 +1725,7 @@
         <translation>Jarvisの理解</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Reading your chats…</source>
         <translation>チャットを読んでいます…</translation>
     </message>
@@ -1681,7 +1740,17 @@
         <translation>この人との最新の1対1メッセージから今すぐ書き直す</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
+        <source>Put it right yourself</source>
+        <translation>自分で直す</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Write it yourself</source>
+        <translation>自分で書く</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Forget this</source>
         <translation>これを忘れる</translation>
     </message>
@@ -1695,8 +1764,13 @@
         <source>Profile forgotten</source>
         <translation>プロフィールを忘れました</translation>
     </message>
+    <message>
+        <location line="+25"/>
+        <source>You wrote this %1. Jarvis leaves it as it is unless you press Refresh.</source>
+        <translation>あなたが書いたものです（%1）。「更新」を押さない限り、Jarvisはそのままにします。</translation>
+    </message>
     <message numerus="yes">
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Updated %1, from %n message(s)</source>
         <translation>
             <numerusform>%1に更新（%n件のメッセージから）</numerusform>
@@ -1704,6 +1778,11 @@
     </message>
     <message>
         <location line="+5"/>
+        <source>You told Jarvis not to get to know them: it doesn&apos;t read your chats with them for this. You can still write it yourself.</source>
+        <translation>この人のことを知らないようJarvisに伝えてあるため、そのためにこの人とのチャットを読むことはありません。自分で書くことはできます。</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>You had Jarvis forget what it understood of them. It won&apos;t write it again unless you press Refresh.</source>
         <translation>この人について理解したことをJarvisに忘れさせました。「更新」を押さない限り、再び書くことはありません。</translation>
     </message>
@@ -1788,7 +1867,37 @@
         <translation>この約束を果たしたことにする</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+11"/>
+        <source>Privacy</source>
+        <translation>プライバシー</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Let Jarvis get to know them</source>
+        <translation>Jarvisにこの人のことを知ってもらう</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Off: what it understood from their chats is forgotten and it never reads them for a profile again. Your notes and promises stay.</source>
+        <translation>オフ：チャットから理解したことは忘れられ、プロフィールのためにチャットを読むことは二度とありません。メモと約束は残ります。</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Hide from this page</source>
+        <translation>このページで非表示にする</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Encrypted on this PC with your secret password and left off this list. To see the people you hid, type that password in the search box and press Enter; the same again puts them away.</source>
+        <translation>このPC上で秘密のパスワードで暗号化され、この一覧には表示されません。非表示にした人を見るには、検索欄にそのパスワードを入力してEnterキーを押します。もう一度同じことをすると、再び非表示になります。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 is hidden. Your secret password in the search box, then Enter, shows the people you hid.</source>
+        <translation>%1を非表示にしました。検索欄に秘密のパスワードを入力してEnterキーを押すと、非表示にした人が表示されます。</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <location line="+5"/>
         <source>Forget this person</source>
         <translation>この人を忘れる</translation>
@@ -1819,7 +1928,36 @@
         <translation>WhatsAppやDiscordで誰かと1対1でチャットしたり、Jarvisに誰かのことを話したりすると（「Samは私のいとこ」）、ここに表示されます。</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+47"/>
+        <source>Who they are, in one line: cousin; warm, writes in French</source>
+        <translation>どんな人か1行で：いとこ。優しい、フランス語で書く</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Who they are, in one line</source>
+        <translation>どんな人か1行で</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>One point a line, up to 8:
+Talks about her exams lately
+Don&apos;t bring up grades</source>
+        <translation>1行に1項目、8つまで：
+最近は試験の話が多い
+成績の話はしない</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>What else Jarvis should understand, one point a line</source>
+        <translation>Jarvisにほかに理解してほしいこと（1行に1項目）</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Your words are kept as you write them, and Jarvis doesn&apos;t rewrite them by itself.</source>
+        <translation>あなたの言葉は書いたとおりに残り、Jarvisが勝手に書き換えることはありません。</translation>
+    </message>
+    <message>
+        <location line="+20"/>
         <source>e.g. My cousin, studies medicine in Lyon</source>
         <translation>例：いとこ。リヨンで医学を学んでいる</translation>
     </message>
@@ -1839,12 +1977,14 @@
         <translation>2026-12-31のように日付を入れると、その日を過ぎたらメモは消えます。</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
@@ -2032,7 +2172,7 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="-677"/>
+        <location filename="../qml/SettingsPage.qml" line="-734"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
@@ -2042,7 +2182,7 @@
         <translation>変更はすぐに保存されます。モデルとAPIキーはモデルページで設定します。</translation>
     </message>
     <message>
-        <location line="-109"/>
+        <location line="-121"/>
         <source>Checking…</source>
         <translation>確認中…</translation>
     </message>
@@ -2057,7 +2197,27 @@
         <translation>更新できませんでした: %1</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
+        <source>The People page asks for its password now</source>
+        <translation>「人物」ページはこれからパスワードを求めます</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Password removed: the People page is open</source>
+        <translation>パスワードを削除しました：「人物」ページは開いています</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>People you hide are encrypted with this password now</source>
+        <translation>非表示にする人は、これからこのパスワードで暗号化されます</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Secret password removed: nobody is hidden any more</source>
+        <translation>秘密のパスワードを削除しました：非表示の人はいなくなりました</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Passphrase saved</source>
         <translation>合言葉を保存しました</translation>
     </message>
@@ -2332,19 +2492,21 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+290"/>
+        <location line="+347"/>
         <location line="+117"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location line="-405"/>
+        <location line="-462"/>
         <location line="+86"/>
+        <location line="+180"/>
+        <location line="+29"/>
         <source>Remove</source>
         <translation>削除</translation>
     </message>
     <message>
-        <location line="-82"/>
+        <location line="-291"/>
         <location line="+7"/>
         <source>Push to talk</source>
         <translation>プッシュトゥトーク</translation>
@@ -2602,7 +2764,93 @@
         </translation>
     </message>
     <message>
-        <location line="+145"/>
+        <location line="+3"/>
+        <source>Asked for before the People page shows anyone. The page locks again after 5 minutes unused, when the window is put away and at every start. It keeps the page from someone at your screen. Forgot it: “jarvis --reset-people-lock” in a terminal takes both passwords here off.</source>
+        <translation>「人物」ページに誰かが表示される前に求められます。5分間使わなかったとき、ウィンドウをしまったとき、起動するたびに再びロックされます。画面の前にいる人からページを守るためのものです。忘れた場合：ターミナルで「jarvis --reset-people-lock」を実行すると、ここにある両方のパスワードが外れます。</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Password for the People page</source>
+        <translation>「人物」ページのパスワード</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lock private security hide</source>
+        <translation>ロック プライベート セキュリティ 非表示 パスワード</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Current password</source>
+        <translation>現在のパスワード</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Current password for the People page</source>
+        <translation>「人物」ページの現在のパスワード</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password set · type a new one to change it</source>
+        <translation>パスワード設定済み · 変更するには新しいものを入力</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A password only you know, 4 characters or more</source>
+        <translation>あなただけが知っているパスワード（4文字以上）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New password for the People page</source>
+        <translation>「人物」ページの新しいパスワード</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set password</source>
+        <translation>パスワードを設定</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>A second password, for the people you hide on the People page: they&apos;re encrypted with it, and listed only when you type it in that page&apos;s search box and press Enter (the same again puts them away). Until you type it after a start, Jarvis doesn&apos;t know them either. Forget it and they stay encrypted until it&apos;s typed again.</source>
+        <translation>「人物」ページで非表示にする人のための2つ目のパスワードです。非表示にした人はこれで暗号化され、そのページの検索欄に入力してEnterキーを押したときだけ一覧に表示されます（もう一度同じことをすると再び非表示になります）。起動後に入力するまでは、Jarvisもその人たちを知りません。忘れると、再び入力されるまで暗号化されたままです。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Secret password, for people you hide</source>
+        <translation>秘密のパスワード（非表示にする人用）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>hidden secret encrypt private</source>
+        <translation>非表示 秘密 暗号化 プライベート</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+0"/>
+        <source>Current secret password</source>
+        <translation>現在の秘密のパスワード</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Secret password set · type a new one to change it</source>
+        <translation>秘密のパスワード設定済み · 変更するには新しいものを入力</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A second password only you know, 4 characters or more</source>
+        <translation>あなただけが知っている2つ目のパスワード（4文字以上）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New secret password</source>
+        <translation>新しい秘密のパスワード</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set secret password</source>
+        <translation>秘密のパスワードを設定</translation>
+    </message>
+    <message>
+        <location line="+152"/>
         <source>Jarvis on Telegram</source>
         <translation>TelegramでJarvisを使う</translation>
     </message>
@@ -2743,7 +2991,9 @@
         <translation>接続中…</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-105"/>
+        <location line="+29"/>
+        <location line="+60"/>
         <location line="+19"/>
         <source>Change</source>
         <translation>変更</translation>
@@ -2772,7 +3022,7 @@
         <translation>Jarvisアプリで「Pair」をタップし、このコードをスキャンしてください。1回限り、10分間有効です。</translation>
     </message>
     <message>
-        <location line="-246"/>
+        <location line="-303"/>
         <source>WhatsApp</source>
         <translation>WhatsApp</translation>
     </message>
@@ -2978,7 +3228,7 @@
     </message>
     <message>
         <location line="-452"/>
-        <location line="+658"/>
+        <location line="+715"/>
         <source>Your data</source>
         <translation>あなたのデータ</translation>
     </message>
@@ -3013,14 +3263,14 @@
         <translation>会話とログの保存期間</translation>
     </message>
     <message>
-        <location line="-198"/>
-        <location line="+200"/>
+        <location line="-255"/>
+        <location line="+257"/>
         <source>A week</source>
         <translation>1週間</translation>
     </message>
     <message>
-        <location line="-199"/>
-        <location line="+199"/>
+        <location line="-256"/>
+        <location line="+256"/>
         <source>A month</source>
         <translation>1か月</translation>
     </message>
@@ -3667,7 +3917,7 @@
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+124"/>
+        <location filename="../jarvis.py" line="+130"/>
         <source>Open Jarvis</source>
         <translation>Jarvisを開く</translation>
     </message>

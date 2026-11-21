@@ -281,7 +281,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+324"/>
+        <location filename="../window.py" line="+327"/>
         <source>Copied</source>
         <translation>Kopyalandı</translation>
     </message>
@@ -879,7 +879,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../qml/SettingsPage.qml" line="+831"/>
+        <location filename="../qml/SettingsPage.qml" line="+902"/>
         <source>Accounts</source>
         <translation>Hesaplar</translation>
     </message>
@@ -1536,7 +1536,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3789"/>
+        <location filename="../jarvis.py" line="+3945"/>
         <source>LISTENING</source>
         <translation>DİNLİYOR</translation>
     </message>
@@ -1567,9 +1567,22 @@
     </message>
 </context>
 <context>
+    <name>PasswordField</name>
+    <message>
+        <location filename="../qml/PasswordField.qml" line="+16"/>
+        <source>Hide it</source>
+        <translation>Gizle</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show what you typed</source>
+        <translation>Yazdığınızı gösterin</translation>
+    </message>
+</context>
+<context>
     <name>PeoplePage</name>
     <message>
-        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <location filename="../qml/PeoplePage.qml" line="+80"/>
         <source>just now</source>
         <translation>az önce</translation>
     </message>
@@ -1620,12 +1633,13 @@
         <translation>Henüz pek bir şey söylemek için yeterli mesajı yok. Daha çok konuştuğunuzda Jarvis yeniden dener.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-56"/>
+        <location line="+58"/>
         <source>Something went wrong</source>
         <translation>Bir şeyler ters gitti</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+33"/>
         <source>People</source>
         <translation>Kişiler</translation>
     </message>
@@ -1635,13 +1649,48 @@
         <translation>Kimlerle konuştuğunuz, Jarvis&apos;in sohbetlerinizden onlar hakkında ne anladığı ve not aldığınız ya da söz verdiğiniz şeyler.</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+17"/>
+        <source>This page is locked</source>
+        <translation>Bu sayfa kilitli</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Give its password to see who you talk with and what Jarvis knows about them.</source>
+        <translation>Kimlerle konuştuğunuzu ve Jarvis&apos;in onlar hakkında neler bildiğini görmek için şifresini girin.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password</source>
+        <translation>Şifre</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Password for the People page</source>
+        <translation>Kişiler sayfasının şifresi</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Unlock</source>
+        <translation>Kilidi aç</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Forgot it? Run “jarvis --reset-people-lock” in a terminal.</source>
+        <translation>Unuttunuz mu? Bir terminalde “jarvis --reset-people-lock” komutunu çalıştırın.</translation>
+    </message>
+    <message>
+        <location line="+21"/>
         <location line="+1"/>
         <source>Search people</source>
         <translation>Kişi ara</translation>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="+65"/>
+        <source>Hidden</source>
+        <translation>Gizli</translation>
+    </message>
+    <message>
+        <location line="+27"/>
         <source>No one matches that</source>
         <translation>Eşleşen kimse yok</translation>
     </message>
@@ -1649,6 +1698,16 @@
         <location line="+0"/>
         <source>No one here yet</source>
         <translation>Henüz kimse yok</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Add a password</source>
+        <translation>Şifre ekle</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lock this page now</source>
+        <translation>Bu sayfayı şimdi kilitle</translation>
     </message>
     <message>
         <location line="+46"/>
@@ -1666,7 +1725,7 @@
         <translation>Jarvis&apos;in anladıkları</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Reading your chats…</source>
         <translation>Sohbetleriniz okunuyor…</translation>
     </message>
@@ -1681,7 +1740,17 @@
         <translation>Bu kişiyle en son birebir mesajlarınızdan şimdi yeniden yaz</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
+        <source>Put it right yourself</source>
+        <translation>Elle düzelt</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Write it yourself</source>
+        <translation>Elle yaz</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Forget this</source>
         <translation>Bunu unut</translation>
     </message>
@@ -1695,8 +1764,13 @@
         <source>Profile forgotten</source>
         <translation>Profil unutuldu</translation>
     </message>
+    <message>
+        <location line="+25"/>
+        <source>You wrote this %1. Jarvis leaves it as it is unless you press Refresh.</source>
+        <translation>Bunu %1 siz yazdınız. Yenile&apos;ye basmadıkça Jarvis olduğu gibi bırakır.</translation>
+    </message>
     <message numerus="yes">
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Updated %1, from %n message(s)</source>
         <translation>
             <numerusform>%1 güncellendi, %n mesajdan</numerusform>
@@ -1704,6 +1778,11 @@
     </message>
     <message>
         <location line="+5"/>
+        <source>You told Jarvis not to get to know them: it doesn&apos;t read your chats with them for this. You can still write it yourself.</source>
+        <translation>Jarvis&apos;e bu kişiyi tanımamasını söylediniz: bunun için onunla olan sohbetlerinizi okumaz. Yine de profili kendiniz yazabilirsiniz.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>You had Jarvis forget what it understood of them. It won&apos;t write it again unless you press Refresh.</source>
         <translation>Jarvis&apos;ten bu kişi hakkında anladıklarını unutmasını istediniz. Yenile&apos;ye basmadıkça bunu yeniden yazmaz.</translation>
     </message>
@@ -1788,7 +1867,37 @@
         <translation>Bu sözü tutuldu olarak işaretle</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+11"/>
+        <source>Privacy</source>
+        <translation>Gizlilik</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Let Jarvis get to know them</source>
+        <translation>Jarvis bu kişiyi tanısın</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Off: what it understood from their chats is forgotten and it never reads them for a profile again. Your notes and promises stay.</source>
+        <translation>Kapalı: sohbetlerinden anladıkları unutulur ve bir profil için onları bir daha asla okumaz. Notlarınız ve sözleriniz kalır.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Hide from this page</source>
+        <translation>Bu sayfada gizle</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Encrypted on this PC with your secret password and left off this list. To see the people you hid, type that password in the search box and press Enter; the same again puts them away.</source>
+        <translation>Bu PC&apos;de gizli şifrenizle şifrelenir ve bu listede gösterilmez. Gizlediğiniz kişileri görmek için o şifreyi arama kutusuna yazıp Enter&apos;a basın; aynısını tekrar yapmak onları yeniden gizler.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 is hidden. Your secret password in the search box, then Enter, shows the people you hid.</source>
+        <translation>%1 gizlendi. Gizli şifrenizi arama kutusuna yazıp Enter&apos;a basınca gizlediğiniz kişiler görünür.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <location line="+5"/>
         <source>Forget this person</source>
         <translation>Bu kişiyi unut</translation>
@@ -1819,7 +1928,36 @@
         <translation>WhatsApp veya Discord&apos;da biriyle birebir sohbet ettiğinizde ya da Jarvis&apos;e birinden bahsettiğinizde kişiler burada görünür: “Sam kuzenim”.</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+47"/>
+        <source>Who they are, in one line: cousin; warm, writes in French</source>
+        <translation>Kim olduğu, tek satırda: kuzen; sıcak, Fransızca yazar</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Who they are, in one line</source>
+        <translation>Kim olduğu, tek satırda</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>One point a line, up to 8:
+Talks about her exams lately
+Don&apos;t bring up grades</source>
+        <translation>Her satıra bir madde, en fazla 8:
+Son zamanlarda sınavlarından bahsediyor
+Notlardan söz etme</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>What else Jarvis should understand, one point a line</source>
+        <translation>Jarvis&apos;in başka neyi anlaması gerektiği, her satıra bir madde</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Your words are kept as you write them, and Jarvis doesn&apos;t rewrite them by itself.</source>
+        <translation>Sözleriniz yazdığınız gibi saklanır ve Jarvis onları kendi kendine yeniden yazmaz.</translation>
+    </message>
+    <message>
+        <location line="+20"/>
         <source>e.g. My cousin, studies medicine in Lyon</source>
         <translation>ör. Kuzenim, Lyon&apos;da tıp okuyor</translation>
     </message>
@@ -1839,12 +1977,14 @@
         <translation>2026-12-31 gibi bir tarih, notun o günden sonra kalkmasını sağlar.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Cancel</source>
         <translation>İptal</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Save</source>
         <translation>Kaydet</translation>
     </message>
@@ -2032,7 +2172,7 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="-677"/>
+        <location filename="../qml/SettingsPage.qml" line="-734"/>
         <source>Settings</source>
         <translation>Ayarlar</translation>
     </message>
@@ -2042,7 +2182,7 @@
         <translation>Değişiklikler anında kaydedilir. Modeller ve API anahtarları Modeller sayfasındadır.</translation>
     </message>
     <message>
-        <location line="-109"/>
+        <location line="-121"/>
         <source>Checking…</source>
         <translation>Kontrol ediliyor…</translation>
     </message>
@@ -2057,7 +2197,27 @@
         <translation>Güncellenemedi: %1</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
+        <source>The People page asks for its password now</source>
+        <translation>Kişiler sayfası artık şifresini soruyor</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Password removed: the People page is open</source>
+        <translation>Şifre kaldırıldı: Kişiler sayfası açık</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>People you hide are encrypted with this password now</source>
+        <translation>Gizlediğiniz kişiler artık bu şifreyle şifreleniyor</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Secret password removed: nobody is hidden any more</source>
+        <translation>Gizli şifre kaldırıldı: artık kimse gizli değil</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Passphrase saved</source>
         <translation>Parola kaydedildi</translation>
     </message>
@@ -2332,19 +2492,21 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+290"/>
+        <location line="+347"/>
         <location line="+117"/>
         <source>Save</source>
         <translation>Kaydet</translation>
     </message>
     <message>
-        <location line="-405"/>
+        <location line="-462"/>
         <location line="+86"/>
+        <location line="+180"/>
+        <location line="+29"/>
         <source>Remove</source>
         <translation>Kaldır</translation>
     </message>
     <message>
-        <location line="-82"/>
+        <location line="-291"/>
         <location line="+7"/>
         <source>Push to talk</source>
         <translation>Bas-konuş</translation>
@@ -2602,7 +2764,93 @@
         </translation>
     </message>
     <message>
-        <location line="+145"/>
+        <location line="+3"/>
+        <source>Asked for before the People page shows anyone. The page locks again after 5 minutes unused, when the window is put away and at every start. It keeps the page from someone at your screen. Forgot it: “jarvis --reset-people-lock” in a terminal takes both passwords here off.</source>
+        <translation>Kişiler sayfası birini göstermeden önce sorulur. Sayfa 5 dakika kullanılmadığında, pencere kaldırıldığında ve her açılışta yeniden kilitlenir. Sayfayı ekranınızın başındaki birinden korur. Unuttuysanız: bir terminalde “jarvis --reset-people-lock” buradaki iki şifreyi de kaldırır.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Password for the People page</source>
+        <translation>Kişiler sayfasının şifresi</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lock private security hide</source>
+        <translation>kilit özel güvenlik gizle şifre</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Current password</source>
+        <translation>Mevcut şifre</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Current password for the People page</source>
+        <translation>Kişiler sayfasının mevcut şifresi</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password set · type a new one to change it</source>
+        <translation>Şifre ayarlandı · değiştirmek için yenisini yazın</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A password only you know, 4 characters or more</source>
+        <translation>Yalnızca sizin bildiğiniz bir şifre, en az 4 karakter</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New password for the People page</source>
+        <translation>Kişiler sayfasının yeni şifresi</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set password</source>
+        <translation>Şifre belirle</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>A second password, for the people you hide on the People page: they&apos;re encrypted with it, and listed only when you type it in that page&apos;s search box and press Enter (the same again puts them away). Until you type it after a start, Jarvis doesn&apos;t know them either. Forget it and they stay encrypted until it&apos;s typed again.</source>
+        <translation>Kişiler sayfasında gizlediğiniz kişiler için ikinci bir şifre: bu şifreyle şifrelenirler ve yalnızca şifreyi o sayfanın arama kutusuna yazıp Enter&apos;a bastığınızda listelenirler (aynısını tekrar yapmak onları yeniden gizler). Bir açılıştan sonra siz yazana kadar Jarvis de onları bilmez. Unutursanız, şifre yeniden yazılana kadar şifreli kalırlar.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Secret password, for people you hide</source>
+        <translation>Gizli şifre, gizlediğiniz kişiler için</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>hidden secret encrypt private</source>
+        <translation>gizli şifre şifreleme özel</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+0"/>
+        <source>Current secret password</source>
+        <translation>Mevcut gizli şifre</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Secret password set · type a new one to change it</source>
+        <translation>Gizli şifre ayarlandı · değiştirmek için yenisini yazın</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A second password only you know, 4 characters or more</source>
+        <translation>Yalnızca sizin bildiğiniz ikinci bir şifre, en az 4 karakter</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New secret password</source>
+        <translation>Yeni gizli şifre</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set secret password</source>
+        <translation>Gizli şifre belirle</translation>
+    </message>
+    <message>
+        <location line="+152"/>
         <source>Jarvis on Telegram</source>
         <translation>Telegram&apos;da Jarvis</translation>
     </message>
@@ -2743,7 +2991,9 @@
         <translation>Bağlanıyor…</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-105"/>
+        <location line="+29"/>
+        <location line="+60"/>
         <location line="+19"/>
         <source>Change</source>
         <translation>Değiştir</translation>
@@ -2772,7 +3022,7 @@
         <translation>Jarvis uygulamasında Eşle&apos;ye dokunun ve bu kodu tarayın. Bir kez, on dakika boyunca çalışır.</translation>
     </message>
     <message>
-        <location line="-246"/>
+        <location line="-303"/>
         <source>WhatsApp</source>
         <translation>WhatsApp</translation>
     </message>
@@ -2978,7 +3228,7 @@
     </message>
     <message>
         <location line="-452"/>
-        <location line="+658"/>
+        <location line="+715"/>
         <source>Your data</source>
         <translation>Verileriniz</translation>
     </message>
@@ -3013,14 +3263,14 @@
         <translation>Konuşmaların ve günlüklerin saklanma süresi</translation>
     </message>
     <message>
-        <location line="-198"/>
-        <location line="+200"/>
+        <location line="-255"/>
+        <location line="+257"/>
         <source>A week</source>
         <translation>Bir hafta</translation>
     </message>
     <message>
-        <location line="-199"/>
-        <location line="+199"/>
+        <location line="-256"/>
+        <location line="+256"/>
         <source>A month</source>
         <translation>Bir ay</translation>
     </message>
@@ -3667,7 +3917,7 @@
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+124"/>
+        <location filename="../jarvis.py" line="+130"/>
         <source>Open Jarvis</source>
         <translation>Jarvis&apos;i aç</translation>
     </message>

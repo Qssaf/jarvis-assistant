@@ -58,7 +58,16 @@ log.
   after the days you choose there, once you've talked since. Someone with fewer than eight messages to you is never
   sent. A paused account (Accounts page) isn't read. On the People page, *Forget this* deletes one profile (Jarvis
   doesn't write another unless you press *Refresh*) and *Forget this person* their whole page; switching the setting
-  off stops it for everyone. Profiles aren't given to WhatsApp or Discord auto-replies.
+  off stops it for everyone. Profiles aren't given to WhatsApp or Discord auto-replies. Per person, *Let Jarvis get to
+  know them* off drops what it understood and keeps their chats from ever being read for a profile. You can set a
+  password for the People page (Settings → Messages → People): it's kept as a salted hash with your keys, and the page
+  shows no one until it's given. That guards the page on your screen, not the file: `people.json` isn't encrypted, but
+  for the people you hide. With a second, secret password set, *Hide from this page* encrypts a person's page in that file
+  (AES-GCM, a key made from the secret password with scrypt; only salted hashes of their names stay readable, so a
+  message from them isn't filed in the open) and lists them only after that password is typed in the page's search box.
+  Jarvis can read them, and tell its models about them, from the first time you give the secret password after a start
+  until it quits. Forget it and they can't be read again. The chat, Home, the log, conversations and WhatsApp's saved messages still name people,
+  hidden or not.
 - **Lecture and meeting notes** (only when you ask for them): what the PC plays, or the room's sound for a class in
   person, is recorded in five-minute pieces, sent to Gemini to be written down, and deleted; the notes are saved in
   `Documents/Jarvis Notes`.

@@ -286,7 +286,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+324"/>
+        <location filename="../window.py" line="+327"/>
         <source>Copied</source>
         <translation>تم النسخ</translation>
     </message>
@@ -934,7 +934,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../qml/SettingsPage.qml" line="+831"/>
+        <location filename="../qml/SettingsPage.qml" line="+902"/>
         <source>Accounts</source>
         <translation>الحسابات</translation>
     </message>
@@ -1611,7 +1611,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3789"/>
+        <location filename="../jarvis.py" line="+3945"/>
         <source>LISTENING</source>
         <translation>يستمع</translation>
     </message>
@@ -1642,9 +1642,22 @@
     </message>
 </context>
 <context>
+    <name>PasswordField</name>
+    <message>
+        <location filename="../qml/PasswordField.qml" line="+16"/>
+        <source>Hide it</source>
+        <translation>إخفاء</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show what you typed</source>
+        <translation>إظهار ما كتبته</translation>
+    </message>
+</context>
+<context>
     <name>PeoplePage</name>
     <message>
-        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <location filename="../qml/PeoplePage.qml" line="+80"/>
         <source>just now</source>
         <translation>الآن</translation>
     </message>
@@ -1710,12 +1723,13 @@
         <translation>لا توجد رسائل كافية منه بعد لقول الكثير. سيحاول Jarvis مجددا بعد أن تتحدثا أكثر.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-56"/>
+        <location line="+58"/>
         <source>Something went wrong</source>
         <translation>حدث خطأ ما</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+33"/>
         <source>People</source>
         <translation>الأشخاص</translation>
     </message>
@@ -1725,13 +1739,48 @@
         <translation>من تتحدث معهم، وما يفهمه Jarvis عنهم من محادثاتك، وما دونته أو وعدت به.</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+17"/>
+        <source>This page is locked</source>
+        <translation>هذه الصفحة مقفلة</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Give its password to see who you talk with and what Jarvis knows about them.</source>
+        <translation>أدخل كلمة مرورها لترى من تتحدث معهم وما يعرفه Jarvis عنهم.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password</source>
+        <translation>كلمة المرور</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Password for the People page</source>
+        <translation>كلمة مرور صفحة الأشخاص</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Unlock</source>
+        <translation>فتح القفل</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Forgot it? Run “jarvis --reset-people-lock” in a terminal.</source>
+        <translation>نسيتها؟ شغل «jarvis --reset-people-lock» في الطرفية.</translation>
+    </message>
+    <message>
+        <location line="+21"/>
         <location line="+1"/>
         <source>Search people</source>
         <translation>البحث عن أشخاص</translation>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="+65"/>
+        <source>Hidden</source>
+        <translation>مخفي</translation>
+    </message>
+    <message>
+        <location line="+27"/>
         <source>No one matches that</source>
         <translation>لا أحد يطابق ذلك</translation>
     </message>
@@ -1739,6 +1788,16 @@
         <location line="+0"/>
         <source>No one here yet</source>
         <translation>لا أحد هنا بعد</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Add a password</source>
+        <translation>إضافة كلمة مرور</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lock this page now</source>
+        <translation>قفل هذه الصفحة الآن</translation>
     </message>
     <message>
         <location line="+46"/>
@@ -1756,7 +1815,7 @@
         <translation>ما يفهمه Jarvis</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Reading your chats…</source>
         <translation>جار قراءة محادثاتك…</translation>
     </message>
@@ -1771,7 +1830,17 @@
         <translation>أعد كتابته الآن من آخر رسائلك الفردية معه</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
+        <source>Put it right yourself</source>
+        <translation>صححه بنفسك</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Write it yourself</source>
+        <translation>اكتبه بنفسك</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Forget this</source>
         <translation>انس هذا</translation>
     </message>
@@ -1785,8 +1854,13 @@
         <source>Profile forgotten</source>
         <translation>تم نسيان الملف الشخصي</translation>
     </message>
+    <message>
+        <location line="+25"/>
+        <source>You wrote this %1. Jarvis leaves it as it is unless you press Refresh.</source>
+        <translation>كتبت هذا %1. يتركه Jarvis كما هو ما لم تضغط «تحديث».</translation>
+    </message>
     <message numerus="yes">
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Updated %1, from %n message(s)</source>
         <translation>
             <numerusform>تم التحديث %1 استنادا إلى %n رسالة</numerusform>
@@ -1799,6 +1873,11 @@
     </message>
     <message>
         <location line="+5"/>
+        <source>You told Jarvis not to get to know them: it doesn&apos;t read your chats with them for this. You can still write it yourself.</source>
+        <translation>طلبت من Jarvis ألا يتعرف على هذا الشخص: لا يقرأ محادثاتك معه لهذا الغرض. لا يزال بإمكانك كتابته بنفسك.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>You had Jarvis forget what it understood of them. It won&apos;t write it again unless you press Refresh.</source>
         <translation>طلبت من Jarvis أن ينسى ما فهمه عن هذا الشخص. لن يكتبه مجددا إلا إذا ضغطت «تحديث».</translation>
     </message>
@@ -1883,7 +1962,37 @@
         <translation>اعتبار هذا الوعد منجزا</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+11"/>
+        <source>Privacy</source>
+        <translation>الخصوصية</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Let Jarvis get to know them</source>
+        <translation>السماح لـ Jarvis بالتعرف عليه</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Off: what it understood from their chats is forgotten and it never reads them for a profile again. Your notes and promises stay.</source>
+        <translation>متوقف: ينسى Jarvis ما فهمه من محادثاته ولن يقرأها مجددا لكتابة ملف شخصي. تبقى ملاحظاتك ووعودك.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Hide from this page</source>
+        <translation>إخفاء من هذه الصفحة</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Encrypted on this PC with your secret password and left off this list. To see the people you hid, type that password in the search box and press Enter; the same again puts them away.</source>
+        <translation>مشفر على هذا الـ PC بكلمة مرورك السرية ومستبعد من هذه القائمة. لرؤية الأشخاص الذين أخفيتهم، اكتب كلمة المرور تلك في مربع البحث واضغط مفتاح Enter؛ وتكرار ذلك يخفيهم مجددا.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 is hidden. Your secret password in the search box, then Enter, shows the people you hid.</source>
+        <translation>تم إخفاء %1. اكتب كلمة مرورك السرية في مربع البحث ثم اضغط مفتاح Enter لإظهار الأشخاص الذين أخفيتهم.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <location line="+5"/>
         <source>Forget this person</source>
         <translation>انس هذا الشخص</translation>
@@ -1914,7 +2023,36 @@
         <translation>يظهر الأشخاص هنا عندما تتحدث مع شخص ما في محادثة فردية على WhatsApp أو Discord، أو عندما تخبر Jarvis عنه: «Sam ابن عمي».</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+47"/>
+        <source>Who they are, in one line: cousin; warm, writes in French</source>
+        <translation>من هو، في سطر واحد: ابنة عمي؛ ودودة، تكتب بالفرنسية</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Who they are, in one line</source>
+        <translation>من هو، في سطر واحد</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>One point a line, up to 8:
+Talks about her exams lately
+Don&apos;t bring up grades</source>
+        <translation>نقطة في كل سطر، حتى 8:
+تتحدث عن امتحاناتها مؤخرا
+لا تفتح موضوع الدرجات</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>What else Jarvis should understand, one point a line</source>
+        <translation>ما يجب أن يفهمه Jarvis أيضا، نقطة في كل سطر</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Your words are kept as you write them, and Jarvis doesn&apos;t rewrite them by itself.</source>
+        <translation>تحفظ كلماتك كما تكتبها، ولا يعيد Jarvis كتابتها من تلقاء نفسه.</translation>
+    </message>
+    <message>
+        <location line="+20"/>
         <source>e.g. My cousin, studies medicine in Lyon</source>
         <translation>مثال: ابن عمي، يدرس الطب في ليون</translation>
     </message>
@@ -1934,12 +2072,14 @@
         <translation>تاريخ مثل 2026-12-31 يجعل الملاحظة تختفي بعد ذلك اليوم.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Cancel</source>
         <translation>إلغاء</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Save</source>
         <translation>حفظ</translation>
     </message>
@@ -2142,7 +2282,7 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="-677"/>
+        <location filename="../qml/SettingsPage.qml" line="-734"/>
         <source>Settings</source>
         <translation>الإعدادات</translation>
     </message>
@@ -2152,7 +2292,7 @@
         <translation>تُحفظ التغييرات فورًا. النماذج ومفاتيح API في صفحة النماذج.</translation>
     </message>
     <message>
-        <location line="-109"/>
+        <location line="-121"/>
         <source>Checking…</source>
         <translation>جارٍ التحقق…</translation>
     </message>
@@ -2167,7 +2307,27 @@
         <translation>تعذّر التحديث: %1</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
+        <source>The People page asks for its password now</source>
+        <translation>صفحة الأشخاص تطلب كلمة مرورها الآن</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Password removed: the People page is open</source>
+        <translation>تمت إزالة كلمة المرور: صفحة الأشخاص مفتوحة</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>People you hide are encrypted with this password now</source>
+        <translation>يشفر الأشخاص الذين تخفيهم بكلمة المرور هذه الآن</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Secret password removed: nobody is hidden any more</source>
+        <translation>تمت إزالة كلمة المرور السرية: لم يعد أحد مخفيا</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Passphrase saved</source>
         <translation>حُفظت عبارة المرور</translation>
     </message>
@@ -2442,19 +2602,21 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+290"/>
+        <location line="+347"/>
         <location line="+117"/>
         <source>Save</source>
         <translation>حفظ</translation>
     </message>
     <message>
-        <location line="-405"/>
+        <location line="-462"/>
         <location line="+86"/>
+        <location line="+180"/>
+        <location line="+29"/>
         <source>Remove</source>
         <translation>إزالة</translation>
     </message>
     <message>
-        <location line="-82"/>
+        <location line="-291"/>
         <location line="+7"/>
         <source>Push to talk</source>
         <translation>الضغط للتحدث</translation>
@@ -2717,7 +2879,93 @@
         </translation>
     </message>
     <message>
-        <location line="+145"/>
+        <location line="+3"/>
+        <source>Asked for before the People page shows anyone. The page locks again after 5 minutes unused, when the window is put away and at every start. It keeps the page from someone at your screen. Forgot it: “jarvis --reset-people-lock” in a terminal takes both passwords here off.</source>
+        <translation>تطلب قبل أن تعرض صفحة الأشخاص أي أحد. تقفل الصفحة مجددا بعد 5 دقائق دون استخدام، وعند إخفاء النافذة، وعند كل تشغيل. تحمي الصفحة ممن يجلس أمام شاشتك. إن نسيتها: «jarvis --reset-people-lock» في الطرفية يزيل كلمتي المرور هنا.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Password for the People page</source>
+        <translation>كلمة مرور صفحة الأشخاص</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lock private security hide</source>
+        <translation>قفل خاص أمان إخفاء كلمة مرور</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Current password</source>
+        <translation>كلمة المرور الحالية</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Current password for the People page</source>
+        <translation>كلمة المرور الحالية لصفحة الأشخاص</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password set · type a new one to change it</source>
+        <translation>تم تعيين كلمة المرور · اكتب كلمة جديدة لتغييرها</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A password only you know, 4 characters or more</source>
+        <translation>كلمة مرور لا يعرفها غيرك، 4 أحرف أو أكثر</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New password for the People page</source>
+        <translation>كلمة مرور جديدة لصفحة الأشخاص</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set password</source>
+        <translation>تعيين كلمة المرور</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>A second password, for the people you hide on the People page: they&apos;re encrypted with it, and listed only when you type it in that page&apos;s search box and press Enter (the same again puts them away). Until you type it after a start, Jarvis doesn&apos;t know them either. Forget it and they stay encrypted until it&apos;s typed again.</source>
+        <translation>كلمة مرور ثانية للأشخاص الذين تخفيهم في صفحة الأشخاص: يشفرون بها، ولا يظهرون في القائمة إلا عندما تكتبها في مربع البحث في تلك الصفحة وتضغط مفتاح Enter (وتكرار ذلك يخفيهم مجددا). حتى تكتبها بعد التشغيل، لا يعرفهم Jarvis أيضا. إن نسيتها، يبقون مشفرين حتى تكتب مجددا.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Secret password, for people you hide</source>
+        <translation>كلمة المرور السرية للأشخاص الذين تخفيهم</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>hidden secret encrypt private</source>
+        <translation>مخفي سري تشفير خاص</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+0"/>
+        <source>Current secret password</source>
+        <translation>كلمة المرور السرية الحالية</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Secret password set · type a new one to change it</source>
+        <translation>تم تعيين كلمة المرور السرية · اكتب كلمة جديدة لتغييرها</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A second password only you know, 4 characters or more</source>
+        <translation>كلمة مرور ثانية لا يعرفها غيرك، 4 أحرف أو أكثر</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New secret password</source>
+        <translation>كلمة المرور السرية الجديدة</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set secret password</source>
+        <translation>تعيين كلمة المرور السرية</translation>
+    </message>
+    <message>
+        <location line="+152"/>
         <source>Jarvis on Telegram</source>
         <translation>Jarvis على Telegram</translation>
     </message>
@@ -2858,7 +3106,9 @@
         <translation>جارٍ الاتصال…</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-105"/>
+        <location line="+29"/>
+        <location line="+60"/>
         <location line="+19"/>
         <source>Change</source>
         <translation>تغيير</translation>
@@ -2887,7 +3137,7 @@
         <translation>في تطبيق Jarvis، اضغط Pair وامسح هذا الرمز. يعمل مرة واحدة، لمدة عشر دقائق.</translation>
     </message>
     <message>
-        <location line="-246"/>
+        <location line="-303"/>
         <source>WhatsApp</source>
         <translation>WhatsApp</translation>
     </message>
@@ -3093,7 +3343,7 @@
     </message>
     <message>
         <location line="-452"/>
-        <location line="+658"/>
+        <location line="+715"/>
         <source>Your data</source>
         <translation>بياناتك</translation>
     </message>
@@ -3128,14 +3378,14 @@
         <translation>الاحتفاظ بالمحادثات والسجلات لمدة</translation>
     </message>
     <message>
-        <location line="-198"/>
-        <location line="+200"/>
+        <location line="-255"/>
+        <location line="+257"/>
         <source>A week</source>
         <translation>أسبوع</translation>
     </message>
     <message>
-        <location line="-199"/>
-        <location line="+199"/>
+        <location line="-256"/>
+        <location line="+256"/>
         <source>A month</source>
         <translation>شهر</translation>
     </message>
@@ -3797,7 +4047,7 @@
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+124"/>
+        <location filename="../jarvis.py" line="+130"/>
         <source>Open Jarvis</source>
         <translation>فتح Jarvis</translation>
     </message>

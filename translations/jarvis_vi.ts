@@ -281,7 +281,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+324"/>
+        <location filename="../window.py" line="+327"/>
         <source>Copied</source>
         <translation>Đã sao chép</translation>
     </message>
@@ -879,7 +879,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../qml/SettingsPage.qml" line="+831"/>
+        <location filename="../qml/SettingsPage.qml" line="+902"/>
         <source>Accounts</source>
         <translation>Tài khoản</translation>
     </message>
@@ -1536,7 +1536,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3789"/>
+        <location filename="../jarvis.py" line="+3945"/>
         <source>LISTENING</source>
         <translation>ĐANG NGHE</translation>
     </message>
@@ -1567,9 +1567,22 @@
     </message>
 </context>
 <context>
+    <name>PasswordField</name>
+    <message>
+        <location filename="../qml/PasswordField.qml" line="+16"/>
+        <source>Hide it</source>
+        <translation>Ẩn</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show what you typed</source>
+        <translation>Hiện nội dung bạn đã nhập</translation>
+    </message>
+</context>
+<context>
     <name>PeoplePage</name>
     <message>
-        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <location filename="../qml/PeoplePage.qml" line="+80"/>
         <source>just now</source>
         <translation>vừa xong</translation>
     </message>
@@ -1620,12 +1633,13 @@
         <translation>Chưa đủ tin nhắn từ họ để nói được nhiều. Jarvis sẽ thử lại khi hai bạn trò chuyện nhiều hơn.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-56"/>
+        <location line="+58"/>
         <source>Something went wrong</source>
         <translation>Đã xảy ra lỗi</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+33"/>
         <source>People</source>
         <translation>Mọi người</translation>
     </message>
@@ -1635,13 +1649,48 @@
         <translation>Những người bạn trò chuyện, những gì Jarvis hiểu về họ từ các cuộc trò chuyện của bạn, và những gì bạn đã ghi chú hoặc hứa.</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+17"/>
+        <source>This page is locked</source>
+        <translation>Trang này đang bị khóa</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Give its password to see who you talk with and what Jarvis knows about them.</source>
+        <translation>Nhập mật khẩu để xem bạn trò chuyện với ai và Jarvis biết gì về họ.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password</source>
+        <translation>Mật khẩu</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Password for the People page</source>
+        <translation>Mật khẩu cho trang Mọi người</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Unlock</source>
+        <translation>Mở khóa</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Forgot it? Run “jarvis --reset-people-lock” in a terminal.</source>
+        <translation>Quên mật khẩu? Chạy “jarvis --reset-people-lock” trong terminal.</translation>
+    </message>
+    <message>
+        <location line="+21"/>
         <location line="+1"/>
         <source>Search people</source>
         <translation>Tìm người</translation>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="+65"/>
+        <source>Hidden</source>
+        <translation>Đã ẩn</translation>
+    </message>
+    <message>
+        <location line="+27"/>
         <source>No one matches that</source>
         <translation>Không ai khớp</translation>
     </message>
@@ -1649,6 +1698,16 @@
         <location line="+0"/>
         <source>No one here yet</source>
         <translation>Chưa có ai</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Add a password</source>
+        <translation>Thêm mật khẩu</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lock this page now</source>
+        <translation>Khóa trang này ngay</translation>
     </message>
     <message>
         <location line="+46"/>
@@ -1666,7 +1725,7 @@
         <translation>Những gì Jarvis hiểu</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Reading your chats…</source>
         <translation>Đang đọc các cuộc trò chuyện…</translation>
     </message>
@@ -1681,7 +1740,17 @@
         <translation>Viết lại ngay từ các tin nhắn riêng mới nhất của bạn với người này</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
+        <source>Put it right yourself</source>
+        <translation>Tự sửa</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Write it yourself</source>
+        <translation>Tự viết</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Forget this</source>
         <translation>Quên điều này</translation>
     </message>
@@ -1695,8 +1764,13 @@
         <source>Profile forgotten</source>
         <translation>Đã quên hồ sơ</translation>
     </message>
+    <message>
+        <location line="+25"/>
+        <source>You wrote this %1. Jarvis leaves it as it is unless you press Refresh.</source>
+        <translation>Bạn đã viết phần này %1. Jarvis giữ nguyên trừ khi bạn nhấn Làm mới.</translation>
+    </message>
     <message numerus="yes">
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Updated %1, from %n message(s)</source>
         <translation>
             <numerusform>Cập nhật %1, từ %n tin nhắn</numerusform>
@@ -1704,6 +1778,11 @@
     </message>
     <message>
         <location line="+5"/>
+        <source>You told Jarvis not to get to know them: it doesn&apos;t read your chats with them for this. You can still write it yourself.</source>
+        <translation>Bạn đã bảo Jarvis đừng tìm hiểu người này: Jarvis không đọc các cuộc trò chuyện của bạn với họ cho việc này. Bạn vẫn có thể tự viết.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>You had Jarvis forget what it understood of them. It won&apos;t write it again unless you press Refresh.</source>
         <translation>Bạn đã yêu cầu Jarvis quên những gì đã hiểu về người này. Jarvis sẽ không viết lại trừ khi bạn nhấn Làm mới.</translation>
     </message>
@@ -1788,7 +1867,37 @@
         <translation>Đánh dấu đã giữ lời hứa này</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+11"/>
+        <source>Privacy</source>
+        <translation>Quyền riêng tư</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Let Jarvis get to know them</source>
+        <translation>Để Jarvis tìm hiểu người này</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Off: what it understood from their chats is forgotten and it never reads them for a profile again. Your notes and promises stay.</source>
+        <translation>Tắt: những gì Jarvis hiểu từ các cuộc trò chuyện với họ sẽ bị quên, và Jarvis sẽ không bao giờ đọc lại để viết hồ sơ. Ghi chú và lời hứa của bạn vẫn còn.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Hide from this page</source>
+        <translation>Ẩn khỏi trang này</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Encrypted on this PC with your secret password and left off this list. To see the people you hid, type that password in the search box and press Enter; the same again puts them away.</source>
+        <translation>Được mã hóa trên PC này bằng mật khẩu bí mật của bạn và không hiện trong danh sách này. Để xem những người bạn đã ẩn, hãy nhập mật khẩu đó vào ô tìm kiếm và nhấn Enter; làm lại như vậy sẽ ẩn họ đi.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 is hidden. Your secret password in the search box, then Enter, shows the people you hid.</source>
+        <translation>Đã ẩn %1. Nhập mật khẩu bí mật vào ô tìm kiếm rồi nhấn Enter để hiện những người bạn đã ẩn.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <location line="+5"/>
         <source>Forget this person</source>
         <translation>Quên người này</translation>
@@ -1819,7 +1928,36 @@
         <translation>Mọi người sẽ xuất hiện ở đây khi bạn nhắn riêng với ai đó trên WhatsApp hoặc Discord, hoặc khi bạn kể với Jarvis về họ: “Sam là anh họ tôi”.</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+47"/>
+        <source>Who they are, in one line: cousin; warm, writes in French</source>
+        <translation>Họ là ai, trong một dòng: em họ; ấm áp, viết bằng tiếng Pháp</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Who they are, in one line</source>
+        <translation>Họ là ai, trong một dòng</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>One point a line, up to 8:
+Talks about her exams lately
+Don&apos;t bring up grades</source>
+        <translation>Mỗi dòng một ý, tối đa 8:
+Dạo này hay nói về kỳ thi
+Đừng nhắc chuyện điểm số</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>What else Jarvis should understand, one point a line</source>
+        <translation>Jarvis cần hiểu thêm điều gì, mỗi dòng một ý</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Your words are kept as you write them, and Jarvis doesn&apos;t rewrite them by itself.</source>
+        <translation>Lời của bạn được giữ đúng như bạn viết, và Jarvis không tự viết lại.</translation>
+    </message>
+    <message>
+        <location line="+20"/>
         <source>e.g. My cousin, studies medicine in Lyon</source>
         <translation>vd: Anh họ tôi, học y ở Lyon</translation>
     </message>
@@ -1839,12 +1977,14 @@
         <translation>Ngày như 2026-12-31 sẽ khiến ghi chú biến mất sau ngày đó.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Cancel</source>
         <translation>Hủy</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Save</source>
         <translation>Lưu</translation>
     </message>
@@ -2032,7 +2172,7 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="-677"/>
+        <location filename="../qml/SettingsPage.qml" line="-734"/>
         <source>Settings</source>
         <translation>Cài đặt</translation>
     </message>
@@ -2042,7 +2182,7 @@
         <translation>Thay đổi được lưu ngay. Mô hình và khóa API nằm ở trang Mô hình.</translation>
     </message>
     <message>
-        <location line="-109"/>
+        <location line="-121"/>
         <source>Checking…</source>
         <translation>Đang kiểm tra…</translation>
     </message>
@@ -2057,7 +2197,27 @@
         <translation>Không cập nhật được: %1</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
+        <source>The People page asks for its password now</source>
+        <translation>Trang Mọi người giờ sẽ hỏi mật khẩu</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Password removed: the People page is open</source>
+        <translation>Đã xóa mật khẩu: trang Mọi người đang mở</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>People you hide are encrypted with this password now</source>
+        <translation>Những người bạn ẩn giờ được mã hóa bằng mật khẩu này</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Secret password removed: nobody is hidden any more</source>
+        <translation>Đã xóa mật khẩu bí mật: không còn ai bị ẩn</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Passphrase saved</source>
         <translation>Đã lưu cụm mật khẩu</translation>
     </message>
@@ -2332,19 +2492,21 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+290"/>
+        <location line="+347"/>
         <location line="+117"/>
         <source>Save</source>
         <translation>Lưu</translation>
     </message>
     <message>
-        <location line="-405"/>
+        <location line="-462"/>
         <location line="+86"/>
+        <location line="+180"/>
+        <location line="+29"/>
         <source>Remove</source>
         <translation>Gỡ bỏ</translation>
     </message>
     <message>
-        <location line="-82"/>
+        <location line="-291"/>
         <location line="+7"/>
         <source>Push to talk</source>
         <translation>Nhấn để nói</translation>
@@ -2602,7 +2764,93 @@
         </translation>
     </message>
     <message>
-        <location line="+145"/>
+        <location line="+3"/>
+        <source>Asked for before the People page shows anyone. The page locks again after 5 minutes unused, when the window is put away and at every start. It keeps the page from someone at your screen. Forgot it: “jarvis --reset-people-lock” in a terminal takes both passwords here off.</source>
+        <translation>Được hỏi trước khi trang Mọi người hiện bất kỳ ai. Trang tự khóa lại sau 5 phút không dùng, khi cửa sổ được cất đi và mỗi lần khởi động. Mật khẩu giữ trang khỏi người ngồi trước màn hình của bạn. Nếu quên: “jarvis --reset-people-lock” trong terminal sẽ gỡ cả hai mật khẩu ở đây.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Password for the People page</source>
+        <translation>Mật khẩu cho trang Mọi người</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lock private security hide</source>
+        <translation>khóa riêng tư bảo mật ẩn mật khẩu</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Current password</source>
+        <translation>Mật khẩu hiện tại</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Current password for the People page</source>
+        <translation>Mật khẩu hiện tại cho trang Mọi người</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password set · type a new one to change it</source>
+        <translation>Đã đặt mật khẩu · nhập mật khẩu mới để đổi</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A password only you know, 4 characters or more</source>
+        <translation>Mật khẩu chỉ bạn biết, từ 4 ký tự trở lên</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New password for the People page</source>
+        <translation>Mật khẩu mới cho trang Mọi người</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set password</source>
+        <translation>Đặt mật khẩu</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>A second password, for the people you hide on the People page: they&apos;re encrypted with it, and listed only when you type it in that page&apos;s search box and press Enter (the same again puts them away). Until you type it after a start, Jarvis doesn&apos;t know them either. Forget it and they stay encrypted until it&apos;s typed again.</source>
+        <translation>Mật khẩu thứ hai, dành cho những người bạn ẩn trên trang Mọi người: họ được mã hóa bằng mật khẩu này và chỉ hiện trong danh sách khi bạn nhập nó vào ô tìm kiếm của trang đó rồi nhấn Enter (làm lại như vậy sẽ ẩn họ đi). Cho đến khi bạn nhập nó sau mỗi lần khởi động, Jarvis cũng không biết họ. Nếu quên, họ vẫn được mã hóa cho đến khi nhập lại mật khẩu này.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Secret password, for people you hide</source>
+        <translation>Mật khẩu bí mật, cho những người bạn ẩn</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>hidden secret encrypt private</source>
+        <translation>ẩn bí mật mã hóa riêng tư</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+0"/>
+        <source>Current secret password</source>
+        <translation>Mật khẩu bí mật hiện tại</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Secret password set · type a new one to change it</source>
+        <translation>Đã đặt mật khẩu bí mật · nhập mật khẩu mới để đổi</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A second password only you know, 4 characters or more</source>
+        <translation>Mật khẩu thứ hai chỉ bạn biết, từ 4 ký tự trở lên</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New secret password</source>
+        <translation>Mật khẩu bí mật mới</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set secret password</source>
+        <translation>Đặt mật khẩu bí mật</translation>
+    </message>
+    <message>
+        <location line="+152"/>
         <source>Jarvis on Telegram</source>
         <translation>Jarvis trên Telegram</translation>
     </message>
@@ -2743,7 +2991,9 @@
         <translation>Đang kết nối…</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-105"/>
+        <location line="+29"/>
+        <location line="+60"/>
         <location line="+19"/>
         <source>Change</source>
         <translation>Đổi</translation>
@@ -2772,7 +3022,7 @@
         <translation>Trong ứng dụng Jarvis, chạm Pair rồi quét mã này. Mã chỉ dùng được một lần, trong mười phút.</translation>
     </message>
     <message>
-        <location line="-246"/>
+        <location line="-303"/>
         <source>WhatsApp</source>
         <translation>WhatsApp</translation>
     </message>
@@ -2978,7 +3228,7 @@
     </message>
     <message>
         <location line="-452"/>
-        <location line="+658"/>
+        <location line="+715"/>
         <source>Your data</source>
         <translation>Dữ liệu của bạn</translation>
     </message>
@@ -3013,14 +3263,14 @@
         <translation>Lưu cuộc trò chuyện và nhật ký trong</translation>
     </message>
     <message>
-        <location line="-198"/>
-        <location line="+200"/>
+        <location line="-255"/>
+        <location line="+257"/>
         <source>A week</source>
         <translation>Một tuần</translation>
     </message>
     <message>
-        <location line="-199"/>
-        <location line="+199"/>
+        <location line="-256"/>
+        <location line="+256"/>
         <source>A month</source>
         <translation>Một tháng</translation>
     </message>
@@ -3667,7 +3917,7 @@
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+124"/>
+        <location filename="../jarvis.py" line="+130"/>
         <source>Open Jarvis</source>
         <translation>Mở Jarvis</translation>
     </message>

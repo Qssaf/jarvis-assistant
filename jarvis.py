@@ -265,18 +265,9 @@ def voice_read(name, args=None):
 
 
 def call_error(result):
-    """What went wrong in a tool call, from its result ("" if nothing): its error, or Composio's, which is inside the result
-    text (data.results[].response: a 503 there was taken for an answer)."""
-    if not isinstance(result, dict):
-        return ""
-    if "error" in result or result.get("successful") is False:
-        return str(result.get("error") or "it failed")
-    try:
-        responses = [r["response"] for r in json.loads(result["result"])["data"]["results"]]
-    except (KeyError, TypeError, ValueError):  # not Composio's wrapping (or cut short): a plain result
-        return ""
-    bad = next((r for r in responses if isinstance(r, dict) and (r.get("successful") is False or r.get("error"))), None)
-    return str(bad.get("error") or "it failed") if bad else ""
+    """What went wrong in a tool call, from its result ("" if nothing): brain.call_error (Composio's is inside the text)."""
+    import brain as brain_mod
+    return brain_mod.call_error(result)
 
 
 def repeat_call(done, name, args, changes=0, now=None):
@@ -565,7 +556,7 @@ def wrong_person(tool, to, heard):
         text = str(m.get("text", "")) if m.get("who") == "system" else ""
         got = re.match(rf"💬 {app} from (.+?): (.*)", text, re.S) or re.match(rf"✏️ Changed: Sent an? {app} message to (.+?): ()", text, re.S)
         if got:
-            name, said = got[1], re.sub(r"\s*(\(you're chatting with them.*|\(Jarvis has answered.*|\(Jarvis's answer may not.*|\nJarvis replied:.*|\nJarvis's draft.*)$", "", got[2], flags=re.S)
+            name, said = got[1], re.sub(r"\s*(\(you're chatting with them.*|\(Jarvis has answered.*|\(Jarvis's answer may not.*|\(Jarvis couldn't read the chat.*|\nJarvis replied:.*|\nJarvis's draft.*)$", "", got[2], flags=re.S)
             if words(to) & (words(name) | words(heard)):
                 return None
             return (f"NOT SENT: the user didn't say who, and on {app} they're talking with {name}"
@@ -630,9 +621,10 @@ def said_yes(heard):
 
 
 def typed_text(steps):
-    """The text an act's type steps put in, whitespace evened out ('' when it types nothing). {type: "keys", keys: ...}
-    is a label (tool_act skips it), not text."""
-    texts = [s["type"] for s in steps or [] if isinstance(s, dict) and isinstance(s.get("type"), str) and s["type"] not in s]
+    """The text an act's type and set_text steps put in, whitespace evened out ('' when it types nothing), read as tool_act
+    runs them: {type: "keys", keys: ...} and {type: "text", click_on: ...} are labels, not text."""
+    import brain as brain_mod
+    texts = [s[k] for s in brain_mod.act_steps(steps) for k in ("type", "set_text") if isinstance(s.get(k), str)]
     return " ".join(" ".join(texts).split())
 
 
@@ -885,6 +877,9 @@ class Live:
             self.muted = self.spoke  # drop the rest of that reply if it's still coming; a finished one has nothing left
 
     def close(self):
+        """End the voice session (New conversation, another one opened, the data deleted), and the backup voice's
+        listening with it (talk: what Stop has dropped stays dropped)."""
+        self.backup.stop(talk=True)
         self._go(self._close())
 
     def toggle_pause(self):
@@ -1557,9 +1552,10 @@ class Live:
                 before["told"] = True  # (now it knows: the user asking again sends it again)
                 return {"error": "NOT DONE, and not needed: this exact text was already typed and sent a moment ago, so it's in "
                                  "the chat. Never send it again unless the user asks for it again."}
-            sends = any(re.search(r"\b(?:Return|KP_Enter|Enter)\b", str(s.get("keys", ""))) for s in args["steps"])
-            to_chat = any("expect" in s for s in args["steps"] if isinstance(s, dict))  # (it checks which chat: "hi to Sam, bye to Alex")
-            presses = sum(bool(re.search(r"\b(?:Return|KP_Enter|Enter)\b", str(s.get("keys", "")))) for s in args["steps"] if isinstance(s, dict))
+            import brain as brain_mod
+            steps = brain_mod.act_steps(args["steps"])
+            presses = sum(bool(brain_mod.SENDS.search(str(s.get("keys", "")))) for s in steps)
+            sends, to_chat = presses > 0, any("expect" in s for s in steps)  # (it checks which chat: "hi to Sam, bye to Alex")
             if presses > 1 and not to_chat:  # finds a chat by typing its name, then sends: a misheard name went to the wrong one
                 return {"error": "NOT DONE: this opens a chat by name and then sends. Put {expect: 'the open chat is with <name>'} "
                                  "right after opening it, so a misheard name stops before anything is sent."}
@@ -1574,7 +1570,7 @@ class Live:
             result = await self._answer(fc, args)
             done = (result.get("result") or result.get("done") or []) if isinstance(result, dict) else []
             done = done if isinstance(done, list) else []
-            if any(re.fullmatch(r"pressed (?:Return|Enter|KP_Enter)", str(d), re.I) for d in done):
+            if any(str(d).startswith("pressed ") and brain_mod.SENDS.search(str(d)) for d in done):  # ("ctrl+a Return" too)
                 self.typed[text] = {"at": time.time(), "sent": True}
                 self.sent_for = self.user_spoke_at
             elif any(str(d).startswith("typed ") for d in done):
@@ -1800,7 +1796,8 @@ class Live:
         self.mic, self.last = True, time.time()  # they answer without saying "Hey Jarvis" first
         q = self.question = {"text": question, "answered": threading.Event(), "answer": None}
         quoted = question.replace('"', "'")
-        if self.backup_now():  # (the backup voice says it, then takes what's said next as the answer)
+        if self.backup_now():  # (the backup voice says it, and takes what's said as the answer: from now, as the question
+            self.backup.listen()  # is still being made into speech; words said meanwhile went to Gemini Live's backlog)
             self.backup.say(question, listen=True)
         else:
             self._go(self._send(f'(Your background task needs the user before it can go on. Ask them this, briefly and in your own words: '
@@ -2151,9 +2148,13 @@ def promises_in_sent_mail(brain):
     if not tracker or "gmail" not in brain.connected or not store.settings()["track_promises"]:
         return
     sent = brain.app_data("GMAIL_FETCH_EMAILS", {"query": "in:sent newer_than:1d", "max_results": 10}) or {}
+    book = people.everyone()
     for m in sent.get("messages") or []:
-        to = str(m.get("to") or m.get("recipient") or "").split("<")[0].strip(' "') or "someone by email"
-        tracker.heard("email", to, f"{m.get('subject', '')}: {m.get('messageText') or m.get('preview') or ''}"[:500])
+        to = str(m.get("to") or m.get("recipient") or "").split("<")[0].strip(' "')
+        if "@" in to:  # (an address alone: the page it belongs to, as a calendar event's guests are found)
+            to = people.by_email(book, to) or to
+        if to:  # (to nobody named: no page; one called "someone by email" took everyone's promises)
+            tracker.heard("email", to, f"{m.get('subject', '')}: {m.get('messageText') or m.get('preview') or ''}"[:500])
     tracker.flush()
 
 
@@ -2343,17 +2344,19 @@ def people_pass(brain, now=None):
     if not cfg["people_profiles"]:
         return
     readable = {app for app, why in brain.profile_sources().items() if not why}
-    for name in people.due_profiles(people.everyone(), now, cfg["people_refresh_days"], apps=readable):
+    book = people.everyone()
+    for name in people.due_profiles(book, now, cfg["people_refresh_days"], apps=readable):
+        who = "someone hidden" if book[name].get("hidden") else name  # (hidden: not named in the log either)
         try:
             made = brain.profile(name)
         except people.NotNow as e:
-            print(f"[people] couldn't get to know {name} now: {e}", flush=True)
+            print(f"[people] couldn't get to know {who} now" + ("" if who != name else f": {e}"), flush=True)
             continue
         except (brain_mod.NoModel, brain_mod.BadRequest) as e:  # (the next one would get no answer either)
-            print(f"[people] no model answered for {name}, trying again next pass: {brain_mod.describe(e)[:200]}", flush=True)
+            print(f"[people] no model answered for {who}, trying again next pass: {brain_mod.describe(e)[:200]}", flush=True)
             return
-        print(f"[people] wrote a profile of {name} from {made['count']} messages" if made else
-              f"[people] {name}: too little to go on yet", flush=True)
+        print(f"[people] wrote a profile of {who} from {made['count']} messages" if made else
+              f"[people] {who}: too little to go on yet", flush=True)
 
 
 def people_loop(brain):
@@ -2771,6 +2774,8 @@ class VoiceLearner:
         self._save("no", audio)
 
     def _save(self, kind, audio):
+        for d in self.dirs.values():  # ("Delete my data" removes them)
+            os.makedirs(d, exist_ok=True)
         if len(os.listdir(self.dirs[kind])) >= 120:  # enough: each retrain reads every clip, minutes of CPU mid-conversation
             return
         import wave
@@ -2968,15 +2973,20 @@ def api_get(path, brain):
         cfg = store.settings()
         return {"settings": cfg, "voices": store.VOICES, "languages": store.LANGUAGES, "window_languages": store.WINDOW_LANGUAGES,
                 "wake_words": store.WAKE_WORDS, "wake_phrase": store.wake_phrase(cfg), "passphrase": bool(store.secret(store.PASSPHRASE)),
+                "people_lock": store.people_lock(), "people_secret": store.people_lock(store.PEOPLE_SECRET),
                 "voice_learned": os.path.exists(os.path.join(wake_folder(cfg["wake_word"]), "verifier.pkl"))}
     if path == "/api/models":
         return models_info(brain)
     if path == "/api/todo":  # Home's To do card: the next 7 days
         return brain.todo_items(7)
-    if path == "/api/people":  # the People page: everyone with a page, with all of it (names never go in a URL)
-        import people
-        cfg = store.settings()
-        return {"people": people.listing(), "profiles": cfg["people_profiles"], "refresh_days": cfg["people_refresh_days"]}
+    if path == "/api/people/lock":  # (the page asks now and then while it's shown: asking isn't using it)
+        return {"lock": store.people_lock(), "locked": bool(people_lock.locked())}
+    if path == "/api/people":  # the People page: everyone with a page, with all of it (names never go in a URL). Locked:
+        import people          # nobody. The ones the user hid: only after the password was typed in the page's search box
+        cfg, locked = store.settings(), bool(people_lock.locked())
+        people_lock.touch()
+        return {"people": [] if locked else people.listing(hidden=people_lock.revealed), "revealed": people_lock.revealed and not locked,
+                "profiles": cfg["people_profiles"], "refresh_days": cfg["people_refresh_days"], "lock": store.people_lock(), "locked": locked}
     if m := re.fullmatch(r"/api/cost(?:\?days=(\d+))?", path):  # the Cost page: today, 7 or 30 days
         import brain as brain_mod
         return brain_mod.cost_report(int(m[1]) if m[1] in ("7", "30") else 1)
@@ -3167,8 +3177,9 @@ def diagnostics(brain):
         lines = ["(no log file: Jarvis was started from a terminal)"]
     # what was said; WhatsApp messages, calls, names and numbers; tasks from the phone or other programs; plans, notes and
     # changes. A message's later lines have no tag of their own, so they go with its first (a reply's second line leaked)
-    private = re.compile(r"\[(?:you|jarvis|thinking|image)\]|The task needs you|Reminder:|[📱💬📞📝📋🔌✏👁]|"
-                         r"\[whatsapp\] (?:message from|call from|calling|answered|call to|.+ (?:hung up|picked up))")
+    private = re.compile(r"\[(?:you|jarvis|thinking|image|people)\]|The task needs you|Reminder:|[📱💬📞📝📋🔌✏👁]|"
+                         r"\[(?:whatsapp|discord)\] (?:message from|call from|calling|answered|call to|picking up|the answer to|"
+                         r"a waiting message to|no answer for|no summary of|.+ (?:hung up|picked up))")
     clean, hiding = [], False
     for line in lines:
         tagged = re.match(r"(?:[\d:]+ )?\[\w+\]", line)
@@ -3411,13 +3422,158 @@ EXTERNAL_NOTE = ("[Sent by another program on this PC (a script or an AI agent),
                  "short sentences as plain text. Changes that need the user's yes can't be made: say what you'd do instead.] ")
 
 
+PEOPLE_OPEN = 300  # seconds the People page stays open after it was last used, once its password was given
+LOCK_TRIES, LOCK_WAIT = 5, 30  # wrong passwords before the next try has to wait, and how long (doubling, an hour at most)
+REVEAL_EVERY = 1.0  # seconds between two looks at whether the search box holds the password (no word list goes through it)
+
+
+class PageLock:
+    """The People page's lock (store.PEOPLE_LOCK, the user's own password): the page's API gives no name and takes no
+    change until the password was given, and locks again PEOPLE_OPEN seconds after its last use, when the window is
+    hidden, and at every start. It keeps the page from someone at this PC's screen; people.json isn't encrypted, but for
+    the people the user hid (people.HIDDEN, under a key made from a second password, the secret one, store.PEOPLE_SECRET:
+    each time that one is given, people.hold). Those are listed only while `revealed`: the secret password typed in the
+    page's search box, until it's typed again or the page locks."""
+
+    def __init__(self):
+        self.clock = time.monotonic
+        self.open_until = self.wait_until = self.looked_at = 0.0
+        self.fails = 0
+        self.revealed = False
+        self.guard = threading.Lock()
+
+    def locked(self):
+        shut = store.people_lock() and self.clock() >= self.open_until
+        if shut:
+            self.revealed = False
+        return shut
+
+    def touch(self):
+        """The page was used: it stays open from now."""
+        if self.clock() < self.open_until:
+            self.open_until = self.clock() + PEOPLE_OPEN
+
+    def close(self):
+        self.open_until, self.revealed = 0.0, False
+
+    def reveal(self, text):
+        """The search box's Enter: if what's in it is the secret password (or an earlier one people are still hidden
+        under), the hidden people are shown, or put away again. Anything else is a search, and says nothing."""
+        import people
+        with self.guard:
+            now = self.clock()
+            if not text or now < self.wait_until or now - self.looked_at < REVEAL_EVERY and self.looked_at:
+                return None
+            self.looked_at = now
+            if store.check_people_lock(text, store.PEOPLE_SECRET):
+                people.hold(text, current=True)
+            elif not (people.hidden_stored() and people.hold(text)):
+                return None
+            self.revealed = not self.revealed
+            return self.revealed
+
+    def verify(self, password, which=store.PEOPLE_LOCK):
+        """Raises ValueError unless this is the password (the page's, or which=store.PEOPLE_SECRET); LOCK_TRIES wrong
+        ones in a row and the next tries wait."""
+        with self.guard:
+            now = self.clock()
+            if now < self.wait_until:
+                raise ValueError(f"too many wrong tries: wait {int(self.wait_until - now) + 1} s")
+            if not store.check_people_lock(password, which):
+                self.fails += 1
+                if self.fails >= LOCK_TRIES:
+                    self.wait_until = now + min(LOCK_WAIT * 2 ** (self.fails - LOCK_TRIES), 3600)
+                print(f"[people] a wrong password ({self.fails} in a row)", flush=True)
+                raise ValueError("that's not the password")
+            self.fails = 0
+
+    def unlock(self, password):
+        self.verify(password)
+        self.open_until, self.revealed = self.clock() + PEOPLE_OPEN, False
+
+    def change(self, new, old):
+        """Set, change or (new "") remove the password; with one set, old has to be it. Whoever set one is in."""
+        if store.people_lock():
+            self.verify(old)
+        elif not new:
+            raise ValueError("there's no password to remove")
+        store.set_people_lock(new, old)
+        self.open_until, self.revealed = self.clock() + PEOPLE_OPEN if new else 0.0, False
+
+    def change_secret(self, new, old):
+        """Set, change or (new "") remove the secret password; with one set, old has to be it. The people hidden move
+        under the new one's key, or, with none any more, back into the open."""
+        import people
+        which = store.PEOPLE_SECRET
+        if new and (len(new) < 4 or len(new) > 200 or new != new.strip()):
+            raise ValueError("a password is 4 to 200 characters, with no space at its ends")
+        if store.people_lock(which):
+            self.verify(old, which)
+            people.hold(old, current=True)
+        elif not new:
+            raise ValueError("there's no secret password to remove")
+        if new:
+            store.set_people_lock(new, old, which)
+            people.hold(new, current=True)
+        else:
+            people.show_all()
+            store.set_people_lock("", old, which)
+        self.revealed = False
+
+
+people_lock = PageLock()
+
+
+def reset_people_lock():
+    """`jarvis --reset-people-lock`: forgotten People passwords taken off, the page's and the secret one. True if there
+    was one. People hidden under the secret one stay encrypted in the file: only that password opens them (typed in the
+    page's search box, any day)."""
+    had = [which for which in (store.PEOPLE_LOCK, store.PEOPLE_SECRET) if store.people_lock(which)]
+    for which in had:
+        store.set_secret(which, "")
+    return bool(had)
+
+
 def people_post(path, data, brain):
     """The People page: a note saved (with old: edited in place) or deleted, a profile written again now (a model
-    request: Backend.request runs it off the window's thread) or forgotten, a person forgotten."""
+    request: Backend.request runs it off the window's thread), put right by the user or forgotten, a person hidden from
+    the page, not to be understood, or forgotten; and the page's lock. Locked, only the lock's own routes answer."""
     import brain as brain_mod, people
+    if path == "/api/people/lock":
+        people_lock.close()
+        return {"locked": bool(people_lock.locked())}
+    if path == "/api/people/unlock":
+        people_lock.unlock(str(data.get("password") or ""))
+        return {"locked": False}
+    if path == "/api/people/password":  # (never sent back, never logged)
+        people_lock.change(str(data.get("new") or ""), str(data.get("old") or ""))
+        return {"lock": store.people_lock(), "locked": bool(people_lock.locked())}
+    if path == "/api/people/secret":  # (the one hidden people are encrypted with; Settings' own row, like the one above)
+        people_lock.change_secret(str(data.get("new") or ""), str(data.get("old") or ""))
+        return {"secret": store.people_lock(store.PEOPLE_SECRET)}
+    if people_lock.locked():
+        raise ValueError("the People page is locked: give its password first")
+    people_lock.touch()
+    if path == "/api/people/reveal":  # (the search box's Enter: never an error, a search is no wrong password)
+        shown = people_lock.reveal(str(data.get("password") or ""))
+        return {"ok": False} if shown is None else {"ok": True, "revealed": shown}
     name = " ".join(str(data.get("name", "")).split())
     if not name:
         raise ValueError("say who")
+    if path in ("/api/people/hide", "/api/people/know"):  # (know off: "don't get to know them")
+        on = data.get("on") is True
+        try:
+            key = people.set_flag(name, "hidden", on) if path.endswith("hide") else people.set_flag(name, "no_profile", not on)
+        except people.Locked as e:
+            raise ValueError(str(e)) from None
+        if not key:
+            raise KeyError(name)
+        return {"name": key, "hidden" if path.endswith("hide") else "know": on}
+    if path == "/api/people/profile":  # (the user's own words for what Jarvis understands)
+        key = people.edit_profile(name, data.get("gist", ""), data.get("lines", []))
+        if not key:
+            raise KeyError(name)
+        return {"person": next(p for p in people.listing(hidden=True) if p["name"] == key)}
     if path == "/api/people/note":
         until = str(data.get("until") or "").strip()
         try:
@@ -3435,7 +3591,7 @@ def people_post(path, data, brain):
         except (brain_mod.NoModel, brain_mod.BadRequest) as e:
             raise ValueError(f"no model answered ({brain_mod.describe(e)[:160]}): try again in a while") from None
         key = people.known(name)
-        return {"outcome": "updated" if made else "few", "person": next((p for p in people.listing() if p["name"] == key), None)}
+        return {"outcome": "updated" if made else "few", "person": next((p for p in people.listing(hidden=True) if p["name"] == key), None)}
     if path == "/api/people/profile/forget":  # (and not written again by itself: only Refresh does)
         if not people.mark_looked(name, time.time(), "forgot"):
             raise KeyError(name)
@@ -3906,6 +4062,12 @@ def make_notch(live):
     return Notch()
 
 
+def stopping(why):
+    """Jarvis is stopping, in the log: why when something asked it to (the tray's Quit, a signal), then "--- stopped" as
+    it exits. A log with neither was a crash or a kill: twice it was gone and nothing said whether someone had quit it."""
+    print(f"[jarvis] stopping: {why}" if why else f"--- stopped {time.strftime('%Y-%m-%d %H:%M:%S')}", flush=True)
+
+
 def qt_args():
     """Jarvis's own windows go through XWayland when there is one (the notch can sit exactly at the top centre). Said in
     Qt's arguments, never the environment: every app and command Jarvis started inherited it, and opened as an X11 app
@@ -3940,7 +4102,7 @@ def run_tray(live, show=False):
     dnd = actions[-1]
     dnd.setCheckable(True)
     dnd.triggered.connect(lambda on: store.update_settings({"do_not_disturb": on}))
-    actions.append(menu.addAction("", app.quit))
+    actions.append(menu.addAction("", lambda: stopping("Quit in the tray menu") or app.quit()))
 
     def menu_shown():  # (Settings may have changed do not disturb, or the window's language)
         dnd.setChecked(store.settings()["do_not_disturb"])
@@ -3964,8 +4126,8 @@ def run_tray(live, show=False):
     tray.showMessage("J.A.R.V.I.S.", QCoreApplication.translate("Tray", 'Running in the tray. Say "%1".').replace("%1", store.wake_phrase()),
                      tray.icon(), 4000)
     clients.append(win.events)
-    signal.signal(signal.SIGINT, lambda *a: app.quit())
-    signal.signal(signal.SIGTERM, lambda *a: app.quit())
+    signal.signal(signal.SIGINT, lambda *a: stopping("an interrupt (SIGINT)") or app.quit())
+    signal.signal(signal.SIGTERM, lambda *a: stopping("a request to end (SIGTERM)") or app.quit())
     shown, ticks, cfg = ["idle", False, False, []], [0], [store.settings()]
 
     def on_tick():  # also lets Python run its signal handlers while Qt's loop is busy
@@ -4048,7 +4210,16 @@ def main():
     ap.add_argument("--say", metavar="TEXT", help="have the running Jarvis say something out loud (\"the build finished\")")
     ap.add_argument("--mcp", action="store_true", help="an MCP server (stdio) that lets AI agents hand tasks to the running Jarvis")
     ap.add_argument("--learn-voice", action="store_true", help=argparse.SUPPRESS)  # VoiceLearner._train's own process
+    ap.add_argument("--reset-people-lock", action="store_true", help="take a forgotten password off the People page")
     args = ap.parse_args()
+    if args.reset_people_lock:
+        import people
+        print("The People page has no password now, and there is no secret password." if reset_people_lock()
+              else "There were no People passwords.")
+        if people.hidden_stored():
+            print("People you hid stay encrypted: type the secret password they were hidden under in the People page's search "
+                  "box to see them again.")
+        return
     if args.learn_voice:
         from openwakeword.custom_verifier_model import train_custom_verifier
         return train_custom_verifier(*json.load(sys.stdin), inference_framework="onnx")
@@ -4080,6 +4251,8 @@ def main():
         store.rotate_log()
         sys.stdout = sys.stderr = Stamped(os.fdopen(os.open(store.LOG_FILE, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600), "a", buffering=1))
         print(f"--- started {time.strftime('%Y-%m-%d %H:%M:%S')}", flush=True)
+        import atexit
+        atexit.register(stopping, "")  # (a log that ends with no such line: it crashed or was killed, it didn't quit)
     fd = os.open(TOKEN_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w") as f:
         f.write(TOKEN)

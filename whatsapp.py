@@ -328,7 +328,7 @@ class WhatsApp:
             self.notify(f"💬 WhatsApp from {e['name']}: {e['text'][:300]}")  # (shown, never answered or said)
             return
         self._cancel(e["chat"])
-        timer = threading.Timer(SETTLE, self._answer, args=(e["chat"], e["name"]))
+        timer = threading.Timer(SETTLE, self._answer, args=(e["chat"], e["name"], e["text"]))
         timer.daemon = True
         self.pending[e["chat"]] = timer
         timer.start()
@@ -357,11 +357,16 @@ class WhatsApp:
         if timer:
             timer.cancel()
 
-    def _answer(self, chat, name):
+    def _answer(self, chat, name, text=""):
         self.pending.pop(chat, None)
         if chat in self.listening:  # (answered once that voice message is heard)
             return
-        history = self.ask("history", chat=chat, count=20) or []
+        try:
+            history = self.ask("history", chat=chat, count=20) or []
+        except (RuntimeError, TimeoutError, OSError) as e:  # (the link dropped meanwhile: this thread died, and the message
+            print(f"[whatsapp] couldn't read the chat to answer: {e}", flush=True)  # was never shown)
+            self.notify(f"💬 WhatsApp from {name}: {text[:300]} (Jarvis couldn't read the chat to answer it)")
+            return
         recent = [m for m in history if not m["me"]][-3:]
         said = " / ".join(m["text"] for m in recent)[:300]
         stand = standing_in("whatsapp", chat)  # the user asked Jarvis to answer this chat for a while: whatever the rules say
@@ -643,7 +648,10 @@ class WhatsApp:
                 state = self.calls.get(got["id"], "over")
             if state != "active":
                 if state != "over":
-                    self.ask("hangup", call=got["id"])
+                    try:  # (rung out on WhatsApp's side meanwhile: "that call is over" was told as the call failing)
+                        self.ask("hangup", call=got["id"])
+                    except (RuntimeError, TimeoutError) as e:
+                        print(f"[whatsapp] hanging up the unanswered call: {e}", flush=True)
                 self.tell(f"{name} didn't pick up my WhatsApp call.")
                 return
             print(f"[whatsapp] {name} picked up", flush=True)

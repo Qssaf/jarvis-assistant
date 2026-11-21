@@ -724,6 +724,8 @@ def to_openai(contents, system=None, signatures=False):
             calls = [p for p in parts if "functionCall" in p]
             pending = [p["functionCall"].get("id") or f"call_{n}_{i}" for i, p in enumerate(calls)]
             msg = {"role": "assistant", "content": "".join(p.get("text", "") for p in parts if not p.get("thought")) or None}
+            if not calls and not msg["content"]:  # (nothing said: OpenAI's kind refuses content null with no tool_calls)
+                continue
             if calls:
                 msg["tool_calls"] = [{"id": cid, "type": "function", "function": {
                     "name": p["functionCall"]["name"], "arguments": json.dumps(p["functionCall"].get("args") or {})},
@@ -960,7 +962,7 @@ CHAT_APP = re.compile(r"discord|vesktop|whatsapp|telegram|slack|messenger|wechat
 CHECK_CHAT = ("nothing was done: this plan types a message and sends it without checking which chat is open. Put an expect step "
               "before the Return that sends it, after whatever opens the chat ({expect: 'the open chat is with <their name>'}): "
               "a wrong chat then stops the plan")
-SENDS = re.compile(r"\b(?:Return|KP_Enter|Enter)\b")
+SENDS = re.compile(r"\b(?:Return|KP_Enter|Enter|ret)\b", re.I)  # (as system.key_chains reads them: "return" and "ret" send too)
 
 
 def act_steps(steps):
@@ -1089,7 +1091,7 @@ def tool_act(steps, screenshot_after=True, fast=False, halt=None, pause=None):
                 r = tool_type_text(step["type"])
             elif "keys" in step:
                 r = tool_press_keys(step["keys"])
-                sent = sent or bool(re.search(r"\b(?:Return|KP_Enter|Enter)\b", str(step["keys"]))) and any("type" in s for s in steps[:i])
+                sent = sent or bool(SENDS.search(str(step["keys"]))) and any("type" in s or "set_text" in s for s in steps[:i])
                 if "error" in r:
                     r["error"] += " (keys is only for key names like Return, Escape or ctrl+a: put text in a type step)"
             elif "scroll" in step:
@@ -1977,7 +1979,7 @@ def tool_search_mine(words, person="", days=0):
         lines = [l.strip() for l in open(path, encoding="utf-8", errors="replace") if holds(l)]
         for line in lines[:5]:
             add(os.path.getmtime(path), {"from": f"notes: {os.path.basename(path)[:-3]}", "text": line[:300]})
-    for name, page in store.read_json(people.FILE, {}).items():
+    for name, page in people.everyone().items():
         for n in page.get("notes", []) + [{"text": p.get("what", ""), "at": p.get("at", 0)} for p in page.get("promises", [])]:
             if holds(f"{name} {n.get('text', '')}"):
                 add(n.get("at", 0), {"from": f"{name}'s page", "text": str(n.get("text", ""))[:300]})
@@ -2077,7 +2079,12 @@ class Notes:
         n = 0
         while not on["stop"].is_set() and time.time() - on["started"] < self.LONGEST:
             path = os.path.join(on["folder"], f"{n:03d}.wav")
-            proc = first if n == 0 else system.record_audio(path, on["source"])
+            try:
+                proc = first if n == 0 else system.record_audio(path, on["source"])
+            except (OSError, RuntimeError) as e:  # (PipeWire gone, the mic unplugged: the thread died and the notes stayed on)
+                print(f"[notes] recording stopped: {e}", flush=True)
+                on["broke"] = str(e)[:150]
+                break
             on["stop"].wait(self.CHUNK)
             system.stop_recording(proc)
             on["ends"].append(time.time())
@@ -2242,7 +2249,8 @@ class Notes:
             summary = f"(the summary couldn't be written: {str(e)[:100]})"
         path = self._write(on, summary, transcript)
         shutil.rmtree(on["folder"], ignore_errors=True)
-        notes_done[0](f"Your notes on '{on['title']}' are ready: {summary[:300]}", path)
+        broke = f" (the recording stopped early: {on['broke']})" if on.get("broke") else ""
+        notes_done[0](f"Your notes on '{on['title']}' are ready{broke}: {summary[:300]}", path)
 
     @staticmethod
     def _write(on, summary, transcript):
@@ -3127,16 +3135,26 @@ def tool_show_image(source="", caption="", search=""):
         return {"result": f"the screen as it is now is shown in the chat; saved as {path}"}
     if source.startswith(("http://", "https://")):
         try:
-            r = fetch(source)
+            r = fetch(source, stream=True)  # (its type is checked first, and only so much is read: a film's whole body was)
         except (PermissionError, requests.RequestException):
             return {"error": "only pictures at public web addresses"}
-        kind = r.headers.get("Content-Type", "").split(";")[0].strip().lower()
-        if not r.ok or kind not in WEB_PICTURES:  # (the name comes from this list, never the server: "image/x\..\run.bat")
-            return {"error": f"that address isn't a picture the chat can show ({r.status_code} {kind[:60]})"}
+        try:
+            kind = r.headers.get("Content-Type", "").split(";")[0].strip().lower()
+            if not r.ok or kind not in WEB_PICTURES:  # (the name comes from this list, never the server: "image/x\..\run.bat")
+                return {"error": f"that address isn't a picture the chat can show ({r.status_code} {kind[:60]})"}
+            data = bytearray()
+            for chunk in r.iter_content(65536):
+                data += chunk
+                if len(data) > PICTURE_MAX:
+                    return {"error": f"that picture is too large to show (over {PICTURE_MAX >> 20} MB)"}
+        except requests.RequestException as e:
+            return {"error": f"couldn't fetch that picture: {describe(e)[:120]}"}
+        finally:
+            r.close()
         os.makedirs(IMAGE_DIR, exist_ok=True)
         path = os.path.join(IMAGE_DIR, "web-" + uuid.uuid4().hex[:8] + WEB_PICTURES[kind])
         with open(path, "wb") as f:
-            f.write(r.content)
+            f.write(data)
     else:
         path = os.path.abspath(os.path.expanduser(source))
         if not os.path.isfile(path):
@@ -3152,6 +3170,7 @@ IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
 CHAT_PICTURES = {*IMAGE_TYPES, ".svg"}  # what the chat shows (and opens when clicked): window.open_image
 WEB_PICTURES = {"image/png": ".png", "image/jpeg": ".jpg", "image/jpg": ".jpg", "image/webp": ".webp", "image/gif": ".gif",
                 "image/bmp": ".bmp", "image/svg+xml": ".svg"}  # a web picture's type -> the extension it's saved with
+PICTURE_MAX = 20 << 20  # bytes of one web picture show_image keeps
 
 
 def office_text(path):
@@ -3739,6 +3758,7 @@ class McpServer:
         self.wake = threading.Event()  # "Try now" on the Plugins page
         self.signing_in = False  # a sign-in page is open in the browser, waiting for the user
         self.session = self.stopped = None
+        self.opening = asyncio.Lock()  # (calls at once while it connects wait for that one: each started a server of its own)
         self.opened_at = 0.0
         self.busy = 0  # calls on the kept connection right now
 
@@ -3773,28 +3793,29 @@ class McpServer:
         return remote() if self.cfg.get("url") else local()
 
     async def _session(self):
-        # a remote login's access token lasts about an hour: reconnect well before, so a fresh one is used
-        if self.session is not None and self.cfg.get("url") and time.time() - self.opened_at > 1500:
-            self._drop()
-        if self.session is None:  # connect once and keep the connection
-            ready, self.stopped = asyncio.Event(), asyncio.Event()
+        async with self.opening:
+            # a remote login's access token lasts about an hour: reconnect well before, so a fresh one is used
+            if self.session is not None and self.cfg.get("url") and time.time() - self.opened_at > 1500:
+                self._drop()
+            if self.session is None:  # connect once and keep the connection
+                ready, self.stopped = asyncio.Event(), asyncio.Event()
 
-            async def hold():
-                try:
-                    async with self._open() as s:
-                        self.session, self.opened_at = s, time.time()
+                async def hold():
+                    try:
+                        async with self._open() as s:
+                            self.session, self.opened_at = s, time.time()
+                            ready.set()
+                            await self.stopped.wait()
+                    except Exception as e:
+                        self.error, self.offline = describe(e), unreachable(e)
+                    finally:
+                        self.session = None
                         ready.set()
-                        await self.stopped.wait()
-                except Exception as e:
-                    self.error, self.offline = describe(e), unreachable(e)
-                finally:
-                    self.session = None
-                    ready.set()
-            asyncio.create_task(hold())
-            await ready.wait()
-            if self.session is None:
-                raise RuntimeError(self.error or "couldn't connect")
-        return self.session
+                asyncio.create_task(hold())
+                await ready.wait()
+                if self.session is None:
+                    raise RuntimeError(self.error or "couldn't connect")
+            return self.session
 
     def _drop(self):
         if self.stopped:
@@ -3886,6 +3907,21 @@ def posted_at(post):
 
 
 TOO_LARGE = "the result was too large to come back whole"
+
+
+def call_error(result):
+    """What went wrong in a tool call, from its result ("" if nothing): its error, or Composio's, which is inside the result
+    text (data.results[].response: a 503 there was taken for an answer)."""
+    if not isinstance(result, dict):
+        return ""
+    if "error" in result or result.get("successful") is False:
+        return str(result.get("error") or "it failed")
+    try:
+        responses = [r["response"] for r in json.loads(result["result"])["data"]["results"]]
+    except (KeyError, TypeError, ValueError):  # not Composio's wrapping (or cut short): a plain result
+        return ""
+    bad = next((r for r in responses if isinstance(r, dict) and (r.get("successful") is False or r.get("error"))), None)
+    return str(bad.get("error") or "it failed") if bad else ""
 
 
 def whole(out):
@@ -4036,7 +4072,7 @@ def about():
         f"- You are Jarvis{' ' + app_version[0] if app_version[0] else ''}, a program on this PC that the user built and "
         "develops: your files, settings and memory are here, and only your models run elsewhere. Your window's pages: Home "
         "(the day, tasks at work and finished lately), Chats, People (who the user talks with: notes, promises, your profile "
-        "of each), Activity (what you changed), Accounts, Plugins, Models, "
+        "of each; there the user can hide someone, tell you not to get to know them, or lock the page), Activity (what you changed), Accounts, Plugins, Models, "
         f"Memory (what you remember, people, checks), Cost, Health, Settings (tabs Voice, Your day, Window, Messages, Phone, "
         f"Your data, Advanced, and a search that finds any setting). The wake word is \"{store.wake_phrase(cfg)}\".\n"
         f"- Your models: the voice is {cfg['live_model']}; background tasks run on {names('agent')}; the screen is read by "
@@ -4423,7 +4459,8 @@ class Brain:
                     if srv.name == "composio":
                         self.refresh_app_tools() if srv.status == "ready" else self.tools_ready.set()
                 threading.Thread(target=start, daemon=True).start()
-        if "composio" not in wanted:
+        if "composio" not in wanted:  # (its account tools go with it: still offered, each call failed on the missing plugin)
+            self.app_tools, self.app_tools_for, self.connected, self.accounts = {}, set(), set(), {}
             self.tools_ready.set()
 
     def plugin_status(self):
@@ -4887,6 +4924,8 @@ class Brain:
         if not key:
             raise ValueError(f"Jarvis has no page for {name}")
         p = people.everyone()[key]
+        if p.get("no_profile"):  # (their say on the People page: nothing of this person's is read)
+            raise people.NotNow(f"the user told Jarvis not to get to know {key} (the People page changes that)")
         sources = self.profile_sources()
         theirs = people.apps_of(p) or list(sources)
         apps = [a for a in theirs if not sources.get(a)]
@@ -5038,9 +5077,12 @@ class Brain:
         if needs_yes(slug) and not args.pop("confirmed", False):
             return {"error": NEEDS_YES}
         args.pop("confirmed", None)
-        out = self.plugins["composio"].call("COMPOSIO_MULTI_EXECUTE_TOOL", {
+        srv = self.plugins.get("composio")
+        if not srv:  # (turned off on the Plugins page while a call was on its way)
+            return {"error": "the Composio plugin is turned off (see Plugins)"}
+        out = srv.call("COMPOSIO_MULTI_EXECUTE_TOOL", {
             "tools": [{"tool_slug": slug, "arguments": args}], "sync_response_to_workbench": False}, limit=limit, again=is_read_action(slug))
-        if not is_read_action(slug) and "error" not in out:
+        if not is_read_action(slug) and not call_error(out):  # (Composio's failure is inside the result text)
             changed(f"{slug}: {json.dumps(args, ensure_ascii=False)[:300]}")
         return whole(out)
 
@@ -5230,7 +5272,7 @@ class Brain:
             out = srv.call(tool, {k: v for k, v in args.items() if not (k == "confirmed" and tool == "COMPOSIO_MULTI_EXECUTE_TOOL")},
                            again=reads), None
             if tool == "COMPOSIO_MULTI_EXECUTE_TOOL" and "error" not in out[0]:  # (for "undo that", like the direct tools)
-                for t in args.get("tools") or []:
+                for t in (args.get("tools") or []) if not call_error(out[0]) else []:
                     if not is_read_action(t.get("tool_slug", "")):
                         changed(f"{t.get('tool_slug')}: {json.dumps(t.get('arguments', {}), ensure_ascii=False)[:300]}")
                 out = whole(out[0]), None
@@ -5332,8 +5374,10 @@ class Brain:
             entries.sort(key=lite.get)
         # every one marked down (a network blip marks them all at once): a "not answering" mark is only a guess, so the
         # first such model is tried anyway rather than refusing everything until a probe gets through (minutes); one try,
-        # so a network that's really down doesn't cost a timeout per model; rate limits are always kept
-        anyway, todo, live = [all(time.time() < self.down_until.get(e, 0) for e in entries)], list(entries), []
+        # so a network that's really down doesn't cost a timeout per model; rate limits are always kept. (One that can't be
+        # asked at all, with no key or account, isn't one that's up.)
+        anyway = [all(time.time() < self.down_until.get(e, 0) or not self.backend(e[0])[0] for e in entries)]
+        todo, live = list(entries), []
 
         def ask(entry, be):  # on its own thread: one that answers or fails after another model won is still noted
             backend, model, thinking = entry
@@ -5398,8 +5442,8 @@ class Brain:
                 if agent and lite[entry] and not all(lite.values()):
                     self._on_lite(entry[1])
                 return got
-            if not live:
-                last = start()
+            if not live or entry == last:  # (the one asked beside a slow one failed at once: the next is asked now)
+                last = start(hedge=bool(live))
         raise NoModel("no model could answer (" + "; ".join(list(dict.fromkeys(why))[:4]) + "); try again in a minute or check "
                       "the Models page", transient[0])
 
@@ -5442,6 +5486,8 @@ class Brain:
         def probe(delay, told):
             while True:
                 time.sleep(delay)
+                if self.down_until.get(entry) != float("inf"):  # (its key changed or went: forget_backend; or it's back)
+                    return
                 try:
                     self.backend(backend)[0].generate([{"role": "user", "parts": [{"text": "hi"}]}], model, thinking)
                     self.down_until[entry] = 0
@@ -5532,7 +5578,9 @@ class Brain:
                 screen_lock.release()
             system.trim_memory()  # (a task's screenshots and pages: freed, and handed back to the system)
             if not unattended:  # (voice, typed and phone tasks alike: only voice ones were saved, so a reopened chat
-                on_asked[0](self.contents)  # forgot what the phone had asked)
+                with history_lock:  # forgot what the phone had asked; a copy: another task joining changed it mid-save)
+                    saved = [dict(m, parts=list(m["parts"])) for m in self.contents]
+                on_asked[0](saved)
 
     def _join(self, task, base, seen, reply):
         """A finished task's turn into the conversation: its whole trace (tool results, the latest screenshot) when no other
@@ -5696,7 +5744,10 @@ class Brain:
                 if task.cancel.is_set():
                     return "Stopped."
                 if final and all("error" not in r["functionResponse"]["response"] for r in responses):
-                    break  # e.g. "close it" done and the answer already written: no extra model call
+                    # e.g. "close it" done and the answer already written: no extra model call. It's the model's last turn
+                    # too (ending on the results, the next request made two user turns in a row)
+                    msgs.append({"role": "model", "parts": [{"text": said}]})
+                    break
                 if stuck is not None and answer is None:  # a checkpoint, with the step's results (a turn of its own would
                     # part the calls from their answers), and the next step thinks one level deeper
                     msgs[-1]["parts"].append({"text": checkpoint(progress.steps, stuck, store.hide_passphrase(text), task.plan)})

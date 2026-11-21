@@ -282,7 +282,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+324"/>
+        <location filename="../window.py" line="+327"/>
         <source>Copied</source>
         <translation>Copiato</translation>
     </message>
@@ -890,7 +890,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../qml/SettingsPage.qml" line="+831"/>
+        <location filename="../qml/SettingsPage.qml" line="+902"/>
         <source>Accounts</source>
         <translation>Account</translation>
     </message>
@@ -1551,7 +1551,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3789"/>
+        <location filename="../jarvis.py" line="+3945"/>
         <source>LISTENING</source>
         <translation>IN ASCOLTO</translation>
     </message>
@@ -1582,9 +1582,22 @@
     </message>
 </context>
 <context>
+    <name>PasswordField</name>
+    <message>
+        <location filename="../qml/PasswordField.qml" line="+16"/>
+        <source>Hide it</source>
+        <translation>Nascondi</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show what you typed</source>
+        <translation>Mostra ciò che hai scritto</translation>
+    </message>
+</context>
+<context>
     <name>PeoplePage</name>
     <message>
-        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <location filename="../qml/PeoplePage.qml" line="+80"/>
         <source>just now</source>
         <translation>poco fa</translation>
     </message>
@@ -1638,12 +1651,13 @@
         <translation>Non ci sono ancora abbastanza messaggi per dire molto. Jarvis riproverà quando vi sarete scritti di più.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-56"/>
+        <location line="+58"/>
         <source>Something went wrong</source>
         <translation>Qualcosa è andato storto</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+33"/>
         <source>People</source>
         <translation>Persone</translation>
     </message>
@@ -1653,13 +1667,48 @@
         <translation>Con chi parli, cosa capisce Jarvis di ognuno dalle tue chat e cosa hai annotato o promesso.</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+17"/>
+        <source>This page is locked</source>
+        <translation>Questa pagina è bloccata</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Give its password to see who you talk with and what Jarvis knows about them.</source>
+        <translation>Inserisci la password per vedere con chi parli e cosa sa Jarvis di queste persone.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password</source>
+        <translation>Password</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Password for the People page</source>
+        <translation>Password della pagina Persone</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Unlock</source>
+        <translation>Sblocca</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Forgot it? Run “jarvis --reset-people-lock” in a terminal.</source>
+        <translation>L&apos;hai dimenticata? Esegui “jarvis --reset-people-lock” in un terminale.</translation>
+    </message>
+    <message>
+        <location line="+21"/>
         <location line="+1"/>
         <source>Search people</source>
         <translation>Cerca persone</translation>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="+65"/>
+        <source>Hidden</source>
+        <translation>Nascosto</translation>
+    </message>
+    <message>
+        <location line="+27"/>
         <source>No one matches that</source>
         <translation>Nessun risultato</translation>
     </message>
@@ -1667,6 +1716,16 @@
         <location line="+0"/>
         <source>No one here yet</source>
         <translation>Ancora nessuno</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Add a password</source>
+        <translation>Aggiungi una password</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lock this page now</source>
+        <translation>Blocca ora questa pagina</translation>
     </message>
     <message>
         <location line="+46"/>
@@ -1684,7 +1743,7 @@
         <translation>Cosa capisce Jarvis</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Reading your chats…</source>
         <translation>Lettura delle tue chat…</translation>
     </message>
@@ -1699,7 +1758,17 @@
         <translation>Riscrivilo ora dai tuoi ultimi messaggi privati con questa persona</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
+        <source>Put it right yourself</source>
+        <translation>Correggilo tu</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Write it yourself</source>
+        <translation>Scrivilo tu</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Forget this</source>
         <translation>Dimentica</translation>
     </message>
@@ -1713,8 +1782,13 @@
         <source>Profile forgotten</source>
         <translation>Profilo dimenticato</translation>
     </message>
+    <message>
+        <location line="+25"/>
+        <source>You wrote this %1. Jarvis leaves it as it is unless you press Refresh.</source>
+        <translation>L&apos;hai scritto %1. Jarvis lo lascia com&apos;è, a meno che tu non prema Aggiorna.</translation>
+    </message>
     <message numerus="yes">
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Updated %1, from %n message(s)</source>
         <translation>
             <numerusform>Aggiornato %1, da %n messaggio</numerusform>
@@ -1723,6 +1797,11 @@
     </message>
     <message>
         <location line="+5"/>
+        <source>You told Jarvis not to get to know them: it doesn&apos;t read your chats with them for this. You can still write it yourself.</source>
+        <translation>Hai detto a Jarvis di non conoscere questa persona: a questo scopo non legge le tue chat con lei. Puoi comunque scriverlo tu.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>You had Jarvis forget what it understood of them. It won&apos;t write it again unless you press Refresh.</source>
         <translation>Hai chiesto a Jarvis di dimenticare ciò che aveva capito di questa persona. Non lo riscriverà finché non premi Aggiorna.</translation>
     </message>
@@ -1807,7 +1886,37 @@
         <translation>Segna questa promessa come mantenuta</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+11"/>
+        <source>Privacy</source>
+        <translation>Privacy</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Let Jarvis get to know them</source>
+        <translation>Lascia che Jarvis conosca questa persona</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Off: what it understood from their chats is forgotten and it never reads them for a profile again. Your notes and promises stay.</source>
+        <translation>Disattivato: ciò che ha capito dalle sue chat viene dimenticato e non le leggerà mai più per un profilo. Le tue note e promesse restano.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Hide from this page</source>
+        <translation>Nascondi da questa pagina</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Encrypted on this PC with your secret password and left off this list. To see the people you hid, type that password in the search box and press Enter; the same again puts them away.</source>
+        <translation>Cifrata su questo PC con la tua password segreta ed esclusa da questo elenco. Per vedere le persone che hai nascosto, scrivi quella password nella casella di ricerca e premi Invio; rifallo per nasconderle di nuovo.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 is hidden. Your secret password in the search box, then Enter, shows the people you hid.</source>
+        <translation>Hai nascosto %1. La tua password segreta nella casella di ricerca, poi Invio, mostra le persone che hai nascosto.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <location line="+5"/>
         <source>Forget this person</source>
         <translation>Dimentica questa persona</translation>
@@ -1838,7 +1947,36 @@
         <translation>Le persone compaiono qui quando chatti in privato con qualcuno su WhatsApp o Discord, o quando parli di qualcuno a Jarvis: “Sam è mio cugino”.</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+47"/>
+        <source>Who they are, in one line: cousin; warm, writes in French</source>
+        <translation>Chi è, in una riga: cugina; affettuosa, scrive in francese</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Who they are, in one line</source>
+        <translation>Chi è, in una riga</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>One point a line, up to 8:
+Talks about her exams lately
+Don&apos;t bring up grades</source>
+        <translation>Un punto per riga, fino a 8:
+Ultimamente parla dei suoi esami
+Non tirare in ballo i voti</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>What else Jarvis should understand, one point a line</source>
+        <translation>Cos&apos;altro dovrebbe capire Jarvis, un punto per riga</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Your words are kept as you write them, and Jarvis doesn&apos;t rewrite them by itself.</source>
+        <translation>Le tue parole restano come le scrivi e Jarvis non le riscrive da solo.</translation>
+    </message>
+    <message>
+        <location line="+20"/>
         <source>e.g. My cousin, studies medicine in Lyon</source>
         <translation>es. Mio cugino, studia medicina a Lione</translation>
     </message>
@@ -1858,12 +1996,14 @@
         <translation>Con una data come 2026-12-31 la nota sparisce dopo quel giorno.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Cancel</source>
         <translation>Annulla</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Save</source>
         <translation>Salva</translation>
     </message>
@@ -2054,7 +2194,7 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="-677"/>
+        <location filename="../qml/SettingsPage.qml" line="-734"/>
         <source>Settings</source>
         <translation>Impostazioni</translation>
     </message>
@@ -2064,7 +2204,7 @@
         <translation>Le modifiche vengono salvate subito. Modelli e chiavi API sono nella pagina Modelli.</translation>
     </message>
     <message>
-        <location line="-109"/>
+        <location line="-121"/>
         <source>Checking…</source>
         <translation>Controllo in corso…</translation>
     </message>
@@ -2079,7 +2219,27 @@
         <translation>Impossibile aggiornare: %1</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
+        <source>The People page asks for its password now</source>
+        <translation>Ora la pagina Persone chiede la password</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Password removed: the People page is open</source>
+        <translation>Password rimossa: la pagina Persone è aperta</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>People you hide are encrypted with this password now</source>
+        <translation>Ora le persone che nascondi vengono cifrate con questa password</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Secret password removed: nobody is hidden any more</source>
+        <translation>Password segreta rimossa: nessuno è più nascosto</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Passphrase saved</source>
         <translation>Frase segreta salvata</translation>
     </message>
@@ -2354,19 +2514,21 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+290"/>
+        <location line="+347"/>
         <location line="+117"/>
         <source>Save</source>
         <translation>Salva</translation>
     </message>
     <message>
-        <location line="-405"/>
+        <location line="-462"/>
         <location line="+86"/>
+        <location line="+180"/>
+        <location line="+29"/>
         <source>Remove</source>
         <translation>Rimuovi</translation>
     </message>
     <message>
-        <location line="-82"/>
+        <location line="-291"/>
         <location line="+7"/>
         <source>Push to talk</source>
         <translation>Push-to-talk</translation>
@@ -2625,7 +2787,93 @@
         </translation>
     </message>
     <message>
-        <location line="+145"/>
+        <location line="+3"/>
+        <source>Asked for before the People page shows anyone. The page locks again after 5 minutes unused, when the window is put away and at every start. It keeps the page from someone at your screen. Forgot it: “jarvis --reset-people-lock” in a terminal takes both passwords here off.</source>
+        <translation>Richiesta prima che la pagina Persone mostri qualcuno. La pagina si blocca di nuovo dopo 5 minuti di inattività, quando la finestra viene nascosta e a ogni avvio. Protegge la pagina da chi si trova davanti al tuo schermo. Se l&apos;hai dimenticata: “jarvis --reset-people-lock” in un terminale toglie entrambe le password da qui.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Password for the People page</source>
+        <translation>Password della pagina Persone</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lock private security hide</source>
+        <translation>blocco privato sicurezza nascondi password</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Current password</source>
+        <translation>Password attuale</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Current password for the People page</source>
+        <translation>Password attuale della pagina Persone</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password set · type a new one to change it</source>
+        <translation>Password impostata · scrivine una nuova per cambiarla</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A password only you know, 4 characters or more</source>
+        <translation>Una password che conosci solo tu, di almeno 4 caratteri</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New password for the People page</source>
+        <translation>Nuova password della pagina Persone</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set password</source>
+        <translation>Imposta password</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>A second password, for the people you hide on the People page: they&apos;re encrypted with it, and listed only when you type it in that page&apos;s search box and press Enter (the same again puts them away). Until you type it after a start, Jarvis doesn&apos;t know them either. Forget it and they stay encrypted until it&apos;s typed again.</source>
+        <translation>Una seconda password, per le persone che nascondi nella pagina Persone: vengono cifrate con questa e mostrate nell&apos;elenco solo quando la scrivi nella casella di ricerca di quella pagina e premi Invio (rifallo per nasconderle di nuovo). Finché non la scrivi dopo un avvio, nemmeno Jarvis le conosce. Se la dimentichi, restano cifrate finché non viene scritta di nuovo.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Secret password, for people you hide</source>
+        <translation>Password segreta, per le persone che nascondi</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>hidden secret encrypt private</source>
+        <translation>nascoste segreta cifrare privato</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+0"/>
+        <source>Current secret password</source>
+        <translation>Password segreta attuale</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Secret password set · type a new one to change it</source>
+        <translation>Password segreta impostata · scrivine una nuova per cambiarla</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A second password only you know, 4 characters or more</source>
+        <translation>Una seconda password che conosci solo tu, di almeno 4 caratteri</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New secret password</source>
+        <translation>Nuova password segreta</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set secret password</source>
+        <translation>Imposta password segreta</translation>
+    </message>
+    <message>
+        <location line="+152"/>
         <source>Jarvis on Telegram</source>
         <translation>Jarvis su Telegram</translation>
     </message>
@@ -2766,7 +3014,9 @@
         <translation>Connessione…</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-105"/>
+        <location line="+29"/>
+        <location line="+60"/>
         <location line="+19"/>
         <source>Change</source>
         <translation>Cambia</translation>
@@ -2795,7 +3045,7 @@
         <translation>Nell&apos;app Jarvis tocca Associa e scansiona questo codice. Funziona una sola volta, per dieci minuti.</translation>
     </message>
     <message>
-        <location line="-246"/>
+        <location line="-303"/>
         <source>WhatsApp</source>
         <translation>WhatsApp</translation>
     </message>
@@ -3001,7 +3251,7 @@
     </message>
     <message>
         <location line="-452"/>
-        <location line="+658"/>
+        <location line="+715"/>
         <source>Your data</source>
         <translation>I tuoi dati</translation>
     </message>
@@ -3036,14 +3286,14 @@
         <translation>Conserva conversazioni e registri per</translation>
     </message>
     <message>
-        <location line="-198"/>
-        <location line="+200"/>
+        <location line="-255"/>
+        <location line="+257"/>
         <source>A week</source>
         <translation>Una settimana</translation>
     </message>
     <message>
-        <location line="-199"/>
-        <location line="+199"/>
+        <location line="-256"/>
+        <location line="+256"/>
         <source>A month</source>
         <translation>Un mese</translation>
     </message>
@@ -3693,7 +3943,7 @@
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+124"/>
+        <location filename="../jarvis.py" line="+130"/>
         <source>Open Jarvis</source>
         <translation>Apri Jarvis</translation>
     </message>

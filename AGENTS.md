@@ -3,15 +3,17 @@
 Jarvis: a voice assistant for the PC. Python 3.13 (core), Qt Quick (window), Go (`whatsapp-helper/`), Kotlin
 (`android/`), a JS worker (`relay/`). Linux and Windows; no macOS.
 
-`CLAUDE.md` holds the full notes, one paragraph per subsystem, each a list of past failures. OpenCode loads this file
-*instead of* it, so before changing an area read its paragraph there: `grep -n '^\*\*' CLAUDE.md` lists them.
+`CLAUDE.md` holds the full notes (commands, the live app, decisions not to undo), and `.claude/rules/*.md` the
+architecture, one file per area (voice-and-agent, safety-and-accounts, models, system, phone, messaging, window), each
+paragraph a list of past failures. OpenCode loads this file *instead of* them, so before changing an area read its
+file there: `grep -n '^\*\*' .claude/rules/*.md` lists the paragraphs.
 
 ## Commands
 
 ```bash
 ./install.sh                                   # Linux: .venv (uv, Python 3.13), deps, the `jarvis` launcher
 .venv/bin/python test_jarvis.py                # every check, about a minute; prints "ok"
-.venv/bin/python -m pyflakes *.py evals/*.py   # lint (CI lints *.py only)
+.venv/bin/python -m pyflakes *.py docs/*.py evals/*.py   # lint (CI lints *.py only)
 .venv/bin/python jarvis.py --no-voice          # the window, without the microphone
 (cd whatsapp-helper && go vet ./... && go test ./...)
 (cd android && WAKE_MODELS=$PWD/../.venv/lib/python3.13/site-packages/openwakeword/resources/models ./gradlew testDebugUnitTest)
@@ -20,7 +22,7 @@ Jarvis: a voice assistant for the PC. Python 3.13 (core), Qt Quick (window), Go 
 - There's no test framework: `test_jarvis.py` is one script of plain `assert`s, top to bottom. "One test" is the
   snippet run with `python -c`. It points `XDG_CONFIG_HOME`/`XDG_DATA_HOME`/`APPDATA` and the keyring at a temp dir
   before importing anything: keep that first. When it hangs, this prints where:
-  `timeout -s ABRT 120 .venv/bin/python -X faulthandler test_jarvis.py`
+  `timeout -s ABRT 300 .venv/bin/python -X faulthandler test_jarvis.py` (a run takes about 100 s)
 - CI runs the same file on Windows: a check of a Linux-only path forces `system.IS_WINDOWS = False`, then restores it.
 - `openwakeword` is installed with `--no-deps`: never add it to `requirements.txt`.
 - After changing a text the user sees (QML `qsTr()`, tray, notch): the `pyside6-lupdate`/`pyside6-lrelease` commands

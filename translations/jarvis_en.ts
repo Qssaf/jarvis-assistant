@@ -147,7 +147,7 @@
 <context>
     <name>PeoplePage</name>
     <message numerus="yes">
-        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <location filename="../qml/PeoplePage.qml" line="+80"/>
         <source>%n min ago</source>
         <translation>
             <numerusform>%n min ago</numerusform>
@@ -171,7 +171,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+256"/>
+        <location line="+323"/>
         <source>Updated %1, from %n message(s)</source>
         <translation>
             <numerusform>Updated %1, from %n message</numerusform>
@@ -209,7 +209,7 @@
 <context>
     <name>SettingsPage</name>
     <message numerus="yes">
-        <location filename="../qml/SettingsPage.qml" line="+562"/>
+        <location filename="../qml/SettingsPage.qml" line="+576"/>
         <source>%n day(s)</source>
         <translation>
             <numerusform>%n day</numerusform>

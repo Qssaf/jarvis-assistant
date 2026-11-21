@@ -387,10 +387,11 @@ def add_reminder(at, text, repeat="", task=False, on=True, rid="", until=0):
 
 
 def cancel_reminder(rid):
-    with _lock:
+    with _lock:  # (whether it was there: from the list it was taken out of, not one read again after the lock)
         rs = read_json(REMINDERS_FILE, [])
-        write_json(REMINDERS_FILE, [r for r in rs if r["id"] != rid], private=True)
-    return len(rs) != len(reminders())
+        kept = [r for r in rs if r["id"] != rid]
+        write_json(REMINDERS_FILE, kept, private=True)
+    return len(kept) != len(rs)
 
 
 def pop_due(now=None):
@@ -721,7 +722,43 @@ def set_secret(name, value):
 
 
 PASSPHRASE = "voice_passphrase"  # (a secret like a key: the keychain, never settings.json or the log)
-OTHER_SECRETS = ("telegram", PASSPHRASE)  # keychain names that aren't a provider's key: no provider may take them
+PEOPLE_LOCK = "people_lock"      # the People page's password, as a salted hash: "pbkdf2$<rounds>$<salt>$<hash>"
+PEOPLE_SECRET = "people_secret"  # the secret password hidden people are encrypted with (people.py), kept the same way:
+# the hash only says whether what was typed is it; the key itself is made from the password each time it's given
+OTHER_SECRETS = ("telegram", PASSPHRASE, PEOPLE_LOCK, PEOPLE_SECRET)  # keychain names that aren't a provider's key: no provider may take them
+LOCK_ROUNDS = 200_000
+
+
+def _lock_hash(password, salt, rounds):
+    import hashlib
+    return hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, rounds).hex()
+
+
+def people_lock(which=PEOPLE_LOCK):
+    """Whether the People page has a password (which=PEOPLE_SECRET: whether there's a secret one for hidden people)."""
+    return bool(secret(which))
+
+
+def check_people_lock(password, which=PEOPLE_LOCK):
+    """Whether this is that password (False when there's none, or what's saved can't be read)."""
+    import hmac
+    try:
+        kind, rounds, salt, want = secret(which).split("$")
+        return kind == "pbkdf2" and hmac.compare_digest(_lock_hash(str(password), bytes.fromhex(salt), int(rounds)), want)
+    except ValueError:
+        return False
+
+
+def set_people_lock(new, old="", which=PEOPLE_LOCK):
+    """Set, change or (new "") remove that password. With one set, old has to be it (PermissionError)."""
+    if people_lock(which) and not check_people_lock(old, which):
+        raise PermissionError("that's not the password")
+    if new and (len(new) < 4 or len(new) > 200 or new != new.strip()):
+        raise ValueError("a password is 4 to 200 characters, with no space at its ends")
+    if not new:
+        return set_secret(which, "")
+    salt = os.urandom(16)
+    set_secret(which, f"pbkdf2${LOCK_ROUNDS}${salt.hex()}${_lock_hash(new, salt, LOCK_ROUNDS)}")
 
 
 def _passphrase():
@@ -1001,7 +1038,19 @@ def _sound_profile(p):
     return ((prof is None or isinstance(prof, dict) and isinstance(prof.get("gist"), str) and isinstance(prof.get("text"), str)
              and all(_number(prof.get(k)) for k in ("at", "upto", "count")))
             and (look is None or isinstance(look, dict) and _number(look.get("at")) and _number(look.get("upto"))
-                 and isinstance(look.get("why"), str)))
+                 and isinstance(look.get("why"), str))
+            and "hidden" not in p and isinstance(p.get("no_profile", False), bool))  # (someone hidden is in the encrypted part)
+
+
+HIDDEN_PEOPLE = "\x00hidden"  # people.HIDDEN: the people the user hid, encrypted (a backup takes them as they are)
+
+
+def _sound_hidden(env):
+    """people.json's encrypted part, if it has one, as people.py writes it."""
+    return env is None or (isinstance(env, dict) and all(isinstance(env.get(k), str) for k in ("nonce", "data", "ids_salt"))
+                           and isinstance(env.get("ids"), list) and isinstance(env.get("kdf"), dict)
+                           and isinstance(env["kdf"].get("salt"), str) and all(type(env["kdf"].get(k)) is int for k in ("n", "r", "p"))
+                           and env["kdf"]["n"] <= 2 ** 20 and env["kdf"]["r"] <= 16 and env["kdf"]["p"] <= 4)  # (a backup can't make a try cost minutes)
 
 
 BACKUP_CHECKS = {  # what a sound file looks like, so a bad one can't break a loop after the restart
@@ -1010,9 +1059,9 @@ BACKUP_CHECKS = {  # what a sound file looks like, so a bad one can't break a lo
         isinstance(r, dict) and isinstance(r.get("id"), str) and _number(r.get("at")) and isinstance(r.get("text"), str)
         and r.get("repeat", "") in ("", *REPEATS) for r in d),
     "routines.json": lambda d: isinstance(d, dict) and all(isinstance(v, str) for v in d.values()),
-    "people.json": lambda d: isinstance(d, dict) and all(isinstance(p, dict) and all(
+    "people.json": lambda d: isinstance(d, dict) and _sound_hidden(d.get(HIDDEN_PEOPLE)) and all(isinstance(p, dict) and all(
         isinstance(n, dict) and isinstance(n.get("text") or n.get("what"), str) and _number(n.get("at"))
-        for n in p.get("notes", []) + p.get("promises", [])) and _sound_profile(p) for p in d.values()),
+        for n in p.get("notes", []) + p.get("promises", [])) and _sound_profile(p) for k, p in d.items() if k != HIDDEN_PEOPLE),
     "skills.json": lambda d: isinstance(d, dict) and all(
         isinstance(v, dict) and isinstance(v.get("name"), str) and isinstance(v.get("steps"), str) and isinstance(v.get("task"), str)
         and _number(v.get("at")) for v in d.values()),

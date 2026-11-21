@@ -21,6 +21,21 @@ FLAG = f"--remote-debugging-port={PORT}"
 LIMIT = 2000  # characters in one Discord message (without Nitro)
 MEDIA_LIMIT = 20 * 1024 * 1024  # bytes of a photo or voice message Jarvis downloads to look at or listen to
 
+# How a message reads (its words, files, stickers and links), given the page's `C` and `who`: on its own so the tests run it.
+# A forwarded message has no words of its own: what it forwards is in message_snapshots (without its author: Discord leaves
+# that out), and read as nothing, a forward never reached Jarvis.
+TEXT_JS = r"""
+  const parts = (m, g) => [(m.content || "")
+      .replace(/<@!?(\d+)>/g, (_, id) => "@" + (C.UserStore.getUser(id) ? who(C.UserStore.getUser(id), g) : "someone"))
+      .replace(/<#(\d+)>/g, (_, id) => "#" + (C.ChannelStore.getChannel(id)?.name ?? "channel"))
+      .replace(/<a?(:\w+:)\d+>/g, "$1"),
+    ...(m.attachments || []).map(f => `[file: ${f.filename}]`), ...(m.sticker_items || []).map(s => `[sticker: ${s.name}]`),
+    ...(m.embeds || []).filter(e => e.title).map(e => `[link: ${e.title}]`)].filter(Boolean);
+  const text = (m, g) => [...parts(m, g),
+    ...(m.message_snapshots || []).map(s => `[forwarded: ${parts(s.message || {}, g).join(" ") || "a message"}]`)].join(" ");
+  const files = m => (m.message_snapshots || []).reduce((all, s) => all.concat(s.message?.attachments || []), m.attachments || []);
+"""
+
 # One call into the page: (cmd, args) -> JSON. Names: a DM by the person's name, a group DM by its name (or members),
 # a server channel as "Server #channel", a server by its name, a friend with no DM yet by their name.
 JS = r"""async (cmd, a) => {
@@ -32,13 +47,7 @@ JS = r"""async (cmd, a) => {
     : c.name || c.recipients.map(id => C.UserStore.getUser(id)).filter(Boolean).map(u => who(u)).join(", ");
   const muted = c => C.UserGuildSettingsStore.isChannelMuted(c.guild_id ?? null, c.id) || (c.guild_id && C.UserGuildSettingsStore.isMuted(c.guild_id));
   const channels = g => C.GuildChannelStore.getChannels(g).SELECTABLE.map(s => s.channel);
-  const text = (m, g) => [m.content
-      .replace(/<@!?(\d+)>/g, (_, id) => "@" + (C.UserStore.getUser(id) ? who(C.UserStore.getUser(id), g) : "someone"))
-      .replace(/<#(\d+)>/g, (_, id) => "#" + (C.ChannelStore.getChannel(id)?.name ?? "channel"))
-      .replace(/<a?(:\w+:)\d+>/g, "$1"),
-    ...m.attachments.map(f => `[file: ${f.filename}]`), ...(m.sticker_items || []).map(s => `[sticker: ${s.name}]`),
-    ...m.embeds.filter(e => e.title).map(e => `[link: ${e.title}]`)].filter(Boolean).join(" ");
-  // "@kanzoid" -> a real mention: a server member (as Discord has loaded them) or a DM member, by username, display name or nickname
+""" + TEXT_JS + r"""  // "@kanzoid" -> a real mention: a server member (as Discord has loaded them) or a DM member, by username, display name or nickname
   const ping = (t, c) => t.replace(/(^|\s)@(\w[\w.]{0,30}\w)/g, (all, sp, n) => {
     const people = (c?.guild_id ? C.GuildMemberStore.getMemberIds(c.guild_id) : c?.recipients || []).map(id => C.UserStore.getUser(id));
     const u = people.find(u => u && [u.username, u.globalName, c.guild_id && C.GuildMemberStore.getNick(c.guild_id, u.id)]
@@ -82,7 +91,7 @@ JS = r"""async (cmd, a) => {
   if (cmd === "media") {  // the newest (or that) photo, voice message or audio in a chat: where to download it
     const id = chan(), g = C.ChannelStore.getChannel(id)?.guild_id;
     for (const m of id ? await recent(id) : []) {
-      const f = (!a.msg || m.id === a.msg) && m.attachments.find(f => /^(image|audio)\//.test(f.content_type || ""));
+      const f = (!a.msg || m.id === a.msg) && files(m).find(f => /^(image|audio)\//.test(f.content_type || ""));
       if (f) return {url: f.url, mime: f.content_type.split(";")[0], name: f.filename, id: m.id, me: m.author.id === me,
                      by: who(m.author, g), caption: m.content, at: Date.parse(m.timestamp) / 1000};
     }
@@ -280,7 +289,8 @@ class Listener:
         rule = whatsapp.contact_rule([e["from"], e["user"]], "discord")
         said = f"Discord from {e['from']}" + (f" in {e['chat']}" if e["server"] or e["group"] else "") + f": {e['text'][:300]}"
         stand = one and whatsapp.standing_in("discord", e["channel"], (e["from"], e["user"], e["chat"]))  # (asked for: whatever the rules)
-        if rule == "always" and not stand:
+        if rule == "always" and not stand:  # (the 💬 line too, as WhatsApp's: wrong_person and the voice read it)
+            self.notify(f"💬 {said}")
             self.tell(said, loud=True)
             return
         if e["muted"] and rule != "never" and not stand:
@@ -303,7 +313,13 @@ class Listener:
     def _answer(self, e):
         chat, name = e["channel"], e["from"]
         self.pending.pop(chat, None)
-        history = call("history", id=chat, kind="dm", count=20)
+        from websockets.exceptions import WebSocketException
+        try:
+            history = call("history", id=chat, kind="dm", count=20)
+        except (RuntimeError, OSError, ValueError, WebSocketException) as ex:  # (Vesktop closed meanwhile: this thread died,
+            print(f"[discord] couldn't read the chat to answer: {ex}", flush=True)  # and the message was never shown)
+            self.notify(f"💬 Discord from {name}: {e['text'][:300]} (Jarvis couldn't read the chat to answer it)")
+            return
         said = " / ".join(m["text"] for m in [m for m in history if not m["me"]][-3:])[:300]
         stand = whatsapp.standing_in("discord", chat, (name, e["user"], e["chat"]))
         if not stand and time.time() - self.user_wrote.get(chat, 0) < whatsapp.QUIET:

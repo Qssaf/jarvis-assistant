@@ -72,9 +72,17 @@ func NewSctpRelayManager(log *slog.Logger) *SctpRelayManager {
 	}
 }
 
-func (m *SctpRelayManager) SetSsrc(ssrc uint32) { m.audioSsrc = ssrc }
+func (m *SctpRelayManager) SetSsrc(ssrc uint32) {
+	m.mu.Lock()
+	m.audioSsrc = ssrc
+	m.mu.Unlock()
+}
 
-func (m *SctpRelayManager) SetSubscriptionSsrc(ssrc uint32) { m.subscriptionSsrc = ssrc }
+func (m *SctpRelayManager) SetSubscriptionSsrc(ssrc uint32) {
+	m.mu.Lock()
+	m.subscriptionSsrc = ssrc
+	m.mu.Unlock()
+}
 
 func (m *SctpRelayManager) SetOnConnected(fn func(ip string, port int)) { m.onConnected = fn }
 
@@ -84,13 +92,13 @@ func (m *SctpRelayManager) ResendSubscriptions() {
 	m.mu.Lock()
 	conns := make([]*relayConnection, 0, len(m.connections))
 	for _, c := range m.connections {
-		conns = append(conns, c)
+		if c.state == relayStateOpen && c.channel != nil {
+			conns = append(conns, c)
+		}
 	}
 	m.mu.Unlock()
 	for _, c := range conns {
-		if c.state == relayStateOpen && c.channel != nil {
-			m.sendStunRegistration(c)
-		}
+		m.sendStunRegistration(c)
 	}
 }
 
@@ -146,7 +154,9 @@ func (m *SctpRelayManager) connectToRelay(info RelayConfig) {
 		m.failConnection(conn)
 		return
 	}
+	m.mu.Lock()
 	conn.pc = pc
+	m.mu.Unlock()
 
 	pc.OnICEConnectionStateChange(func(s webrtc.ICEConnectionState) {
 		m.log.Info("relay ice state", "id", id, "state", s.String())
@@ -162,11 +172,15 @@ func (m *SctpRelayManager) connectToRelay(info RelayConfig) {
 		m.failConnection(conn)
 		return
 	}
+	m.mu.Lock()
 	conn.channel = channel
+	m.mu.Unlock()
 
 	channel.OnOpen(func() {
 		m.log.Info("relay datachannel open", "id", id)
+		m.mu.Lock()
 		conn.state = relayStateOpen
+		m.mu.Unlock()
 		m.sendStunRegistration(conn)
 		m.startKeepalive(conn)
 		if m.onConnected != nil {
@@ -202,7 +216,10 @@ func (m *SctpRelayManager) connectToRelay(info RelayConfig) {
 	go func() {
 		select {
 		case <-time.After(relayConnectionTimeout):
-			if conn.state == relayStateConnecting {
+			m.mu.Lock()
+			connecting := conn.state == relayStateConnecting
+			m.mu.Unlock()
+			if connecting {
 				m.log.Debug("relay connection timeout", "id", id)
 				m.failConnection(conn)
 			}
@@ -263,12 +280,16 @@ func (m *SctpRelayManager) sendStunRegistration(conn *relayConnection) {
 	hmacKey := []byte(info.Key)
 
 	send := func() {
-		if conn.state != relayStateOpen || conn.channel == nil {
+		m.mu.Lock()
+		open := conn.state == relayStateOpen && conn.channel != nil
+		audioSsrc, subscriptionSsrc := m.audioSsrc, m.subscriptionSsrc
+		m.mu.Unlock()
+		if !open {
 			return
 		}
-		ssrc := m.subscriptionSsrc
+		ssrc := subscriptionSsrc
 		if ssrc == 0 {
-			ssrc = m.audioSsrc
+			ssrc = audioSsrc
 		}
 		if ssrc == 0 {
 			return
@@ -287,10 +308,10 @@ func (m *SctpRelayManager) sendStunRegistration(conn *relayConnection) {
 
 		if len(info.RawToken) > 0 {
 			var peerSsrcs []uint32
-			if m.subscriptionSsrc != 0 {
-				peerSsrcs = []uint32{m.subscriptionSsrc}
+			if subscriptionSsrc != 0 {
+				peerSsrcs = []uint32{subscriptionSsrc}
 			}
-			ssrcList := BuildSSRCSubscriptionList([]uint32{m.audioSsrc}, peerSsrcs, 0, 0)
+			ssrcList := BuildSSRCSubscriptionList([]uint32{audioSsrc}, peerSsrcs, 0, 0)
 			m.sendRaw(conn, BuildAllocateForRelay(info.RawToken, ssrcList, hmacKey, info.IP, info.Port))
 		}
 	}
@@ -316,12 +337,17 @@ func (m *SctpRelayManager) sendStunRegistration(conn *relayConnection) {
 func (m *SctpRelayManager) startKeepalive(conn *relayConnection) {
 	m.sendRaw(conn, BuildWhatsAppPing())
 	ticker := time.NewTicker(relayKeepaliveInterval)
+	m.mu.Lock()
 	conn.keepalive = ticker
+	m.mu.Unlock()
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				if conn.state != relayStateOpen || conn.channel == nil {
+				m.mu.Lock()
+				open := conn.state == relayStateOpen && conn.channel != nil
+				m.mu.Unlock()
+				if !open {
 					return
 				}
 				m.sendRaw(conn, BuildWhatsAppPing())
@@ -334,10 +360,13 @@ func (m *SctpRelayManager) startKeepalive(conn *relayConnection) {
 }
 
 func (m *SctpRelayManager) sendRaw(conn *relayConnection, data []byte) {
-	if conn.channel == nil || conn.state != relayStateOpen {
+	m.mu.Lock()
+	channel, open := conn.channel, conn.state == relayStateOpen
+	m.mu.Unlock()
+	if channel == nil || !open {
 		return
 	}
-	if err := conn.channel.Send(data); err != nil {
+	if err := channel.Send(data); err != nil {
 		m.log.Debug("relay send error", "id", conn.id, "err", err)
 	}
 }
@@ -403,19 +432,22 @@ func (m *SctpRelayManager) closeConnection(id string) {
 }
 
 func (m *SctpRelayManager) teardown(conn *relayConnection) {
+	m.mu.Lock() // (Cleanup and a failing relay may tear the same one down at once)
 	select {
 	case <-conn.stopCh:
 	default:
 		close(conn.stopCh)
 	}
-	if conn.keepalive != nil {
-		conn.keepalive.Stop()
+	keepalive, channel, pc := conn.keepalive, conn.channel, conn.pc
+	m.mu.Unlock()
+	if keepalive != nil {
+		keepalive.Stop()
 	}
-	if conn.channel != nil {
-		_ = conn.channel.Close()
+	if channel != nil {
+		_ = channel.Close()
 	}
-	if conn.pc != nil {
-		_ = conn.pc.Close()
+	if pc != nil {
+		_ = pc.Close()
 	}
 }
 

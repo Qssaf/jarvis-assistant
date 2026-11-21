@@ -10,6 +10,8 @@ edeb31f, its MLow codec a port of [whatsapp-rust](https://github.com/oxidezap/wh
 - the SRTP rollover counter is guessed from the newest packet (RFC 3711), not the last one: a late packet from before
   a sequence wrap-around moved it back, garbling the rest of the call;
 - one received packet at a time: each relay delivers on its own goroutine, and both used the same decoder at once;
+- a relay's state, data channel and SSRCs are only used under its manager's lock (`transport/sctprelay.go`): pion's
+  callbacks, timers and the call's media goroutine read and wrote them at once (`go test -race`);
 - its tests that need the upstream test vectors (6 MB) are left out, and the files are gofmt'ed.
 
 Build: `go build -trimpath -ldflags="-s -w" -o jarvis-wa .` (Jarvis also builds it itself when it's missing or older

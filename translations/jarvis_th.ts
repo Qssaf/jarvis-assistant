@@ -281,7 +281,7 @@
 <context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+324"/>
+        <location filename="../window.py" line="+327"/>
         <source>Copied</source>
         <translation>คัดลอกแล้ว</translation>
     </message>
@@ -879,7 +879,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <location filename="../qml/SettingsPage.qml" line="+831"/>
+        <location filename="../qml/SettingsPage.qml" line="+902"/>
         <source>Accounts</source>
         <translation>บัญชี</translation>
     </message>
@@ -1536,7 +1536,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3789"/>
+        <location filename="../jarvis.py" line="+3945"/>
         <source>LISTENING</source>
         <translation>กำลังฟัง</translation>
     </message>
@@ -1567,9 +1567,22 @@
     </message>
 </context>
 <context>
+    <name>PasswordField</name>
+    <message>
+        <location filename="../qml/PasswordField.qml" line="+16"/>
+        <source>Hide it</source>
+        <translation>ซ่อน</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Show what you typed</source>
+        <translation>แสดงสิ่งที่พิมพ์</translation>
+    </message>
+</context>
+<context>
     <name>PeoplePage</name>
     <message>
-        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <location filename="../qml/PeoplePage.qml" line="+80"/>
         <source>just now</source>
         <translation>เมื่อสักครู่</translation>
     </message>
@@ -1620,12 +1633,13 @@
         <translation>ยังมีข้อความจากเขาไม่พอที่จะบอกอะไรได้มาก Jarvis จะลองอีกครั้งเมื่อคุณคุยกันมากขึ้น</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-56"/>
+        <location line="+58"/>
         <source>Something went wrong</source>
         <translation>เกิดข้อผิดพลาด</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+33"/>
         <source>People</source>
         <translation>ผู้คน</translation>
     </message>
@@ -1635,13 +1649,48 @@
         <translation>คนที่คุณคุยด้วย สิ่งที่ Jarvis เข้าใจเกี่ยวกับพวกเขาจากแชทของคุณ และสิ่งที่คุณจดไว้หรือสัญญาไว้</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+17"/>
+        <source>This page is locked</source>
+        <translation>หน้านี้ถูกล็อกอยู่</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Give its password to see who you talk with and what Jarvis knows about them.</source>
+        <translation>ใส่รหัสผ่านเพื่อดูว่าคุณคุยกับใครบ้าง และ Jarvis รู้อะไรเกี่ยวกับพวกเขา</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password</source>
+        <translation>รหัสผ่าน</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Password for the People page</source>
+        <translation>รหัสผ่านสำหรับหน้าผู้คน</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Unlock</source>
+        <translation>ปลดล็อก</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Forgot it? Run “jarvis --reset-people-lock” in a terminal.</source>
+        <translation>ลืมรหัสผ่านใช่ไหม เรียกใช้ “jarvis --reset-people-lock” ในเทอร์มินัล</translation>
+    </message>
+    <message>
+        <location line="+21"/>
         <location line="+1"/>
         <source>Search people</source>
         <translation>ค้นหาผู้คน</translation>
     </message>
     <message>
-        <location line="+89"/>
+        <location line="+65"/>
+        <source>Hidden</source>
+        <translation>ซ่อนอยู่</translation>
+    </message>
+    <message>
+        <location line="+27"/>
         <source>No one matches that</source>
         <translation>ไม่มีใครตรงกับคำค้นหา</translation>
     </message>
@@ -1649,6 +1698,16 @@
         <location line="+0"/>
         <source>No one here yet</source>
         <translation>ยังไม่มีใครที่นี่</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Add a password</source>
+        <translation>เพิ่มรหัสผ่าน</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lock this page now</source>
+        <translation>ล็อกหน้านี้ตอนนี้</translation>
     </message>
     <message>
         <location line="+46"/>
@@ -1666,7 +1725,7 @@
         <translation>สิ่งที่ Jarvis เข้าใจ</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Reading your chats…</source>
         <translation>กำลังอ่านแชทของคุณ…</translation>
     </message>
@@ -1681,7 +1740,17 @@
         <translation>เขียนใหม่ตอนนี้จากข้อความตัวต่อตัวล่าสุดกับคนนี้</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
+        <source>Put it right yourself</source>
+        <translation>แก้ไขเอง</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Write it yourself</source>
+        <translation>เขียนเอง</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Forget this</source>
         <translation>ลืมสิ่งนี้</translation>
     </message>
@@ -1695,8 +1764,13 @@
         <source>Profile forgotten</source>
         <translation>ลืมโปรไฟล์แล้ว</translation>
     </message>
+    <message>
+        <location line="+25"/>
+        <source>You wrote this %1. Jarvis leaves it as it is unless you press Refresh.</source>
+        <translation>คุณเขียนสิ่งนี้เมื่อ %1 Jarvis จะไม่แก้ไขจนกว่าคุณจะกดรีเฟรช</translation>
+    </message>
     <message numerus="yes">
-        <location line="+23"/>
+        <location line="+1"/>
         <source>Updated %1, from %n message(s)</source>
         <translation>
             <numerusform>อัปเดต %1 จาก %n ข้อความ</numerusform>
@@ -1704,6 +1778,11 @@
     </message>
     <message>
         <location line="+5"/>
+        <source>You told Jarvis not to get to know them: it doesn&apos;t read your chats with them for this. You can still write it yourself.</source>
+        <translation>คุณบอก Jarvis ว่าไม่ต้องทำความรู้จักคนนี้ Jarvis จึงไม่อ่านแชทของคุณกับเขาเพื่อการนี้ คุณยังเขียนเองได้</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>You had Jarvis forget what it understood of them. It won&apos;t write it again unless you press Refresh.</source>
         <translation>คุณให้ Jarvis ลืมสิ่งที่เข้าใจเกี่ยวกับคนนี้แล้ว Jarvis จะไม่เขียนอีกจนกว่าคุณจะกดรีเฟรช</translation>
     </message>
@@ -1788,7 +1867,37 @@
         <translation>ทำเครื่องหมายว่ารักษาสัญญานี้แล้ว</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+11"/>
+        <source>Privacy</source>
+        <translation>ความเป็นส่วนตัว</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Let Jarvis get to know them</source>
+        <translation>ให้ Jarvis ทำความรู้จักคนนี้</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Off: what it understood from their chats is forgotten and it never reads them for a profile again. Your notes and promises stay.</source>
+        <translation>ปิด: สิ่งที่เข้าใจจากแชทของเขาจะถูกลืม และจะไม่อ่านแชทเหล่านั้นเพื่อทำโปรไฟล์อีกเลย บันทึกและคำสัญญาของคุณยังอยู่</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Hide from this page</source>
+        <translation>ซ่อนจากหน้านี้</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Encrypted on this PC with your secret password and left off this list. To see the people you hid, type that password in the search box and press Enter; the same again puts them away.</source>
+        <translation>เข้ารหัสไว้ใน PC เครื่องนี้ด้วยรหัสผ่านลับของคุณ และไม่แสดงในรายการนี้ หากต้องการดูคนที่คุณซ่อน ให้พิมพ์รหัสผ่านนั้นในช่องค้นหาแล้วกด Enter ทำแบบเดิมอีกครั้งเพื่อซ่อนกลับ</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>%1 is hidden. Your secret password in the search box, then Enter, shows the people you hid.</source>
+        <translation>ซ่อน %1 แล้ว พิมพ์รหัสผ่านลับในช่องค้นหาแล้วกด Enter เพื่อแสดงคนที่คุณซ่อน</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <location line="+5"/>
         <source>Forget this person</source>
         <translation>ลืมคนนี้</translation>
@@ -1819,7 +1928,36 @@
         <translation>ผู้คนจะปรากฏที่นี่เมื่อคุณแชทตัวต่อตัวกับใครสักคนใน WhatsApp หรือ Discord หรือเมื่อคุณเล่าเรื่องของเขาให้ Jarvis ฟัง: “Sam เป็นลูกพี่ลูกน้องของฉัน”</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+47"/>
+        <source>Who they are, in one line: cousin; warm, writes in French</source>
+        <translation>เขาเป็นใคร ในหนึ่งบรรทัด: ลูกพี่ลูกน้อง อบอุ่น เขียนเป็นภาษาฝรั่งเศส</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Who they are, in one line</source>
+        <translation>เขาเป็นใคร ในหนึ่งบรรทัด</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>One point a line, up to 8:
+Talks about her exams lately
+Don&apos;t bring up grades</source>
+        <translation>บรรทัดละหนึ่งข้อ ไม่เกิน 8 ข้อ:
+ช่วงนี้พูดถึงการสอบบ่อย
+อย่าพูดเรื่องเกรด</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>What else Jarvis should understand, one point a line</source>
+        <translation>สิ่งอื่นที่ Jarvis ควรเข้าใจ บรรทัดละหนึ่งข้อ</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Your words are kept as you write them, and Jarvis doesn&apos;t rewrite them by itself.</source>
+        <translation>คำของคุณจะถูกเก็บไว้ตามที่คุณเขียน และ Jarvis จะไม่เขียนใหม่เอง</translation>
+    </message>
+    <message>
+        <location line="+20"/>
         <source>e.g. My cousin, studies medicine in Lyon</source>
         <translation>เช่น ลูกพี่ลูกน้อง เรียนแพทย์ที่ลียง</translation>
     </message>
@@ -1839,12 +1977,14 @@
         <translation>วันที่อย่าง 2026-12-31 จะทำให้บันทึกหายไปหลังวันนั้น</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Cancel</source>
         <translation>ยกเลิก</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-30"/>
+        <location line="+31"/>
         <source>Save</source>
         <translation>บันทึก</translation>
     </message>
@@ -2032,7 +2172,7 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="-677"/>
+        <location filename="../qml/SettingsPage.qml" line="-734"/>
         <source>Settings</source>
         <translation>การตั้งค่า</translation>
     </message>
@@ -2042,7 +2182,7 @@
         <translation>การเปลี่ยนแปลงจะบันทึกทันที โมเดลและคีย์ API อยู่ในหน้าโมเดล</translation>
     </message>
     <message>
-        <location line="-109"/>
+        <location line="-121"/>
         <source>Checking…</source>
         <translation>กำลังตรวจสอบ…</translation>
     </message>
@@ -2057,7 +2197,27 @@
         <translation>อัปเดตไม่สำเร็จ: %1</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
+        <source>The People page asks for its password now</source>
+        <translation>หน้าผู้คนจะขอรหัสผ่านแล้ว</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Password removed: the People page is open</source>
+        <translation>ลบรหัสผ่านแล้ว: หน้าผู้คนเปิดอยู่</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>People you hide are encrypted with this password now</source>
+        <translation>คนที่คุณซ่อนจะถูกเข้ารหัสด้วยรหัสผ่านนี้แล้ว</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Secret password removed: nobody is hidden any more</source>
+        <translation>ลบรหัสผ่านลับแล้ว: ไม่มีใครถูกซ่อนอีกต่อไป</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Passphrase saved</source>
         <translation>บันทึกวลีลับแล้ว</translation>
     </message>
@@ -2332,19 +2492,21 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+290"/>
+        <location line="+347"/>
         <location line="+117"/>
         <source>Save</source>
         <translation>บันทึก</translation>
     </message>
     <message>
-        <location line="-405"/>
+        <location line="-462"/>
         <location line="+86"/>
+        <location line="+180"/>
+        <location line="+29"/>
         <source>Remove</source>
         <translation>นำออก</translation>
     </message>
     <message>
-        <location line="-82"/>
+        <location line="-291"/>
         <location line="+7"/>
         <source>Push to talk</source>
         <translation>กดเพื่อพูด</translation>
@@ -2602,7 +2764,93 @@
         </translation>
     </message>
     <message>
-        <location line="+145"/>
+        <location line="+3"/>
+        <source>Asked for before the People page shows anyone. The page locks again after 5 minutes unused, when the window is put away and at every start. It keeps the page from someone at your screen. Forgot it: “jarvis --reset-people-lock” in a terminal takes both passwords here off.</source>
+        <translation>ต้องใส่ก่อนที่หน้าผู้คนจะแสดงใคร หน้านี้จะล็อกอีกครั้งเมื่อไม่ได้ใช้ 5 นาที เมื่อเก็บหน้าต่าง และทุกครั้งที่เริ่ม ช่วยกันหน้านี้จากคนที่อยู่หน้าจอของคุณ หากลืม: “jarvis --reset-people-lock” ในเทอร์มินัลจะลบรหัสผ่านทั้งสองที่นี่ออก</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Password for the People page</source>
+        <translation>รหัสผ่านสำหรับหน้าผู้คน</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lock private security hide</source>
+        <translation>ล็อก ส่วนตัว ความปลอดภัย ซ่อน รหัสผ่าน</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Current password</source>
+        <translation>รหัสผ่านปัจจุบัน</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Current password for the People page</source>
+        <translation>รหัสผ่านปัจจุบันสำหรับหน้าผู้คน</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Password set · type a new one to change it</source>
+        <translation>ตั้งรหัสผ่านแล้ว · พิมพ์รหัสใหม่เพื่อเปลี่ยน</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A password only you know, 4 characters or more</source>
+        <translation>รหัสผ่านที่มีแค่คุณรู้ อย่างน้อย 4 ตัวอักษร</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New password for the People page</source>
+        <translation>รหัสผ่านใหม่สำหรับหน้าผู้คน</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set password</source>
+        <translation>ตั้งรหัสผ่าน</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>A second password, for the people you hide on the People page: they&apos;re encrypted with it, and listed only when you type it in that page&apos;s search box and press Enter (the same again puts them away). Until you type it after a start, Jarvis doesn&apos;t know them either. Forget it and they stay encrypted until it&apos;s typed again.</source>
+        <translation>รหัสผ่านที่สอง สำหรับคนที่คุณซ่อนในหน้าผู้คน: คนเหล่านั้นจะถูกเข้ารหัสด้วยรหัสผ่านนี้ และจะแสดงในรายการเมื่อคุณพิมพ์รหัสผ่านในช่องค้นหาของหน้านั้นแล้วกด Enter เท่านั้น (ทำแบบเดิมอีกครั้งเพื่อซ่อนกลับ) จนกว่าคุณจะพิมพ์หลังเริ่มโปรแกรม Jarvis เองก็จะไม่รู้จักพวกเขา หากลืม พวกเขาจะยังถูกเข้ารหัสจนกว่าจะพิมพ์รหัสผ่านนั้นอีกครั้ง</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Secret password, for people you hide</source>
+        <translation>รหัสผ่านลับ สำหรับคนที่คุณซ่อน</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>hidden secret encrypt private</source>
+        <translation>ซ่อน ลับ เข้ารหัส ส่วนตัว</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <location line="+0"/>
+        <source>Current secret password</source>
+        <translation>รหัสผ่านลับปัจจุบัน</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Secret password set · type a new one to change it</source>
+        <translation>ตั้งรหัสผ่านลับแล้ว · พิมพ์รหัสใหม่เพื่อเปลี่ยน</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A second password only you know, 4 characters or more</source>
+        <translation>รหัสผ่านที่สองที่มีแค่คุณรู้ อย่างน้อย 4 ตัวอักษร</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New secret password</source>
+        <translation>รหัสผ่านลับใหม่</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set secret password</source>
+        <translation>ตั้งรหัสผ่านลับ</translation>
+    </message>
+    <message>
+        <location line="+152"/>
         <source>Jarvis on Telegram</source>
         <translation>Jarvis บน Telegram</translation>
     </message>
@@ -2743,7 +2991,9 @@
         <translation>กำลังเชื่อมต่อ…</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-105"/>
+        <location line="+29"/>
+        <location line="+60"/>
         <location line="+19"/>
         <source>Change</source>
         <translation>เปลี่ยน</translation>
@@ -2772,7 +3022,7 @@
         <translation>ในแอป Jarvis แตะ Pair แล้วสแกนโค้ดนี้ ใช้ได้ครั้งเดียว ภายในสิบนาที</translation>
     </message>
     <message>
-        <location line="-246"/>
+        <location line="-303"/>
         <source>WhatsApp</source>
         <translation>WhatsApp</translation>
     </message>
@@ -2978,7 +3228,7 @@
     </message>
     <message>
         <location line="-452"/>
-        <location line="+658"/>
+        <location line="+715"/>
         <source>Your data</source>
         <translation>ข้อมูลของคุณ</translation>
     </message>
@@ -3013,14 +3263,14 @@
         <translation>เก็บการสนทนาและบันทึกการทำงานไว้นาน</translation>
     </message>
     <message>
-        <location line="-198"/>
-        <location line="+200"/>
+        <location line="-255"/>
+        <location line="+257"/>
         <source>A week</source>
         <translation>1 สัปดาห์</translation>
     </message>
     <message>
-        <location line="-199"/>
-        <location line="+199"/>
+        <location line="-256"/>
+        <location line="+256"/>
         <source>A month</source>
         <translation>1 เดือน</translation>
     </message>
@@ -3667,7 +3917,7 @@
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+124"/>
+        <location filename="../jarvis.py" line="+130"/>
         <source>Open Jarvis</source>
         <translation>เปิด Jarvis</translation>
     </message>

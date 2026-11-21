@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"go.mau.fi/whatsmeow/types"
+	"go.mau.fi/whatsmeow/types/events"
 
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"google.golang.org/protobuf/proto"
@@ -95,5 +96,38 @@ func TestSearch(t *testing.T) {
 	}
 	if got, _ := search("trip_", 10); len(got) != 0 {
 		t.Errorf("_ is a letter, not a wildcard: %v", got)
+	}
+}
+
+// a group with no name saved is asked of WhatsApp once, not at every list of chats (a round trip per group each time:
+// a list of 500 held the offline lookup past its 10 s), and a rename WhatsApp tells of is kept
+func TestGroupNameOnce(t *testing.T) {
+	db, _ = sql.Open("sqlite", ":memory:")
+	db.SetMaxOpenConns(1)
+	defer db.Close()
+	if _, err := db.Exec(schema); err != nil {
+		t.Fatal(err)
+	}
+	group := types.NewJID("120363000001", types.GroupServer)
+	db.Exec(`INSERT INTO jarvis_chats VALUES (?, '', 3, 0)`, group.String())
+	asked, real := 0, groupName
+	defer func() { groupName = real }()
+	groupName = func(types.JID) string { asked++; return "Trip planning" }
+	for i := 0; i < 3; i++ {
+		if got := nameOf(group); got != "Trip planning" {
+			t.Fatalf("named %q", got)
+		}
+	}
+	if asked != 1 {
+		t.Errorf("WhatsApp was asked %d times", asked)
+	}
+	handle(&events.GroupInfo{JID: group, Name: &types.GroupName{Name: "Trip, the sequel"}})
+	if got := nameOf(group); got != "Trip, the sequel" {
+		t.Errorf("after the rename: %q", got)
+	}
+	groupName = real // (not logged in, as here: WhatsApp isn't asked, and the number stands in)
+	other := types.NewJID("120363000002", types.GroupServer)
+	if got := nameOf(other); got != other.User {
+		t.Errorf("logged out: %q", got)
 	}
 }
