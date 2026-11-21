@@ -21,7 +21,9 @@ AbstractButton {
     Tip { text: b.tip; visible: b.tip !== "" && (b.hovered || b.visualFocus) }  // (the keyboard gets the name too)
     background: Rectangle {
         radius: width / 2
-        color: b.tint.a > 0 ? (b.hovered ? Qt.lighter(b.tint, 1.1) : b.tint) : (b.down ? Theme.glassHover : b.hovered ? Theme.glass : "transparent")
+        // (a see-through tint, like glass, gets stronger under the mouse: lighter white is still white)
+        color: b.tint.a > 0 ? (!b.hovered ? b.tint : b.tint.a < 1 ? Theme.alpha(b.tint, Math.min(1.6, 1 / b.tint.a)) : Qt.lighter(b.tint, 1.1))
+                            : (b.down ? Theme.glassHover : b.hovered ? Theme.glass : "transparent")
         border.width: b.tint.a === 0 && b.hovered ? 1 : 0
         border.color: Theme.stroke
         Behavior on color { ColorAnimation { duration: Theme.fast } }

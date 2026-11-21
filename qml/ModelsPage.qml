@@ -12,16 +12,18 @@ ScrollPage {
     property var avail: ({ backends: [], live: [] })  // what each provider offers (asked for separately: it's slower)
     property var jobs: []
     property bool looking: false
+    property real lookedAt: 0  // when the providers were last asked what they offer
     property string adding: ""  // a provider whose key is being pasted
     property bool custom: false  // the add-a-provider row is open
 
-    function load() {
+    function load() {  // (each time the page shows: a key or sign-in may have changed meanwhile)
         Api.get("/api/models", d => info = d)
         Api.get("/api/models/jobs", d => jobs = d)
-        lookUp()
+        if (Date.now() - lookedAt > 300000) lookUp()  // (that asks every provider: not each time, Refresh does it at once)
     }
     function lookUp() {
         looking = true
+        lookedAt = Date.now()
         Api.get("/api/models/available", d => { avail = d; looking = false }, e => { looking = false; Backend.toast(e.error, true) })
     }
     function save(job, list) {
@@ -29,9 +31,9 @@ ScrollPage {
         change[job + "_models"] = list
         Api.post("/api/settings", change, () => Api.get("/api/models/jobs", d => jobs = d), e => { Backend.toast(e.error, true); load() })
     }
-    function options(list, current) {  // [{value, label}] for a Select, keeping the current choice even if it isn't listed
+    function options(list, current, name) {  // [{value, label}] for a Select, keeping the current choice even if it isn't listed
         const all = current && list.indexOf(current) < 0 ? [current].concat(list) : list
-        return all.map(v => ({ value: v, label: v }))
+        return all.map(v => ({ value: v, label: name ? name(v) : v }))
     }
     function pretty(m) {  // "gemini-3.8-flash" -> "Gemini 3.8 Flash"
         return m.split("/").pop().replace(/(\d)-(\d)/g, "$1.$2").split(/[-_]/).filter(w => w)
@@ -47,8 +49,9 @@ ScrollPage {
     }
     readonly property string status: looking ? qsTr("Looking up the models you can use…") : avail.backends
         .filter(b => b.models.length || (b.error && !/no API key|unknown backend|not signed in|not installed/.test(b.error)))
-        .map(b => b.models.length ? qsTr("%1: %n model(s)", "", b.models.length).arg(b.name) : `${b.name}: ${b.error}`).join(" · ")
+        .map(b => b.models.length ? qsTr("%1: %n model(s)", "", b.models.length).arg(Api.provider(b.name)) : `${Api.provider(b.name)}: ${b.error}`).join(" · ")
     Component.onCompleted: load()
+    onVisibleChanged: if (visible) load()
     Timer {  // while a Google sign-in waits in the browser: notice when it's done
         interval: 2000; repeat: true; running: !!page.info.google_signing
         onTriggered: Api.get("/api/models", d => { const was = page.info.google_signing; page.info = d; if (was && !d.google_signing) page.lookUp() })
@@ -79,17 +82,31 @@ ScrollPage {
                     Layout.fillWidth: true
                     spacing: 0
                     Divider {}
-                    Item {  // the job at a glance: click it to open its full list
+                    Item {  // the job at a glance: click it (or Tab to it and press Enter) to open its full list
                         Layout.fillWidth: true
                         implicitHeight: head.implicitHeight + 24
                         Rectangle {
                             anchors { fill: parent; topMargin: 4; bottomMargin: 4; leftMargin: -10; rightMargin: -10 }
                             radius: Theme.radiusControl
-                            color: Theme.glassHover
-                            opacity: hit.containsMouse ? 1 : 0
-                            Behavior on opacity { NumberAnimation { duration: Theme.fast } }
+                            color: hit.hovered ? Theme.glassHover : "transparent"
+                            Behavior on color { ColorAnimation { duration: Theme.fast } }
+                            Focus { keyboard: true; visible: hit.visualFocus }
                         }
-                        MouseArea { id: hit; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: job.open = !job.open }
+                        AbstractButton {  // (under the row's own chip and button, which take their clicks first)
+                            id: hit
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            focusPolicy: Qt.TabFocus
+                            Keys.onReturnPressed: click()
+                            Keys.onEnterPressed: click()
+                            Accessible.role: Accessible.Button
+                            Accessible.name: job.modelData.label
+                            Accessible.description: job.modelData.hint
+                            Accessible.checkable: true
+                            Accessible.checked: job.open
+                            onClicked: job.open = !job.open
+                            HoverHandler { cursorShape: Qt.PointingHandCursor }
+                        }
                         RowLayout {
                             id: head
                             anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter }
@@ -116,9 +133,9 @@ ScrollPage {
                                 spacing: 12
                                 Chip { visible: job.first[0] !== ""; active: true; text: page.pretty(job.first[1] || ""); onClicked: job.open = true }
                                 Txt { kind: "small"; color: Theme.text3; wrapMode: Text.NoWrap; elide: Text.ElideRight; Layout.fillWidth: true
-                                      text: job.more > 0 ? qsTr("%1 · +%n fallback(s)", "", job.more).arg(job.first[0]) : job.first[0] }
+                                      text: job.more > 0 ? qsTr("%1 · +%n backup(s)", "", job.more).arg(Api.provider(job.first[0])) : Api.provider(job.first[0]) }
                             }
-                            Icon { name: "chevron-right"; size: 18; color: hit.containsMouse ? Theme.text : Theme.text3
+                            Icon { name: "chevron-right"; size: 18; color: hit.hovered || hit.visualFocus ? Theme.text : Theme.text3
                                    Layout.preferredWidth: 18; Layout.preferredHeight: 18
                                    rotation: job.open ? (LayoutMirroring.enabled ? -90 : 90) : 0; Behavior on rotation { NumberAnimation { duration: Theme.fast } } }
                         }
@@ -164,7 +181,7 @@ ScrollPage {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 2
-                            Txt { text: modelData.name; weight: 600 }
+                            Txt { text: Api.provider(modelData.name); weight: 600 }
                             Txt { kind: "small"; text: modelData.url; elide: Text.ElideRight; wrapMode: Text.NoWrap; Layout.fillWidth: true }
                         }
                         Field {
@@ -179,8 +196,9 @@ ScrollPage {
                         Txt { kind: "small"; visible: !!modelData.local; Layout.preferredWidth: 320; horizontalAlignment: Text.AlignRight
                               color: page.info.ollama && page.info.ollama.length ? Theme.text2 : Theme.text3; elide: Text.ElideRight; wrapMode: Text.NoWrap
                               text: page.info.ollama === null ? qsTr("Ollama isn't running") : (page.info.ollama.length ? page.info.ollama.join(", ") : qsTr("No models downloaded yet")) }
-                        IconButton { visible: !!modelData.custom; symbol: "trash"; color: Theme.text3; tip: qsTr("Remove this provider"); Layout.rightMargin: -8
-                                     onClicked: Api.post(`/api/providers/${modelData.name}/delete`, {}, d => { page.info = d; page.lookUp() }) }
+                        ConfirmButton { visible: !!modelData.custom; size: 36; glyph: 18; label: qsTr("Remove this provider"); Layout.rightMargin: -8
+                                        again: qsTr("Click again to remove it and its keys")
+                                        onConfirmed: Api.post(`/api/providers/${modelData.name}/delete`, {}, d => { page.info = d; page.lookUp() }) }
                     }
                     Flow {  // the saved keys, by their last four characters: orange while one rests, each removable
                         Layout.fillWidth: true
@@ -196,8 +214,8 @@ ScrollPage {
                                 required property int index
                                 Chip { id: tail; focusPolicy: Qt.NoFocus; dot: savedKey.modelData.resting > 0 ? "working" : "ok"; text: "…" + savedKey.modelData.tail
                                        Tip { text: qsTr("Resting (rate limited or refused): the next key answers"); visible: tail.hovered && savedKey.modelData.resting > 0 } }
-                                IconButton { symbol: "close"; size: 32; glyph: 14; color: Theme.text3; tip: qsTr("Remove")
-                                             onClicked: Api.post(`/api/keys/${prov.modelData.name}`, { remove: savedKey.index }, d => { page.info = d; page.lookUp() }) }
+                                ConfirmButton { idleSymbol: "close"; glyph: 14; label: qsTr("Remove"); again: qsTr("Click again to remove this key")
+                                                onConfirmed: Api.post(`/api/keys/${prov.modelData.name}`, { remove: savedKey.index }, d => { page.info = d; page.lookUp() }) }
                             }
                         }
                     }
@@ -271,8 +289,9 @@ ScrollPage {
                         }
                         Txt { text: modelData.email || qsTr("Google account"); weight: 500; Layout.fillWidth: true; elide: Text.ElideRight; wrapMode: Text.NoWrap }
                         Txt { kind: "small"; color: Theme.text3; visible: modelData.source === "opencode"; text: qsTr("from opencode") }
-                        IconButton { visible: modelData.source === "jarvis"; symbol: "trash"; color: Theme.text3; tip: qsTr("Sign out"); Layout.rightMargin: -8
-                                     onClicked: Api.post("/api/google/signout", { email: modelData.email }, d => { page.info = d; page.lookUp() }) }
+                        ConfirmButton { visible: modelData.source === "jarvis"; size: 36; glyph: 18; label: qsTr("Sign out"); Layout.rightMargin: -8
+                                        again: qsTr("Click again to sign out")
+                                        onConfirmed: Api.post("/api/google/signout", { email: modelData.email }, d => { page.info = d; page.lookUp() }) }
                     }
                 }
             }
@@ -323,7 +342,7 @@ ScrollPage {
                     Txt { anchors.centerIn: parent; text: row.index + 1; kind: "label"; color: row.index === 0 ? Theme.accent : Theme.text3
                           font.features: { "tnum": 1 } }
                 }
-                Select { Layout.preferredWidth: 150; model: page.options(page.usableBackends(list.job), row.parts[0]); value: row.parts[0]
+                Select { Layout.preferredWidth: 150; model: page.options(page.usableBackends(list.job), row.parts[0], Api.provider); value: row.parts[0]
                          onPicked: v => list.update(row.index, [v, page.modelsFor(v, list.job)[0] || row.parts[1],
                                                                  list.levels(v).includes(row.parts[2]) || list.job !== "speak" ? row.parts[2] : list.levels(v)[0]]) }
                 Select { Layout.fillWidth: true; visible: page.modelsFor(row.parts[0], list.job).length > 0

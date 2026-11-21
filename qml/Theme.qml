@@ -29,7 +29,7 @@ QtObject {
     readonly property color accentSoft: "#243fd8ff"
     readonly property color accentInk: "#04202b"    // text and icons on solid cyan
     readonly property color listen: "#7cf0ff"
-    readonly property color speak: "#7cf0ff"
+    readonly property color speak: "#7cf0ff"        // (the rail's label says which it is: a violet of its own was asked away)
     readonly property color warm: "#ff9d3f"         // Jarvis's orange: working
     readonly property color warmSoft: "#24ff9d3f"
     readonly property color green: "#4ade80"
@@ -49,6 +49,7 @@ QtObject {
     readonly property int pageWidth: 920     // a page's content column at most
     readonly property int pad: 20            // inside a card
     readonly property int gap: 16            // between cards
+    readonly property int fileTile: 236      // a file attached to a message (Attachment), not a picture
     readonly property int fast: 140          // hover and press, ms
 
     function stateColor(s) {

@@ -4,7 +4,7 @@
 <context>
     <name>ActivityPage</name>
     <message numerus="yes">
-        <location filename="../qml/ActivityPage.qml" line="+168"/>
+        <location filename="../qml/ActivityPage.qml" line="+230"/>
         <source>Averaged over the last %n replies: from the end of what you said to Jarvis&apos;s first word.</source>
         <translation>
             <numerusform>Averaged over the last reply: from the end of what you said to Jarvis&apos;s first word.</numerusform>
@@ -15,7 +15,7 @@
 <context>
     <name>ChatsPage</name>
     <message numerus="yes">
-        <location filename="../qml/ChatsPage.qml" line="+33"/>
+        <location filename="../qml/ChatsPage.qml" line="+41"/>
         <source>%n min ago</source>
         <translation>
             <numerusform>%n min ago</numerusform>
@@ -31,7 +31,7 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+91"/>
+        <location line="+100"/>
         <source>%n message(s)</source>
         <translation>
             <numerusform>%n message</numerusform>
@@ -69,7 +69,7 @@
 <context>
     <name>HealthPage</name>
     <message numerus="yes">
-        <location filename="../qml/HealthPage.qml" line="+56"/>
+        <location filename="../qml/HealthPage.qml" line="+59"/>
         <source>%n thing(s) to fix</source>
         <translation>
             <numerusform>%n thing to fix</numerusform>
@@ -95,9 +95,29 @@
     </message>
 </context>
 <context>
+    <name>HomePage</name>
+    <message numerus="yes">
+        <location filename="../qml/Composer.qml" line="+199"/>
+        <location filename="../qml/HomePage.qml" line="+197"/>
+        <source>Stop all (%n)</source>
+        <translation>
+            <numerusform>Stop all (%n)</numerusform>
+            <numerusform>Stop all (%n)</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>MemoryPage</name>
     <message numerus="yes">
-        <location filename="../qml/MemoryPage.qml" line="+97"/>
+        <location filename="../qml/MemoryPage.qml" line="+50"/>
+        <source>Kept %n note(s) Jarvis added while you were editing</source>
+        <translation>
+            <numerusform>Kept %n note Jarvis added while you were editing</numerusform>
+            <numerusform>Kept %n notes Jarvis added while you were editing</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+172"/>
         <source>%n coming up.</source>
         <translation>
             <numerusform>%n coming up.</numerusform>
@@ -108,7 +128,7 @@
 <context>
     <name>ModelsPage</name>
     <message numerus="yes">
-        <location filename="../qml/ModelsPage.qml" line="+50"/>
+        <location filename="../qml/ModelsPage.qml" line="+52"/>
         <source>%1: %n model(s)</source>
         <translation>
             <numerusform>%1: %n model</numerusform>
@@ -116,18 +136,53 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+69"/>
-        <source>%1 · +%n fallback(s)</source>
+        <location line="+84"/>
+        <source>%1 · +%n backup(s)</source>
         <translation>
-            <numerusform>%1 · +%n fallback</numerusform>
-            <numerusform>%1 · +%n fallbacks</numerusform>
+            <numerusform>%1 · +%n backup</numerusform>
+            <numerusform>%1 · +%n backups</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>PeoplePage</name>
+    <message numerus="yes">
+        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <source>%n min ago</source>
+        <translation>
+            <numerusform>%n min ago</numerusform>
+            <numerusform>%n min ago</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n h ago</source>
+        <translation>
+            <numerusform>%n h ago</numerusform>
+            <numerusform>%n h ago</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n day(s) ago</source>
+        <translation>
+            <numerusform>%n day ago</numerusform>
+            <numerusform>%n days ago</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+256"/>
+        <source>Updated %1, from %n message(s)</source>
+        <translation>
+            <numerusform>Updated %1, from %n message</numerusform>
+            <numerusform>Updated %1, from %n messages</numerusform>
         </translation>
     </message>
 </context>
 <context>
     <name>PluginsPage</name>
     <message numerus="yes">
-        <location filename="../qml/PluginsPage.qml" line="+17"/>
+        <location filename="../qml/PluginsPage.qml" line="+19"/>
         <source>%n min</source>
         <translation>
             <numerusform>%n min</numerusform>
@@ -143,11 +198,49 @@
         </translation>
     </message>
     <message numerus="yes">
-        <location line="+41"/>
+        <location line="+47"/>
         <source>%n tool(s)</source>
         <translation>
             <numerusform>%n tool</numerusform>
             <numerusform>%n tools</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>SettingsPage</name>
+    <message numerus="yes">
+        <location filename="../qml/SettingsPage.qml" line="+562"/>
+        <source>%n day(s)</source>
+        <translation>
+            <numerusform>%n day</numerusform>
+            <numerusform>%n days</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>Today</name>
+    <message numerus="yes">
+        <location filename="../qml/Today.qml" line="+86"/>
+        <source>%n running</source>
+        <translation>
+            <numerusform>%n running</numerusform>
+            <numerusform>%n running</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+18"/>
+        <source>%n to do</source>
+        <translation>
+            <numerusform>%n to do</numerusform>
+            <numerusform>%n to do</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+186"/>
+        <source>+%n more</source>
+        <translation>
+            <numerusform>+%n more</numerusform>
+            <numerusform>+%n more</numerusform>
         </translation>
     </message>
 </context>

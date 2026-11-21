@@ -10,10 +10,12 @@ ScrollPage {
     hint: qsTr("Give Jarvis more tools with MCP servers: a web address, or a command that runs on this PC.")
     property var items: []
     property string kind: "url"
+    property string showing: ""  // the plugin whose tools are listed under it (a reload keeps it open)
 
     function load() { Api.get("/api/plugins", d => items = d) }
     function preset(name, how, value, more) { pname.text = name; kind = how; target.text = value; extra.text = more || "" }
     Component.onCompleted: load()
+    onVisibleChanged: if (visible) load()
     function wait(seconds) { return seconds >= 90 ? qsTr("%n min", "", Math.round(seconds / 60)) : qsTr("%n s", "", seconds) }
     Timer { interval: 4000; running: page.visible && page.items.some(p => p.status === "connecting" || p.status === "retrying")
             repeat: true; onTriggered: page.load() }
@@ -35,6 +37,7 @@ ScrollPage {
                     required property int index
                     property bool confirming: false
                     readonly property bool on: modelData.status !== "off"
+                    readonly property bool open: page.showing === modelData.name && modelData.tools.length > 0
                     Layout.fillWidth: true
                     spacing: 0
                     Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Theme.stroke; visible: row.index > 0 }
@@ -54,8 +57,18 @@ ScrollPage {
                             RowLayout {
                                 spacing: 8
                                 Txt { text: row.modelData.name; weight: 600; wrapMode: Text.NoWrap }
-                                Txt { kind: "label"; visible: row.modelData.status === "ready"; color: Theme.text3
-                                      text: qsTr("%n tool(s)", "", row.modelData.tools.length) }
+                                Chip {  // opens the list of its tools under it
+                                    visible: row.modelData.status === "ready"
+                                    enabled: row.modelData.tools.length > 0
+                                    implicitHeight: 26
+                                    symbol: row.open ? "chevron" : "chevron-right"
+                                    checked: row.open
+                                    text: qsTr("%n tool(s)", "", row.modelData.tools.length)
+                                    onClicked: page.showing = row.open ? "" : row.modelData.name
+                                    Accessible.role: Accessible.Button
+                                    Accessible.checkable: true
+                                    Accessible.checked: row.open
+                                }
                             }
                             RowLayout {
                                 Layout.fillWidth: true
@@ -99,6 +112,13 @@ ScrollPage {
                             Timer { id: undo; interval: 4000; onTriggered: row.confirming = false }
                         }
                     }
+                    Txt {  // its tools, as the server names them
+                        visible: row.open
+                        Layout.fillWidth: true
+                        Layout.leftMargin: 52; Layout.bottomMargin: 14
+                        kind: "small"; color: Theme.text2; lineHeight: 1.2
+                        text: row.modelData.tools.join(" · ")
+                    }
                 }
             }
         }
@@ -141,7 +161,7 @@ ScrollPage {
             Txt { kind: "label"; text: qsTr("Only these tools (optional)"); Layout.columnSpan: 2; Layout.topMargin: 8 }
             Txt { kind: "label"; text: page.kind === "url" ? qsTr("Headers (optional)") : qsTr("Environment (optional)"); Layout.topMargin: 8 }
             Field { id: only; Layout.columnSpan: 2; Layout.preferredWidth: 352; placeholderText: qsTr("comma-separated names") }
-            Field { id: extra; Layout.fillWidth: true
+            Field { id: extra; Layout.fillWidth: true; echoMode: TextInput.PasswordEchoOnEdit  // (a header often holds a token)
                     placeholderText: page.kind === "url" ? qsTr("JSON, e.g. {\"Authorization\": \"Bearer …\"}") : qsTr("JSON, e.g. {\"API_KEY\": \"…\"}") }
         }
         Pill {

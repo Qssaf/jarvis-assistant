@@ -57,7 +57,7 @@ LIVE_PROMPT = """You are J.A.R.V.I.S., the personal AI assistant of the user, wh
 - People: "what's up with Sam?", "what did I promise Maya?" → person (their page and latest messages); "Sam is my cousin", "Maya's exam is Friday" → person with note (until: the day it stops being true), not remember. "Who's waiting on me?" → waiting_on_me; "leave Sam off the list", "take Maya off the evening list" → waiting_on_me with skip. "Who am I seeing today?" → briefing (each meeting says who comes). "What was that site I had open yesterday?" → screen_history.
 - Messaging: [{click_on: "the chat named 'Sam Lee' in the left list"}, {expect: "the open conversation is with Sam Lee"}, {click_on: "the message box at the bottom"}, {type: "..."}, {keys: "Return"}, {look: "Is the message in the conversation?"}].
 - System info, files, volume, clipboard: run_command. One or two commands answer most questions; when they don't (logs to dig through, something to track down), hand it to do_task with what you tried instead of running more. {SYSTEM} Open apps with act launch, not run_command.
-- Pictures: make_image, show_image. Local files: read_file (a recording too: it writes it down, and a long one becomes notes). Time: set_reminder (repeat for "every day/weekday/week"), list_reminders, cancel_reminder.
+- Pictures: show_image puts one in the chat: a photo of something real by its name (search: "red panda", a place, a person), a picture file or address (source), or the screen as it is now (source: "screen"); make_image paints something invented. "Show me a picture of X" is one of the two at once, never a description instead. Local files: read_file (a recording too: it writes it down, and a long one becomes notes). Time: set_reminder (repeat for "every day/weekday/week"), list_reminders, cancel_reminder.
 - Something to do later rather than say ("every weekday at 8, check my inbox and tell me what matters", "at 6 send me the weather"): set_reminder with task: true and the whole instruction as text. "Keep an eye on X", "tell me if Y happens" over hours or days: checks add (watch is only for the screen right now).
 - "This"/"what I selected"/"what I copied" with summarise, translate, explain or rewrite: selection. Music: media (play_pause, next, previous, now_playing).
 - "Take notes of this lecture/meeting/video", or listening along to one ("listen to this meeting with me", "keep listening, I'm in a call", "just hear it, don't talk"): notes start at once, without asking anything first (the start would be lost). It records the microphone and what the PC plays together, so leave source out (pc: only a video's sound; room: only the room, when they ask for just that); the title is optional. Starting them turns your microphone off until the wake word (it also closes after a few seconds of quiet), so never promise to stay on or keep listening: notes is what hears all of it. "Stop the notes": notes stop. While they're being taken, "mark that", "bookmark this: the exam date", "that was a decision": notes mark at once (label: what they called it, in a few words; none for a bare "mark that"), then say only that it's marked.
@@ -231,7 +231,7 @@ def empty_promise(said, done, busy=False):
 
 
 # voice tools that change something when given one of these (people_rules with a rule), though they read otherwise
-CHANGING_ARGS = {"people_rules": ("rule",), "person": ("note", "forget"), "waiting_on_me": ("skip",), "drive_file": ("save_to",)}
+CHANGING_ARGS = {"people_rules": ("rule",), "person": ("note", "forget", "refresh"), "waiting_on_me": ("skip",), "drive_file": ("save_to",)}
 # ...and ones that only read with these actions, though they change things with their others (None: no action given).
 # Taken for a change, the list of tasks couldn't be asked for again after one was stopped
 READING_ACTIONS = {"jobs": ("list", None), "approvals": ("list", None), "checks": ("list",), "routine": ("list",), "notes": ("status",),
@@ -483,11 +483,36 @@ def work_line(name, args, result):
     return hidden(" ".join(f"{line} -> {got}".split()))[:WORK_LINE]
 
 
+def work_parts(line):
+    """A work log line taken apart for the Activity page: {name, args (without their braces), result, error}. The
+    arguments end at the first "} -> " (they could hold one themselves, though rarely: only the page reads this)."""
+    name, _, rest = line.partition(" ")
+    args = ""
+    if rest.startswith("{") and "} -> " in rest:
+        args, _, result = rest[1:].partition("} -> ")
+    else:
+        result = rest.partition("-> ")[2]
+    error = result.startswith("error: ")
+    return {"name": name, "args": args, "result": result[7:] if error else result, "error": error}
+
+
+def work_entries():
+    """The current conversation's work log for the Activity page, newest first, with each tool's label."""
+    out = []
+    for w in reversed(sessions.current.get("work", [])):
+        parts = work_parts(w["text"])
+        out.append({"who": w["who"], "time": w["time"], "label": tool_label(parts["name"]), **parts})
+    return out
+
+
 def log_work(who, name, args, result, sid=None):
     """A finished tool call into the conversation's work log (who: "voice" or "task"), for both models: recent_talk.
-    sid: the conversation the call was made in (the voice's); after New conversation its line isn't kept."""
+    sid: the conversation the call was made in (the voice's); after New conversation its line isn't kept. The window's
+    Activity page gets it at once (a "work" event)."""
     try:
-        sessions.log_work(who, work_line(name, args, result), sid)
+        line = work_line(name, args, result)
+        if sessions.log_work(who, line, sid):
+            emit("work", who=who, time=time.time(), label=tool_label(name), **work_parts(line))
     except Exception as e:  # the call itself went through: failing it here (its line, or the save) would have it made again
         print(f"[work] not logged for {name}: {e!r}"[:300], flush=True)
 
@@ -611,10 +636,51 @@ def typed_text(steps):
     return " ".join(" ".join(texts).split())
 
 
+REPLY_PICTURES = 4  # pictures shown from one answer, at most
+PICTURE_IN_TEXT = re.compile(r"[ \t]*!\[([^\]\n]*)\]\(\s*<?([^)\s>]+)>?(?:\s+\"[^\"\n]*\")?\s*\)[ \t]*\n?")
+
+
+OUTSIDE_PICTURE = re.compile(r"[a-z][a-z0-9+.-]+:|//|\\\\", re.I)  # an address or a network share (a drive letter isn't one)
+
+
+def reply_pictures(text):
+    """An answer without the picture files written into it ("![a chart](~/chart.png)", as every model writes one), and
+    those pictures as [(file, what it is)], REPLY_PICTURES at most: the chat shows them as pictures, and the words are
+    what's read out. A picture at an address stays in the words as a link: what an answer names is never fetched (text
+    read from a page or a message could have it name an address that carries something out)."""
+    found = []
+
+    def swap(m):
+        if OUTSIDE_PICTURE.match(m[2]):
+            return m[0].replace("![", "[", 1)
+        found.append((m[2], m[1].strip()))
+        return ""
+    words = PICTURE_IN_TEXT.sub(swap, text)
+    return (words.strip(), found[:REPLY_PICTURES]) if found or words != text else (text, [])
+
+
+def show_pictures(pictures):
+    """Puts an answer's picture files in the chat."""
+    import brain as brain_mod
+    for source, caption in pictures:
+        try:
+            out = brain_mod.tool_show_image(source, caption)
+        except Exception as e:  # (said in the chat: the answer promised a picture)
+            out = {"error": str(e)[:200]}
+        if out.get("error"):
+            emit("log", who="system", text=f"A picture in that answer couldn't be shown ({caption or source[:80]}): {out['error']}")
+
+
 def emit(kind, **data):
     if kind == "tool":  # tool use is part of the conversation record too
         kind, data = "log", {"who": "tool", "text": data["name"]}
     data["kind"] = kind
+    if kind == "log" and data.get("who") == "jarvis":  # pictures written into an answer are shown, not left as markup
+        data["text"], pictures = reply_pictures(str(data["text"]))
+        if pictures:
+            threading.Thread(target=show_pictures, args=(pictures,), daemon=True).start()
+        if not data["text"]:  # (the answer was only the picture)
+            return
     if kind == "log":
         data["text"] = store.hide_passphrase(data["text"])  # (the passphrase is never kept or shown: chat, sessions, log)
         sessions.add({k: v for k, v in data.items() if k != "kind"})
@@ -706,6 +772,7 @@ class Live:
         self.tools_wait = None  # the one-time wait for the account tools at startup
         self.skip_app_tools = False  # Gemini rejected an account tool's description: connect without them
         self.stopped = False   # the user pressed Stop: don't speak late results
+        self.tasks_stopped_at = 0.0  # when Stop last ended the tasks too (Escape stops only the talk)
         self.running = 0       # quick tool calls in progress
         self.quick_tasks = {}  # quick tool calls running -> their halt event (set: their acts stop at the next step)
         self.asked = {}  # (query tool, its arguments) -> [the task answering it, when it finished]: see _tool
@@ -828,12 +895,14 @@ class Live:
         else:
             self.wake()
 
-    def stop(self):
-        """Stop everything: speech, the running task, and listening. The voice session is hung up only if something
-        was under way; otherwise it stays connected (mic off), so the next "Hey Jarvis" is still instant."""
-        busy = (self.working or self.running or self.waiting or self.speaker.busy() or self.inflight is not None
+    def stop(self, talk=False):
+        """Stop everything: speech, the running tasks, and listening. talk (Escape): the speech, the request being
+        answered and listening only; tasks at work go on, as after Pause, and their answers are said when they come.
+        The voice session is hung up only if something was under way; otherwise it stays connected (mic off), so the
+        next "Hey Jarvis" is still instant."""
+        busy = (self.running or self.waiting or self.speaker.busy() or self.inflight is not None or not talk and self.working
                 or time.time() - self.voice_at < 2)  # (a half-said request mustn't run into the next one)
-        print(f"[voice] stop pressed{' (ending the session)' if busy else ''}", flush=True)
+        print(f"[voice] {'talk only: ' if talk else ''}stop pressed{' (ending the session)' if busy else ''}", flush=True)
         if self.inflight is None and not self.heard.strip():
             learner.judge(False)  # woken, then dismissed without a word: probably not them
         self.stopped = True
@@ -841,8 +910,10 @@ class Live:
         self.resume_handle, self.resume_next = None, False
         self.loop.call_soon_threadsafe(self._cancel_quick)  # (asyncio tasks are cancelled on their own loop)
         self.barge_in()
-        stopped = self.brain.interrupt()
-        self.backup.stop()
+        stopped = [] if talk else self.brain.interrupt()
+        if not talk:
+            self.tasks_stopped_at = time.time()
+        self.backup.stop(talk)
         self.mic = False
         if busy:
             self.close()
@@ -1644,7 +1715,7 @@ class Live:
     async def _task(self, s, fc):
         """One do_task, side by side with any others. Its answer is spoken when it's ready, unless it was stopped or the
         user is away from the PC (then it's kept for when they're back: held)."""
-        task = (fc.args or {}).get("task", "")
+        task, began = (fc.args or {}).get("task", ""), time.time()
         try:
             thoughts = (lambda t: emit("log", who="thinking", text=t)) if store.settings()["show_thinking"] else None
             progress = asyncio.create_task(self._progress())
@@ -1658,8 +1729,14 @@ class Live:
         finally:
             self.working -= 1
             self.doing.discard(task_key(fc))
-        stopped = self.stopped or result == "Stopped."
+        stopped = result == "Stopped." or self.stopped and self.tasks_stopped_at >= began
+        if self.stopped and not stopped:  # (Escape stopped the talk, not this task: its answer is news, as an announcement is)
+            self.stopped = False
         away = not stopped and not at_pc(self)
+        result, pictures = reply_pictures(result)  # (shown as pictures; the voice gets the words only)
+        if pictures:
+            threading.Thread(target=show_pictures, args=(pictures,), daemon=True).start()
+            result = result or "Here it is."
         shown = "http" in result or len(result) > LONG_RESULT or away  # links and long reports are shown, not read out
         if shown:
             emit("log", who="jarvis", text=result)
@@ -1793,6 +1870,7 @@ class Backup:
         self.since, self.end, self.wait = 0.0, 600, 8  # when listening began; end_of_speech_ms; follow_up_seconds
         self.jobs = set()  # requests being written down, answered or said: the notch shows thinking
         self.gen = 0  # Stop moves it on: what was on its way isn't said
+        self.dropped = 0  # ...nor shown, below this (Escape doesn't stop the agent at a request: what it did is shown)
         self.engaged = self.watching = False  # it has the notch; its watcher runs
 
     # ---- called from other threads
@@ -1836,8 +1914,10 @@ class Backup:
         """Say something on Jarvis's own (a reminder), or the agent's question to the user (listen: for their answer)."""
         self._start(self._say, text, self.gen, listen)
 
-    def stop(self):
+    def stop(self, talk=False):
         self.gen += 1
+        if not talk:
+            self.dropped = self.gen
         self.frames, self.live.mic = None, False
 
     # ---- on their own threads
@@ -1881,11 +1961,11 @@ class Backup:
             return
         thoughts = (lambda t: emit("log", who="thinking", text=t)) if store.settings()["show_thinking"] else None
         reply = live.brain.ask((HEARD_NOTE if frames is not None else "") + text, lambda n: emit("tool", name=n), thoughts, label=text)
-        if gen != self.gen or reply == "Stopped." or reply.strip().strip(".").upper() == "NOTHING":
+        if gen < self.dropped or reply == "Stopped." or reply.strip().strip(".").upper() == "NOTHING":
             return
         emit("log", who="jarvis", text=reply)
         live.last_said = reply
-        if not quiet:
+        if not quiet and gen == self.gen:
             self._say(reply, gen)
 
     def _say(self, text, gen, listen=False):
@@ -2251,6 +2331,38 @@ def learn_loop(brain):
         learn_pass(brain)
 
 
+PEOPLE_EVERY = 3600  # seconds between two passes over the people the user chats with (people_pass)
+
+
+def people_pass(brain, now=None):
+    """Gets to know the people the user chats with one to one: a profile of each one due (people.due_profiles: none yet,
+    or an old one with messages since), a couple a pass and one model request each, from the apps that can be read now.
+    A person whose turn failed (their chat couldn't be read, no model answered) is simply due again next pass."""
+    import brain as brain_mod, people
+    cfg = store.settings()
+    if not cfg["people_profiles"]:
+        return
+    readable = {app for app, why in brain.profile_sources().items() if not why}
+    for name in people.due_profiles(people.everyone(), now, cfg["people_refresh_days"], apps=readable):
+        try:
+            made = brain.profile(name)
+        except people.NotNow as e:
+            print(f"[people] couldn't get to know {name} now: {e}", flush=True)
+            continue
+        except (brain_mod.NoModel, brain_mod.BadRequest) as e:  # (the next one would get no answer either)
+            print(f"[people] no model answered for {name}, trying again next pass: {brain_mod.describe(e)[:200]}", flush=True)
+            return
+        print(f"[people] wrote a profile of {name} from {made['count']} messages" if made else
+              f"[people] {name}: too little to go on yet", flush=True)
+
+
+def people_loop(brain):
+    time.sleep(600)  # (WhatsApp and Vesktop are up by then)
+    while True:
+        people_pass(brain)
+        time.sleep(PEOPLE_EVERY)
+
+
 def presence_loop(live):
     while True:
         presence_pass(live)
@@ -2479,12 +2591,17 @@ def deadline_loop(brain):
 # ---------------------------------------------------------------- microphone + wake word
 # monitor mode: the reference is everything the speakers play (Jarvis, games, videos, calls), taken from the default
 # output's monitor, so none of it reaches the mic as if the user said it; Jarvis plays to the normal output
-EC_MODULE = ("{ library.name = aec/libspa-aec-webrtc audio.rate = 16000 audio.channels = 1 "
-             "aec.args = \"webrtc.noise_suppression=true webrtc.transient_suppression=true\" monitor.mode = true "
-             "capture.props = { node.name = jarvis-ec-capture node.passive = true } "
-             "source.props = { node.name = jarvis-ec-source node.description = \"Jarvis echo-cancelled mic\" "
-             "state.restore-props = false } "  # (WirePlumber would bring back a mute from a "mute all mics" in an earlier run)
-             "sink.props = { node.name = jarvis-ec-reference node.passive = true } }")
+def ec_module(mic=""):
+    """The echo canceller's arguments; mic: the microphone it listens to (system.mic_choice), pinned there so it never
+    sits on a Bluetooth headset's mic (which keeps the headset in call quality); "" for the default one. It's chosen
+    when the canceller is loaded: a default mic changed later is followed from the next start."""
+    pinned = f'target.object = "{mic}" node.dont-move = true ' if mic else ""
+    return ("{ library.name = aec/libspa-aec-webrtc audio.rate = 16000 audio.channels = 1 "
+            "aec.args = \"webrtc.noise_suppression=true webrtc.transient_suppression=true\" monitor.mode = true "
+            f"capture.props = {{ node.name = jarvis-ec-capture node.passive = true {pinned}}} "
+            "source.props = { node.name = jarvis-ec-source node.description = \"Jarvis echo-cancelled mic\" "
+            "state.restore-props = false } "  # (WirePlumber would bring back a mute from a "mute all mics" in an earlier run)
+            "sink.props = { node.name = jarvis-ec-reference node.passive = true } }")
 
 
 def start_echo_cancel():
@@ -2502,7 +2619,7 @@ def start_echo_cancel():
         if "jarvis-ec-source" not in subprocess.run(["pw-cli", "ls", "Node"], capture_output=True, text=True).stdout:
             break  # it falls back to the raw microphone, which the echo-cancelled mic gate then chops up
         time.sleep(0.1)
-    proc = subprocess.Popen(["pw-cli", "-m", "load-module", "libpipewire-module-echo-cancel", EC_MODULE],
+    proc = subprocess.Popen(["pw-cli", "-m", "load-module", "libpipewire-module-echo-cancel", ec_module(system.mic_choice())],
                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     for _ in range(40):
         if "jarvis-ec-source" in subprocess.run(["pw-cli", "ls", "Node"], capture_output=True, text=True).stdout:
@@ -2791,7 +2908,7 @@ def voice_loop(live, mic_target=None):
         if mic_target and source and source != mic_target and live.speaker.echo_cancelled:
             live.speaker.echo_cancelled = False  # full duplex on a raw mic: Jarvis would hear and answer itself
             print("[voice] not on the echo canceller: the mic stays off while Jarvis talks", flush=True)
-    for i, f in enumerate(system.mic_frames(mic_target, on_source=heard_from)):
+    for i, f in enumerate(system.mic_frames(mic_target, on_source=heard_from, pick=system.mic_choice)):
         f = level(f, own_voice=time.time() <= live.speaker.until + 0.5)
         if abs(np.log10(level.gain / logged_gain)) > 0.3:  # (a change of more than ~6 dB)
             logged_gain = level.gain
@@ -2833,6 +2950,15 @@ FILE_CORS = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Private-N
              "Access-Control-Allow-Methods": "GET"}
 
 
+def action_label(slug):
+    """An account action in plain words: GMAIL_BATCH_MODIFY_MESSAGES -> "Gmail: batch modify messages"."""
+    import brain as brain_mod
+    app = brain_mod.toolkit_of(slug)
+    name = dict(brain_mod.WORKSPACES).get(app) or app.replace("_", " ").title()
+    rest = slug[len(app) + 1:] if slug.upper().startswith(app.upper() + "_") else ""
+    return f"{name}: {rest.replace('_', ' ').lower()}" if rest else name
+
+
 def api_get(path, brain):
     if path == "/api/sessions":
         return {"current": sessions.current["id"], "sessions": sessions.list()}
@@ -2847,6 +2973,10 @@ def api_get(path, brain):
         return models_info(brain)
     if path == "/api/todo":  # Home's To do card: the next 7 days
         return brain.todo_items(7)
+    if path == "/api/people":  # the People page: everyone with a page, with all of it (names never go in a URL)
+        import people
+        cfg = store.settings()
+        return {"people": people.listing(), "profiles": cfg["people_profiles"], "refresh_days": cfg["people_refresh_days"]}
     if m := re.fullmatch(r"/api/cost(?:\?days=(\d+))?", path):  # the Cost page: today, 7 or 30 days
         import brain as brain_mod
         return brain_mod.cost_report(int(m[1]) if m[1] in ("7", "30") else 1)
@@ -2860,6 +2990,10 @@ def api_get(path, brain):
         return brain.workspaces()
     if path == "/api/memory":
         return {"memory": store.memory()}
+    if path == "/api/approvals":  # (Accounts: what the user said not to ask before, newest first)
+        import brain as brain_mod
+        return sorted(({"tool": slug, "app": brain_mod.toolkit_of(slug), "label": action_label(slug), "said": a.get("said", ""),
+                        "at": a.get("at", 0)} for slug, a in store.approvals().items()), key=lambda a: -a["at"])
     if path == "/api/reminders":
         return [{**r, "when": time.strftime("%a %d %b, %H:%M", time.localtime(r["at"])) + (f" · {r['repeat']}" if r.get("repeat") else "")
                  + (" · paused" if r.get("off") else ""), "edit_at": time.strftime("%Y-%m-%d %H:%M", time.localtime(r["at"]))}
@@ -2876,6 +3010,8 @@ def api_get(path, brain):
                 "every": s["checks_every"], "last": last}
     if path == "/api/conversation":
         return sessions.current
+    if path == "/api/work":  # (Activity: what each tool call did)
+        return work_entries()
     if path.startswith("/api/search?q="):
         return sessions.search(requests.utils.unquote(path.split("=", 1)[1]))
     if path == "/api/system":
@@ -2913,7 +3049,9 @@ def api_get(path, brain):
         import brain as brain_mod
         return {"weather": weather(), "wake": store.wake_phrase(), "reminders": api_get("/api/reminders", brain)[:4],
                 "remembered": len([l for l in store.memory().splitlines() if l.strip()]),
-                "tools": len(brain_mod.TOOLS) + sum(len(p["tools"]) for p in brain.plugin_status()) + len(brain.app_tools)}
+                "tools": len(brain_mod.TOOLS) + sum(len(p["tools"]) for p in brain.plugin_status()) + len(brain.app_tools),
+                # the accounts connected (Home's ideas), as the account tools last loaded; None until they have
+                "connected": sorted(brain.connected) if brain.tools_ready.is_set() else None}
     raise KeyError(path)
 
 
@@ -3273,6 +3411,40 @@ EXTERNAL_NOTE = ("[Sent by another program on this PC (a script or an AI agent),
                  "short sentences as plain text. Changes that need the user's yes can't be made: say what you'd do instead.] ")
 
 
+def people_post(path, data, brain):
+    """The People page: a note saved (with old: edited in place) or deleted, a profile written again now (a model
+    request: Backend.request runs it off the window's thread) or forgotten, a person forgotten."""
+    import brain as brain_mod, people
+    name = " ".join(str(data.get("name", "")).split())
+    if not name:
+        raise ValueError("say who")
+    if path == "/api/people/note":
+        until = str(data.get("until") or "").strip()
+        try:
+            end = time.mktime(time.strptime(until, "%Y-%m-%d")) + 86399 if until else 0
+        except ValueError:
+            raise ValueError("the end date is a day, like 2026-12-31") from None
+        return {"name": people.set_note(name, str(data.get("text", "")), end, str(data.get("old") or ""))}
+    if path == "/api/people/note/delete":
+        return {"deleted": people.drop_note(name, str(data.get("text", "")))}
+    if path == "/api/people/refresh":
+        try:
+            made = brain.profile(name)
+        except people.NotNow as e:
+            raise ValueError(str(e)) from None
+        except (brain_mod.NoModel, brain_mod.BadRequest) as e:
+            raise ValueError(f"no model answered ({brain_mod.describe(e)[:160]}): try again in a while") from None
+        key = people.known(name)
+        return {"outcome": "updated" if made else "few", "person": next((p for p in people.listing() if p["name"] == key), None)}
+    if path == "/api/people/profile/forget":  # (and not written again by itself: only Refresh does)
+        if not people.mark_looked(name, time.time(), "forgot"):
+            raise KeyError(name)
+        return {"forgot": True}
+    if path == "/api/people/forget":  # (the whole page, with its promises' reminders)
+        return {"forgot": people.drop(name, "")}
+    raise KeyError(path)
+
+
 def api_post(path, data, live, brain):
     if path == "/api/task" and str(data.get("text", "")).strip():  # `jarvis --task` and the MCP server (`jarvis --mcp`)
         text = data["text"].strip()
@@ -3286,8 +3458,8 @@ def api_post(path, data, live, brain):
     elif path == "/api/ask" and str(data.get("text", "")).strip():
         live.barge_in()
         live.type(data["text"].strip())
-    elif path == "/api/stop":
-        live.stop()
+    elif path == "/api/stop":  # (talk: Escape, which leaves the tasks at work)
+        live.stop(talk=bool(data.get("talk")))
     elif m := re.fullmatch(r"/api/jobs/(\d+)/stop", path):  # one task only: the others carry on
         import brain as brain_mod
         brain_mod.tool_jobs("stop", m[1])
@@ -3378,13 +3550,22 @@ def api_post(path, data, live, brain):
         store.set_secret(m[1], "")
         brain.forget_backend(m[1])
         return models_info(brain)
-    elif path == "/api/memory":
-        store.set_memory(str(data.get("memory", "")))
+    elif path == "/api/memory" and "line" in data:  # (a row of the page: that one line, on the memory as it is now)
+        line = data["line"]
+        if not isinstance(line, dict):
+            raise ValueError("say which note")
+        old, new = (None if line.get(k) is None else str(line[k]) for k in ("old", "new"))
+        return {"memory": store.edit_memory_line(old, new)}
+    elif path == "/api/memory":  # (was: the text the page loaded)
+        text, merged = store.save_memory(str(data.get("memory", "")), None if data.get("was") is None else str(data["was"]))
+        return {"memory": text, "merged": merged}
     elif m := re.fullmatch(r"/api/reminders/(\w+)/cancel", path):
         store.cancel_reminder(m[1])
     elif path == "/api/promises/done":  # (Home's Done on a promise: it ends for good, with its reminder)
         import people
         return {"done": people.done(str(data.get("to", "")), str(data.get("what", "")))}
+    elif path.startswith("/api/people/"):  # the People page's changes, the person named in the body
+        return people_post(path, data, brain)
     elif path == "/api/reminders":  # (the window's editor: a new one, or id's changed)
         import brain as brain_mod
         rid = str(data.get("id") or "")
@@ -3446,6 +3627,13 @@ def api_post(path, data, live, brain):
         store.delete_routine(str(data.get("name", "")))
     elif path == "/api/routines":
         store.save_routine(data.get("name", ""), data.get("steps", ""), data.get("old", ""), data.get("new") is True)
+    elif path == "/api/approvals/revoke":  # (Accounts' Ask again; allowing one stays the voice's, with its checks)
+        slug = str(data.get("tool", "")).strip().upper()
+        if not slug:
+            raise ValueError("say which action")
+        if slug in store.approvals():  # (clicked twice, or taken back by voice meanwhile: nothing more to do)
+            brain.approvals("remove", slug)
+        return api_get("/api/approvals", brain)
     elif path == "/api/checks/test":  # (Memory's Try now: that one check, at once)
         return try_check(live, data.get("text", ""))
     elif path == "/api/checks":  # (add, change, pause or, with no text, delete one)
@@ -3595,7 +3783,7 @@ def make_notch(live):
     from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPainterPath, QPen, QRadialGradient
     from PySide6.QtWidgets import QApplication, QWidget
 
-    colors = {"idle": "#3fd8ff", "listening": "#7cf0ff", "speaking": "#7cf0ff", "thinking": "#ff9d3f"}  # the app's cyan and orange
+    colors = {"idle": "#3fd8ff", "listening": "#7cf0ff", "speaking": "#7cf0ff", "thinking": "#ff9d3f"}  # Theme.qml's state colours
 
     def labels():  # (asked each time: the window's language can change)
         return {"listening": QCoreApplication.translate("Notch", "LISTENING"), "speaking": QCoreApplication.translate("Notch", "SPEAKING"),
@@ -3721,8 +3909,10 @@ def make_notch(live):
 def qt_args():
     """Jarvis's own windows go through XWayland when there is one (the notch can sit exactly at the top centre). Said in
     Qt's arguments, never the environment: every app and command Jarvis started inherited it, and opened as an X11 app
-    too (blurry or the wrong size with fractional scaling)."""
-    return ["jarvis", "-platform", "xcb"] if os.environ.get("DISPLAY") else ["jarvis"]
+    too (blurry or the wrong size with fractional scaling). File dialogs go through xdg-desktop-portal on Linux, so the
+    desktop shows its own (PySide6's Qt has no KDE theme: Qt's plain dialog otherwise); without a portal they fall back."""
+    args = ["jarvis", "-platform", "xcb"] if os.environ.get("DISPLAY") else ["jarvis"]
+    return args + ["-platformtheme", "xdgdesktopportal"] if system.portal_theme() else args
 
 
 def run_tray(live, show=False):
@@ -3931,8 +4121,10 @@ def main():
     background(tidy_loop, restart=True)
     background(presence_loop, live, restart=True)
     background(learn_loop, brain, restart=True)
+    background(people_loop, brain, restart=True)
     brain_mod.job_done[0] = lambda text: job_done(live, text)
     brain_mod.app_version[0] = VERSION
+    system.headset_mic[0] = lambda: store.settings()["bluetooth_mic"]
     import remote
     chat = lambda who, text: emit("log", who=who, text=text)  # (tasks from the phone and their answers)
     remote_ref[0] = remote.Telegram(brain, notify=lambda text: emit("log", who="system", text=text), chat=chat)

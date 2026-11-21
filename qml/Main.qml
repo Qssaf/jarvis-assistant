@@ -36,7 +36,8 @@ Window {
     Shortcut { sequence: "Ctrl+1"; onActivated: win.go("home") }
     Shortcut { sequence: "Ctrl+2"; onActivated: win.go("chats") }
     Shortcut { sequence: "Ctrl+,"; onActivated: win.go("settings") }
-    Shortcut { sequence: "Escape"; enabled: Backend.state !== "idle"; onActivated: Backend.stop() }
+    // (Escape stops the talk only: the tasks at work go on, unlike the Stop buttons)
+    Shortcut { sequence: "Escape"; enabled: Backend.state !== "idle"; onActivated: Api.post("/api/stop", { talk: true }) }
 
     onPageChanged: pageIn.restart()
 
@@ -100,19 +101,40 @@ Window {
                 spacing: 2
 
                 Orb {
+                    id: railOrb
+                    readonly property string does: Backend.listening ? qsTranslate("Composer", "Pause listening") : qsTranslate("Composer", "Talk to Jarvis")
                     Layout.alignment: Qt.AlignHCenter
                     Layout.preferredWidth: 48; Layout.preferredHeight: 48
                     mode: Backend.state
                     level: Backend.level
                     rings: false
-                    TapHandler { onTapped: Backend.talk() }
-                    HoverHandler { cursorShape: Qt.PointingHandCursor }
+                    Accessible.role: Accessible.Button
+                    Accessible.name: does
+                    TapHandler { onTapped: Backend.listening ? Backend.pause() : Backend.talk() }  // (as the message box's mic)
+                    HoverHandler { id: orbHover; cursorShape: Qt.PointingHandCursor }
+                    Tip { text: railOrb.does; visible: orbHover.hovered }
+                }
+                Txt {  // what Jarvis is doing, in its colour: nothing while it only waits for the wake word
+                    objectName: "railState"
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredWidth: 70
+                    Layout.preferredHeight: Theme.px(11) + 4  // (kept when it's empty: the rail doesn't jump)
+                    Layout.topMargin: 2
+                    kind: "label"
+                    font.pixelSize: Theme.px(11)
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    wrapMode: Text.NoWrap
+                    fontSizeMode: Text.HorizontalFit; minimumPixelSize: Theme.px(8)  // (long words shrink)
+                    color: Theme.stateColor(Backend.state)
+                    text: Backend.state === "idle" ? "" : Theme.stateName(Backend.state)
+                    Behavior on color { ColorAnimation { duration: 450; easing.type: Easing.OutCubic } }
                 }
                 Rectangle { Layout.alignment: Qt.AlignHCenter; Layout.preferredWidth: 28; Layout.preferredHeight: 1
-                            Layout.topMargin: 10; Layout.bottomMargin: 10; color: Theme.stroke }
+                            Layout.topMargin: 8; Layout.bottomMargin: 10; color: Theme.stroke }
 
                 Repeater {
-                    model: [["home", qsTr("Home"), "home"], ["chats", qsTr("Chats"), "chats"], ["activity", qsTr("Activity"), "activity"],
+                    model: [["home", qsTr("Home"), "home"], ["chats", qsTr("Chats"), "chats"], ["people", qsTr("People"), "people"], ["activity", qsTr("Activity"), "activity"],
                             ["accounts", qsTr("Accounts"), "accounts"], ["plugins", qsTr("Plugins"), "plugins"], ["models", qsTr("Models"), "cpu"],
                             ["memory", qsTr("Memory"), "memory"], ["cost", qsTr("Cost"), "coin"], ["health", qsTr("Health"), "pulse"]]
                     RailButton { required property var modelData; key: modelData[0]; label: modelData[1]; symbol: modelData[2] }
@@ -137,17 +159,20 @@ Window {
                 }
                 StackLayout {
                     anchors.fill: parent
-                    currentIndex: ["home", "chats", "activity", "accounts", "plugins", "models", "memory", "settings", "health", "cost"].indexOf(win.page)
-                    HomePage { id: home }
+                    currentIndex: ["home", "chats", "activity", "accounts", "plugins", "models", "memory", "settings", "health", "cost", "people"].indexOf(win.page)
+                    HomePage { id: home; onGoTo: key => win.go(key) }
                     Loader { active: win.page === "chats" || item; sourceComponent: ChatsPage { onOpened: { home.reload(); win.go("home") } } }
                     Loader { active: win.page === "activity" || item; sourceComponent: ActivityPage {} }
                     Loader { active: win.page === "accounts" || item; sourceComponent: AccountsPage {} }
                     Loader { active: win.page === "plugins" || item; sourceComponent: PluginsPage {} }
                     Loader { active: win.page === "models" || item; sourceComponent: ModelsPage {} }
                     Loader { active: win.page === "memory" || item; sourceComponent: MemoryPage {} }
-                    Loader { active: win.page === "settings" || item; sourceComponent: SettingsPage { onSetupAgain: win.needsSetup = true } }
+                    Loader { id: settingsView; active: win.page === "settings" || item; sourceComponent: SettingsPage { onSetupAgain: win.needsSetup = true; onGoTo: key => win.go(key) } }
                     Loader { active: win.page === "health" || item; sourceComponent: HealthPage { onGoTo: key => win.go(key) } }
                     Loader { active: win.page === "cost" || item; sourceComponent: CostPage {} }
+                    // (People's "Turn them on in Settings": the tab with its switch)
+                    Loader { active: win.page === "people" || item; sourceComponent: PeoplePage { onGoTo: key => {
+                        win.go(key); if (key === "settings" && settingsView.item) settingsView.item.pick("messages") } } }
                 }
             }
         }
@@ -196,7 +221,11 @@ Window {
             sourceComponent: SetupWizard { onFinished: goTo => { win.needsSetup = false; if (goTo) win.go(goTo) } }
         }
 
-        Toast { id: toast; z: 6; anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 28 }
+        Item {  // the toast, centred on the page beside the rail (a wide one, centred on the window, ran over the rail)
+            anchors { left: win.needsSetup ? parent.left : rail.right; right: parent.right; top: parent.top; bottom: parent.bottom }
+            z: 6
+            Toast { id: toast; anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 28 }
+        }
 
         Rectangle {  // the window's edge, over everything
             anchors.fill: parent
@@ -219,8 +248,11 @@ Window {
         Layout.preferredWidth: 64
         Layout.preferredHeight: 56
         Layout.maximumHeight: 56
-        Layout.minimumHeight: 44
-        Layout.fillHeight: true  // (so it can shrink in a short window)
+        Layout.minimumHeight: 34
+        Layout.fillHeight: true  // (so it can shrink in a short window: under its label's room, the icon alone and a tip)
+        readonly property bool roomy: height >= 20 + 4 + railLabel.implicitHeight + 4
+        Accessible.name: label
+        Tip { text: rb.label; visible: !rb.roomy && (rb.hovered || rb.visualFocus) }
         hoverEnabled: true
         focusPolicy: Qt.TabFocus  // (Tab reaches it; a click leaves the typing where it was)
         Keys.onReturnPressed: click()
@@ -238,7 +270,7 @@ Window {
                 spacing: 4
                 Icon { anchors.horizontalCenter: parent.horizontalCenter; name: rb.symbol; size: 20
                        color: rb.current ? Theme.accent : rb.hovered ? Theme.text : Theme.text2 }
-                Text { anchors.horizontalCenter: parent.horizontalCenter; text: rb.label; font.family: Theme.font; font.pixelSize: Theme.px(11)
+                Text { id: railLabel; visible: rb.roomy; anchors.horizontalCenter: parent.horizontalCenter; text: rb.label; font.family: Theme.font; font.pixelSize: Theme.px(11)
                        width: 70; horizontalAlignment: Text.AlignHCenter; fontSizeMode: Text.HorizontalFit; minimumPixelSize: Theme.px(8)  // (long words shrink)
                        font.variableAxes: { "wght": rb.current ? 600 : 500 }; color: rb.current ? Theme.text : rb.hovered ? Theme.text : Theme.text2 }
             }

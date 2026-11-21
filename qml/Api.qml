@@ -15,6 +15,8 @@ QtObject {
     }
     function get(path, done, failed) { call(path, undefined, done, failed) }
     function post(path, data, done, failed) { call(path, data || {}, done, failed) }
+    // A model provider as the user knows it ("aistudio" is the API's word for their Gemini key); others by their name.
+    function provider(id) { return id === "aistudio" ? qsTr("Gemini API key") : id === "antigravity" ? qsTr("Google sign-in") : id }
 
     readonly property Connections replies: Connections {
         target: Backend

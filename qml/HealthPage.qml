@@ -12,9 +12,11 @@ ScrollPage {
     property var checks: []
     property var usage: ({})
     property bool running: false
+    property real ranAt: 0  // when the checks last started (they take a screenshot: not every time the page shows)
 
     function run() {
         running = true
+        ranAt = Date.now()
         Api.get("/api/health", d => { checks = d.checks; usage = d.usage; running = false },
                 e => { running = false; Backend.toast(e.error, true) })
     }
@@ -25,6 +27,7 @@ ScrollPage {
                   models: qsTr("Models"), memory: qsTr("Memory"), settings: qsTr("Settings"), health: qsTr("Health") })[key] || key
     }
     Component.onCompleted: run()
+    onVisibleChanged: if (visible && !running && Date.now() - ranAt > 60000) run()
 
     actions: [
         Pill { text: qsTr("Copy a report"); symbol: "copy"
@@ -113,7 +116,7 @@ ScrollPage {
                         spacing: 8
                         Txt { text: parts.slice(1).join(" ") || modelData; weight: 500; wrapMode: Text.NoWrap; elide: Text.ElideRight
                               Layout.fillWidth: parts.length < 2 }
-                        Txt { kind: "small"; text: parts[0]; color: Theme.text3; visible: parts.length > 1; Layout.fillWidth: true }
+                        Txt { kind: "small"; text: Api.provider(parts[0]); color: Theme.text3; visible: parts.length > 1; Layout.fillWidth: true }
                         Txt { text: page.usage[modelData]; weight: 600; font.features: { "tnum": 1 } }
                         Txt { kind: "small"; text: qsTr("request(s)", "after a number", page.usage[modelData]) }
                     }

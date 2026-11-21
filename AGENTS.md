@@ -35,7 +35,8 @@ Jarvis: a voice assistant for the PC. Python 3.13 (core), Qt Quick (window), Go 
 - `brain.py` is the agent (`Brain.ask`; its prompt is `prompt.md`), every tool (`TOOLS`), model backends, accounts and
   plugins. It never imports `jarvis.py`: what a tool needs from the app is a module-level one-item list `main()` fills.
 - `system.py`: everything OS-specific, and nowhere else. `store.py`: settings, memory, reminders, keys.
-  `window.py` + `qml/`: the window.
+  `window.py` + `qml/`: the window. A new setting in `store.DEFAULT_SETTINGS` lands with its control in
+  `qml/SettingsPage.qml` (a test fails otherwise), and a delete that can't be undone uses `qml/ConfirmButton.qml`.
 - A new tool goes in `TOOLS`, in `LIVE_TOOLS` if the voice runs it itself (`QUERY_TOOLS` if its result must be
   spoken) and in `TOOL_LABELS`. One that changes something is simulated in `evals/voice_eval.py` first: that eval
   runs real tools.
@@ -63,6 +64,7 @@ They spend the user's model quota and are run by hand, never in CI.
 EVAL_RUNS=3 EVAL_OUT=/tmp/a.json .venv/bin/python evals/agent_eval.py [case id or kind ...]  # Brain.ask, simulated tools
 EVAL_RUNS=3 EVAL_OUT=/tmp/v.json .venv/bin/python evals/voice_eval.py [case-prefix ...]      # one Live session a case
 .venv/bin/python evals/learn_eval.py [case ...]   # made-up talks through Brain.learn's prompt (what's kept in memory)
+.venv/bin/python evals/people_eval.py [case ...]  # made-up chats through Brain.profile_of (people.PROFILE_PROMPT: a person's profile)
 ```
 
 - A change to `prompt.md`, a tool's description or `LIVE_PROMPT`: run the cases it touches before and after, three

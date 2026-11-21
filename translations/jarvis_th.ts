@@ -4,7 +4,7 @@
 <context>
     <name>AccountsPage</name>
     <message>
-        <location filename="../qml/AccountsPage.qml" line="+9"/>
+        <location filename="../qml/AccountsPage.qml" line="+10"/>
         <source>Accounts</source>
         <translation>บัญชี</translation>
     </message>
@@ -14,7 +14,22 @@
         <translation>เชื่อมต่อบัญชีของคุณเพื่อให้ Jarvis อ่านและจัดการแทนได้ คุณเลือกได้ว่าจะให้ทำอะไรกับแต่ละบัญชี</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+14"/>
+        <source>Jarvis will ask again before “%1”</source>
+        <translation>Jarvis จะถามอีกครั้งก่อน “%1”</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>%1 connected</source>
+        <translation>เชื่อมต่อ %1 แล้ว</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>%1 isn&apos;t connected yet: press Refresh once you&apos;ve signed in</source>
+        <translation>ยังไม่ได้เชื่อมต่อ %1: กด “รีเฟรช” หลังจากลงชื่อเข้าใช้แล้ว</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Refresh</source>
         <translation>รีเฟรช</translation>
     </message>
@@ -40,7 +55,7 @@
         <translation>เลือกสิ่งที่ Jarvis ทำได้กับแต่ละบัญชี</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+36"/>
         <source>Sign in again</source>
         <translation>ลงชื่อเข้าใช้อีกครั้ง</translation>
     </message>
@@ -50,7 +65,7 @@
         <translation>เปิดหน้าลงชื่อเข้าใช้ในเบราว์เซอร์แล้ว</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Click again to disconnect</source>
         <translation>คลิกอีกครั้งเพื่อยกเลิกการเชื่อมต่อ</translation>
     </message>
@@ -86,6 +101,31 @@
     </message>
     <message>
         <location line="+11"/>
+        <source>Jarvis no longer asks before…</source>
+        <translation>Jarvis ไม่ถามก่อนแล้วสำหรับ…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>You told Jarvis it may do these without asking first. Ask again takes that back.</source>
+        <translation>คุณบอก Jarvis ว่าทำสิ่งเหล่านี้ได้โดยไม่ต้องถามก่อน “ถามอีกครั้ง” จะยกเลิกการอนุญาตนั้น</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>You said “%1” on %2</source>
+        <translation>คุณพูดว่า “%1” เมื่อ %2</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Since %1</source>
+        <translation>ตั้งแต่ %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Ask again</source>
+        <translation>ถามอีกครั้ง</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>More accounts</source>
         <translation>บัญชีอื่นๆ</translation>
     </message>
@@ -100,7 +140,12 @@
         <translation>เลือกบัญชีเพื่อลงชื่อเข้าใช้ผ่านเบราว์เซอร์ แล้วกด “รีเฟรช”</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
+        <source>%1: waiting for sign-in…</source>
+        <translation>%1: กำลังรอการลงชื่อเข้าใช้…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Finish signing in in your browser, then press Refresh</source>
         <translation>ลงชื่อเข้าใช้ในเบราว์เซอร์ให้เสร็จ แล้วกด “รีเฟรช”</translation>
     </message>
@@ -113,7 +158,7 @@
 <context>
     <name>ActivityPage</name>
     <message>
-        <location filename="../qml/ActivityPage.qml" line="+43"/>
+        <location filename="../qml/ActivityPage.qml" line="+79"/>
         <source>Activity</source>
         <translation>กิจกรรม</translation>
     </message>
@@ -123,14 +168,60 @@
         <translation>ทุกขั้นตอนที่ Jarvis ทำในการสนทนานี้ แสดงแบบเรียลไทม์</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>All</source>
+        <translation>ทั้งหมด</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Errors</source>
+        <translation>ข้อผิดพลาด</translation>
+    </message>
+    <message>
+        <location line="+0"/>
         <location line="+86"/>
+        <source>Voice</source>
+        <translation>เสียง</translation>
+    </message>
+    <message>
+        <location line="-86"/>
+        <source>Tasks</source>
+        <translation>งาน</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Failed: %1</source>
+        <translation>ล้มเหลว: %1</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Task</source>
+        <translation>งาน</translation>
+    </message>
+    <message>
+        <location line="+19"/>
         <source>New steps appear at the top as Jarvis works</source>
         <translation>ขั้นตอนใหม่จะแสดงด้านบนขณะที่ Jarvis ทำงาน</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+16"/>
         <source>Nothing yet: ask Jarvis something</source>
         <translation>ยังไม่มีอะไร ลองถาม Jarvis ดู</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing has failed in this conversation</source>
+        <translation>ไม่มีอะไรล้มเหลวในการสนทนานี้</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The voice hasn&apos;t used a tool in this conversation yet</source>
+        <translation>ผู้ช่วยเสียงยังไม่ได้ใช้เครื่องมือใดในการสนทนานี้</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No background task has used a tool in this conversation yet</source>
+        <translation>ยังไม่มีงานเบื้องหลังใดใช้เครื่องมือในการสนทนานี้</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -154,23 +245,66 @@
 <context>
     <name>Api</name>
     <message>
-        <location filename="../qml/Api.qml" line="+27"/>
+        <location filename="../qml/Api.qml" line="+19"/>
+        <source>Gemini API key</source>
+        <translation>คีย์ API ของ Gemini</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Google sign-in</source>
+        <translation>ลงชื่อเข้าใช้ Google</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Something went wrong</source>
         <translation>เกิดข้อผิดพลาด</translation>
     </message>
 </context>
 <context>
+    <name>Attachment</name>
+    <message>
+        <location filename="../qml/Attachment.qml" line="+17"/>
+        <source>Moved or deleted</source>
+        <translation>ถูกย้ายหรือลบไปแล้ว</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Folder</source>
+        <translation>โฟลเดอร์</translation>
+    </message>
+    <message>
+        <location line="+71"/>
+        <source>Remove %1</source>
+        <translation>นำ %1 ออก</translation>
+    </message>
+</context>
+<context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+243"/>
+        <location filename="../window.py" line="+324"/>
         <source>Copied</source>
         <translation>คัดลอกแล้ว</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>Couldn&apos;t paste the picture: %1</source>
+        <translation>วางรูปภาพไม่ได้: %1</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>%1 isn&apos;t there any more</source>
+        <translation>%1 ไม่มีอยู่แล้ว</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Couldn&apos;t open %1: %2</source>
+        <translation>เปิด %1 ไม่ได้: %2</translation>
     </message>
 </context>
 <context>
     <name>ChatsPage</name>
     <message>
-        <location filename="../qml/ChatsPage.qml" line="+33"/>
+        <location filename="../qml/ChatsPage.qml" line="+41"/>
         <source>just now</source>
         <translation>เมื่อสักครู่</translation>
     </message>
@@ -209,7 +343,7 @@
         <translation>ค้นหาการสนทนา</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+57"/>
         <source>Now</source>
         <translation>ตอนนี้</translation>
     </message>
@@ -259,39 +393,94 @@
 <context>
     <name>Composer</name>
     <message>
-        <location filename="../qml/Composer.qml" line="+45"/>
-        <source>Remove</source>
-        <translation>นำออก</translation>
+        <location filename="../qml/Composer.qml" line="+49"/>
+        <source>Attach files for Jarvis</source>
+        <translation>แนบไฟล์ให้ Jarvis</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Attach files (or drop them here)</source>
-        <translation>แนบไฟล์ (หรือลากมาวางที่นี่)</translation>
+        <location line="+27"/>
+        <source>Drop to attach</source>
+        <translation>วางเพื่อแนบ</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+40"/>
+        <source>Attach files (or paste or drop them here)</source>
+        <translation>แนบไฟล์ (หรือวางจากคลิปบอร์ด หรือลากมาวางที่นี่)</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Ask Jarvis</source>
         <translation>ถาม Jarvis</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+34"/>
+        <source>Undo</source>
+        <translation>เลิกทำ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Redo</source>
+        <translation>ทำซ้ำ</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cut</source>
+        <translation>ตัด</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy</source>
+        <translation>คัดลอก</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Paste</source>
+        <translation>วาง</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Delete</source>
+        <translation>ลบ</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Select all</source>
+        <translation>เลือกทั้งหมด</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location filename="../qml/Main.qml" line="+105"/>
         <source>Pause listening</source>
         <translation>หยุดฟังชั่วคราว</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/Main.qml" line="+0"/>
         <source>Talk to Jarvis</source>
         <translation>คุยกับ Jarvis</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>Stop (Esc)</source>
         <translation>หยุด (Esc)</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-1"/>
         <source>Send (Enter)</source>
         <translation>ส่ง (Enter)</translation>
+    </message>
+</context>
+<context>
+    <name>ConfirmButton</name>
+    <message>
+        <location filename="../qml/ConfirmButton.qml" line="+7"/>
+        <source>Delete</source>
+        <translation>ลบ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Click again to delete</source>
+        <translation>คลิกอีกครั้งเพื่อลบ</translation>
     </message>
 </context>
 <context>
@@ -387,17 +576,17 @@
     <name>HealthPage</name>
     <message>
         <location filename="../qml/HealthPage.qml" line="+9"/>
-        <location line="+16"/>
+        <location line="+18"/>
         <source>Health</source>
         <translation>สถานะระบบ</translation>
     </message>
     <message>
-        <location line="-15"/>
+        <location line="-17"/>
         <source>Checks the key, mic, screen, accounts and models, and how to fix them.</source>
         <translation>ตรวจคีย์ ไมค์ หน้าจอ บัญชี และโมเดล พร้อมบอกวิธีแก้</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+16"/>
         <source>Home</source>
         <translation>หน้าหลัก</translation>
     </message>
@@ -437,7 +626,7 @@
         <translation>การตั้งค่า</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Copy a report</source>
         <translation>คัดลอกรายงาน</translation>
     </message>
@@ -517,12 +706,7 @@
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="../qml/HomePage.qml" line="+58"/>
-        <source>Attach files for Jarvis</source>
-        <translation>แนบไฟล์ให้ Jarvis</translation>
-    </message>
-    <message>
-        <location line="+36"/>
+        <location filename="../qml/HomePage.qml" line="+92"/>
         <source>Up late?</source>
         <translation>ดึกแล้ว ยังไม่นอนเหรอ?</translation>
     </message>
@@ -567,7 +751,7 @@
         <translation>กำลังจัดการ</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="-83"/>
         <source>Brief me</source>
         <translation>สรุปวันนี้ให้หน่อย</translation>
     </message>
@@ -577,7 +761,17 @@
         <translation>สภาพอากาศและตารางของคุณ</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Connect your accounts</source>
+        <translation>เชื่อมต่อบัญชีของคุณ</translation>
+    </message>
+    <message>
         <location line="+0"/>
+        <source>Gmail, Calendar, Classroom</source>
+        <translation>Gmail, Calendar, Classroom</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>What&apos;s due this week?</source>
         <translation>สัปดาห์นี้มีงานอะไรต้องส่งบ้าง?</translation>
     </message>
@@ -597,7 +791,7 @@
         <translation>กล่องจดหมาย Gmail ของคุณ</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+1"/>
         <source>What&apos;s on my screen?</source>
         <translation>บนหน้าจอมีอะไรอยู่?</translation>
     </message>
@@ -627,7 +821,7 @@
         <translation>สร้างรูปภาพ</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+99"/>
         <source>New chat</source>
         <translation>แชทใหม่</translation>
     </message>
@@ -642,25 +836,29 @@
         <translation>เสียงสำรอง (หน้าโมเดล) ตอบแทน Gemini Live</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+53"/>
         <source>Working on it…</source>
         <translation>กำลังดำเนินการ…</translation>
     </message>
-    <message>
-        <location line="+5"/>
-        <source>Stop</source>
-        <translation>หยุด</translation>
+    <message numerus="yes">
+        <location filename="../qml/Composer.qml" line="+0"/>
+        <location filename="../qml/HomePage.qml" line="+8"/>
+        <source>Stop all (%n)</source>
+        <translation>
+            <numerusform>หยุดทั้งหมด (%n)</numerusform>
+        </translation>
     </message>
     <message>
-        <location line="+27"/>
-        <source>Drop to attach</source>
-        <translation>วางเพื่อแนบ</translation>
+        <location line="+1"/>
+        <location filename="../qml/HomePage.qml" line="+0"/>
+        <source>Stop</source>
+        <translation>หยุด</translation>
     </message>
 </context>
 <context>
     <name>Main</name>
     <message>
-        <location filename="../qml/Main.qml" line="+115"/>
+        <location filename="../qml/Main.qml" line="+32"/>
         <source>Home</source>
         <translation>หน้าหลัก</translation>
     </message>
@@ -675,22 +873,31 @@
         <translation>กิจกรรม</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>People</source>
+        <translation>ผู้คน</translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <location filename="../qml/SettingsPage.qml" line="+831"/>
         <source>Accounts</source>
         <translation>บัญชี</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/SettingsPage.qml" line="+2"/>
         <source>Plugins</source>
         <translation>ปลั๊กอิน</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/SettingsPage.qml" line="-6"/>
         <source>Models</source>
         <translation>โมเดล</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/SettingsPage.qml" line="+2"/>
         <source>Memory</source>
         <translation>ความจำ</translation>
     </message>
@@ -710,7 +917,7 @@
         <translation>การตั้งค่า</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+66"/>
         <source>Minimise</source>
         <translation>ย่อเล็กสุด</translation>
     </message>
@@ -733,7 +940,7 @@
 <context>
     <name>MemoryPage</name>
     <message>
-        <location filename="../qml/MemoryPage.qml" line="+10"/>
+        <location filename="../qml/MemoryPage.qml" line="+11"/>
         <source>Memory</source>
         <translation>ความจำ</translation>
     </message>
@@ -743,23 +950,46 @@
         <translation>Jarvis อ่านส่วนนี้ก่อนทุกการสนทนา บอกว่า “จำไว้ว่า…” หรือแก้ไขที่นี่</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+126"/>
         <source>Saved</source>
         <translation>บันทึกแล้ว</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+226"/>
+        <location line="+291"/>
+        <location line="+37"/>
         <source>Save</source>
         <translation>บันทึก</translation>
     </message>
     <message>
-        <location line="-225"/>
+        <location line="-420"/>
         <source>Memory saved</source>
         <translation>บันทึกความจำแล้ว</translation>
     </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>Kept %n note(s) Jarvis added while you were editing</source>
+        <translation>
+            <numerusform>เก็บบันทึก %n รายการที่ Jarvis เพิ่มระหว่างที่คุณแก้ไขไว้แล้ว</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+5"/>
+        <location line="+40"/>
+        <source>Note added</source>
+        <translation>เพิ่มบันทึกแล้ว</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Edit as text</source>
+        <translation>แก้ไขเป็นข้อความ</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Done</source>
+        <translation>เสร็จสิ้น</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>What Jarvis knows about you</source>
         <translation>สิ่งที่ Jarvis รู้เกี่ยวกับคุณ</translation>
     </message>
@@ -769,7 +999,77 @@
         <translation>บันทึกสั้นๆ บรรทัดละเรื่อง Jarvis จะเพิ่มให้เองระหว่างที่คุยกัน</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+1"/>
+        <source>Nothing yet. Say “remember that I&apos;m vegetarian”, or add a note below.</source>
+        <translation>ยังไม่มีอะไร ลองพูดว่า “จำไว้ว่าฉันกินมังสวิรัติ” หรือเพิ่มบันทึกด้านล่าง</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis adds to these as you talk. Hover over a note to change or delete it.</source>
+        <translation>Jarvis จะเพิ่มให้เองระหว่างที่คุยกัน วางเมาส์บนบันทึกเพื่อแก้ไขหรือลบ</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Filter notes</source>
+        <translation>กรองบันทึก</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>No notes match “%1”.</source>
+        <translation>ไม่มีบันทึกที่ตรงกับ “%1”</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Lessons</source>
+        <translation>บทเรียน</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>How you corrected the way Jarvis does things.</source>
+        <translation>สิ่งที่คุณแก้ไขในวิธีทำงานของ Jarvis</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ways that worked</source>
+        <translation>วิธีที่ได้ผล</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>How Jarvis got something tricky done, kept for next time.</source>
+        <translation>วิธีที่ Jarvis ทำเรื่องยากๆ ได้สำเร็จ เก็บไว้ใช้ครั้งหน้า</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Add a note</source>
+        <translation>เพิ่มบันทึก</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Kind of note</source>
+        <translation>ประเภทบันทึก</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>About you</source>
+        <translation>เกี่ยวกับคุณ</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Lesson</source>
+        <translation>บทเรียน</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Way that worked</source>
+        <translation>วิธีที่ได้ผล</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Add</source>
+        <translation>เพิ่ม</translation>
+    </message>
+    <message>
+        <location line="+18"/>
         <source>- Prefers to be called …
 - Studies …</source>
         <translation>- ชอบให้เรียกว่า …
@@ -804,12 +1104,18 @@
     </message>
     <message>
         <location line="+5"/>
-        <location line="+164"/>
+        <location line="+190"/>
+        <location line="+37"/>
         <source>Cancel</source>
         <translation>ยกเลิก</translation>
     </message>
     <message>
-        <location line="-156"/>
+        <location line="-227"/>
+        <source>Click again to cancel it</source>
+        <translation>คลิกอีกครั้งเพื่อยกเลิก</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Add a reminder or task</source>
         <translation>เพิ่มการเตือนหรืองาน</translation>
     </message>
@@ -921,7 +1227,17 @@
         <translation>12 ชั่วโมง</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+80"/>
+        <source>Note deleted</source>
+        <translation>ลบบันทึกแล้ว</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Write the note</source>
+        <translation>เขียนบันทึก</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Edit</source>
         <translation>แก้ไข</translation>
     </message>
@@ -984,7 +1300,7 @@
 <context>
     <name>Message</name>
     <message>
-        <location filename="../qml/Message.qml" line="+71"/>
+        <location filename="../qml/Message.qml" line="+115"/>
         <source>Copy</source>
         <translation>คัดลอก</translation>
     </message>
@@ -1002,7 +1318,7 @@
         <translation>เลือกโมเดลสำหรับแต่ละงาน แต่ละรายการจะลองจากบนลงล่าง ถ้าตัวไหนไม่ว่างหรือใช้งานไม่ได้ ตัวถัดไปจะทำแทน</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+40"/>
         <source>Looking up the models you can use…</source>
         <translation>กำลังค้นหาโมเดลที่คุณใช้ได้…</translation>
     </message>
@@ -1014,7 +1330,7 @@
         </translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Refresh</source>
         <translation>รีเฟรช</translation>
     </message>
@@ -1024,7 +1340,7 @@
         <translation>แต่ละงานใช้อะไร</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+59"/>
         <source>Jarvis&apos;s choice</source>
         <translation>ตามที่ Jarvis เลือก</translation>
     </message>
@@ -1033,15 +1349,8 @@
         <source>Use Jarvis&apos;s choice</source>
         <translation>ใช้ตามที่ Jarvis เลือก</translation>
     </message>
-    <message numerus="yes">
-        <location line="+9"/>
-        <source>%1 · +%n fallback(s)</source>
-        <translation>
-            <numerusform>%1 · สำรอง +%n</numerusform>
-        </translation>
-    </message>
     <message>
-        <location line="+14"/>
+        <location line="+23"/>
         <source>Providers and keys</source>
         <translation>ผู้ให้บริการและคีย์</translation>
     </message>
@@ -1101,12 +1410,22 @@
         <translation>นำผู้ให้บริการนี้ออก</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Click again to remove it and its keys</source>
+        <translation>คลิกอีกครั้งเพื่อนำผู้ให้บริการนี้และคีย์ทั้งหมดของมันออก</translation>
+    </message>
+    <message>
         <location line="+16"/>
         <source>Resting (rate limited or refused): the next key answers</source>
         <translation>พักอยู่ (ติดขีดจำกัดหรือถูกปฏิเสธ): คีย์ถัดไปตอบแทน</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+1"/>
+        <source>Click again to remove this key</source>
+        <translation>คลิกอีกครั้งเพื่อนำคีย์นี้ออก</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>More providers</source>
         <translation>ผู้ให้บริการอื่นๆ</translation>
     </message>
@@ -1161,6 +1480,11 @@
         <translation>ออกจากระบบ</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Click again to sign out</source>
+        <translation>คลิกอีกครั้งเพื่อออกจากระบบ</translation>
+    </message>
+    <message>
         <location line="+8"/>
         <source>First install the opencode-antigravity-auth plugin (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
         <translation>ติดตั้งปลั๊กอิน opencode-antigravity-auth ก่อน (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis จะใช้ข้อมูลของปลั๊กอินนั้นลงชื่อเข้าใช้ หรือใส่ ANTIGRAVITY_CLIENT_ID และ ANTIGRAVITY_CLIENT_SECRET ในไฟล์ env ของ Jarvis</translation>
@@ -1191,13 +1515,20 @@
         <translation>ลองตัวนี้ก่อน</translation>
     </message>
     <message>
-        <location line="-137"/>
-        <location line="+139"/>
+        <location line="-138"/>
+        <location line="+140"/>
         <source>Remove</source>
         <translation>นำออก</translation>
     </message>
+    <message numerus="yes">
+        <location line="-221"/>
+        <source>%1 · +%n backup(s)</source>
+        <translation>
+            <numerusform>%1 · +%n ตัวสำรอง</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+4"/>
+        <location line="+225"/>
         <source>Add a model</source>
         <translation>เพิ่มโมเดล</translation>
     </message>
@@ -1205,7 +1536,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3543"/>
+        <location filename="../jarvis.py" line="+3789"/>
         <source>LISTENING</source>
         <translation>กำลังฟัง</translation>
     </message>
@@ -1236,6 +1567,289 @@
     </message>
 </context>
 <context>
+    <name>PeoplePage</name>
+    <message>
+        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <source>just now</source>
+        <translation>เมื่อสักครู่</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n min ago</source>
+        <translation>
+            <numerusform>%n นาทีที่แล้ว</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n h ago</source>
+        <translation>
+            <numerusform>%n ชม. ที่แล้ว</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n day(s) ago</source>
+        <translation>
+            <numerusform>%n วันที่แล้ว</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>%1: they wrote %2, you wrote %3</source>
+        <translation>%1: อีกฝ่ายเขียน %2, คุณเขียน %3</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1: they wrote %2</source>
+        <translation>%1: อีกฝ่ายเขียน %2</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1: you wrote %2</source>
+        <translation>%1: คุณเขียน %2</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Talked %1</source>
+        <translation>คุยกันล่าสุด %1</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Not enough messages from them yet to say much. Jarvis tries again once you&apos;ve talked more.</source>
+        <translation>ยังมีข้อความจากเขาไม่พอที่จะบอกอะไรได้มาก Jarvis จะลองอีกครั้งเมื่อคุณคุยกันมากขึ้น</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Something went wrong</source>
+        <translation>เกิดข้อผิดพลาด</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>People</source>
+        <translation>ผู้คน</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Who you talk with, what Jarvis understands of them from your chats, and what you&apos;ve noted or promised.</source>
+        <translation>คนที่คุณคุยด้วย สิ่งที่ Jarvis เข้าใจเกี่ยวกับพวกเขาจากแชทของคุณ และสิ่งที่คุณจดไว้หรือสัญญาไว้</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <location line="+1"/>
+        <source>Search people</source>
+        <translation>ค้นหาผู้คน</translation>
+    </message>
+    <message>
+        <location line="+89"/>
+        <source>No one matches that</source>
+        <translation>ไม่มีใครตรงกับคำค้นหา</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No one here yet</source>
+        <translation>ยังไม่มีใครที่นี่</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Also %1</source>
+        <translation>ชื่ออื่น: %1</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>You haven&apos;t chatted with them one to one on WhatsApp or Discord since Jarvis was linked.</source>
+        <translation>คุณยังไม่ได้แชทตัวต่อตัวกับคนนี้ใน WhatsApp หรือ Discord ตั้งแต่เชื่อมต่อ Jarvis</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>What Jarvis understands</source>
+        <translation>สิ่งที่ Jarvis เข้าใจ</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Reading your chats…</source>
+        <translation>กำลังอ่านแชทของคุณ…</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Refresh</source>
+        <translation>รีเฟรช</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Write it again now from your latest one-to-one messages with them</source>
+        <translation>เขียนใหม่ตอนนี้จากข้อความตัวต่อตัวล่าสุดกับคนนี้</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Forget this</source>
+        <translation>ลืมสิ่งนี้</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Click again to forget it</source>
+        <translation>คลิกอีกครั้งเพื่อลืม</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Profile forgotten</source>
+        <translation>ลืมโปรไฟล์แล้ว</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+23"/>
+        <source>Updated %1, from %n message(s)</source>
+        <translation>
+            <numerusform>อัปเดต %1 จาก %n ข้อความ</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>You had Jarvis forget what it understood of them. It won&apos;t write it again unless you press Refresh.</source>
+        <translation>คุณให้ Jarvis ลืมสิ่งที่เข้าใจเกี่ยวกับคนนี้แล้ว Jarvis จะไม่เขียนอีกจนกว่าคุณจะกดรีเฟรช</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing yet. Every so often Jarvis reads your latest one-to-one messages with someone and writes a short profile of them, once there are enough messages.</source>
+        <translation>ยังไม่มีอะไร เป็นระยะๆ Jarvis จะอ่านข้อความตัวต่อตัวล่าสุดของคุณกับใครสักคน และเขียนโปรไฟล์สั้นๆ ของเขาเมื่อมีข้อความมากพอ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis doesn&apos;t read your chats to understand people: profiles are off.</source>
+        <translation>Jarvis ไม่อ่านแชทของคุณเพื่อทำความเข้าใจผู้คน: ปิดโปรไฟล์อยู่</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Profiles are off, so this one isn&apos;t updated.</source>
+        <translation>ปิดโปรไฟล์อยู่ โปรไฟล์นี้จึงไม่ได้รับการอัปเดต</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Turn them on in Settings</source>
+        <translation>เปิดในการตั้งค่า</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Reading your latest messages with %1 and asking your model…</source>
+        <translation>กำลังอ่านข้อความล่าสุดกับ %1 และถามโมเดลของคุณ…</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Notes</source>
+        <translation>บันทึก</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Add a note</source>
+        <translation>เพิ่มบันทึก</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>None yet. Tell Jarvis “Sam is my cousin”, or add one here.</source>
+        <translation>ยังไม่มี บอก Jarvis ว่า “Sam เป็นลูกพี่ลูกน้องของฉัน” หรือเพิ่มที่นี่</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Until %1</source>
+        <translation>จนถึง %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Edit</source>
+        <translation>แก้ไข</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Promises</source>
+        <translation>คำสัญญา</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Nothing open. When you write them “I&apos;ll send it tomorrow”, Jarvis keeps it here.</source>
+        <translation>ไม่มีเรื่องค้าง เมื่อคุณเขียนถึงเขาว่า “พรุ่งนี้จะส่งให้” Jarvis จะเก็บไว้ที่นี่</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Due %1</source>
+        <translation>ครบกำหนด %1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No time set: it&apos;s on your evening list</source>
+        <translation>ไม่ได้ตั้งเวลา: อยู่ในรายการตอนเย็นของคุณ</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Done</source>
+        <translation>เสร็จแล้ว</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mark this promise as kept</source>
+        <translation>ทำเครื่องหมายว่ารักษาสัญญานี้แล้ว</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <location line="+5"/>
+        <source>Forget this person</source>
+        <translation>ลืมคนนี้</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>Their notes, promises and profile go. If you chat with them again, Jarvis starts a new page.</source>
+        <translation>บันทึก คำสัญญา และโปรไฟล์ของเขาจะหายไป ถ้าคุณแชทกับเขาอีก Jarvis จะเริ่มหน้าใหม่</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Click again to forget them</source>
+        <translation>คลิกอีกครั้งเพื่อลืมคนนี้</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Forgot %1</source>
+        <translation>ลืม %1 แล้ว</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Pick someone to see what Jarvis knows about them</source>
+        <translation>เลือกใครสักคนเพื่อดูว่า Jarvis รู้อะไรเกี่ยวกับเขาบ้าง</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>People appear here when you chat with someone one to one on WhatsApp or Discord, or when you tell Jarvis about them: “Sam is my cousin”.</source>
+        <translation>ผู้คนจะปรากฏที่นี่เมื่อคุณแชทตัวต่อตัวกับใครสักคนใน WhatsApp หรือ Discord หรือเมื่อคุณเล่าเรื่องของเขาให้ Jarvis ฟัง: “Sam เป็นลูกพี่ลูกน้องของฉัน”</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>e.g. My cousin, studies medicine in Lyon</source>
+        <translation>เช่น ลูกพี่ลูกน้อง เรียนแพทย์ที่ลียง</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Until (optional)</source>
+        <translation>จนถึง (ไม่บังคับ)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The last day it&apos;s true, like 2026-12-31</source>
+        <translation>วันสุดท้ายที่ยังเป็นจริง เช่น 2026-12-31</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>A date like 2026-12-31 makes the note go after that day.</source>
+        <translation>วันที่อย่าง 2026-12-31 จะทำให้บันทึกหายไปหลังวันนั้น</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cancel</source>
+        <translation>ยกเลิก</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Save</source>
+        <translation>บันทึก</translation>
+    </message>
+</context>
+<context>
     <name>PluginsPage</name>
     <message>
         <location filename="../qml/PluginsPage.qml" line="+9"/>
@@ -1248,7 +1862,7 @@
         <translation>เพิ่มเครื่องมือให้ Jarvis ด้วยเซิร์ฟเวอร์ MCP: ที่อยู่เว็บ หรือคำสั่งที่รันบนพีซีเครื่องนี้</translation>
     </message>
     <message numerus="yes">
-        <location line="+7"/>
+        <location line="+9"/>
         <source>%n min</source>
         <translation>
             <numerusform>%n นาที</numerusform>
@@ -1272,14 +1886,14 @@
         <translation>ติดตั้งแล้ว</translation>
     </message>
     <message numerus="yes">
-        <location line="+34"/>
+        <location line="+40"/>
         <source>%n tool(s)</source>
         <translation>
             <numerusform>%n เครื่องมือ</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+17"/>
         <source>%1 · trying again in %2</source>
         <translation>%1 · ลองใหม่ใน %2</translation>
     </message>
@@ -1319,7 +1933,7 @@
         <translation>นำปลั๊กอินออกแล้ว</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+18"/>
         <source>Add a plugin</source>
         <translation>เพิ่มปลั๊กอิน</translation>
     </message>
@@ -1418,17 +2032,17 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="+11"/>
+        <location filename="../qml/SettingsPage.qml" line="-677"/>
         <source>Settings</source>
         <translation>การตั้งค่า</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>การเปลี่ยนแปลงจะบันทึกทันที โมเดลและคีย์ API อยู่ในหน้าโมเดล</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="-109"/>
         <source>Checking…</source>
         <translation>กำลังตรวจสอบ…</translation>
     </message>
@@ -1453,12 +2067,50 @@
         <translation>นำวลีลับออกแล้ว</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
+        <location line="+130"/>
         <source>Voice</source>
         <translation>เสียง</translation>
     </message>
     <message>
+        <location line="-129"/>
+        <source>Window</source>
+        <translation>หน้าต่าง</translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <source>Phone</source>
+        <translation>โทรศัพท์</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Advanced</source>
+        <translation>ขั้นสูง</translation>
+    </message>
+    <message>
+        <location line="+68"/>
+        <location line="+1"/>
+        <source>Search settings</source>
+        <translation>ค้นหาการตั้งค่า</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <location line="+39"/>
+        <source>Clear the search</source>
+        <translation>ล้างการค้นหา</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>No setting matches “%1”</source>
+        <translation>ไม่มีการตั้งค่าที่ตรงกับ “%1”</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Try another word, or pick a tab above.</source>
+        <translation>ลองใช้คำอื่น หรือเลือกแท็บด้านบน</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>How Jarvis sounds and talks to you. Changes apply from the next conversation.</source>
         <translation>เสียงและวิธีที่ Jarvis พูดกับคุณ มีผลตั้งแต่การสนทนาครั้งถัดไป</translation>
     </message>
@@ -1513,12 +2165,12 @@
         <translation>ตอบโดยไม่คิดก่อน: เร็วขึ้นราว 0.3 วินาที แต่ฉลาดน้อยลงเล็กน้อย</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Speak replies to typed messages</source>
         <translation>พูดตอบข้อความที่พิมพ์</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Always use the backup voice</source>
         <translation>ใช้เสียงสำรองเสมอ</translation>
     </message>
@@ -1528,7 +2180,7 @@
         <translation>ฟังและพูดด้วยโมเดลในหน้าโมเดลแทน Gemini Live สำหรับคีย์ที่ใช้ Gemini Live ไม่ได้ ถ้าปิดไว้ เสียงสำรองจะตอบเฉพาะตอนที่เชื่อมต่อ Gemini Live ไม่ได้</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Listening</source>
         <translation>การฟัง</translation>
     </message>
@@ -1619,7 +2271,7 @@
         <translation>การปลุกที่คุณปัดทิ้งจะสอน Jarvis ว่าเสียงไหนไม่ใช่คุณ</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Only wake for my voice</source>
         <translation>ตื่นเฉพาะเสียงของฉัน</translation>
     </message>
@@ -1639,7 +2291,7 @@
         <translation>คนอื่นพูดคำปลุกจะไม่ปลุก Jarvis ปุ่ม “พูด” และการกดเพื่อพูดใช้ได้เสมอ</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Echo cancelling</source>
         <translation>ตัดเสียงสะท้อน</translation>
     </message>
@@ -1654,7 +2306,17 @@
         <translation>กันเสียงจากพีซี (Jarvis เกม วิดีโอ การโทร) ไม่ให้เข้าไมค์ จะได้ไม่ถูกฟังเป็นเสียงคุณ และคุณพูดแทรก Jarvis ได้ (PipeWire รีสตาร์ต Jarvis เพื่อให้มีผล)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Listen through a Bluetooth headset</source>
+        <translation>ฟังผ่านชุดหูฟัง Bluetooth</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>When a Bluetooth headset&apos;s microphone is the default one, Jarvis listens through it, and the headset stays in call quality (mono and muffled) while Jarvis runs. Off, Jarvis uses the PC&apos;s own microphone and the headset keeps its sound</source>
+        <translation>เมื่อไมโครโฟนของชุดหูฟัง Bluetooth เป็นไมค์เริ่มต้น Jarvis จะฟังผ่านไมค์นั้น และชุดหูฟังจะอยู่ในคุณภาพเสียงแบบโทร (โมโนและเสียงอู้อี้) ตลอดเวลาที่ Jarvis ทำงาน ถ้าปิด Jarvis จะใช้ไมโครโฟนของพีซีเอง และชุดหูฟังจะคงคุณภาพเสียงตามปกติ</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Spoken passphrase: asked for with every yes said out loud (sends, calls, account changes, risky commands). Never shown or said back</source>
         <translation>วลีลับแบบพูด: ต้องพูดทุกครั้งที่ตอบตกลงด้วยเสียง (ส่งข้อความ โทร เปลี่ยนแปลงบัญชี คำสั่งเสี่ยง) ไม่แสดงหรือพูดทวนให้ได้ยิน</translation>
     </message>
@@ -1670,39 +2332,44 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+138"/>
-        <location line="+56"/>
+        <location line="+290"/>
+        <location line="+117"/>
         <source>Save</source>
         <translation>บันทึก</translation>
     </message>
     <message>
-        <location line="-192"/>
+        <location line="-405"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>นำออก</translation>
     </message>
     <message>
-        <location line="-76"/>
+        <location line="-82"/>
+        <location line="+7"/>
         <source>Push to talk</source>
         <translation>กดเพื่อพูด</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-7"/>
+        <location line="+9"/>
         <source>Bind these to keyboard shortcuts (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</source>
         <translation>ผูกคำสั่งเหล่านี้กับปุ่มลัด (KDE: System Settings → Keyboard → Shortcuts → Add New → Command)</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-8"/>
+        <location line="+10"/>
         <source>Start listening</source>
         <translation>เริ่มฟัง</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-10"/>
+        <location line="+11"/>
         <source>Drag over part of the screen and ask about it</source>
         <translation>ลากครอบบางส่วนของหน้าจอแล้วถามเกี่ยวกับส่วนนั้น</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-249"/>
+        <location line="+256"/>
         <source>Your day</source>
         <translation>วันของคุณ</translation>
     </message>
@@ -1732,7 +2399,7 @@
         <translation>ครั้งแรกที่ Jarvis เริ่มทำงานในตอนเช้า จะเล่าเรื่องของวันนี้ให้คุณฟัง</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Do not disturb</source>
         <translation>ห้ามรบกวน</translation>
     </message>
@@ -1742,7 +2409,7 @@
         <translation>Jarvis จะไม่พูดขึ้นมาเอง: การเตือน ผลลัพธ์ และข้อความจะไปที่แชท การแจ้งเตือน และโทรศัพท์ของคุณเท่านั้น แต่ยังตอบเมื่อคุณถาม (มีในเมนูถาดระบบด้วย)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Quiet over full-screen apps</source>
         <translation>เงียบเมื่อแอปเต็มจอ</translation>
     </message>
@@ -1752,7 +2419,7 @@
         <translation>ขณะที่เกมหรือภาพยนตร์เปิดเต็มจอ Jarvis จะเก็บสิ่งที่จะพูดเองไว้ในแชตและการแจ้งเตือน แต่ยังพูดการเตือนความจำ</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Classroom deadlines</source>
         <translation>กำหนดส่งงาน Classroom</translation>
     </message>
@@ -1762,7 +2429,7 @@
         <translation>เตือนหนึ่งวันและสองชั่วโมงก่อนกำหนดส่ง (ข้ามถ้าคุณส่งงานแล้ว)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Calendar heads-up</source>
         <translation>แจ้งเตือนปฏิทิน</translation>
     </message>
@@ -1772,7 +2439,7 @@
         <translation>เตือนสิบนาทีก่อนทุกกิจกรรมใน Google Calendar</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Keep track of my promises</source>
         <translation>ติดตามสัญญาของฉัน</translation>
     </message>
@@ -1793,11 +2460,12 @@
     </message>
     <message>
         <location line="+5"/>
+        <location line="+3"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>ช่วงเวลาเงียบ ตั้งแต่ (เว้นว่าง: ไม่มี)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-2"/>
         <source>e.g. 22:00</source>
         <translation>เช่น 22:00</translation>
     </message>
@@ -1812,7 +2480,7 @@
         <translation>เช่น 07:00</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Window &amp; behavior</source>
         <translation>หน้าต่างและการทำงาน</translation>
     </message>
@@ -1862,12 +2530,12 @@
         <translation>แสดงความคิดของ Jarvis ในแชท</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Start Jarvis when I log in</source>
         <translation>เปิด Jarvis เมื่อเข้าสู่ระบบ</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Ask before risky actions</source>
         <translation>ถามก่อนทำสิ่งที่เสี่ยง</translation>
     </message>
@@ -1877,7 +2545,7 @@
         <translation>คำสั่งที่ลบ ติดตั้ง หรือปิดเครื่อง และการเปลี่ยนแปลงบัญชี (ส่งอีเมล สร้างกิจกรรมใหม่) จะรอให้คุณตกลงก่อน เว้นแต่คุณสั่งให้ทำแบบนั้นตรงๆ</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Your instructions</source>
         <translation>คำสั่งของคุณ</translation>
     </message>
@@ -1887,7 +2555,54 @@
         <translation>Jarvis ควรทำตัวอย่างไร และสิ่งที่ควรรู้เกี่ยวกับคุณ</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+116"/>
+        <source>People</source>
+        <translation>ผู้คน</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis gets to know the people you chat with one to one, so it knows who someone is when you mention them. The People page shows what it understood, with your notes and promises.</source>
+        <translation>Jarvis จะรู้จักคนที่คุณแชทด้วยแบบตัวต่อตัว เพื่อให้รู้ว่าใครเป็นใครเมื่อคุณพูดถึง หน้าผู้คนจะแสดงสิ่งที่ Jarvis เข้าใจ พร้อมบันทึกและคำสัญญาของคุณ</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Understand the people I chat with</source>
+        <translation>ทำความเข้าใจคนที่ฉันแชทด้วย</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Now and then, the latest messages of your one-to-one WhatsApp and Discord chats go to your model to write a short profile of each person: who they are to you, how they write, what&apos;s open between you. Kept on this PC; groups are never read</source>
+        <translation>เป็นระยะๆ ข้อความล่าสุดจากแชทตัวต่อตัวใน WhatsApp และ Discord ของคุณจะถูกส่งไปยังโมเดลของคุณเพื่อเขียนโปรไฟล์สั้นๆ ของแต่ละคน: เขาเป็นใครสำหรับคุณ เขียนแบบไหน มีอะไรค้างอยู่ระหว่างคุณ เก็บไว้ใน PC เครื่องนี้ และไม่อ่านแชทกลุ่มเลย</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Write a profile again after</source>
+        <translation>เขียนโปรไฟล์ใหม่หลังจาก</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>refresh profiles days</source>
+        <translation>รีเฟรช โปรไฟล์ วัน</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>3 days</source>
+        <translation>3 วัน</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Two weeks</source>
+        <translation>2 สัปดาห์</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n day(s)</source>
+        <translation>
+            <numerusform>%n วัน</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+145"/>
         <source>Jarvis on Telegram</source>
         <translation>Jarvis บน Telegram</translation>
     </message>
@@ -1897,7 +2612,7 @@
         <translation>ส่งงานให้ Jarvis จากทุกที่ผ่าน Telegram</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>In Telegram, message &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, send /newbot and copy the token it gives you.</source>
         <translation>ใน Telegram ส่งข้อความหา &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt; ส่ง /newbot แล้วคัดลอกโทเคนที่ได้</translation>
     </message>
@@ -1907,7 +2622,8 @@
         <translation>วางที่นี่</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-6"/>
+        <location line="+7"/>
         <source>Send your new bot the code below. Only that chat is answered.</source>
         <translation>ส่งรหัสด้านล่างให้บอตใหม่ของคุณ Jarvis จะตอบเฉพาะแชทนั้น</translation>
     </message>
@@ -1917,7 +2633,8 @@
         <translation>บันทึกโทเคนบอตแล้ว · วางโทเคนใหม่เพื่อแทนที่</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-13"/>
+        <location line="+13"/>
         <source>Paste your bot&apos;s token</source>
         <translation>วางโทเคนของบอต</translation>
     </message>
@@ -1932,18 +2649,21 @@
         <translation>ส่งรหัสนี้ให้บอตของคุณ: %1</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <location line="+89"/>
+        <location line="-93"/>
+        <location line="+19"/>
+        <location line="+52"/>
+        <location line="+28"/>
         <source>Unpair</source>
         <translation>เลิกจับคู่</translation>
     </message>
     <message>
-        <location line="-88"/>
+        <location line="-28"/>
+        <location line="+29"/>
         <source>Remove the bot</source>
         <translation>นำบอตออก</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-171"/>
         <source>The Jarvis app</source>
         <translation>แอป Jarvis</translation>
     </message>
@@ -1953,7 +2673,7 @@
         <translation>แอป Jarvis บน Android เข้าถึงพีซีเครื่องนี้ได้จากทุกที่ผ่านรีเลย์ส่วนตัวของคุณเอง มีการเข้ารหัสต้นทางถึงปลายทาง: รีเลย์แค่ส่งต่อข้อมูลที่อ่านไม่ออก และไม่มีอะไรบนพีซีนี้เปิดสู่อินเทอร์เน็ต</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Connect directly on your own network</source>
         <translation>เชื่อมต่อโดยตรงบนเครือข่ายของคุณเอง</translation>
     </message>
@@ -1963,22 +2683,25 @@
         <translation>บน Wi-Fi เดียวกัน หรือผ่าน VPN อย่าง Tailscale โทรศัพท์ที่จับคู่ไว้จะเข้าถึงพีซีเครื่องนี้ได้โดยไม่ต้องใช้รีเลย์ และการจับคู่ก็ไม่ต้องใช้รีเลย์เช่นกัน ไฟร์วอลล์ของคุณอาจต้องอนุญาต Jarvis</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+12"/>
         <source>Setting up…</source>
         <translation>กำลังตั้งค่า…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-6"/>
+        <location line="+6"/>
         <source>Set up my relay</source>
         <translation>ตั้งค่ารีเลย์ของฉัน</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-6"/>
+        <location line="+9"/>
         <source>Signs in to your free Cloudflare account in your browser, puts the relay online and saves its address.</source>
         <translation>ลงชื่อเข้าใช้บัญชี Cloudflare ฟรีของคุณในเบราว์เซอร์ นำรีเลย์ขึ้นออนไลน์ และบันทึกที่อยู่ของรีเลย์</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="-8"/>
+        <location line="+17"/>
         <source>Or by hand</source>
         <translation>หรือทำเอง</translation>
     </message>
@@ -1998,7 +2721,8 @@
         <translation>วางที่อยู่ที่แสดงออกมาที่นี่</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-20"/>
+        <location line="+26"/>
         <source>Your relay&apos;s address, like https://jarvis-relay.you.workers.dev</source>
         <translation>ที่อยู่รีเลย์ของคุณ เช่น https://jarvis-relay.you.workers.dev</translation>
     </message>
@@ -2008,7 +2732,8 @@
         <translation>ยกเลิก</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+6"/>
+        <location line="+16"/>
         <source>Connected</source>
         <translation>เชื่อมต่อแล้ว</translation>
     </message>
@@ -2018,22 +2743,26 @@
         <translation>กำลังเชื่อมต่อ…</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-16"/>
+        <location line="+19"/>
         <source>Change</source>
         <translation>เปลี่ยน</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+32"/>
+        <location line="+3"/>
         <source>Pair another phone</source>
         <translation>จับคู่โทรศัพท์อีกเครื่อง</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-3"/>
+        <location line="+3"/>
         <source>Pair a phone</source>
         <translation>จับคู่โทรศัพท์</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="-3"/>
+        <location line="+19"/>
         <source>Scan to pair</source>
         <translation>สแกนเพื่อจับคู่</translation>
     </message>
@@ -2043,7 +2772,7 @@
         <translation>ในแอป Jarvis แตะ Pair แล้วสแกนโค้ดนี้ ใช้ได้ครั้งเดียว ภายในสิบนาที</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="-246"/>
         <source>WhatsApp</source>
         <translation>WhatsApp</translation>
     </message>
@@ -2053,7 +2782,8 @@
         <translation>Jarvis เชื่อมโยงกับ WhatsApp ของคุณเองแบบเดียวกับ WhatsApp Web ตอบข้อความจากผู้ติดต่อที่ไม่จำเป็นต้องให้คุณตอบเอง โดยบอกว่าเป็นผู้ช่วยของคุณ และรับสายที่คุณไม่ได้รับเพื่อฝากข้อความ นี่ไม่ใช่ฟีเจอร์ทางการของ WhatsApp: WhatsApp อาจบล็อกเบอร์ที่ทำตัวเหมือนบอต Jarvis จึงตอบเฉพาะผู้ติดต่อที่บันทึกไว้ และไม่ตอบในกลุ่ม</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
+        <location line="+1"/>
         <source>Link WhatsApp</source>
         <translation>เชื่อมโยง WhatsApp</translation>
     </message>
@@ -2068,7 +2798,8 @@
         <translation>กำลังขอโค้ดจาก WhatsApp…</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-4"/>
+        <location line="+18"/>
         <source>Scan with WhatsApp</source>
         <translation>สแกนด้วย WhatsApp</translation>
     </message>
@@ -2093,18 +2824,20 @@
         <translation>เชื่อมโยงแล้ว</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-28"/>
+        <location line="+29"/>
         <source>Unlink</source>
         <translation>ยกเลิกการเชื่อมโยง</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <location line="+45"/>
+        <location line="-387"/>
+        <location line="+392"/>
+        <location line="+51"/>
         <source>Messages</source>
         <translation>ข้อความ</translation>
     </message>
     <message>
-        <location line="-43"/>
+        <location line="-49"/>
         <source>Answer my contacts</source>
         <translation>ตอบผู้ติดต่อของฉัน</translation>
     </message>
@@ -2115,12 +2848,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+44"/>
+        <location line="+50"/>
         <source>Just show them to me</source>
         <translation>แค่แสดงให้ฉันดู</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-48"/>
         <source>Jarvis writes a reply to your contacts&apos; messages that don&apos;t need you and tells you. Nothing is sent until you say &quot;send it&quot;.</source>
         <translation>Jarvis จะเขียนคำตอบสำหรับข้อความจากผู้ติดต่อที่ไม่จำเป็นต้องให้คุณตอบเอง แล้วบอกคุณ จะไม่มีอะไรถูกส่งจนกว่าคุณจะพูดว่า “ส่งเลย”</translation>
     </message>
@@ -2151,23 +2884,23 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+38"/>
+        <location line="+44"/>
         <source>e.g. Alex</source>
         <translation>เช่น สมชาย</translation>
     </message>
     <message>
-        <location line="-37"/>
+        <location line="-43"/>
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
         <translation>ไม่ตอบเลย (บรรทัดละหนึ่งชื่อ): Jarvis จะไม่ตอบหรือรับสาย และแสดงข้อความของคนเหล่านี้ในแชทเท่านั้น</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+38"/>
+        <location line="+44"/>
         <source>e.g. Sam</source>
         <translation>เช่น สมหญิง</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-42"/>
         <source>What Jarvis tells people</source>
         <translation>สิ่งที่ Jarvis บอกคนอื่น</translation>
     </message>
@@ -2177,7 +2910,7 @@
         <translation>เช่น เรียนอยู่ถึงห้าโมง เดี๋ยวตอบหลังจากนั้น</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Tell people when I&apos;m busy</source>
         <translation>บอกคนอื่นว่าฉันไม่ว่างเมื่อไหร่</translation>
     </message>
@@ -2187,7 +2920,7 @@
         <translation>จาก Google ปฏิทินของคุณ: บอกแค่เวลา ไม่บอกว่าคุณทำอะไรอยู่</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+11"/>
         <source>Discord</source>
         <translation>Discord</translation>
     </message>
@@ -2197,7 +2930,8 @@
         <translation>Jarvis อ่านและส่งข้อความ Discord แทนคุณผ่าน Vesktop ใน Discord ของคุณเอง: ถามว่ามีอะไรใหม่ หรือให้ส่ง ตอบกลับ หรือแสดงความรู้สึกใน DM หรือช่องเซิร์ฟเวอร์ DM ใหม่และการกล่าวถึงจะแสดงในแชตของ Jarvis</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
+        <location line="+1"/>
         <source>Connected to Vesktop</source>
         <translation>เชื่อมต่อกับ Vesktop แล้ว</translation>
     </message>
@@ -2217,12 +2951,13 @@
         <translation>ต้องเริ่ม Vesktop ใหม่โดยเปิดการเชื่อมต่อของ Jarvis (สายที่คุยอยู่ใน Vesktop จะหลุด)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-9"/>
+        <location line="+10"/>
         <source>Restart Vesktop</source>
         <translation>เริ่ม Vesktop ใหม่</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Answer my friends&apos; DMs (Discord may ban accounts that act like bots)</source>
         <translation>ตอบ DM ของเพื่อนฉัน (Discord อาจแบนบัญชีที่ทำตัวเหมือนบอท)</translation>
     </message>
@@ -2242,7 +2977,8 @@
         <translation>การตอบกลับใช้สิ่งที่ Jarvis บอกผู้คนจากส่วน WhatsApp คุณยังพูดง่ายๆ ได้ว่า &quot;ไม่ต้องตอบแซม&quot; หรือ &quot;บอกฉันเมื่ออเล็กซ์ส่งข้อความมา&quot;</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="-452"/>
+        <location line="+658"/>
         <source>Your data</source>
         <translation>ข้อมูลของคุณ</translation>
     </message>
@@ -2252,7 +2988,7 @@
         <translation>บนพีซีเครื่องนี้ Jarvis เก็บสิ่งที่จำเกี่ยวกับคุณ การสนทนา การเตือนและรูทีน คลิปสั้นๆ ของคำปลุก (เพื่อเรียนรู้เสียงของคุณ) และบันทึกการทำงาน สิ่งที่คุณพูดหลังคำปลุก และภาพหน้าจอเมื่องานต้องใช้หน้าจอ จะส่งไปยัง Google Gemini ส่วนการทำงานกับบัญชีจะผ่าน Composio</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Screen history</source>
         <translation>ประวัติหน้าจอ</translation>
     </message>
@@ -2272,17 +3008,19 @@
         <translation>เมื่อบทสนทนาจบลง Jarvis จะเพิ่มสิ่งที่ไม่เปลี่ยนแปลงซึ่งคุณเล่าเกี่ยวกับตัวเองลงในความจำ และแสดงแต่ละรายการในแชท</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Keep conversations and logs for</source>
         <translation>เก็บการสนทนาและบันทึกการทำงานไว้นาน</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-198"/>
+        <location line="+200"/>
         <source>A week</source>
         <translation>1 สัปดาห์</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-199"/>
+        <location line="+199"/>
         <source>A month</source>
         <translation>1 เดือน</translation>
     </message>
@@ -2302,12 +3040,13 @@
         <translation>ตลอดไป</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Press again to delete it all</source>
         <translation>กดอีกครั้งเพื่อลบทั้งหมด</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-4"/>
+        <location line="+4"/>
         <source>Delete everything Jarvis keeps about me</source>
         <translation>ลบทุกอย่างที่ Jarvis เก็บเกี่ยวกับฉัน</translation>
     </message>
@@ -2317,12 +3056,13 @@
         <translation>ลบแล้ว คีย์ บัญชี และการตั้งค่ายังอยู่</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-8"/>
+        <location line="+11"/>
         <source>Keys, account sign-ins and settings stay.</source>
         <translation>คีย์ การลงชื่อเข้าใช้บัญชี และการตั้งค่าจะยังอยู่</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Move to another computer</source>
         <translation>ย้ายไปคอมพิวเตอร์เครื่องอื่น</translation>
     </message>
@@ -2332,22 +3072,25 @@
         <translation>ไฟล์เดียวที่รวมการตั้งค่า ความจำ การเตือน งานที่ตั้งเวลาไว้ รูทีน ปลั๊กอิน การสนทนา และคลิปที่ Jarvis ใช้เรียนรู้เสียงของคุณ ไม่รวมคีย์ การลงชื่อเข้าใช้บัญชี WhatsApp และโทรศัพท์ของคุณ: ต้องตั้งค่าใหม่บนคอมพิวเตอร์อีกเครื่อง</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+4"/>
+        <location line="+4"/>
         <source>Save a backup</source>
         <translation>บันทึกข้อมูลสำรอง</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-4"/>
+        <location line="+7"/>
         <source>Bring one in</source>
         <translation>นำเข้าข้อมูลสำรอง</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-7"/>
+        <location line="+8"/>
         <source>Bringing one in replaces what&apos;s on this computer (conversations are added), then Jarvis restarts.</source>
         <translation>การนำเข้าจะแทนที่ข้อมูลบนคอมพิวเตอร์นี้ (ส่วนการสนทนาจะเพิ่มเข้าไป) จากนั้น Jarvis จะรีสตาร์ต</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Save a Jarvis backup</source>
         <translation>บันทึกข้อมูลสำรอง Jarvis</translation>
     </message>
@@ -2378,7 +3121,62 @@
         <translation>นำเข้าแล้ว: Jarvis กำลังรีสตาร์ต</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+8"/>
+        <source>On other pages</source>
+        <translation>ในหน้าอื่น</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>These are set on the page they belong to.</source>
+        <translation>รายการเหล่านี้ตั้งค่าได้ในหน้าของมันเอง</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Models and API keys</source>
+        <translation>โมเดลและคีย์ API</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Which model does each job (tasks, reading the screen, web search, pictures, the backup voice), the order they&apos;re tried in, and your keys</source>
+        <translation>โมเดลไหนทำงานอะไร (งาน การอ่านหน้าจอ การค้นเว็บ รูปภาพ เสียงสำรอง) ลำดับที่จะลองใช้ และคีย์ของคุณ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Background checks</source>
+        <translation>การจับตาดูเบื้องหลัง</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis keeps an eye on for you (&quot;tell me if a payment fails&quot;), how often it looks, and which checks are paused</source>
+        <translation>สิ่งที่ Jarvis คอยจับตาดูให้คุณ (“บอกฉันถ้าการชำระเงินไม่สำเร็จ”) ตรวจบ่อยแค่ไหน และเรื่องไหนหยุดชั่วคราวอยู่</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis may do in each account</source>
+        <translation>สิ่งที่ Jarvis ทำได้ในแต่ละบัญชี</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ask first, go ahead, read only or paused, for each account you connected</source>
+        <translation>ถามก่อน ทำได้เลย อ่านอย่างเดียว หรือหยุดชั่วคราว สำหรับแต่ละบัญชีที่คุณเชื่อมต่อ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tools from other apps</source>
+        <translation>เครื่องมือจากแอปอื่น</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The plugins (MCP servers) Jarvis can use: add one, or switch one on or off</source>
+        <translation>ปลั๊กอิน (เซิร์ฟเวอร์ MCP) ที่ Jarvis ใช้ได้: เพิ่มใหม่ หรือเปิดปิดแต่ละตัว</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>About Jarvis</source>
+        <translation>เกี่ยวกับ Jarvis</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>%1 is out (%2)</source>
         <translation>เวอร์ชัน %1 ออกแล้ว (%2)</translation>
     </message>
@@ -2388,7 +3186,8 @@
         <translation>เวอร์ชัน %1 ออกแล้ว</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-10"/>
+        <location line="+11"/>
         <source>Up to date</source>
         <translation>เป็นเวอร์ชันล่าสุดแล้ว</translation>
     </message>
@@ -2398,22 +3197,34 @@
         <translation>กำลังอัปเดต…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
+        <location line="+12"/>
         <source>Update now</source>
         <translation>อัปเดตเลย</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
+        <location line="+12"/>
         <source>Check for updates</source>
         <translation>ตรวจหาอัปเดต</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Run the setup again</source>
         <translation>เริ่มตัวช่วยตั้งค่าอีกครั้ง</translation>
     </message>
     <message>
-        <location line="+116"/>
+        <location line="+0"/>
+        <source>First-run setup</source>
+        <translation>การตั้งค่าครั้งแรก</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Your Gemini key, microphone, Jarvis&apos;s voice and how careful it should be, one step at a time</source>
+        <translation>คีย์ Gemini ไมโครโฟน เสียงของ Jarvis และระดับความระมัดระวัง ทีละขั้นตอน</translation>
+    </message>
+    <message>
+        <location line="+256"/>
         <source>e.g. Keep answers short.</source>
         <translation>เช่น ตอบให้สั้นๆ</translation>
     </message>
@@ -2477,8 +3288,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis keeps all of it on this computer.</source>
-        <translation>สิ่งที่คุณพูดหลัง “%1” หรือพิมพ์ ความจำและการสนทนาล่าสุดที่ช่วยในการตอบ และภาพหน้าจอเมื่องานต้องใช้หน้าจอ จะส่งไปยัง Google Gemini การทำงานกับบัญชีจะผ่าน Composio เฉพาะบัญชีที่คุณเชื่อมต่อ Jarvis เก็บทั้งหมดนี้ไว้บนคอมพิวเตอร์นี้</translation>
+        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis also keeps a copy of your conversations and memory on this computer.</source>
+        <translation>สิ่งที่คุณพูดหลัง “%1” หรือพิมพ์ ความจำและการสนทนาล่าสุดที่ช่วยในการตอบ และภาพหน้าจอเมื่องานต้องใช้หน้าจอ จะส่งไปยัง Google Gemini การทำงานกับบัญชีจะผ่าน Composio เฉพาะบัญชีที่คุณเชื่อมต่อ นอกจากนี้ Jarvis ยังเก็บสำเนาการสนทนาและความจำของคุณไว้บนคอมพิวเตอร์นี้</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -2664,7 +3475,7 @@
 <context>
     <name>Theme</name>
     <message>
-        <location filename="../qml/Theme.qml" line="+58"/>
+        <location filename="../qml/Theme.qml" line="+59"/>
         <source>Listening</source>
         <translation>กำลังฟัง</translation>
     </message>
@@ -2685,9 +3496,17 @@
     </message>
 </context>
 <context>
+    <name>Toast</name>
+    <message>
+        <location filename="../qml/Toast.qml" line="+34"/>
+        <source>Close</source>
+        <translation>ปิด</translation>
+    </message>
+</context>
+<context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+109"/>
+        <location filename="../qml/Today.qml" line="+135"/>
         <source>Feels %1 in %2</source>
         <translation>ที่ %2 รู้สึกเหมือน %1</translation>
     </message>
@@ -2697,7 +3516,7 @@
         <translation>รู้สึกเหมือน %1</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+55"/>
         <source>Now playing</source>
         <translation>กำลังเล่น</translation>
     </message>
@@ -2712,7 +3531,8 @@
         <translation>ถัดไป</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-111"/>
+        <location line="+125"/>
         <source>Working on</source>
         <translation>กำลังทำ</translation>
     </message>
@@ -2722,17 +3542,18 @@
         <translation>เพิ่งเสร็จ</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+137"/>
         <source>Stop this task</source>
         <translation>หยุดงานนี้</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="-92"/>
         <source>Finished at %1</source>
         <translation>เสร็จเมื่อ %1</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="-154"/>
+        <location line="+171"/>
         <source>To do</source>
         <translation>สิ่งที่ต้องทำ</translation>
     </message>
@@ -2742,7 +3563,7 @@
         <translation>สัปดาห์นี้ไม่มีอะไรต้องทำ ลองพูดว่า “อีก 20 นาทีเตือนให้ยืดเส้นยืดสาย”</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+104"/>
         <source>No date</source>
         <translation>ไม่มีวันกำหนด</translation>
     </message>
@@ -2757,12 +3578,12 @@
         <translation>สัญญาไว้กับ %1</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+29"/>
         <source>Cancel this reminder</source>
         <translation>ยกเลิกการเตือนนี้</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
         <source>Mark as done</source>
         <translation>ทำเครื่องหมายว่าเสร็จแล้ว</translation>
     </message>
@@ -2772,12 +3593,38 @@
         <translation>เปิดใน Classroom</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-112"/>
         <source>Couldn&apos;t check %1 just now.</source>
         <translation>ตรวจ %1 ไม่ได้ในตอนนี้</translation>
     </message>
+    <message numerus="yes">
+        <location line="-208"/>
+        <source>%n running</source>
+        <translation>
+            <numerusform>กำลังทำ %n งาน</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+18"/>
+        <source>%n to do</source>
+        <translation>
+            <numerusform>ต้องทำ %n รายการ</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+13"/>
+        <location line="+186"/>
+        <source>Show fewer</source>
+        <translation>แสดงน้อยลง</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>+%n more</source>
+        <translation>
+            <numerusform>อีก %n รายการ</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+17"/>
         <source>This PC</source>
         <translation>พีซีเครื่องนี้</translation>
     </message>
@@ -2811,11 +3658,16 @@
         <source>Last answer started %1 s after you finished</source>
         <translation>คำตอบล่าสุดเริ่มหลังจากคุณพูดจบ %1 วินาที</translation>
     </message>
+    <message>
+        <location line="+94"/>
+        <source>Click again to cancel it</source>
+        <translation>คลิกอีกครั้งเพื่อยกเลิก</translation>
+    </message>
 </context>
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+122"/>
+        <location filename="../jarvis.py" line="+124"/>
         <source>Open Jarvis</source>
         <translation>เปิด Jarvis</translation>
     </message>

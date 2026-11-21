@@ -12,6 +12,7 @@ Item {
     readonly property bool mine: who === "you"
     property real column: Math.min(width - 80, 760)
     property real rise: 0  // (the list animates new messages in with it)
+    readonly property int thumb: 88  // a picture you sent, as a thumbnail
     readonly property int gap: who === "you" ? 20 : who === "jarvis" ? 10 : who === "system" ? 14 : who === "thinking" ? 4 : 8
     implicitHeight: body.implicitHeight + gap
     transform: Translate { y: m.rise }
@@ -33,20 +34,52 @@ Item {
     Component {
         id: you
         Item {
-            implicitHeight: bubble.height
-            Rectangle {
-                id: bubble
+            id: mine
+            readonly property var sent: Backend.attachedIn(m.text)  // (files go as "(attached: path)" notes: shown as tiles)
+            readonly property real most: width * 0.7
+            readonly property var rows: {  // the tiles in lines as wide as the bubble's widest, each against the bubble's side
+                const out = [[]]
+                let used = 0
+                for (const path of sent.files) {
+                    const wide = Backend.fileInfo(path).kind === "picture" ? m.thumb : Theme.fileTile
+                    if (out[out.length - 1].length && used + 8 + wide > most) {
+                        out.push([])
+                        used = 0
+                    }
+                    used += (out[out.length - 1].length ? 8 : 0) + wide
+                    out[out.length - 1].push(path)
+                }
+                return out
+            }
+            implicitHeight: stack.implicitHeight
+            Column {
+                id: stack
                 anchors.right: parent.right
-                width: Math.min(words.implicitWidth, parent.width * 0.7 - 32) + 32
-                height: words.implicitHeight + 22
-                radius: Theme.radius
-                bottomRightRadius: 6
-                color: Theme.accentSoft
-                border.width: 1
-                border.color: Theme.alpha(Theme.accent, 0.25)
-                Txt { id: words; x: 16; anchors.verticalCenter: parent.verticalCenter; width: parent.width - 32
-                      text: m.text; textFormat: Text.PlainText; font.pixelSize: Theme.px(15); lineHeight: 1.1
-                      horizontalAlignment: undefined }  // (a message goes the way its own words read)
+                spacing: 6
+                Repeater {
+                    model: mine.sent.files.length ? mine.rows : []
+                    Row {
+                        required property var modelData
+                        anchors.right: parent.right
+                        spacing: 8
+                        Repeater { model: parent.modelData; Attachment { required property string modelData; path: modelData; side: m.thumb } }
+                    }
+                }
+                Rectangle {
+                    id: bubble
+                    anchors.right: parent.right
+                    visible: mine.sent.text !== ""
+                    width: Math.min(words.implicitWidth, mine.most - 32) + 32
+                    height: words.implicitHeight + 22
+                    radius: Theme.radius
+                    bottomRightRadius: 6
+                    color: Theme.accentSoft
+                    border.width: 1
+                    border.color: Theme.alpha(Theme.accent, 0.25)
+                    Txt { id: words; x: 16; anchors.verticalCenter: parent.verticalCenter; width: parent.width - 32
+                          text: mine.sent.text; textFormat: Text.PlainText; font.pixelSize: Theme.px(15); lineHeight: 1.1
+                          horizontalAlignment: undefined }  // (a message goes the way its own words read)
+                }
             }
         }
     }
@@ -55,18 +88,29 @@ Item {
         Item {
             implicitHeight: Math.max(24, said.implicitHeight)
             Orb { anchors.left: parent.left; width: 24; height: 24; y: 1; rings: false; mode: "idle" }
-            Txt {
+            TextEdit {  // (not a Txt: a part of the reply can be selected and copied)
                 id: said
+                objectName: "reply"
                 anchors { left: parent.left; leftMargin: 36; right: parent.right }
                 text: m.linkify(m.text)
-                textFormat: Text.MarkdownText
-                horizontalAlignment: undefined
+                textFormat: TextEdit.MarkdownText
+                readOnly: true
+                selectByMouse: true
+                wrapMode: TextEdit.Wrap
+                font.family: Theme.font
                 font.pixelSize: Theme.px(15)
-                lineHeight: 1.3
+                font.weight: 400
+                font.variableAxes: ({ "wght": 400 })
+                color: Theme.text
+                selectionColor: Theme.alpha(Theme.accent, 0.4)
+                selectedTextColor: Theme.text
+                Component.onCompleted: Backend.spaceLines(textDocument, 1.3)  // (as Txt's lineHeight: TextEdit has none)
+                onLinkActivated: link => { if (/^(https?|mailto):/i.test(link)) Qt.openUrlExternally(link) }  // (as Txt's)
+                HoverHandler { cursorShape: said.hoveredLink ? Qt.PointingHandCursor : Qt.IBeamCursor }
             }
             IconButton {
                 anchors { left: parent.right; leftMargin: 8 }
-                opacity: hover.hovered ? 1 : 0
+                opacity: hover.hovered || activeFocus ? 1 : 0  // (Tab reaches it: it shows then too)
                 Behavior on opacity { NumberAnimation { duration: Theme.fast } }
                 size: 28; glyph: 14; symbol: "copy"; tip: qsTr("Copy")
                 onClicked: Backend.copy(m.text)

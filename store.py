@@ -63,11 +63,16 @@ DEFAULT_SETTINGS = {
     "discord_always": [],          # Discord names always told to the user out loud (even in quiet hours), never answered
     "discord_never": [],           # Discord names Jarvis never answers or speaks about: only shown in the chat
     "track_promises": True,        # promises in what you send ("I'll send it tomorrow") get a reminder or go on the evening list
+    "people_profiles": True,       # now and then the latest one-to-one chats with someone go to the agent's models for a short
+                                   # profile of them (who they are to you, how they write), kept on their page in people.json
+    "people_refresh_days": 7,      # a profile is written again after this many days, once you've talked since
     "evening_digest": "20:00",     # who's waiting on you and what's due tomorrow, said once a day at this time; empty = off
     "phone_direct": True,          # paired phones on the same Wi-Fi or VPN connect straight to this PC (phone.PORT), without the relay
     "learn_from_talk": True,       # after a conversation, lasting things you said about yourself go into memory (shown in the chat)
     "screen_history": False,       # a private timeline of the windows you had open (titles only, on this PC), for "what was that site?"
     "echo_cancel": False,          # echo cancelling (PipeWire on Linux, WebRTC + a speaker loopback on Windows): talk over Jarvis on speakers (experimental)
+    "bluetooth_mic": False,        # on: Jarvis listens through a Bluetooth headset's own microphone when that's the default
+                                   # one (the headset then stays in call quality, mono and muffled, while Jarvis runs)
     "learn_my_voice": True,        # learn from real wake-ups to ignore things that aren't you saying the wake word
     "only_my_voice": False,        # on (once learned): the wake word wakes Jarvis only when the learned verifier is sure it's you
     "safety": "ask",               # ask: risky commands and account changes wait for your yes; full: Jarvis just does them
@@ -232,6 +237,8 @@ def _update_settings(changes):
             raise ValueError("keep things 0 (for good) to 3650 days")
         if key == "whatsapp_calls" and value not in ("answer", "decline", "off"):
             raise ValueError("WhatsApp calls are answer, decline or off")
+        if key == "people_refresh_days" and not 1 <= value <= 60:
+            raise ValueError("write people's profiles again every 1-60 days")
         s[key] = value
     if any({n.lower() for n in s[f"{app}_always"]} & {n.lower() for n in s[f"{app}_never"]} for app in ("whatsapp", "discord")):
         raise ValueError("a name can't be both always let through and never answered")
@@ -250,10 +257,12 @@ def memory():
     except OSError:
         return ""
     try:
-        return raw.decode("utf-8").strip()
+        text = raw.decode("utf-8")
     except UnicodeDecodeError:  # (Windows used to write it in its code page)
         import locale
-        return raw.decode(locale.getpreferredencoding(False), "replace").strip()
+        text = raw.decode(locale.getpreferredencoding(False), "replace")
+    # (Windows writes "\n" as "\r\n": handed back, every write after it added another "\r" to each line)
+    return re.sub(r"\r+\n?", "\n", text).strip()
 
 
 def _write_memory(text):  # (with _lock held; through a temp file, so a reader never finds it empty mid-write)
@@ -268,6 +277,21 @@ def _write_memory(text):  # (with _lock held; through a temp file, so a reader n
 def set_memory(text):
     with _lock:
         _write_memory(text)
+
+
+def save_memory(text, was=None):
+    """The user's edit of the memory, made on `was` (the text they loaded): lines added to the file since then (a
+    "remember", the learning pass) go under it, never lost. Returns (the text kept, how many lines were added back)."""
+    key = lambda line: " ".join(line.split()).lower()
+    with _lock:
+        now = memory()
+        added = []
+        if was is not None and now != str(was).strip():
+            known = {key(l) for l in f"{was}\n{text}".splitlines()}
+            added = [l for l in now.splitlines() if key(l) and key(l) not in known]
+        text = "\n".join([text.strip(), *added]).strip()
+        _write_memory(text)
+    return text, len(added)
 
 
 def remember(fact):
@@ -289,6 +313,33 @@ def forget(text):
         keep = [l for l in lines if text.lower() not in l.lower()]
         _write_memory("\n".join(keep))
     return len(lines) - len(keep)
+
+
+NOTE_LEAD = re.compile(r"^\s*(?:[-*•]\s*)?(?:(?:lesson|how to)\s*:\s*)?", re.I)  # a note's bullet and kind, before its words
+
+
+def edit_memory_line(old=None, new=None):
+    """One of the Memory page's rows: the line old changed to new, removed (old only) or added (new only), on the memory
+    as it is now, so a note Jarvis learnt or forgot meanwhile stays so. Every other line is kept as it is; returns the memory."""
+    if new is not None:
+        new = " ".join(str(new).split())
+        if not NOTE_LEAD.sub("", new):
+            raise ValueError("write the note first")
+    elif old is None:
+        raise ValueError("say which note")
+    with _lock:
+        text = memory()
+        lines = text.split("\n") if text else []
+        if old is None:
+            if new.lower() not in (l.strip().lower() for l in lines):  # (there already: kept once, as remember does)
+                lines.append(new)
+        else:
+            at = next((i for i, l in enumerate(lines) if str(old).strip() and l.strip() == str(old).strip()), None)
+            if at is None:
+                raise ValueError("that note isn't in Jarvis's memory any more")
+            lines[at:at + 1] = [] if new is None else [new]
+        _write_memory("\n".join(lines))
+        return memory()
 
 
 # ---------------------------------------------------------------- reminders
@@ -492,6 +543,9 @@ def changes(limit=15):
 
 
 # ---------------------------------------------------------------- deleting what Jarvis keeps
+PASTED_DIR = os.path.join(DATA, "pasted")  # pictures pasted into the message box (window.paste_files), attached from here
+
+
 def delete_data():
     """Delete everything Jarvis keeps about the user on this PC: memory, conversations, reminders, routines, voice clips,
     saved WhatsApp messages and the files behind Classroom and calendar reminders, model use and the log. Keys, account sign-ins and settings stay
@@ -506,6 +560,7 @@ def delete_data():
                 pass
         for folder in ("sessions", "wake", "activity"):
             shutil.rmtree(os.path.join(DATA, folder), ignore_errors=True)
+        shutil.rmtree(PASTED_DIR, ignore_errors=True)
         forget_whatsapp_messages()
         os.makedirs(SESSIONS_DIR, exist_ok=True)
         try:
@@ -585,6 +640,7 @@ def tidy():
         return
     before = now - days * 86400
     chats = [os.path.join(SESSIONS_DIR, n) for n in os.listdir(SESSIONS_DIR) if n.endswith(".json")] if os.path.isdir(SESSIONS_DIR) else []
+    chats += [os.path.join(PASTED_DIR, n) for n in os.listdir(PASTED_DIR)] if os.path.isdir(PASTED_DIR) else []  # (as old as their chat)
     for path in [LOG_FILE] + OLD_LOGS:
         trim_log(path, before)
     with _lock:
@@ -847,14 +903,16 @@ class Sessions:
 
     def log_work(self, who, text, sid=None):
         """A finished tool call (who: "voice" or "task"), for the models' context: kept with the conversation, never a
-        chat message. sid: the conversation it was made in; once the user has left that one, the line isn't wanted."""
+        chat message. sid: the conversation it was made in; once the user has left that one, the line isn't wanted.
+        True when it was kept."""
         with _lock:
             if sid and self.current["id"] != sid:
-                return
+                return False
             work = self.current.setdefault("work", [])  # (conversations saved before there was one)
             work.append({"who": who, "text": text, "time": time.time()})
             del work[:-WORK_MAX]
         self.save()
+        return True
 
     def save(self, agent=None):
         with _lock:  # voice, agent and app threads all write to the current session
@@ -937,6 +995,15 @@ def _number(v):
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
 
+def _sound_profile(p):
+    """A person's profile and look-again mark (people.py), if they have them, as Jarvis writes them."""
+    prof, look = p.get("profile"), p.get("looked")
+    return ((prof is None or isinstance(prof, dict) and isinstance(prof.get("gist"), str) and isinstance(prof.get("text"), str)
+             and all(_number(prof.get(k)) for k in ("at", "upto", "count")))
+            and (look is None or isinstance(look, dict) and _number(look.get("at")) and _number(look.get("upto"))
+                 and isinstance(look.get("why"), str)))
+
+
 BACKUP_CHECKS = {  # what a sound file looks like, so a bad one can't break a loop after the restart
     "settings.json": lambda d: isinstance(d, dict),
     "reminders.json": lambda d: isinstance(d, list) and all(
@@ -945,7 +1012,7 @@ BACKUP_CHECKS = {  # what a sound file looks like, so a bad one can't break a lo
     "routines.json": lambda d: isinstance(d, dict) and all(isinstance(v, str) for v in d.values()),
     "people.json": lambda d: isinstance(d, dict) and all(isinstance(p, dict) and all(
         isinstance(n, dict) and isinstance(n.get("text") or n.get("what"), str) and _number(n.get("at"))
-        for n in p.get("notes", []) + p.get("promises", [])) for p in d.values()),
+        for n in p.get("notes", []) + p.get("promises", [])) and _sound_profile(p) for p in d.values()),
     "skills.json": lambda d: isinstance(d, dict) and all(
         isinstance(v, dict) and isinstance(v.get("name"), str) and isinstance(v.get("steps"), str) and isinstance(v.get("task"), str)
         and _number(v.get("at")) for v in d.values()),

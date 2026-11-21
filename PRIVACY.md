@@ -11,17 +11,21 @@ user:
 - **Memory**: the facts you asked it to remember (editable on the Memory page).
 - **Conversations**: what you and Jarvis said, and the agent's working history (the Chats page).
 - **Reminders and routines.**
+- **People** (`people.json`, the People page): a page for each person you chat with one to one on WhatsApp or Discord,
+  or tell Jarvis about: your notes, when you last wrote each other, what you promised them, and Jarvis's short profile
+  of them (see below).
 - **Wake word clips**: a few seconds of audio around each wake word, used only on this computer to learn your voice
   (Settings → *Learn my voice*), kept apart for each wake word.
 - **A log** of what Jarvis did, for troubleshooting (a new file past 5 MB; two old ones are kept).
 
 Settings → *Keep conversations and logs for* deletes conversations, the change list and log lines older than you choose,
 once a day (forever by default). *Save a backup* (Settings → *Move to another computer*) writes your settings, memory,
-reminders, routines, checks, plugins, conversations and wake-word clips into a .zip where you choose: keep it as private
+reminders, routines, checks, plugins, people (with their notes and profiles), conversations and wake-word clips into a .zip where you choose: keep it as private
 as those. It never holds keys, account sign-ins, WhatsApp or phone pairing.
 
 API keys and your spoken passphrase are kept in your system keychain (or, without one, a file only your user can read). Settings → *Delete
-everything Jarvis keeps about me* removes memory, conversations, reminders, routines, voice clips and the log.
+everything Jarvis keeps about me* removes memory, conversations, reminders, routines, people (their notes, promises and profiles), voice clips and the
+log.
 
 ## What leaves your computer
 
@@ -45,6 +49,16 @@ everything Jarvis keeps about me* removes memory, conversations, reminders, rout
   shown to you, and the transcript is kept with the conversation so you can ask about it. The names you put in its
   *Always let through* and *Never answer* lists stay in your settings on this computer (and out of bug reports). Unlink
   in Settings, or from your phone's *Linked devices*.
+- **People's profiles** (Settings → Messages → *Understand the people I chat with*, on by default): about once an
+  hour, for at most two people you've chatted with lately, Jarvis sends the latest messages of your one-to-one WhatsApp
+  and Discord chat with them (about 12,000 characters at most, never a group or server) and your notes about them to
+  the agent's models on the Models page, which write a short profile: who they seem to be to you, how they write, what
+  you talk about, what's open between you. Only the profile is kept, on their page in `people.json` on this computer;
+  saved keys, your passphrase, links, email addresses and long numbers are taken out of it first. It's written again
+  after the days you choose there, once you've talked since. Someone with fewer than eight messages to you is never
+  sent. A paused account (Accounts page) isn't read. On the People page, *Forget this* deletes one profile (Jarvis
+  doesn't write another unless you press *Refresh*) and *Forget this person* their whole page; switching the setting
+  off stops it for everyone. Profiles aren't given to WhatsApp or Discord auto-replies.
 - **Lecture and meeting notes** (only when you ask for them): what the PC plays, or the room's sound for a class in
   person, is recorded in five-minute pieces, sent to Gemini to be written down, and deleted; the notes are saved in
   `Documents/Jarvis Notes`.

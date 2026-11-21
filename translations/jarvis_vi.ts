@@ -4,7 +4,7 @@
 <context>
     <name>AccountsPage</name>
     <message>
-        <location filename="../qml/AccountsPage.qml" line="+9"/>
+        <location filename="../qml/AccountsPage.qml" line="+10"/>
         <source>Accounts</source>
         <translation>Tài khoản</translation>
     </message>
@@ -14,7 +14,22 @@
         <translation>Kết nối tài khoản để Jarvis có thể đọc và thao tác trên đó. Bạn quyết định Jarvis được làm gì với từng tài khoản.</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+14"/>
+        <source>Jarvis will ask again before “%1”</source>
+        <translation>Jarvis sẽ hỏi lại trước khi “%1”</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>%1 connected</source>
+        <translation>Đã kết nối %1</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>%1 isn&apos;t connected yet: press Refresh once you&apos;ve signed in</source>
+        <translation>%1 chưa được kết nối: hãy nhấn Làm mới sau khi đăng nhập</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Refresh</source>
         <translation>Làm mới</translation>
     </message>
@@ -40,7 +55,7 @@
         <translation>Chọn những gì Jarvis được làm với từng tài khoản.</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+36"/>
         <source>Sign in again</source>
         <translation>Đăng nhập lại</translation>
     </message>
@@ -50,7 +65,7 @@
         <translation>Đã mở trang đăng nhập trong trình duyệt</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Click again to disconnect</source>
         <translation>Nhấn lần nữa để ngắt kết nối</translation>
     </message>
@@ -86,6 +101,31 @@
     </message>
     <message>
         <location line="+11"/>
+        <source>Jarvis no longer asks before…</source>
+        <translation>Jarvis không còn hỏi trước khi…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>You told Jarvis it may do these without asking first. Ask again takes that back.</source>
+        <translation>Bạn đã cho phép Jarvis làm những việc này mà không cần hỏi trước. “Hỏi lại” sẽ thu hồi điều đó.</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>You said “%1” on %2</source>
+        <translation>Bạn đã nói “%1” vào %2</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Since %1</source>
+        <translation>Từ %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Ask again</source>
+        <translation>Hỏi lại</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>More accounts</source>
         <translation>Thêm tài khoản</translation>
     </message>
@@ -100,7 +140,12 @@
         <translation>Chọn một tài khoản để đăng nhập trong trình duyệt, rồi nhấn Làm mới.</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
+        <source>%1: waiting for sign-in…</source>
+        <translation>%1: đang chờ đăng nhập…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Finish signing in in your browser, then press Refresh</source>
         <translation>Hoàn tất đăng nhập trong trình duyệt, rồi nhấn Làm mới</translation>
     </message>
@@ -113,7 +158,7 @@
 <context>
     <name>ActivityPage</name>
     <message>
-        <location filename="../qml/ActivityPage.qml" line="+43"/>
+        <location filename="../qml/ActivityPage.qml" line="+79"/>
         <source>Activity</source>
         <translation>Hoạt động</translation>
     </message>
@@ -123,14 +168,60 @@
         <translation>Từng bước Jarvis thực hiện trong cuộc trò chuyện này, theo thời gian thực.</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>All</source>
+        <translation>Tất cả</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Errors</source>
+        <translation>Lỗi</translation>
+    </message>
+    <message>
+        <location line="+0"/>
         <location line="+86"/>
+        <source>Voice</source>
+        <translation>Giọng nói</translation>
+    </message>
+    <message>
+        <location line="-86"/>
+        <source>Tasks</source>
+        <translation>Tác vụ</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Failed: %1</source>
+        <translation>Thất bại: %1</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Task</source>
+        <translation>Tác vụ</translation>
+    </message>
+    <message>
+        <location line="+19"/>
         <source>New steps appear at the top as Jarvis works</source>
         <translation>Các bước mới hiện ở trên cùng khi Jarvis làm việc</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+16"/>
         <source>Nothing yet: ask Jarvis something</source>
         <translation>Chưa có gì: hãy hỏi Jarvis điều gì đó</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing has failed in this conversation</source>
+        <translation>Không có lỗi nào trong cuộc trò chuyện này</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The voice hasn&apos;t used a tool in this conversation yet</source>
+        <translation>Giọng nói chưa dùng công cụ nào trong cuộc trò chuyện này</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No background task has used a tool in this conversation yet</source>
+        <translation>Chưa có tác vụ nền nào dùng công cụ trong cuộc trò chuyện này</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -154,23 +245,66 @@
 <context>
     <name>Api</name>
     <message>
-        <location filename="../qml/Api.qml" line="+27"/>
+        <location filename="../qml/Api.qml" line="+19"/>
+        <source>Gemini API key</source>
+        <translation>Khóa API Gemini</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Google sign-in</source>
+        <translation>Đăng nhập Google</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Something went wrong</source>
         <translation>Đã xảy ra lỗi</translation>
     </message>
 </context>
 <context>
+    <name>Attachment</name>
+    <message>
+        <location filename="../qml/Attachment.qml" line="+17"/>
+        <source>Moved or deleted</source>
+        <translation>Đã bị di chuyển hoặc xóa</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Folder</source>
+        <translation>Thư mục</translation>
+    </message>
+    <message>
+        <location line="+71"/>
+        <source>Remove %1</source>
+        <translation>Gỡ %1</translation>
+    </message>
+</context>
+<context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+243"/>
+        <location filename="../window.py" line="+324"/>
         <source>Copied</source>
         <translation>Đã sao chép</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>Couldn&apos;t paste the picture: %1</source>
+        <translation>Không dán được ảnh: %1</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>%1 isn&apos;t there any more</source>
+        <translation>%1 không còn ở đó nữa</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Couldn&apos;t open %1: %2</source>
+        <translation>Không mở được %1: %2</translation>
     </message>
 </context>
 <context>
     <name>ChatsPage</name>
     <message>
-        <location filename="../qml/ChatsPage.qml" line="+33"/>
+        <location filename="../qml/ChatsPage.qml" line="+41"/>
         <source>just now</source>
         <translation>vừa xong</translation>
     </message>
@@ -209,7 +343,7 @@
         <translation>Tìm cuộc trò chuyện</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+57"/>
         <source>Now</source>
         <translation>Hiện tại</translation>
     </message>
@@ -259,39 +393,94 @@
 <context>
     <name>Composer</name>
     <message>
-        <location filename="../qml/Composer.qml" line="+45"/>
-        <source>Remove</source>
-        <translation>Gỡ bỏ</translation>
+        <location filename="../qml/Composer.qml" line="+49"/>
+        <source>Attach files for Jarvis</source>
+        <translation>Đính kèm tệp cho Jarvis</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Attach files (or drop them here)</source>
-        <translation>Đính kèm tệp (hoặc thả vào đây)</translation>
+        <location line="+27"/>
+        <source>Drop to attach</source>
+        <translation>Thả để đính kèm</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+40"/>
+        <source>Attach files (or paste or drop them here)</source>
+        <translation>Đính kèm tệp (hoặc dán hay kéo thả vào đây)</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Ask Jarvis</source>
         <translation>Hỏi Jarvis</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+34"/>
+        <source>Undo</source>
+        <translation>Hoàn tác</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Redo</source>
+        <translation>Làm lại</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cut</source>
+        <translation>Cắt</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy</source>
+        <translation>Sao chép</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Paste</source>
+        <translation>Dán</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Delete</source>
+        <translation>Xóa</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Select all</source>
+        <translation>Chọn tất cả</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location filename="../qml/Main.qml" line="+105"/>
         <source>Pause listening</source>
         <translation>Tạm dừng nghe</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/Main.qml" line="+0"/>
         <source>Talk to Jarvis</source>
         <translation>Nói với Jarvis</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>Stop (Esc)</source>
         <translation>Dừng (Esc)</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-1"/>
         <source>Send (Enter)</source>
         <translation>Gửi (Enter)</translation>
+    </message>
+</context>
+<context>
+    <name>ConfirmButton</name>
+    <message>
+        <location filename="../qml/ConfirmButton.qml" line="+7"/>
+        <source>Delete</source>
+        <translation>Xóa</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Click again to delete</source>
+        <translation>Nhấn lần nữa để xóa</translation>
     </message>
 </context>
 <context>
@@ -387,17 +576,17 @@
     <name>HealthPage</name>
     <message>
         <location filename="../qml/HealthPage.qml" line="+9"/>
-        <location line="+16"/>
+        <location line="+18"/>
         <source>Health</source>
         <translation>Tình trạng</translation>
     </message>
     <message>
-        <location line="-15"/>
+        <location line="-17"/>
         <source>Checks the key, mic, screen, accounts and models, and how to fix them.</source>
         <translation>Kiểm tra khóa API, micrô, màn hình, tài khoản và mô hình, kèm cách khắc phục.</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+16"/>
         <source>Home</source>
         <translation>Trang chủ</translation>
     </message>
@@ -437,7 +626,7 @@
         <translation>Cài đặt</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Copy a report</source>
         <translation>Sao chép báo cáo</translation>
     </message>
@@ -517,12 +706,7 @@
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="../qml/HomePage.qml" line="+58"/>
-        <source>Attach files for Jarvis</source>
-        <translation>Đính kèm tệp cho Jarvis</translation>
-    </message>
-    <message>
-        <location line="+36"/>
+        <location filename="../qml/HomePage.qml" line="+92"/>
         <source>Up late?</source>
         <translation>Thức khuya à?</translation>
     </message>
@@ -567,7 +751,7 @@
         <translation>Đang làm đây</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="-83"/>
         <source>Brief me</source>
         <translation>Điểm tin cho tôi</translation>
     </message>
@@ -577,7 +761,17 @@
         <translation>Thời tiết và lịch của bạn</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Connect your accounts</source>
+        <translation>Kết nối tài khoản của bạn</translation>
+    </message>
+    <message>
         <location line="+0"/>
+        <source>Gmail, Calendar, Classroom</source>
+        <translation>Gmail, Calendar, Classroom</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>What&apos;s due this week?</source>
         <translation>Tuần này có bài nào phải nộp?</translation>
     </message>
@@ -597,7 +791,7 @@
         <translation>Hộp thư Gmail của bạn</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+1"/>
         <source>What&apos;s on my screen?</source>
         <translation>Trên màn hình của tôi có gì?</translation>
     </message>
@@ -627,7 +821,7 @@
         <translation>Tạo một bức ảnh</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+99"/>
         <source>New chat</source>
         <translation>Trò chuyện mới</translation>
     </message>
@@ -642,25 +836,29 @@
         <translation>Giọng dự phòng (trang Mô hình) đang trả lời thay cho Gemini Live</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+53"/>
         <source>Working on it…</source>
         <translation>Đang xử lý…</translation>
     </message>
-    <message>
-        <location line="+5"/>
-        <source>Stop</source>
-        <translation>Dừng</translation>
+    <message numerus="yes">
+        <location filename="../qml/Composer.qml" line="+0"/>
+        <location filename="../qml/HomePage.qml" line="+8"/>
+        <source>Stop all (%n)</source>
+        <translation>
+            <numerusform>Dừng tất cả (%n)</numerusform>
+        </translation>
     </message>
     <message>
-        <location line="+27"/>
-        <source>Drop to attach</source>
-        <translation>Thả để đính kèm</translation>
+        <location line="+1"/>
+        <location filename="../qml/HomePage.qml" line="+0"/>
+        <source>Stop</source>
+        <translation>Dừng</translation>
     </message>
 </context>
 <context>
     <name>Main</name>
     <message>
-        <location filename="../qml/Main.qml" line="+115"/>
+        <location filename="../qml/Main.qml" line="+32"/>
         <source>Home</source>
         <translation>Trang chủ</translation>
     </message>
@@ -675,22 +873,31 @@
         <translation>Hoạt động</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>People</source>
+        <translation>Mọi người</translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <location filename="../qml/SettingsPage.qml" line="+831"/>
         <source>Accounts</source>
         <translation>Tài khoản</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/SettingsPage.qml" line="+2"/>
         <source>Plugins</source>
         <translation>Plugin</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/SettingsPage.qml" line="-6"/>
         <source>Models</source>
         <translation>Mô hình</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/SettingsPage.qml" line="+2"/>
         <source>Memory</source>
         <translation>Ghi nhớ</translation>
     </message>
@@ -710,7 +917,7 @@
         <translation>Cài đặt</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+66"/>
         <source>Minimise</source>
         <translation>Thu nhỏ</translation>
     </message>
@@ -733,7 +940,7 @@
 <context>
     <name>MemoryPage</name>
     <message>
-        <location filename="../qml/MemoryPage.qml" line="+10"/>
+        <location filename="../qml/MemoryPage.qml" line="+11"/>
         <source>Memory</source>
         <translation>Ghi nhớ</translation>
     </message>
@@ -743,23 +950,46 @@
         <translation>Jarvis đọc phần này trước mỗi cuộc trò chuyện. Hãy nói “nhớ là…” hoặc sửa trực tiếp tại đây.</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+126"/>
         <source>Saved</source>
         <translation>Đã lưu</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+226"/>
+        <location line="+291"/>
+        <location line="+37"/>
         <source>Save</source>
         <translation>Lưu</translation>
     </message>
     <message>
-        <location line="-225"/>
+        <location line="-420"/>
         <source>Memory saved</source>
         <translation>Đã lưu ghi nhớ</translation>
     </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>Kept %n note(s) Jarvis added while you were editing</source>
+        <translation>
+            <numerusform>Đã giữ lại %n ghi chú Jarvis thêm vào trong lúc bạn chỉnh sửa</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+5"/>
+        <location line="+40"/>
+        <source>Note added</source>
+        <translation>Đã thêm ghi chú</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Edit as text</source>
+        <translation>Sửa dạng văn bản</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Done</source>
+        <translation>Xong</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>What Jarvis knows about you</source>
         <translation>Những gì Jarvis biết về bạn</translation>
     </message>
@@ -769,7 +999,77 @@
         <translation>Ghi chú đơn giản, mỗi dòng một ý. Jarvis sẽ bổ sung khi bạn trò chuyện.</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+1"/>
+        <source>Nothing yet. Say “remember that I&apos;m vegetarian”, or add a note below.</source>
+        <translation>Chưa có gì. Hãy nói “nhớ rằng tôi ăn chay”, hoặc thêm ghi chú bên dưới.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis adds to these as you talk. Hover over a note to change or delete it.</source>
+        <translation>Jarvis sẽ bổ sung khi bạn trò chuyện. Di chuột lên một ghi chú để sửa hoặc xóa.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Filter notes</source>
+        <translation>Lọc ghi chú</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>No notes match “%1”.</source>
+        <translation>Không có ghi chú nào khớp với “%1”.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Lessons</source>
+        <translation>Bài học</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>How you corrected the way Jarvis does things.</source>
+        <translation>Những lần bạn chỉnh lại cách Jarvis làm việc.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ways that worked</source>
+        <translation>Cách đã hiệu quả</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>How Jarvis got something tricky done, kept for next time.</source>
+        <translation>Cách Jarvis làm được việc khó, lưu lại cho lần sau.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Add a note</source>
+        <translation>Thêm ghi chú</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Kind of note</source>
+        <translation>Loại ghi chú</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>About you</source>
+        <translation>Về bạn</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Lesson</source>
+        <translation>Bài học</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Way that worked</source>
+        <translation>Cách đã hiệu quả</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Add</source>
+        <translation>Thêm</translation>
+    </message>
+    <message>
+        <location line="+18"/>
         <source>- Prefers to be called …
 - Studies …</source>
         <translation>- Thích được gọi là …
@@ -804,12 +1104,18 @@
     </message>
     <message>
         <location line="+5"/>
-        <location line="+164"/>
+        <location line="+190"/>
+        <location line="+37"/>
         <source>Cancel</source>
         <translation>Hủy</translation>
     </message>
     <message>
-        <location line="-156"/>
+        <location line="-227"/>
+        <source>Click again to cancel it</source>
+        <translation>Nhấn lần nữa để hủy</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Add a reminder or task</source>
         <translation>Thêm lời nhắc hoặc tác vụ</translation>
     </message>
@@ -921,7 +1227,17 @@
         <translation>12 giờ</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+80"/>
+        <source>Note deleted</source>
+        <translation>Đã xóa ghi chú</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Write the note</source>
+        <translation>Viết ghi chú</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Edit</source>
         <translation>Sửa</translation>
     </message>
@@ -984,7 +1300,7 @@
 <context>
     <name>Message</name>
     <message>
-        <location filename="../qml/Message.qml" line="+71"/>
+        <location filename="../qml/Message.qml" line="+115"/>
         <source>Copy</source>
         <translation>Sao chép</translation>
     </message>
@@ -1002,7 +1318,7 @@
         <translation>Chọn mô hình cho từng tác vụ. Mỗi danh sách được thử từ trên xuống: khi một mô hình bận hoặc gặp sự cố, mô hình kế tiếp sẽ thay thế.</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+40"/>
         <source>Looking up the models you can use…</source>
         <translation>Đang tìm các mô hình bạn có thể dùng…</translation>
     </message>
@@ -1014,7 +1330,7 @@
         </translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Refresh</source>
         <translation>Làm mới</translation>
     </message>
@@ -1024,7 +1340,7 @@
         <translation>Mô hình cho từng tác vụ</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+59"/>
         <source>Jarvis&apos;s choice</source>
         <translation>Jarvis tự chọn</translation>
     </message>
@@ -1033,15 +1349,8 @@
         <source>Use Jarvis&apos;s choice</source>
         <translation>Để Jarvis tự chọn</translation>
     </message>
-    <message numerus="yes">
-        <location line="+9"/>
-        <source>%1 · +%n fallback(s)</source>
-        <translation>
-            <numerusform>%1 · +%n dự phòng</numerusform>
-        </translation>
-    </message>
     <message>
-        <location line="+14"/>
+        <location line="+23"/>
         <source>Providers and keys</source>
         <translation>Nhà cung cấp và khóa</translation>
     </message>
@@ -1101,12 +1410,22 @@
         <translation>Gỡ nhà cung cấp này</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Click again to remove it and its keys</source>
+        <translation>Nhấn lần nữa để gỡ nhà cung cấp này cùng các khóa của nó</translation>
+    </message>
+    <message>
         <location line="+16"/>
         <source>Resting (rate limited or refused): the next key answers</source>
         <translation>Đang nghỉ (bị giới hạn hoặc bị từ chối): khóa tiếp theo trả lời</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+1"/>
+        <source>Click again to remove this key</source>
+        <translation>Nhấn lần nữa để gỡ khóa này</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>More providers</source>
         <translation>Thêm nhà cung cấp</translation>
     </message>
@@ -1161,6 +1480,11 @@
         <translation>Đăng xuất</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Click again to sign out</source>
+        <translation>Nhấn lần nữa để đăng xuất</translation>
+    </message>
+    <message>
         <location line="+8"/>
         <source>First install the opencode-antigravity-auth plugin (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
         <translation>Trước tiên hãy cài plugin opencode-antigravity-auth (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis sẽ đăng nhập bằng thông tin của nó. Hoặc đặt ANTIGRAVITY_CLIENT_ID và ANTIGRAVITY_CLIENT_SECRET vào tệp env của Jarvis.</translation>
@@ -1191,13 +1515,20 @@
         <translation>Ưu tiên thử sớm hơn</translation>
     </message>
     <message>
-        <location line="-137"/>
-        <location line="+139"/>
+        <location line="-138"/>
+        <location line="+140"/>
         <source>Remove</source>
         <translation>Gỡ bỏ</translation>
     </message>
+    <message numerus="yes">
+        <location line="-221"/>
+        <source>%1 · +%n backup(s)</source>
+        <translation>
+            <numerusform>%1 · +%n dự phòng</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+4"/>
+        <location line="+225"/>
         <source>Add a model</source>
         <translation>Thêm mô hình</translation>
     </message>
@@ -1205,7 +1536,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3543"/>
+        <location filename="../jarvis.py" line="+3789"/>
         <source>LISTENING</source>
         <translation>ĐANG NGHE</translation>
     </message>
@@ -1236,6 +1567,289 @@
     </message>
 </context>
 <context>
+    <name>PeoplePage</name>
+    <message>
+        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <source>just now</source>
+        <translation>vừa xong</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n min ago</source>
+        <translation>
+            <numerusform>%n phút trước</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n h ago</source>
+        <translation>
+            <numerusform>%n giờ trước</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n day(s) ago</source>
+        <translation>
+            <numerusform>%n ngày trước</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>%1: they wrote %2, you wrote %3</source>
+        <translation>%1: họ nhắn %2, bạn nhắn %3</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1: they wrote %2</source>
+        <translation>%1: họ nhắn %2</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1: you wrote %2</source>
+        <translation>%1: bạn nhắn %2</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Talked %1</source>
+        <translation>Trò chuyện gần nhất: %1</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Not enough messages from them yet to say much. Jarvis tries again once you&apos;ve talked more.</source>
+        <translation>Chưa đủ tin nhắn từ họ để nói được nhiều. Jarvis sẽ thử lại khi hai bạn trò chuyện nhiều hơn.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Something went wrong</source>
+        <translation>Đã xảy ra lỗi</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>People</source>
+        <translation>Mọi người</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Who you talk with, what Jarvis understands of them from your chats, and what you&apos;ve noted or promised.</source>
+        <translation>Những người bạn trò chuyện, những gì Jarvis hiểu về họ từ các cuộc trò chuyện của bạn, và những gì bạn đã ghi chú hoặc hứa.</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <location line="+1"/>
+        <source>Search people</source>
+        <translation>Tìm người</translation>
+    </message>
+    <message>
+        <location line="+89"/>
+        <source>No one matches that</source>
+        <translation>Không ai khớp</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No one here yet</source>
+        <translation>Chưa có ai</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Also %1</source>
+        <translation>Tên khác: %1</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>You haven&apos;t chatted with them one to one on WhatsApp or Discord since Jarvis was linked.</source>
+        <translation>Bạn chưa nhắn riêng với người này trên WhatsApp hay Discord kể từ khi liên kết Jarvis.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>What Jarvis understands</source>
+        <translation>Những gì Jarvis hiểu</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Reading your chats…</source>
+        <translation>Đang đọc các cuộc trò chuyện…</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Refresh</source>
+        <translation>Làm mới</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Write it again now from your latest one-to-one messages with them</source>
+        <translation>Viết lại ngay từ các tin nhắn riêng mới nhất của bạn với người này</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Forget this</source>
+        <translation>Quên điều này</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Click again to forget it</source>
+        <translation>Nhấp lần nữa để quên</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Profile forgotten</source>
+        <translation>Đã quên hồ sơ</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+23"/>
+        <source>Updated %1, from %n message(s)</source>
+        <translation>
+            <numerusform>Cập nhật %1, từ %n tin nhắn</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>You had Jarvis forget what it understood of them. It won&apos;t write it again unless you press Refresh.</source>
+        <translation>Bạn đã yêu cầu Jarvis quên những gì đã hiểu về người này. Jarvis sẽ không viết lại trừ khi bạn nhấn Làm mới.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing yet. Every so often Jarvis reads your latest one-to-one messages with someone and writes a short profile of them, once there are enough messages.</source>
+        <translation>Chưa có gì. Thỉnh thoảng Jarvis đọc các tin nhắn riêng mới nhất của bạn với ai đó và viết một hồ sơ ngắn về họ khi đã có đủ tin nhắn.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis doesn&apos;t read your chats to understand people: profiles are off.</source>
+        <translation>Jarvis không đọc các cuộc trò chuyện của bạn để hiểu mọi người: hồ sơ đang tắt.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Profiles are off, so this one isn&apos;t updated.</source>
+        <translation>Hồ sơ đang tắt nên hồ sơ này không được cập nhật.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Turn them on in Settings</source>
+        <translation>Bật trong Cài đặt</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Reading your latest messages with %1 and asking your model…</source>
+        <translation>Đang đọc tin nhắn mới nhất của bạn với %1 và hỏi mô hình của bạn…</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Notes</source>
+        <translation>Ghi chú</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Add a note</source>
+        <translation>Thêm ghi chú</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>None yet. Tell Jarvis “Sam is my cousin”, or add one here.</source>
+        <translation>Chưa có. Hãy nói với Jarvis “Sam là anh họ tôi”, hoặc thêm ở đây.</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Until %1</source>
+        <translation>Đến %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Edit</source>
+        <translation>Sửa</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Promises</source>
+        <translation>Lời hứa</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Nothing open. When you write them “I&apos;ll send it tomorrow”, Jarvis keeps it here.</source>
+        <translation>Không có gì đang chờ. Khi bạn nhắn cho họ “mai mình gửi”, Jarvis sẽ lưu ở đây.</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Due %1</source>
+        <translation>Hạn %1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No time set: it&apos;s on your evening list</source>
+        <translation>Chưa đặt giờ: nằm trong danh sách buổi tối của bạn</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Done</source>
+        <translation>Xong</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mark this promise as kept</source>
+        <translation>Đánh dấu đã giữ lời hứa này</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <location line="+5"/>
+        <source>Forget this person</source>
+        <translation>Quên người này</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>Their notes, promises and profile go. If you chat with them again, Jarvis starts a new page.</source>
+        <translation>Ghi chú, lời hứa và hồ sơ của họ sẽ bị xóa. Nếu bạn trò chuyện lại với họ, Jarvis sẽ bắt đầu một trang mới.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Click again to forget them</source>
+        <translation>Nhấp lần nữa để quên người này</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Forgot %1</source>
+        <translation>Đã quên %1</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Pick someone to see what Jarvis knows about them</source>
+        <translation>Chọn một người để xem Jarvis biết gì về họ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>People appear here when you chat with someone one to one on WhatsApp or Discord, or when you tell Jarvis about them: “Sam is my cousin”.</source>
+        <translation>Mọi người sẽ xuất hiện ở đây khi bạn nhắn riêng với ai đó trên WhatsApp hoặc Discord, hoặc khi bạn kể với Jarvis về họ: “Sam là anh họ tôi”.</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>e.g. My cousin, studies medicine in Lyon</source>
+        <translation>vd: Anh họ tôi, học y ở Lyon</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Until (optional)</source>
+        <translation>Đến (không bắt buộc)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The last day it&apos;s true, like 2026-12-31</source>
+        <translation>Ngày cuối cùng điều này còn đúng, ví dụ 2026-12-31</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>A date like 2026-12-31 makes the note go after that day.</source>
+        <translation>Ngày như 2026-12-31 sẽ khiến ghi chú biến mất sau ngày đó.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cancel</source>
+        <translation>Hủy</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Save</source>
+        <translation>Lưu</translation>
+    </message>
+</context>
+<context>
     <name>PluginsPage</name>
     <message>
         <location filename="../qml/PluginsPage.qml" line="+9"/>
@@ -1248,7 +1862,7 @@
         <translation>Thêm công cụ cho Jarvis bằng máy chủ MCP: một địa chỉ web hoặc một lệnh chạy trên máy này.</translation>
     </message>
     <message numerus="yes">
-        <location line="+7"/>
+        <location line="+9"/>
         <source>%n min</source>
         <translation>
             <numerusform>%n phút</numerusform>
@@ -1272,14 +1886,14 @@
         <translation>Đã cài</translation>
     </message>
     <message numerus="yes">
-        <location line="+34"/>
+        <location line="+40"/>
         <source>%n tool(s)</source>
         <translation>
             <numerusform>%n công cụ</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+17"/>
         <source>%1 · trying again in %2</source>
         <translation>%1 · thử lại sau %2</translation>
     </message>
@@ -1319,7 +1933,7 @@
         <translation>Đã gỡ plugin</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+18"/>
         <source>Add a plugin</source>
         <translation>Thêm plugin</translation>
     </message>
@@ -1418,17 +2032,17 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="+11"/>
+        <location filename="../qml/SettingsPage.qml" line="-677"/>
         <source>Settings</source>
         <translation>Cài đặt</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>Thay đổi được lưu ngay. Mô hình và khóa API nằm ở trang Mô hình.</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="-109"/>
         <source>Checking…</source>
         <translation>Đang kiểm tra…</translation>
     </message>
@@ -1453,12 +2067,50 @@
         <translation>Đã xóa cụm mật khẩu</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
+        <location line="+130"/>
         <source>Voice</source>
         <translation>Giọng nói</translation>
     </message>
     <message>
+        <location line="-129"/>
+        <source>Window</source>
+        <translation>Cửa sổ</translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <source>Phone</source>
+        <translation>Điện thoại</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Advanced</source>
+        <translation>Nâng cao</translation>
+    </message>
+    <message>
+        <location line="+68"/>
+        <location line="+1"/>
+        <source>Search settings</source>
+        <translation>Tìm cài đặt</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <location line="+39"/>
+        <source>Clear the search</source>
+        <translation>Xóa nội dung tìm kiếm</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>No setting matches “%1”</source>
+        <translation>Không có cài đặt nào khớp với “%1”</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Try another word, or pick a tab above.</source>
+        <translation>Hãy thử từ khác, hoặc chọn một thẻ ở trên.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>How Jarvis sounds and talks to you. Changes apply from the next conversation.</source>
         <translation>Giọng và cách Jarvis nói chuyện với bạn. Thay đổi có hiệu lực từ cuộc trò chuyện tiếp theo.</translation>
     </message>
@@ -1513,12 +2165,12 @@
         <translation>Trả lời không cần suy nghĩ trước: nhanh hơn khoảng 0,3 giây, kém chính xác hơn một chút</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Speak replies to typed messages</source>
         <translation>Đọc to câu trả lời cho tin nhắn đã nhập</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Always use the backup voice</source>
         <translation>Luôn dùng giọng dự phòng</translation>
     </message>
@@ -1528,7 +2180,7 @@
         <translation>Nghe và nói bằng các mô hình ở trang Mô hình thay cho Gemini Live, dành cho khóa không hỗ trợ Gemini Live. Khi tắt, giọng dự phòng chỉ trả lời lúc không kết nối được Gemini Live</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Listening</source>
         <translation>Lắng nghe</translation>
     </message>
@@ -1619,7 +2271,7 @@
         <translation>Những lần đánh thức bạn bỏ qua giúp Jarvis nhận ra đâu không phải giọng bạn</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Only wake for my voice</source>
         <translation>Chỉ thức dậy khi nghe giọng tôi</translation>
     </message>
@@ -1639,7 +2291,7 @@
         <translation>Người khác nói từ đánh thức sẽ không đánh thức Jarvis. Nút Nói và Nhấn để nói vẫn luôn hoạt động</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Echo cancelling</source>
         <translation>Khử tiếng vọng</translation>
     </message>
@@ -1654,7 +2306,17 @@
         <translation>Ngăn âm thanh của chính máy tính (Jarvis, trò chơi, video, cuộc gọi) lọt vào micrô để không bị nhầm là giọng bạn, và bạn có thể nói chen khi Jarvis đang nói (PipeWire; khởi động lại Jarvis để áp dụng)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Listen through a Bluetooth headset</source>
+        <translation>Nghe qua tai nghe Bluetooth</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>When a Bluetooth headset&apos;s microphone is the default one, Jarvis listens through it, and the headset stays in call quality (mono and muffled) while Jarvis runs. Off, Jarvis uses the PC&apos;s own microphone and the headset keeps its sound</source>
+        <translation>Khi micrô của tai nghe Bluetooth là micrô mặc định, Jarvis nghe qua micrô đó, và tai nghe sẽ ở chất lượng cuộc gọi (mono, tiếng bị đục) suốt thời gian Jarvis chạy. Khi tắt, Jarvis dùng micrô của chính máy tính và tai nghe giữ nguyên chất lượng âm thanh</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Spoken passphrase: asked for with every yes said out loud (sends, calls, account changes, risky commands). Never shown or said back</source>
         <translation>Cụm mật khẩu nói: được hỏi mỗi khi bạn nói đồng ý (gửi tin, gọi điện, thay đổi tài khoản, lệnh rủi ro). Không bao giờ hiển thị hay đọc lại</translation>
     </message>
@@ -1670,39 +2332,44 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+138"/>
-        <location line="+56"/>
+        <location line="+290"/>
+        <location line="+117"/>
         <source>Save</source>
         <translation>Lưu</translation>
     </message>
     <message>
-        <location line="-192"/>
+        <location line="-405"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>Gỡ bỏ</translation>
     </message>
     <message>
-        <location line="-76"/>
+        <location line="-82"/>
+        <location line="+7"/>
         <source>Push to talk</source>
         <translation>Nhấn để nói</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-7"/>
+        <location line="+9"/>
         <source>Bind these to keyboard shortcuts (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</source>
         <translation>Gán các lệnh này cho phím tắt (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-8"/>
+        <location line="+10"/>
         <source>Start listening</source>
         <translation>Bắt đầu nghe</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-10"/>
+        <location line="+11"/>
         <source>Drag over part of the screen and ask about it</source>
         <translation>Kéo chọn một vùng màn hình và hỏi về nó</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-249"/>
+        <location line="+256"/>
         <source>Your day</source>
         <translation>Ngày của bạn</translation>
     </message>
@@ -1732,7 +2399,7 @@
         <translation>Lần đầu Jarvis khởi động vào buổi sáng, Jarvis sẽ kể cho bạn về ngày hôm nay</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Do not disturb</source>
         <translation>Không làm phiền</translation>
     </message>
@@ -1742,7 +2409,7 @@
         <translation>Jarvis không tự lên tiếng: lời nhắc, kết quả và tin nhắn chỉ được gửi vào khung trò chuyện, thông báo và điện thoại của bạn. Jarvis vẫn trả lời khi bạn hỏi (cũng có trong menu khay hệ thống)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Quiet over full-screen apps</source>
         <translation>Yên lặng khi ứng dụng toàn màn hình</translation>
     </message>
@@ -1752,7 +2419,7 @@
         <translation>Khi trò chơi hoặc phim đang toàn màn hình, Jarvis chỉ để những gì nó tự nói trong khung chat và thông báo. Lời nhắc vẫn được đọc</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Classroom deadlines</source>
         <translation>Hạn nộp Classroom</translation>
     </message>
@@ -1762,7 +2429,7 @@
         <translation>Nhắc trước hạn nộp một ngày và hai giờ (bỏ qua nếu bạn đã nộp bài)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Calendar heads-up</source>
         <translation>Nhắc lịch</translation>
     </message>
@@ -1772,7 +2439,7 @@
         <translation>Nhắc mười phút trước mỗi sự kiện trên Google Calendar</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Keep track of my promises</source>
         <translation>Ghi nhớ lời hứa của tôi</translation>
     </message>
@@ -1793,11 +2460,12 @@
     </message>
     <message>
         <location line="+5"/>
+        <location line="+3"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>Giờ yên lặng từ (để trống: không có)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-2"/>
         <source>e.g. 22:00</source>
         <translation>ví dụ: 22:00</translation>
     </message>
@@ -1812,7 +2480,7 @@
         <translation>ví dụ: 07:00</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Window &amp; behavior</source>
         <translation>Cửa sổ và hành vi</translation>
     </message>
@@ -1862,12 +2530,12 @@
         <translation>Hiện suy nghĩ của Jarvis trong khung trò chuyện</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Start Jarvis when I log in</source>
         <translation>Khởi động Jarvis khi tôi đăng nhập</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Ask before risky actions</source>
         <translation>Hỏi trước khi làm việc rủi ro</translation>
     </message>
@@ -1877,7 +2545,7 @@
         <translation>Lệnh xóa, cài đặt hay tắt máy, và thay đổi tài khoản (gửi email, tạo sự kiện) sẽ chờ bạn đồng ý, trừ khi bạn đã yêu cầu đúng việc đó</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Your instructions</source>
         <translation>Chỉ dẫn của bạn</translation>
     </message>
@@ -1887,7 +2555,54 @@
         <translation>Cách Jarvis nên cư xử và những điều Jarvis nên biết về bạn.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+116"/>
+        <source>People</source>
+        <translation>Mọi người</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis gets to know the people you chat with one to one, so it knows who someone is when you mention them. The People page shows what it understood, with your notes and promises.</source>
+        <translation>Jarvis làm quen với những người bạn nhắn riêng, để biết ai là ai khi bạn nhắc đến họ. Trang Mọi người cho thấy những gì Jarvis hiểu, cùng ghi chú và lời hứa của bạn.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Understand the people I chat with</source>
+        <translation>Hiểu những người tôi trò chuyện</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Now and then, the latest messages of your one-to-one WhatsApp and Discord chats go to your model to write a short profile of each person: who they are to you, how they write, what&apos;s open between you. Kept on this PC; groups are never read</source>
+        <translation>Thỉnh thoảng, tin nhắn mới nhất trong các cuộc trò chuyện riêng trên WhatsApp và Discord của bạn được gửi đến mô hình của bạn để viết một hồ sơ ngắn về từng người: họ là ai với bạn, họ viết thế nào, giữa hai bạn còn việc gì dở dang. Lưu trên PC này; không bao giờ đọc nhóm</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Write a profile again after</source>
+        <translation>Viết lại hồ sơ sau</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>refresh profiles days</source>
+        <translation>làm mới hồ sơ ngày</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>3 days</source>
+        <translation>3 ngày</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Two weeks</source>
+        <translation>Hai tuần</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n day(s)</source>
+        <translation>
+            <numerusform>%n ngày</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+145"/>
         <source>Jarvis on Telegram</source>
         <translation>Jarvis trên Telegram</translation>
     </message>
@@ -1897,7 +2612,7 @@
         <translation>Giao việc cho Jarvis từ bất cứ đâu qua Telegram.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>In Telegram, message &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, send /newbot and copy the token it gives you.</source>
         <translation>Trong Telegram, nhắn tin cho &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, gửi /newbot rồi sao chép token được cấp.</translation>
     </message>
@@ -1907,7 +2622,8 @@
         <translation>Dán token vào đây.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-6"/>
+        <location line="+7"/>
         <source>Send your new bot the code below. Only that chat is answered.</source>
         <translation>Gửi mã bên dưới cho bot mới của bạn. Jarvis chỉ trả lời cuộc trò chuyện đó.</translation>
     </message>
@@ -1917,7 +2633,8 @@
         <translation>Đã lưu token bot · dán token mới để thay thế</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-13"/>
+        <location line="+13"/>
         <source>Paste your bot&apos;s token</source>
         <translation>Dán token của bot</translation>
     </message>
@@ -1932,18 +2649,21 @@
         <translation>Gửi mã này cho bot của bạn: %1</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <location line="+89"/>
+        <location line="-93"/>
+        <location line="+19"/>
+        <location line="+52"/>
+        <location line="+28"/>
         <source>Unpair</source>
         <translation>Hủy ghép nối</translation>
     </message>
     <message>
-        <location line="-88"/>
+        <location line="-28"/>
+        <location line="+29"/>
         <source>Remove the bot</source>
         <translation>Gỡ bot</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-171"/>
         <source>The Jarvis app</source>
         <translation>Ứng dụng Jarvis</translation>
     </message>
@@ -1953,7 +2673,7 @@
         <translation>Ứng dụng Jarvis cho Android kết nối tới máy tính này từ bất cứ đâu qua relay riêng của bạn. Kết nối được mã hóa đầu cuối: relay chỉ chuyển tiếp dữ liệu đã mã hóa, và máy tính này không mở cổng nào ra internet.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Connect directly on your own network</source>
         <translation>Kết nối trực tiếp trong mạng của bạn</translation>
     </message>
@@ -1963,22 +2683,25 @@
         <translation>Trên cùng Wi-Fi, hoặc qua VPN như Tailscale, điện thoại đã ghép nối kết nối tới PC này mà không cần relay, và việc ghép nối cũng không cần relay. Tường lửa của bạn có thể cần cho phép Jarvis</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+12"/>
         <source>Setting up…</source>
         <translation>Đang thiết lập…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-6"/>
+        <location line="+6"/>
         <source>Set up my relay</source>
         <translation>Thiết lập relay</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-6"/>
+        <location line="+9"/>
         <source>Signs in to your free Cloudflare account in your browser, puts the relay online and saves its address.</source>
         <translation>Đăng nhập tài khoản Cloudflare miễn phí của bạn trong trình duyệt, đưa relay lên mạng và lưu địa chỉ của nó.</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="-8"/>
+        <location line="+17"/>
         <source>Or by hand</source>
         <translation>Hoặc làm thủ công</translation>
     </message>
@@ -1998,7 +2721,8 @@
         <translation>Dán địa chỉ mà lệnh in ra vào đây.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-20"/>
+        <location line="+26"/>
         <source>Your relay&apos;s address, like https://jarvis-relay.you.workers.dev</source>
         <translation>Địa chỉ relay của bạn, ví dụ: https://jarvis-relay.you.workers.dev</translation>
     </message>
@@ -2008,7 +2732,8 @@
         <translation>Hủy</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+6"/>
+        <location line="+16"/>
         <source>Connected</source>
         <translation>Đã kết nối</translation>
     </message>
@@ -2018,22 +2743,26 @@
         <translation>Đang kết nối…</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-16"/>
+        <location line="+19"/>
         <source>Change</source>
         <translation>Đổi</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+32"/>
+        <location line="+3"/>
         <source>Pair another phone</source>
         <translation>Ghép nối điện thoại khác</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-3"/>
+        <location line="+3"/>
         <source>Pair a phone</source>
         <translation>Ghép nối điện thoại</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="-3"/>
+        <location line="+19"/>
         <source>Scan to pair</source>
         <translation>Quét để ghép nối</translation>
     </message>
@@ -2043,7 +2772,7 @@
         <translation>Trong ứng dụng Jarvis, chạm Pair rồi quét mã này. Mã chỉ dùng được một lần, trong mười phút.</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="-246"/>
         <source>WhatsApp</source>
         <translation>WhatsApp</translation>
     </message>
@@ -2053,7 +2782,8 @@
         <translation>Jarvis liên kết với WhatsApp của bạn giống như WhatsApp Web. Jarvis trả lời những tin nhắn của danh bạ không cần đến bạn, cho biết mình là trợ lý của bạn, và nghe máy khi bạn lỡ cuộc gọi để nhận lời nhắn. Đây không phải tính năng chính thức của WhatsApp: WhatsApp có thể chặn số điện thoại hoạt động như bot, nên Jarvis chỉ trả lời danh bạ đã lưu, không bao giờ trả lời trong nhóm.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
+        <location line="+1"/>
         <source>Link WhatsApp</source>
         <translation>Liên kết WhatsApp</translation>
     </message>
@@ -2068,7 +2798,8 @@
         <translation>Đang lấy mã từ WhatsApp…</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-4"/>
+        <location line="+18"/>
         <source>Scan with WhatsApp</source>
         <translation>Quét bằng WhatsApp</translation>
     </message>
@@ -2093,18 +2824,20 @@
         <translation>Đã liên kết</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-28"/>
+        <location line="+29"/>
         <source>Unlink</source>
         <translation>Hủy liên kết</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <location line="+45"/>
+        <location line="-387"/>
+        <location line="+392"/>
+        <location line="+51"/>
         <source>Messages</source>
         <translation>Tin nhắn</translation>
     </message>
     <message>
-        <location line="-43"/>
+        <location line="-49"/>
         <source>Answer my contacts</source>
         <translation>Trả lời danh bạ của tôi</translation>
     </message>
@@ -2115,12 +2848,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+44"/>
+        <location line="+50"/>
         <source>Just show them to me</source>
         <translation>Chỉ hiện cho tôi xem</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-48"/>
         <source>Jarvis writes a reply to your contacts&apos; messages that don&apos;t need you and tells you. Nothing is sent until you say &quot;send it&quot;.</source>
         <translation>Jarvis viết câu trả lời cho những tin nhắn của danh bạ không cần đến bạn và báo cho bạn. Không gì được gửi đi cho đến khi bạn nói “gửi đi”.</translation>
     </message>
@@ -2151,23 +2884,23 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+38"/>
+        <location line="+44"/>
         <source>e.g. Alex</source>
         <translation>ví dụ: Minh</translation>
     </message>
     <message>
-        <location line="-37"/>
+        <location line="-43"/>
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
         <translation>Không bao giờ trả lời (mỗi dòng một tên): Jarvis không trả lời hay nghe máy, chỉ hiện tin nhắn của họ trong khung trò chuyện</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+38"/>
+        <location line="+44"/>
         <source>e.g. Sam</source>
         <translation>ví dụ: Lan</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-42"/>
         <source>What Jarvis tells people</source>
         <translation>Điều Jarvis nói với mọi người</translation>
     </message>
@@ -2177,7 +2910,7 @@
         <translation>ví dụ: Mình đang học đến 5 giờ, xong sẽ trả lời</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Tell people when I&apos;m busy</source>
         <translation>Cho mọi người biết khi nào tôi bận</translation>
     </message>
@@ -2187,7 +2920,7 @@
         <translation>Từ Google Lịch của bạn: chỉ giờ, không bao giờ nói bạn đang làm gì</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+11"/>
         <source>Discord</source>
         <translation>Discord</translation>
     </message>
@@ -2197,7 +2930,8 @@
         <translation>Jarvis đọc và gửi tin nhắn Discord cho bạn qua Vesktop, ngay trong Discord của bạn: hỏi xem có gì mới, hoặc nhờ nhắn, trả lời hay thả cảm xúc trong DM hoặc kênh máy chủ. DM mới và lượt nhắc đến bạn hiện trong khung chat của Jarvis.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
+        <location line="+1"/>
         <source>Connected to Vesktop</source>
         <translation>Đã kết nối với Vesktop</translation>
     </message>
@@ -2217,12 +2951,13 @@
         <translation>Cần khởi động lại Vesktop với kết nối của Jarvis được bật (cuộc gọi trong Vesktop sẽ bị ngắt).</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-9"/>
+        <location line="+10"/>
         <source>Restart Vesktop</source>
         <translation>Khởi động lại Vesktop</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Answer my friends&apos; DMs (Discord may ban accounts that act like bots)</source>
         <translation>Trả lời DM của bạn bè tôi (Discord có thể cấm các tài khoản hoạt động như bot)</translation>
     </message>
@@ -2242,7 +2977,8 @@
         <translation>Câu trả lời dùng điều Jarvis nói với mọi người trong mục WhatsApp. Bạn cũng có thể chỉ cần nói &quot;đừng trả lời Sam&quot; hoặc &quot;báo tôi khi Alex nhắn&quot;.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="-452"/>
+        <location line="+658"/>
         <source>Your data</source>
         <translation>Dữ liệu của bạn</translation>
     </message>
@@ -2252,7 +2988,7 @@
         <translation>Trên máy tính này, Jarvis lưu những gì đã ghi nhớ về bạn, các cuộc trò chuyện, lời nhắc và quy trình, các đoạn ghi âm ngắn từ đánh thức của bạn (để học giọng bạn) và một tệp nhật ký. Những gì bạn nói sau từ đánh thức, và ảnh chụp màn hình khi tác vụ cần đến màn hình, được gửi tới Google Gemini; thao tác với tài khoản đi qua Composio.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Screen history</source>
         <translation>Lịch sử màn hình</translation>
     </message>
@@ -2272,17 +3008,19 @@
         <translation>Khi cuộc trò chuyện kết thúc, Jarvis thêm vào bộ nhớ những điều lâu dài bạn nói về bản thân và hiển thị từng điều trong khung chat</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Keep conversations and logs for</source>
         <translation>Lưu cuộc trò chuyện và nhật ký trong</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-198"/>
+        <location line="+200"/>
         <source>A week</source>
         <translation>Một tuần</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-199"/>
+        <location line="+199"/>
         <source>A month</source>
         <translation>Một tháng</translation>
     </message>
@@ -2302,12 +3040,13 @@
         <translation>Mãi mãi</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Press again to delete it all</source>
         <translation>Nhấn lần nữa để xóa tất cả</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-4"/>
+        <location line="+4"/>
         <source>Delete everything Jarvis keeps about me</source>
         <translation>Xóa mọi thứ Jarvis lưu về tôi</translation>
     </message>
@@ -2317,12 +3056,13 @@
         <translation>Đã xóa. Khóa, tài khoản và cài đặt vẫn được giữ.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-8"/>
+        <location line="+11"/>
         <source>Keys, account sign-ins and settings stay.</source>
         <translation>Khóa, thông tin đăng nhập tài khoản và cài đặt vẫn được giữ.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Move to another computer</source>
         <translation>Chuyển sang máy tính khác</translation>
     </message>
@@ -2332,22 +3072,25 @@
         <translation>Một tệp chứa cài đặt, ghi nhớ, lời nhắc, tác vụ đã lên lịch, quy trình, plugin, cuộc trò chuyện và các đoạn ghi âm Jarvis dùng để học giọng bạn. Tệp không gồm khóa, thông tin đăng nhập tài khoản, WhatsApp và điện thoại của bạn: hãy thiết lập lại chúng trên máy kia.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+4"/>
+        <location line="+4"/>
         <source>Save a backup</source>
         <translation>Lưu bản sao lưu</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-4"/>
+        <location line="+7"/>
         <source>Bring one in</source>
         <translation>Nhập bản sao lưu</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-7"/>
+        <location line="+8"/>
         <source>Bringing one in replaces what&apos;s on this computer (conversations are added), then Jarvis restarts.</source>
         <translation>Nhập bản sao lưu sẽ thay thế dữ liệu trên máy này (cuộc trò chuyện được thêm vào), sau đó Jarvis khởi động lại.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Save a Jarvis backup</source>
         <translation>Lưu bản sao lưu Jarvis</translation>
     </message>
@@ -2378,7 +3121,62 @@
         <translation>Đã nhập: Jarvis đang khởi động lại</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+8"/>
+        <source>On other pages</source>
+        <translation>Ở các trang khác</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>These are set on the page they belong to.</source>
+        <translation>Những mục này được đặt ở trang tương ứng.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Models and API keys</source>
+        <translation>Mô hình và khóa API</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Which model does each job (tasks, reading the screen, web search, pictures, the backup voice), the order they&apos;re tried in, and your keys</source>
+        <translation>Mô hình nào làm việc gì (tác vụ, đọc màn hình, tìm kiếm web, hình ảnh, giọng dự phòng), thứ tự được thử, và các khóa của bạn</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Background checks</source>
+        <translation>Theo dõi trong nền</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis keeps an eye on for you (&quot;tell me if a payment fails&quot;), how often it looks, and which checks are paused</source>
+        <translation>Những gì Jarvis theo dõi giúp bạn (“báo tôi nếu có giao dịch thanh toán thất bại”), bao lâu kiểm tra một lần, và mục nào đang tạm dừng</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis may do in each account</source>
+        <translation>Những gì Jarvis được làm trong từng tài khoản</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ask first, go ahead, read only or paused, for each account you connected</source>
+        <translation>Hỏi trước, cứ làm, chỉ đọc hoặc tạm dừng, cho từng tài khoản bạn đã kết nối</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tools from other apps</source>
+        <translation>Công cụ từ các ứng dụng khác</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The plugins (MCP servers) Jarvis can use: add one, or switch one on or off</source>
+        <translation>Các plugin (máy chủ MCP) Jarvis có thể dùng: thêm mới, hoặc bật tắt từng plugin</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>About Jarvis</source>
+        <translation>Giới thiệu về Jarvis</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>%1 is out (%2)</source>
         <translation>Đã có bản %1 (%2)</translation>
     </message>
@@ -2388,7 +3186,8 @@
         <translation>Đã có bản %1</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-10"/>
+        <location line="+11"/>
         <source>Up to date</source>
         <translation>Đã là bản mới nhất</translation>
     </message>
@@ -2398,22 +3197,34 @@
         <translation>Đang cập nhật…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
+        <location line="+12"/>
         <source>Update now</source>
         <translation>Cập nhật ngay</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
+        <location line="+12"/>
         <source>Check for updates</source>
         <translation>Kiểm tra cập nhật</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Run the setup again</source>
         <translation>Chạy lại thiết lập</translation>
     </message>
     <message>
-        <location line="+116"/>
+        <location line="+0"/>
+        <source>First-run setup</source>
+        <translation>Thiết lập lần đầu</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Your Gemini key, microphone, Jarvis&apos;s voice and how careful it should be, one step at a time</source>
+        <translation>Khóa Gemini, micrô, giọng của Jarvis và mức độ cẩn trọng, từng bước một</translation>
+    </message>
+    <message>
+        <location line="+256"/>
         <source>e.g. Keep answers short.</source>
         <translation>ví dụ: Trả lời ngắn gọn.</translation>
     </message>
@@ -2477,8 +3288,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis keeps all of it on this computer.</source>
-        <translation>Những gì bạn nói sau “%1” hoặc gõ vào, phần ghi nhớ và cuộc trò chuyện gần đây giúp trả lời, và ảnh chụp màn hình khi tác vụ cần đến màn hình, được gửi tới Google Gemini. Thao tác với tài khoản đi qua Composio, chỉ với những tài khoản bạn kết nối. Jarvis lưu tất cả trên máy tính này.</translation>
+        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis also keeps a copy of your conversations and memory on this computer.</source>
+        <translation>Những gì bạn nói sau “%1” hoặc gõ vào, phần ghi nhớ và cuộc trò chuyện gần đây giúp trả lời, và ảnh chụp màn hình khi tác vụ cần đến màn hình, được gửi tới Google Gemini. Thao tác với tài khoản đi qua Composio, chỉ với những tài khoản bạn kết nối. Jarvis cũng lưu một bản sao các cuộc trò chuyện và phần ghi nhớ của bạn trên máy tính này.</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -2664,7 +3475,7 @@
 <context>
     <name>Theme</name>
     <message>
-        <location filename="../qml/Theme.qml" line="+58"/>
+        <location filename="../qml/Theme.qml" line="+59"/>
         <source>Listening</source>
         <translation>Đang nghe</translation>
     </message>
@@ -2685,9 +3496,17 @@
     </message>
 </context>
 <context>
+    <name>Toast</name>
+    <message>
+        <location filename="../qml/Toast.qml" line="+34"/>
+        <source>Close</source>
+        <translation>Đóng</translation>
+    </message>
+</context>
+<context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+109"/>
+        <location filename="../qml/Today.qml" line="+135"/>
         <source>Feels %1 in %2</source>
         <translation>Cảm giác như %1 tại %2</translation>
     </message>
@@ -2697,7 +3516,7 @@
         <translation>Cảm giác như %1</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+55"/>
         <source>Now playing</source>
         <translation>Đang phát</translation>
     </message>
@@ -2712,7 +3531,8 @@
         <translation>Bài tiếp</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-111"/>
+        <location line="+125"/>
         <source>Working on</source>
         <translation>Đang làm</translation>
     </message>
@@ -2722,17 +3542,18 @@
         <translation>Vừa hoàn thành</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+137"/>
         <source>Stop this task</source>
         <translation>Dừng tác vụ này</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="-92"/>
         <source>Finished at %1</source>
         <translation>Hoàn thành lúc %1</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="-154"/>
+        <location line="+171"/>
         <source>To do</source>
         <translation>Việc cần làm</translation>
     </message>
@@ -2742,7 +3563,7 @@
         <translation>Tuần này không có việc gì. Thử nói “20 phút nữa nhắc tôi vươn vai”.</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+104"/>
         <source>No date</source>
         <translation>Không có hạn</translation>
     </message>
@@ -2757,12 +3578,12 @@
         <translation>Đã hứa với %1</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+29"/>
         <source>Cancel this reminder</source>
         <translation>Hủy lời nhắc này</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
         <source>Mark as done</source>
         <translation>Đánh dấu đã xong</translation>
     </message>
@@ -2772,12 +3593,38 @@
         <translation>Mở trong Classroom</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-112"/>
         <source>Couldn&apos;t check %1 just now.</source>
         <translation>Hiện không kiểm tra được %1.</translation>
     </message>
+    <message numerus="yes">
+        <location line="-208"/>
+        <source>%n running</source>
+        <translation>
+            <numerusform>%n đang chạy</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+18"/>
+        <source>%n to do</source>
+        <translation>
+            <numerusform>%n việc cần làm</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+13"/>
+        <location line="+186"/>
+        <source>Show fewer</source>
+        <translation>Thu gọn</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>+%n more</source>
+        <translation>
+            <numerusform>+%n mục khác</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+17"/>
         <source>This PC</source>
         <translation>Máy tính này</translation>
     </message>
@@ -2811,11 +3658,16 @@
         <source>Last answer started %1 s after you finished</source>
         <translation>Câu trả lời gần nhất bắt đầu %1 giây sau khi bạn nói xong</translation>
     </message>
+    <message>
+        <location line="+94"/>
+        <source>Click again to cancel it</source>
+        <translation>Nhấn lần nữa để hủy</translation>
+    </message>
 </context>
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+122"/>
+        <location filename="../jarvis.py" line="+124"/>
         <source>Open Jarvis</source>
         <translation>Mở Jarvis</translation>
     </message>

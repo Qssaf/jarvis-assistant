@@ -4,7 +4,7 @@
 <context>
     <name>AccountsPage</name>
     <message>
-        <location filename="../qml/AccountsPage.qml" line="+9"/>
+        <location filename="../qml/AccountsPage.qml" line="+10"/>
         <source>Accounts</source>
         <translation>الحسابات</translation>
     </message>
@@ -14,7 +14,22 @@
         <translation>اربط حساباتك ليتمكن Jarvis من قراءتها والتصرّف فيها. أنت تحدد ما يُسمح له به في كل حساب.</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+14"/>
+        <source>Jarvis will ask again before “%1”</source>
+        <translation>سيسألك Jarvis مجددا قبل «%1»</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>%1 connected</source>
+        <translation>تم ربط %1</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>%1 isn&apos;t connected yet: press Refresh once you&apos;ve signed in</source>
+        <translation>لم يُربط %1 بعد: اضغط «تحديث» بعد تسجيل الدخول</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Refresh</source>
         <translation>تحديث</translation>
     </message>
@@ -40,7 +55,7 @@
         <translation>اختر ما يُسمح لـ Jarvis بفعله في كل حساب.</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+36"/>
         <source>Sign in again</source>
         <translation>إعادة تسجيل الدخول</translation>
     </message>
@@ -50,7 +65,7 @@
         <translation>فُتحت صفحة تسجيل الدخول في متصفحك</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Click again to disconnect</source>
         <translation>انقر مجددًا لقطع الاتصال</translation>
     </message>
@@ -86,6 +101,31 @@
     </message>
     <message>
         <location line="+11"/>
+        <source>Jarvis no longer asks before…</source>
+        <translation>لم يعد Jarvis يسأل قبل…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>You told Jarvis it may do these without asking first. Ask again takes that back.</source>
+        <translation>سمحت لـ Jarvis بفعل هذه الأمور دون أن يسألك أولا. «اسألني مجددا» يلغي ذلك.</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>You said “%1” on %2</source>
+        <translation>قلت «%1» في %2</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Since %1</source>
+        <translation>منذ %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Ask again</source>
+        <translation>اسألني مجددا</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>More accounts</source>
         <translation>حسابات أخرى</translation>
     </message>
@@ -100,7 +140,12 @@
         <translation>اختر حسابًا لتسجيل الدخول إليه من متصفحك، ثم اضغط «تحديث».</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
+        <source>%1: waiting for sign-in…</source>
+        <translation>%1: بانتظار تسجيل الدخول…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Finish signing in in your browser, then press Refresh</source>
         <translation>أكمل تسجيل الدخول في متصفحك، ثم اضغط «تحديث»</translation>
     </message>
@@ -113,7 +158,7 @@
 <context>
     <name>ActivityPage</name>
     <message>
-        <location filename="../qml/ActivityPage.qml" line="+43"/>
+        <location filename="../qml/ActivityPage.qml" line="+79"/>
         <source>Activity</source>
         <translation>النشاط</translation>
     </message>
@@ -123,14 +168,60 @@
         <translation>كل خطوة يخطوها Jarvis في هذه المحادثة، لحظة بلحظة.</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>All</source>
+        <translation>الكل</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Errors</source>
+        <translation>الأخطاء</translation>
+    </message>
+    <message>
+        <location line="+0"/>
         <location line="+86"/>
+        <source>Voice</source>
+        <translation>الصوت</translation>
+    </message>
+    <message>
+        <location line="-86"/>
+        <source>Tasks</source>
+        <translation>المهام</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Failed: %1</source>
+        <translation>فشل: %1</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Task</source>
+        <translation>مهمة</translation>
+    </message>
+    <message>
+        <location line="+19"/>
         <source>New steps appear at the top as Jarvis works</source>
         <translation>تظهر الخطوات الجديدة في الأعلى أثناء عمل Jarvis</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+16"/>
         <source>Nothing yet: ask Jarvis something</source>
         <translation>لا شيء بعد: اسأل Jarvis عن أي شيء</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing has failed in this conversation</source>
+        <translation>لم يفشل شيء في هذه المحادثة</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The voice hasn&apos;t used a tool in this conversation yet</source>
+        <translation>لم يستخدم الصوت أي أداة في هذه المحادثة بعد</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No background task has used a tool in this conversation yet</source>
+        <translation>لم تستخدم أي مهمة في الخلفية أداةً في هذه المحادثة بعد</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -159,23 +250,66 @@
 <context>
     <name>Api</name>
     <message>
-        <location filename="../qml/Api.qml" line="+27"/>
+        <location filename="../qml/Api.qml" line="+19"/>
+        <source>Gemini API key</source>
+        <translation>مفتاح Gemini API</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Google sign-in</source>
+        <translation>تسجيل الدخول باستخدام Google</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Something went wrong</source>
         <translation>حدث خطأ ما</translation>
     </message>
 </context>
 <context>
+    <name>Attachment</name>
+    <message>
+        <location filename="../qml/Attachment.qml" line="+17"/>
+        <source>Moved or deleted</source>
+        <translation>نُقل أو حُذف</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Folder</source>
+        <translation>مجلد</translation>
+    </message>
+    <message>
+        <location line="+71"/>
+        <source>Remove %1</source>
+        <translation>إزالة %1</translation>
+    </message>
+</context>
+<context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+243"/>
+        <location filename="../window.py" line="+324"/>
         <source>Copied</source>
         <translation>تم النسخ</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>Couldn&apos;t paste the picture: %1</source>
+        <translation>تعذّر لصق الصورة: %1</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>%1 isn&apos;t there any more</source>
+        <translation>لم يعد %1 موجودًا</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Couldn&apos;t open %1: %2</source>
+        <translation>تعذّر فتح %1: %2</translation>
     </message>
 </context>
 <context>
     <name>ChatsPage</name>
     <message>
-        <location filename="../qml/ChatsPage.qml" line="+33"/>
+        <location filename="../qml/ChatsPage.qml" line="+41"/>
         <source>just now</source>
         <translation>الآن</translation>
     </message>
@@ -224,7 +358,7 @@
         <translation>ابحث في المحادثات</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+57"/>
         <source>Now</source>
         <translation>الآن</translation>
     </message>
@@ -279,39 +413,94 @@
 <context>
     <name>Composer</name>
     <message>
-        <location filename="../qml/Composer.qml" line="+45"/>
-        <source>Remove</source>
-        <translation>إزالة</translation>
+        <location filename="../qml/Composer.qml" line="+49"/>
+        <source>Attach files for Jarvis</source>
+        <translation>إرفاق ملفات لـ Jarvis</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Attach files (or drop them here)</source>
-        <translation>إرفاق ملفات (أو أفلتها هنا)</translation>
+        <location line="+27"/>
+        <source>Drop to attach</source>
+        <translation>أفلت للإرفاق</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+40"/>
+        <source>Attach files (or paste or drop them here)</source>
+        <translation>إرفاق ملفات (أو الصقها أو أفلتها هنا)</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Ask Jarvis</source>
         <translation>اسأل Jarvis</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+34"/>
+        <source>Undo</source>
+        <translation>تراجع</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Redo</source>
+        <translation>إعادة</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cut</source>
+        <translation>قص</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy</source>
+        <translation>نسخ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Paste</source>
+        <translation>لصق</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Delete</source>
+        <translation>حذف</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Select all</source>
+        <translation>تحديد الكل</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location filename="../qml/Main.qml" line="+105"/>
         <source>Pause listening</source>
         <translation>إيقاف الاستماع مؤقتًا</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/Main.qml" line="+0"/>
         <source>Talk to Jarvis</source>
         <translation>تحدّث إلى Jarvis</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>Stop (Esc)</source>
         <translation>إيقاف (Esc)</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-1"/>
         <source>Send (Enter)</source>
         <translation>إرسال (Enter)</translation>
+    </message>
+</context>
+<context>
+    <name>ConfirmButton</name>
+    <message>
+        <location filename="../qml/ConfirmButton.qml" line="+7"/>
+        <source>Delete</source>
+        <translation>حذف</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Click again to delete</source>
+        <translation>انقر مجددًا للحذف</translation>
     </message>
 </context>
 <context>
@@ -422,17 +611,17 @@
     <name>HealthPage</name>
     <message>
         <location filename="../qml/HealthPage.qml" line="+9"/>
-        <location line="+16"/>
+        <location line="+18"/>
         <source>Health</source>
         <translation>الحالة</translation>
     </message>
     <message>
-        <location line="-15"/>
+        <location line="-17"/>
         <source>Checks the key, mic, screen, accounts and models, and how to fix them.</source>
         <translation>يفحص المفتاح والميكروفون والشاشة والحسابات والنماذج، ويوضح كيفية إصلاحها.</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+16"/>
         <source>Home</source>
         <translation>الرئيسية</translation>
     </message>
@@ -472,7 +661,7 @@
         <translation>الإعدادات</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Copy a report</source>
         <translation>نسخ تقرير</translation>
     </message>
@@ -567,12 +756,7 @@
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="../qml/HomePage.qml" line="+58"/>
-        <source>Attach files for Jarvis</source>
-        <translation>إرفاق ملفات لـ Jarvis</translation>
-    </message>
-    <message>
-        <location line="+36"/>
+        <location filename="../qml/HomePage.qml" line="+92"/>
         <source>Up late?</source>
         <translation>ما زلت مستيقظًا؟</translation>
     </message>
@@ -617,7 +801,7 @@
         <translation>على الفور</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="-83"/>
         <source>Brief me</source>
         <translation>لخّص لي يومي</translation>
     </message>
@@ -627,7 +811,17 @@
         <translation>الطقس وجدول مواعيدك</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Connect your accounts</source>
+        <translation>اربط حساباتك</translation>
+    </message>
+    <message>
         <location line="+0"/>
+        <source>Gmail, Calendar, Classroom</source>
+        <translation>Gmail والتقويم وClassroom</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>What&apos;s due this week?</source>
         <translation>ما المطلوب تسليمه هذا الأسبوع؟</translation>
     </message>
@@ -647,7 +841,7 @@
         <translation>بريدك الوارد في Gmail</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+1"/>
         <source>What&apos;s on my screen?</source>
         <translation>ماذا يوجد على شاشتي؟</translation>
     </message>
@@ -677,7 +871,7 @@
         <translation>إنشاء صورة</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+99"/>
         <source>New chat</source>
         <translation>محادثة جديدة</translation>
     </message>
@@ -692,25 +886,34 @@
         <translation>يجيب الصوت الاحتياطي (صفحة النماذج) بدلًا من Gemini Live</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+53"/>
         <source>Working on it…</source>
         <translation>جارٍ العمل على ذلك…</translation>
     </message>
-    <message>
-        <location line="+5"/>
-        <source>Stop</source>
-        <translation>إيقاف</translation>
+    <message numerus="yes">
+        <location filename="../qml/Composer.qml" line="+0"/>
+        <location filename="../qml/HomePage.qml" line="+8"/>
+        <source>Stop all (%n)</source>
+        <translation>
+            <numerusform>إيقاف الكل (%n)</numerusform>
+            <numerusform>إيقاف الكل (%n)</numerusform>
+            <numerusform>إيقاف الكل (%n)</numerusform>
+            <numerusform>إيقاف الكل (%n)</numerusform>
+            <numerusform>إيقاف الكل (%n)</numerusform>
+            <numerusform>إيقاف الكل (%n)</numerusform>
+        </translation>
     </message>
     <message>
-        <location line="+27"/>
-        <source>Drop to attach</source>
-        <translation>أفلت للإرفاق</translation>
+        <location line="+1"/>
+        <location filename="../qml/HomePage.qml" line="+0"/>
+        <source>Stop</source>
+        <translation>إيقاف</translation>
     </message>
 </context>
 <context>
     <name>Main</name>
     <message>
-        <location filename="../qml/Main.qml" line="+115"/>
+        <location filename="../qml/Main.qml" line="+32"/>
         <source>Home</source>
         <translation>الرئيسية</translation>
     </message>
@@ -725,22 +928,31 @@
         <translation>النشاط</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>People</source>
+        <translation>الأشخاص</translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <location filename="../qml/SettingsPage.qml" line="+831"/>
         <source>Accounts</source>
         <translation>الحسابات</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/SettingsPage.qml" line="+2"/>
         <source>Plugins</source>
         <translation>الملحقات</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/SettingsPage.qml" line="-6"/>
         <source>Models</source>
         <translation>النماذج</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/SettingsPage.qml" line="+2"/>
         <source>Memory</source>
         <translation>الذاكرة</translation>
     </message>
@@ -760,7 +972,7 @@
         <translation>الإعدادات</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+66"/>
         <source>Minimise</source>
         <translation>تصغير</translation>
     </message>
@@ -783,7 +995,7 @@
 <context>
     <name>MemoryPage</name>
     <message>
-        <location filename="../qml/MemoryPage.qml" line="+10"/>
+        <location filename="../qml/MemoryPage.qml" line="+11"/>
         <source>Memory</source>
         <translation>الذاكرة</translation>
     </message>
@@ -793,23 +1005,51 @@
         <translation>يقرأ Jarvis هذا قبل كل محادثة. قل له «تذكّر…» أو عدّله هنا.</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+126"/>
         <source>Saved</source>
         <translation>محفوظ</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+226"/>
+        <location line="+291"/>
+        <location line="+37"/>
         <source>Save</source>
         <translation>حفظ</translation>
     </message>
     <message>
-        <location line="-225"/>
+        <location line="-420"/>
         <source>Memory saved</source>
         <translation>حُفظت الذاكرة</translation>
     </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>Kept %n note(s) Jarvis added while you were editing</source>
+        <translation>
+            <numerusform>أُبقي على %n ملاحظة أضافها Jarvis أثناء تعديلك</numerusform>
+            <numerusform>أُبقي على %n ملاحظة أضافها Jarvis أثناء تعديلك</numerusform>
+            <numerusform>أُبقي على %n ملاحظتين أضافهما Jarvis أثناء تعديلك</numerusform>
+            <numerusform>أُبقي على %n ملاحظات أضافها Jarvis أثناء تعديلك</numerusform>
+            <numerusform>أُبقي على %n ملاحظة أضافها Jarvis أثناء تعديلك</numerusform>
+            <numerusform>أُبقي على %n ملاحظة أضافها Jarvis أثناء تعديلك</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+5"/>
+        <location line="+40"/>
+        <source>Note added</source>
+        <translation>تمت إضافة الملاحظة</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Edit as text</source>
+        <translation>تعديل كنص</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Done</source>
+        <translation>تم</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>What Jarvis knows about you</source>
         <translation>ما يعرفه Jarvis عنك</translation>
     </message>
@@ -819,7 +1059,77 @@
         <translation>ملاحظات بسيطة، واحدة في كل سطر. يضيف إليها Jarvis أثناء حديثك معه.</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+1"/>
+        <source>Nothing yet. Say “remember that I&apos;m vegetarian”, or add a note below.</source>
+        <translation>لا شيء بعد. قل «تذكر أنني نباتي» أو أضف ملاحظة في الأسفل.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis adds to these as you talk. Hover over a note to change or delete it.</source>
+        <translation>يضيف إليها Jarvis أثناء حديثك معه. مرر المؤشر فوق ملاحظة لتغييرها أو حذفها.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Filter notes</source>
+        <translation>تصفية الملاحظات</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>No notes match “%1”.</source>
+        <translation>لا توجد ملاحظات تطابق «%1».</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Lessons</source>
+        <translation>الدروس</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>How you corrected the way Jarvis does things.</source>
+        <translation>كيف صححت طريقة Jarvis في إنجاز الأمور.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ways that worked</source>
+        <translation>طرق نجحت</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>How Jarvis got something tricky done, kept for next time.</source>
+        <translation>كيف أنجز Jarvis أمرا صعبا، محفوظة للمرة القادمة.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Add a note</source>
+        <translation>إضافة ملاحظة</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Kind of note</source>
+        <translation>نوع الملاحظة</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>About you</source>
+        <translation>عنك</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Lesson</source>
+        <translation>درس</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Way that worked</source>
+        <translation>طريقة نجحت</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Add</source>
+        <translation>إضافة</translation>
+    </message>
+    <message>
+        <location line="+18"/>
         <source>- Prefers to be called …
 - Studies …</source>
         <translation>- يفضّل أن يُنادى بـ …
@@ -859,12 +1169,18 @@
     </message>
     <message>
         <location line="+5"/>
-        <location line="+164"/>
+        <location line="+190"/>
+        <location line="+37"/>
         <source>Cancel</source>
         <translation>إلغاء</translation>
     </message>
     <message>
-        <location line="-156"/>
+        <location line="-227"/>
+        <source>Click again to cancel it</source>
+        <translation>انقر مجددًا لإلغائه</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Add a reminder or task</source>
         <translation>إضافة تذكير أو مهمة</translation>
     </message>
@@ -976,7 +1292,17 @@
         <translation>12 ساعة</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+80"/>
+        <source>Note deleted</source>
+        <translation>تم حذف الملاحظة</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Write the note</source>
+        <translation>اكتب الملاحظة</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Edit</source>
         <translation>تعديل</translation>
     </message>
@@ -1039,7 +1365,7 @@
 <context>
     <name>Message</name>
     <message>
-        <location filename="../qml/Message.qml" line="+71"/>
+        <location filename="../qml/Message.qml" line="+115"/>
         <source>Copy</source>
         <translation>نسخ</translation>
     </message>
@@ -1057,7 +1383,7 @@
         <translation>اختر النماذج لكل مهمة. تُجرَّب كل قائمة من الأعلى إلى الأسفل: إذا كان أحدها مشغولًا أو متوقفًا، يتولّى التالي المهمة.</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+40"/>
         <source>Looking up the models you can use…</source>
         <translation>جارٍ البحث عن النماذج المتاحة لك…</translation>
     </message>
@@ -1074,7 +1400,7 @@
         </translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Refresh</source>
         <translation>تحديث</translation>
     </message>
@@ -1084,7 +1410,7 @@
         <translation>ما تستخدمه كل مهمة</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+59"/>
         <source>Jarvis&apos;s choice</source>
         <translation>اختيار Jarvis</translation>
     </message>
@@ -1093,20 +1419,8 @@
         <source>Use Jarvis&apos;s choice</source>
         <translation>استخدام اختيار Jarvis</translation>
     </message>
-    <message numerus="yes">
-        <location line="+9"/>
-        <source>%1 · +%n fallback(s)</source>
-        <translation>
-            <numerusform>%1 · +%n بديل</numerusform>
-            <numerusform>%1 · +%n بديل</numerusform>
-            <numerusform>%1 · +%n بديلان</numerusform>
-            <numerusform>%1 · +%n بدائل</numerusform>
-            <numerusform>%1 · +%n بديلًا</numerusform>
-            <numerusform>%1 · +%n بديل</numerusform>
-        </translation>
-    </message>
     <message>
-        <location line="+14"/>
+        <location line="+23"/>
         <source>Providers and keys</source>
         <translation>المزوّدون والمفاتيح</translation>
     </message>
@@ -1166,12 +1480,22 @@
         <translation>إزالة هذا المزوّد</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Click again to remove it and its keys</source>
+        <translation>انقر مجددًا لإزالته مع مفاتيحه</translation>
+    </message>
+    <message>
         <location line="+16"/>
         <source>Resting (rate limited or refused): the next key answers</source>
         <translation>في استراحة (تجاوز الحد أو رُفض): المفتاح التالي يجيب</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+1"/>
+        <source>Click again to remove this key</source>
+        <translation>انقر مجددًا لإزالة هذا المفتاح</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>More providers</source>
         <translation>مزوّدون آخرون</translation>
     </message>
@@ -1226,6 +1550,11 @@
         <translation>تسجيل الخروج</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Click again to sign out</source>
+        <translation>انقر مجددًا لتسجيل الخروج</translation>
+    </message>
+    <message>
         <location line="+8"/>
         <source>First install the opencode-antigravity-auth plugin (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
         <translation>ثبّت أولًا الملحق opencode-antigravity-auth (github:Qssaf/opencode-antigravity-auth-desktop): يسجّل Jarvis الدخول ببياناته. أو ضع ANTIGRAVITY_CLIENT_ID و ANTIGRAVITY_CLIENT_SECRET في ملف env الخاص بـ Jarvis.</translation>
@@ -1256,13 +1585,25 @@
         <translation>تقديمه في الترتيب</translation>
     </message>
     <message>
-        <location line="-137"/>
-        <location line="+139"/>
+        <location line="-138"/>
+        <location line="+140"/>
         <source>Remove</source>
         <translation>إزالة</translation>
     </message>
+    <message numerus="yes">
+        <location line="-221"/>
+        <source>%1 · +%n backup(s)</source>
+        <translation>
+            <numerusform>%1 · +%n نموذج احتياطي</numerusform>
+            <numerusform>%1 · +%n نموذج احتياطي</numerusform>
+            <numerusform>%1 · +%n نموذجان احتياطيان</numerusform>
+            <numerusform>%1 · +%n نماذج احتياطية</numerusform>
+            <numerusform>%1 · +%n نموذجًا احتياطيًا</numerusform>
+            <numerusform>%1 · +%n نموذج احتياطي</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+4"/>
+        <location line="+225"/>
         <source>Add a model</source>
         <translation>إضافة نموذج</translation>
     </message>
@@ -1270,7 +1611,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3543"/>
+        <location filename="../jarvis.py" line="+3789"/>
         <source>LISTENING</source>
         <translation>يستمع</translation>
     </message>
@@ -1301,6 +1642,309 @@
     </message>
 </context>
 <context>
+    <name>PeoplePage</name>
+    <message>
+        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <source>just now</source>
+        <translation>الآن</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n min ago</source>
+        <translation>
+            <numerusform>منذ %n دقيقة</numerusform>
+            <numerusform>منذ %n دقيقة</numerusform>
+            <numerusform>منذ %n دقيقتين</numerusform>
+            <numerusform>منذ %n دقائق</numerusform>
+            <numerusform>منذ %n دقيقة</numerusform>
+            <numerusform>منذ %n دقيقة</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n h ago</source>
+        <translation>
+            <numerusform>منذ %n ساعة</numerusform>
+            <numerusform>منذ %n ساعة</numerusform>
+            <numerusform>منذ %n ساعتين</numerusform>
+            <numerusform>منذ %n ساعات</numerusform>
+            <numerusform>منذ %n ساعة</numerusform>
+            <numerusform>منذ %n ساعة</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n day(s) ago</source>
+        <translation>
+            <numerusform>منذ %n يوم</numerusform>
+            <numerusform>منذ %n يوم</numerusform>
+            <numerusform>منذ %n يومين</numerusform>
+            <numerusform>منذ %n أيام</numerusform>
+            <numerusform>منذ %n يوما</numerusform>
+            <numerusform>منذ %n يوم</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>%1: they wrote %2, you wrote %3</source>
+        <translation>%1: تلقيت %2، وأرسلت %3</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1: they wrote %2</source>
+        <translation>%1: تلقيت %2</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1: you wrote %2</source>
+        <translation>%1: أرسلت %2</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Talked %1</source>
+        <translation>آخر حديث %1</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Not enough messages from them yet to say much. Jarvis tries again once you&apos;ve talked more.</source>
+        <translation>لا توجد رسائل كافية منه بعد لقول الكثير. سيحاول Jarvis مجددا بعد أن تتحدثا أكثر.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Something went wrong</source>
+        <translation>حدث خطأ ما</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>People</source>
+        <translation>الأشخاص</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Who you talk with, what Jarvis understands of them from your chats, and what you&apos;ve noted or promised.</source>
+        <translation>من تتحدث معهم، وما يفهمه Jarvis عنهم من محادثاتك، وما دونته أو وعدت به.</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <location line="+1"/>
+        <source>Search people</source>
+        <translation>البحث عن أشخاص</translation>
+    </message>
+    <message>
+        <location line="+89"/>
+        <source>No one matches that</source>
+        <translation>لا أحد يطابق ذلك</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No one here yet</source>
+        <translation>لا أحد هنا بعد</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Also %1</source>
+        <translation>أيضا %1</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>You haven&apos;t chatted with them one to one on WhatsApp or Discord since Jarvis was linked.</source>
+        <translation>لم تتحدث معه في محادثة فردية على WhatsApp أو Discord منذ ربط Jarvis.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>What Jarvis understands</source>
+        <translation>ما يفهمه Jarvis</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Reading your chats…</source>
+        <translation>جار قراءة محادثاتك…</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Refresh</source>
+        <translation>تحديث</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Write it again now from your latest one-to-one messages with them</source>
+        <translation>أعد كتابته الآن من آخر رسائلك الفردية معه</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Forget this</source>
+        <translation>انس هذا</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Click again to forget it</source>
+        <translation>انقر مجددا لنسيانه</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Profile forgotten</source>
+        <translation>تم نسيان الملف الشخصي</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+23"/>
+        <source>Updated %1, from %n message(s)</source>
+        <translation>
+            <numerusform>تم التحديث %1 استنادا إلى %n رسالة</numerusform>
+            <numerusform>تم التحديث %1 استنادا إلى %n رسالة</numerusform>
+            <numerusform>تم التحديث %1 استنادا إلى %n رسالتين</numerusform>
+            <numerusform>تم التحديث %1 استنادا إلى %n رسائل</numerusform>
+            <numerusform>تم التحديث %1 استنادا إلى %n رسالة</numerusform>
+            <numerusform>تم التحديث %1 استنادا إلى %n رسالة</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>You had Jarvis forget what it understood of them. It won&apos;t write it again unless you press Refresh.</source>
+        <translation>طلبت من Jarvis أن ينسى ما فهمه عن هذا الشخص. لن يكتبه مجددا إلا إذا ضغطت «تحديث».</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing yet. Every so often Jarvis reads your latest one-to-one messages with someone and writes a short profile of them, once there are enough messages.</source>
+        <translation>لا شيء بعد. يقرأ Jarvis من حين لآخر آخر رسائلك الفردية مع شخص ما ويكتب عنه ملفا شخصيا قصيرا، عندما تتوفر رسائل كافية.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis doesn&apos;t read your chats to understand people: profiles are off.</source>
+        <translation>لا يقرأ Jarvis محادثاتك لفهم الأشخاص: الملفات الشخصية متوقفة.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Profiles are off, so this one isn&apos;t updated.</source>
+        <translation>الملفات الشخصية متوقفة، لذا لا يتم تحديث هذا الملف.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Turn them on in Settings</source>
+        <translation>شغلها من الإعدادات</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Reading your latest messages with %1 and asking your model…</source>
+        <translation>جار قراءة آخر رسائلك مع %1 وسؤال نموذجك…</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Notes</source>
+        <translation>الملاحظات</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Add a note</source>
+        <translation>إضافة ملاحظة</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>None yet. Tell Jarvis “Sam is my cousin”, or add one here.</source>
+        <translation>لا شيء بعد. قل لـ Jarvis «Sam ابن عمي» أو أضف ملاحظة هنا.</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Until %1</source>
+        <translation>حتى %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Edit</source>
+        <translation>تعديل</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Promises</source>
+        <translation>الوعود</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Nothing open. When you write them “I&apos;ll send it tomorrow”, Jarvis keeps it here.</source>
+        <translation>لا شيء مفتوح. عندما تكتب له «سأرسله غدا»، يحتفظ به Jarvis هنا.</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Due %1</source>
+        <translation>الموعد: %1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No time set: it&apos;s on your evening list</source>
+        <translation>لم يحدد وقت: إنه في قائمة المساء لديك</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Done</source>
+        <translation>تم</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mark this promise as kept</source>
+        <translation>اعتبار هذا الوعد منجزا</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <location line="+5"/>
+        <source>Forget this person</source>
+        <translation>انس هذا الشخص</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>Their notes, promises and profile go. If you chat with them again, Jarvis starts a new page.</source>
+        <translation>ستحذف ملاحظاته ووعوده وملفه الشخصي. إذا تحدثت معه مجددا، سيبدأ Jarvis صفحة جديدة.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Click again to forget them</source>
+        <translation>انقر مجددا لنسيان هذا الشخص</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Forgot %1</source>
+        <translation>تم نسيان %1</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Pick someone to see what Jarvis knows about them</source>
+        <translation>اختر شخصا لترى ما يعرفه Jarvis عنه</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>People appear here when you chat with someone one to one on WhatsApp or Discord, or when you tell Jarvis about them: “Sam is my cousin”.</source>
+        <translation>يظهر الأشخاص هنا عندما تتحدث مع شخص ما في محادثة فردية على WhatsApp أو Discord، أو عندما تخبر Jarvis عنه: «Sam ابن عمي».</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>e.g. My cousin, studies medicine in Lyon</source>
+        <translation>مثال: ابن عمي، يدرس الطب في ليون</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Until (optional)</source>
+        <translation>حتى (اختياري)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The last day it&apos;s true, like 2026-12-31</source>
+        <translation>آخر يوم يكون فيه ذلك صحيحا، مثل 2026-12-31</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>A date like 2026-12-31 makes the note go after that day.</source>
+        <translation>تاريخ مثل 2026-12-31 يجعل الملاحظة تختفي بعد ذلك اليوم.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cancel</source>
+        <translation>إلغاء</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Save</source>
+        <translation>حفظ</translation>
+    </message>
+</context>
+<context>
     <name>PluginsPage</name>
     <message>
         <location filename="../qml/PluginsPage.qml" line="+9"/>
@@ -1313,7 +1957,7 @@
         <translation>امنح Jarvis أدوات إضافية عبر خوادم MCP: عنوان ويب، أو أمر يعمل على هذا الحاسوب.</translation>
     </message>
     <message numerus="yes">
-        <location line="+7"/>
+        <location line="+9"/>
         <source>%n min</source>
         <translation>
             <numerusform>%n دقيقة</numerusform>
@@ -1347,7 +1991,7 @@
         <translation>المثبّتة</translation>
     </message>
     <message numerus="yes">
-        <location line="+34"/>
+        <location line="+40"/>
         <source>%n tool(s)</source>
         <translation>
             <numerusform>%n أداة</numerusform>
@@ -1359,7 +2003,7 @@
         </translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+17"/>
         <source>%1 · trying again in %2</source>
         <translation>%1 · إعادة المحاولة بعد %2</translation>
     </message>
@@ -1399,7 +2043,7 @@
         <translation>أُزيل الملحق</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+18"/>
         <source>Add a plugin</source>
         <translation>إضافة ملحق</translation>
     </message>
@@ -1498,17 +2142,17 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="+11"/>
+        <location filename="../qml/SettingsPage.qml" line="-677"/>
         <source>Settings</source>
         <translation>الإعدادات</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>تُحفظ التغييرات فورًا. النماذج ومفاتيح API في صفحة النماذج.</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="-109"/>
         <source>Checking…</source>
         <translation>جارٍ التحقق…</translation>
     </message>
@@ -1533,12 +2177,50 @@
         <translation>أُزيلت عبارة المرور</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
+        <location line="+130"/>
         <source>Voice</source>
         <translation>الصوت</translation>
     </message>
     <message>
+        <location line="-129"/>
+        <source>Window</source>
+        <translation>النافذة</translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <source>Phone</source>
+        <translation>الهاتف</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Advanced</source>
+        <translation>متقدّم</translation>
+    </message>
+    <message>
+        <location line="+68"/>
+        <location line="+1"/>
+        <source>Search settings</source>
+        <translation>ابحث في الإعدادات</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <location line="+39"/>
+        <source>Clear the search</source>
+        <translation>مسح البحث</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>No setting matches “%1”</source>
+        <translation>لا يوجد إعداد يطابق «%1»</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Try another word, or pick a tab above.</source>
+        <translation>جرّب كلمة أخرى، أو اختر تبويبًا في الأعلى.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>How Jarvis sounds and talks to you. Changes apply from the next conversation.</source>
         <translation>صوت Jarvis وطريقة حديثه معك. تسري التغييرات من المحادثة التالية.</translation>
     </message>
@@ -1593,12 +2275,12 @@
         <translation>يجيب دون تفكير مسبق: أسرع بنحو 0.3 ث، وأقل دقة قليلًا</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Speak replies to typed messages</source>
         <translation>نطق الردود على الرسائل المكتوبة</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Always use the backup voice</source>
         <translation>استخدام الصوت الاحتياطي دائمًا</translation>
     </message>
@@ -1608,7 +2290,7 @@
         <translation>الاستماع والتحدث عبر النماذج في صفحة النماذج بدلًا من Gemini Live، للمفاتيح التي لا تدعمه. عند إيقافه، لا يجيب الصوت الاحتياطي إلا حين يتعذّر الوصول إلى Gemini Live</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Listening</source>
         <translation>الاستماع</translation>
     </message>
@@ -1699,7 +2381,7 @@
         <translation>مرات الاستيقاظ التي تلغيها تعلّم Jarvis ما ليس صوتك</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Only wake for my voice</source>
         <translation>الاستيقاظ لصوتي فقط</translation>
     </message>
@@ -1719,7 +2401,7 @@
         <translation>لن يستيقظ Jarvis إذا قال شخص آخر كلمة التنبيه. يعمل زر التحدث والضغط للتحدث دائمًا</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Echo cancelling</source>
         <translation>إلغاء الصدى</translation>
     </message>
@@ -1734,7 +2416,17 @@
         <translation>يمنع صوت الحاسوب نفسه (Jarvis والألعاب والفيديوهات والمكالمات) من الوصول إلى الميكروفون، فلا يُسمع كأنه صوتك، ويمكنك التحدث أثناء كلام Jarvis (PipeWire؛ أعد تشغيل Jarvis لتطبيقه)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Listen through a Bluetooth headset</source>
+        <translation>الاستماع عبر ميكروفون سماعة Bluetooth</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>When a Bluetooth headset&apos;s microphone is the default one, Jarvis listens through it, and the headset stays in call quality (mono and muffled) while Jarvis runs. Off, Jarvis uses the PC&apos;s own microphone and the headset keeps its sound</source>
+        <translation>عندما يكون ميكروفون سماعة Bluetooth هو الميكروفون الافتراضي، يستمع Jarvis عبره، وتبقى السماعة بجودة المكالمات (صوت أحادي ومكتوم) طوال تشغيل Jarvis. عند إيقاف هذا الخيار، يستخدم Jarvis ميكروفون الحاسوب نفسه وتحتفظ السماعة بجودة صوتها</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Spoken passphrase: asked for with every yes said out loud (sends, calls, account changes, risky commands). Never shown or said back</source>
         <translation>عبارة مرور منطوقة: تُطلب مع كل موافقة تقولها بصوت عالٍ (الإرسال والمكالمات وتغييرات الحسابات والأوامر الخطرة). لا تُعرض ولا تُردَّد أبدًا</translation>
     </message>
@@ -1750,39 +2442,44 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+138"/>
-        <location line="+56"/>
+        <location line="+290"/>
+        <location line="+117"/>
         <source>Save</source>
         <translation>حفظ</translation>
     </message>
     <message>
-        <location line="-192"/>
+        <location line="-405"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>إزالة</translation>
     </message>
     <message>
-        <location line="-76"/>
+        <location line="-82"/>
+        <location line="+7"/>
         <source>Push to talk</source>
         <translation>الضغط للتحدث</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-7"/>
+        <location line="+9"/>
         <source>Bind these to keyboard shortcuts (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</source>
         <translation>اربط هذه الأوامر باختصارات لوحة المفاتيح (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-8"/>
+        <location line="+10"/>
         <source>Start listening</source>
         <translation>بدء الاستماع</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-10"/>
+        <location line="+11"/>
         <source>Drag over part of the screen and ask about it</source>
         <translation>اسحب فوق جزء من الشاشة واسأل عنه</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-249"/>
+        <location line="+256"/>
         <source>Your day</source>
         <translation>يومك</translation>
     </message>
@@ -1812,7 +2509,7 @@
         <translation>عند أول تشغيل لـ Jarvis في الصباح، يطلعك على يومك</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Do not disturb</source>
         <translation>عدم الإزعاج</translation>
     </message>
@@ -1822,7 +2519,7 @@
         <translation>لا يتحدث Jarvis من تلقاء نفسه: تذهب التذكيرات والنتائج والرسائل إلى المحادثة والإشعارات وهاتفك فقط. ويظل يجيبك (متاح أيضًا في قائمة شريط النظام)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Quiet over full-screen apps</source>
         <translation>الهدوء فوق التطبيقات بملء الشاشة</translation>
     </message>
@@ -1832,7 +2529,7 @@
         <translation>عندما تكون لعبة أو فيلم بملء الشاشة، يُبقي Jarvis ما سيقوله من تلقاء نفسه في المحادثة والإشعارات. التذكيرات تُقال رغم ذلك</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Classroom deadlines</source>
         <translation>مواعيد تسليم Classroom</translation>
     </message>
@@ -1842,7 +2539,7 @@
         <translation>تذكيرات قبل موعد التسليم بيوم وبساعتين (تُتخطّى بعد تسليمك العمل)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Calendar heads-up</source>
         <translation>تنبيهات التقويم</translation>
     </message>
@@ -1852,7 +2549,7 @@
         <translation>تذكير قبل عشر دقائق من كل حدث في Google Calendar</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Keep track of my promises</source>
         <translation>تتبّع وعودي</translation>
     </message>
@@ -1873,11 +2570,12 @@
     </message>
     <message>
         <location line="+5"/>
+        <location line="+3"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>ساعات الهدوء من (اتركها فارغة لإلغائها)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-2"/>
         <source>e.g. 22:00</source>
         <translation>مثل: 22:00</translation>
     </message>
@@ -1892,7 +2590,7 @@
         <translation>مثل: 07:00</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Window &amp; behavior</source>
         <translation>النافذة والسلوك</translation>
     </message>
@@ -1942,12 +2640,12 @@
         <translation>إظهار تفكير Jarvis في المحادثة</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Start Jarvis when I log in</source>
         <translation>تشغيل Jarvis عند تسجيل الدخول</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Ask before risky actions</source>
         <translation>السؤال قبل الإجراءات الخطرة</translation>
     </message>
@@ -1957,7 +2655,7 @@
         <translation>الأوامر التي تحذف أو تثبّت أو توقف التشغيل، وتغييرات الحسابات (إرسال بريد، أحداث جديدة)، تنتظر موافقتك ما لم تطلبها أنت بالتحديد</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Your instructions</source>
         <translation>تعليماتك</translation>
     </message>
@@ -1967,7 +2665,59 @@
         <translation>كيف ينبغي أن يتصرف Jarvis، وأمور ينبغي أن يعرفها عنك.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+116"/>
+        <source>People</source>
+        <translation>الأشخاص</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis gets to know the people you chat with one to one, so it knows who someone is when you mention them. The People page shows what it understood, with your notes and promises.</source>
+        <translation>يتعرف Jarvis على الأشخاص الذين تتحدث معهم في محادثات فردية، ليعرف من تقصد عندما تذكر أحدهم. تعرض صفحة الأشخاص ما فهمه، مع ملاحظاتك ووعودك.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Understand the people I chat with</source>
+        <translation>فهم الأشخاص الذين أتحدث معهم</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Now and then, the latest messages of your one-to-one WhatsApp and Discord chats go to your model to write a short profile of each person: who they are to you, how they write, what&apos;s open between you. Kept on this PC; groups are never read</source>
+        <translation>من حين لآخر، تذهب آخر رسائل محادثاتك الفردية على WhatsApp وDiscord إلى نموذجك ليكتب ملفا شخصيا قصيرا لكل شخص: من هو بالنسبة لك، وكيف يكتب، وما المعلق بينكما. يحفظ على هذا الـ PC؛ لا تقرأ المجموعات أبدا</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Write a profile again after</source>
+        <translation>إعادة كتابة الملف الشخصي بعد</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>refresh profiles days</source>
+        <translation>تحديث الملفات الشخصية أيام</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>3 days</source>
+        <translation>3 أيام</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Two weeks</source>
+        <translation>أسبوعان</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n day(s)</source>
+        <translation>
+            <numerusform>%n يوم</numerusform>
+            <numerusform>%n يوم</numerusform>
+            <numerusform>%n يومين</numerusform>
+            <numerusform>%n أيام</numerusform>
+            <numerusform>%n يوما</numerusform>
+            <numerusform>%n يوم</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+145"/>
         <source>Jarvis on Telegram</source>
         <translation>Jarvis على Telegram</translation>
     </message>
@@ -1977,7 +2727,7 @@
         <translation>أرسل المهام إلى Jarvis من أي مكان عبر Telegram.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>In Telegram, message &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, send /newbot and copy the token it gives you.</source>
         <translation>في Telegram، راسل &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;، وأرسل /newbot ثم انسخ رمز الوصول الذي يعطيك إياه.</translation>
     </message>
@@ -1987,7 +2737,8 @@
         <translation>الصقه هنا.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-6"/>
+        <location line="+7"/>
         <source>Send your new bot the code below. Only that chat is answered.</source>
         <translation>أرسل الرمز أدناه إلى البوت الجديد. لن يُرَدّ إلا على تلك المحادثة.</translation>
     </message>
@@ -1997,7 +2748,8 @@
         <translation>حُفظ رمز وصول البوت · الصق رمزًا جديدًا لاستبداله</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-13"/>
+        <location line="+13"/>
         <source>Paste your bot&apos;s token</source>
         <translation>الصق رمز وصول البوت</translation>
     </message>
@@ -2012,18 +2764,21 @@
         <translation>أرسل هذا الرمز إلى البوت: %1</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <location line="+89"/>
+        <location line="-93"/>
+        <location line="+19"/>
+        <location line="+52"/>
+        <location line="+28"/>
         <source>Unpair</source>
         <translation>إلغاء الاقتران</translation>
     </message>
     <message>
-        <location line="-88"/>
+        <location line="-28"/>
+        <location line="+29"/>
         <source>Remove the bot</source>
         <translation>إزالة البوت</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-171"/>
         <source>The Jarvis app</source>
         <translation>تطبيق Jarvis</translation>
     </message>
@@ -2033,7 +2788,7 @@
         <translation>يصل تطبيق Jarvis لنظام Android إلى هذا الحاسوب من أي مكان عبر خادم الترحيل الخاص بك. الاتصال مشفّر من طرف إلى طرف: لا يمرّر خادم الترحيل سوى بيانات مشوّشة، ولا شيء على هذا الحاسوب مكشوف للإنترنت.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Connect directly on your own network</source>
         <translation>الاتصال مباشرة عبر شبكتك</translation>
     </message>
@@ -2043,22 +2798,25 @@
         <translation>على نفس شبكة Wi-Fi، أو عبر VPN مثل Tailscale، تصل الهواتف المقترنة إلى هذا الحاسوب دون المرحِّل، ولا يحتاج الاقتران إلى مرحِّل أيضًا. قد يلزم السماح لـ Jarvis في جدار الحماية</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+12"/>
         <source>Setting up…</source>
         <translation>جارٍ الإعداد…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-6"/>
+        <location line="+6"/>
         <source>Set up my relay</source>
         <translation>إعداد خادم الترحيل</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-6"/>
+        <location line="+9"/>
         <source>Signs in to your free Cloudflare account in your browser, puts the relay online and saves its address.</source>
         <translation>يسجّل الدخول إلى حسابك المجاني على Cloudflare في متصفحك، وينشر خادم الترحيل ويحفظ عنوانه.</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="-8"/>
+        <location line="+17"/>
         <source>Or by hand</source>
         <translation>أو يدويًا</translation>
     </message>
@@ -2078,7 +2836,8 @@
         <translation>الصق هنا العنوان الذي يطبعه.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-20"/>
+        <location line="+26"/>
         <source>Your relay&apos;s address, like https://jarvis-relay.you.workers.dev</source>
         <translation>عنوان خادم الترحيل، مثل https://jarvis-relay.you.workers.dev</translation>
     </message>
@@ -2088,7 +2847,8 @@
         <translation>إلغاء</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+6"/>
+        <location line="+16"/>
         <source>Connected</source>
         <translation>متصل</translation>
     </message>
@@ -2098,22 +2858,26 @@
         <translation>جارٍ الاتصال…</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-16"/>
+        <location line="+19"/>
         <source>Change</source>
         <translation>تغيير</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+32"/>
+        <location line="+3"/>
         <source>Pair another phone</source>
         <translation>إقران هاتف آخر</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-3"/>
+        <location line="+3"/>
         <source>Pair a phone</source>
         <translation>إقران هاتف</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="-3"/>
+        <location line="+19"/>
         <source>Scan to pair</source>
         <translation>امسح للإقران</translation>
     </message>
@@ -2123,7 +2887,7 @@
         <translation>في تطبيق Jarvis، اضغط Pair وامسح هذا الرمز. يعمل مرة واحدة، لمدة عشر دقائق.</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="-246"/>
         <source>WhatsApp</source>
         <translation>WhatsApp</translation>
     </message>
@@ -2133,7 +2897,8 @@
         <translation>يرتبط Jarvis بحساب WhatsApp الخاص بك كما يفعل WhatsApp Web. يرد على رسائل جهات اتصالك التي لا تحتاج إليك، موضحًا أنه مساعدك، ويجيب المكالمات التي تفوتك ليأخذ رسالة. هذه ليست ميزة رسمية من WhatsApp: قد يحظر WhatsApp الأرقام التي تتصرف كالبوتات، لذا لا يرد Jarvis إلا على جهات الاتصال المحفوظة، ولا يرد على المجموعات أبدًا.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
+        <location line="+1"/>
         <source>Link WhatsApp</source>
         <translation>ربط WhatsApp</translation>
     </message>
@@ -2148,7 +2913,8 @@
         <translation>جارٍ الحصول على رمز من WhatsApp…</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-4"/>
+        <location line="+18"/>
         <source>Scan with WhatsApp</source>
         <translation>امسح باستخدام WhatsApp</translation>
     </message>
@@ -2173,18 +2939,20 @@
         <translation>مرتبط</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-28"/>
+        <location line="+29"/>
         <source>Unlink</source>
         <translation>إلغاء الربط</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <location line="+45"/>
+        <location line="-387"/>
+        <location line="+392"/>
+        <location line="+51"/>
         <source>Messages</source>
         <translation>الرسائل</translation>
     </message>
     <message>
-        <location line="-43"/>
+        <location line="-49"/>
         <source>Answer my contacts</source>
         <translation>الرد على جهات اتصالي</translation>
     </message>
@@ -2195,12 +2963,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+44"/>
+        <location line="+50"/>
         <source>Just show them to me</source>
         <translation>اعرضها عليّ فقط</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-48"/>
         <source>Jarvis writes a reply to your contacts&apos; messages that don&apos;t need you and tells you. Nothing is sent until you say &quot;send it&quot;.</source>
         <translation>يكتب Jarvis ردًا على رسائل جهات اتصالك التي لا تحتاج إليك ويخبرك به. لا يُرسل شيء حتى تقول «أرسله».</translation>
     </message>
@@ -2231,23 +2999,23 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+38"/>
+        <location line="+44"/>
         <source>e.g. Alex</source>
         <translation>مثل: أحمد</translation>
     </message>
     <message>
-        <location line="-37"/>
+        <location line="-43"/>
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
         <translation>عدم الرد أبدًا (اسم واحد في كل سطر): لا يرد Jarvis عليهم برسالة أو مكالمة، ويعرض رسائلهم في المحادثة فقط</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+38"/>
+        <location line="+44"/>
         <source>e.g. Sam</source>
         <translation>مثل: سارة</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-42"/>
         <source>What Jarvis tells people</source>
         <translation>ما يقوله Jarvis للناس</translation>
     </message>
@@ -2257,7 +3025,7 @@
         <translation>مثل: أنا في المحاضرة حتى الخامسة، سأرد بعدها</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Tell people when I&apos;m busy</source>
         <translation>أخبر الناس متى أكون مشغولًا</translation>
     </message>
@@ -2267,7 +3035,7 @@
         <translation>من تقويم Google: الأوقات فقط، وليس ما تفعله أبدًا</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+11"/>
         <source>Discord</source>
         <translation>Discord</translation>
     </message>
@@ -2277,7 +3045,8 @@
         <translation>يقرأ Jarvis رسائل Discord ويرسلها نيابةً عنك عبر Vesktop، داخل حسابك على Discord: اسأله عن الجديد، أو اطلب منه المراسلة أو الرد أو التفاعل في رسالة خاصة أو قناة خادم. تظهر الرسائل الخاصة الجديدة والإشارات إليك في محادثة Jarvis.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
+        <location line="+1"/>
         <source>Connected to Vesktop</source>
         <translation>متصل بـ Vesktop</translation>
     </message>
@@ -2297,12 +3066,13 @@
         <translation>يحتاج Vesktop إلى إعادة تشغيل مع تفعيل اتصال Jarvis (ستنقطع أي مكالمة في Vesktop).</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-9"/>
+        <location line="+10"/>
         <source>Restart Vesktop</source>
         <translation>إعادة تشغيل Vesktop</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Answer my friends&apos; DMs (Discord may ban accounts that act like bots)</source>
         <translation>الرد على الرسائل الخاصة من أصدقائي (قد يحظر Discord الحسابات التي تتصرف كالبوتات)</translation>
     </message>
@@ -2322,7 +3092,8 @@
         <translation>تستخدم الردود ما يخبر به Jarvis الناس من قسم WhatsApp. يمكنك أيضًا أن تقول ببساطة &quot;لا ترد على سام&quot; أو &quot;أخبرني عندما يراسلني أليكس&quot;.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="-452"/>
+        <location line="+658"/>
         <source>Your data</source>
         <translation>بياناتك</translation>
     </message>
@@ -2332,7 +3103,7 @@
         <translation>يحتفظ Jarvis على هذا الحاسوب بما يتذكره عنك، ومحادثاتك وتذكيراتك وروتيناتك، ومقاطع قصيرة من كلمة التنبيه (ليتعلّم صوتك) وسجلًا. أما ما تقوله بعد كلمة التنبيه، ولقطات الشاشة حين تحتاج مهمة إلى الشاشة، فتذهب إلى Google Gemini؛ وتمر إجراءات الحسابات عبر Composio.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Screen history</source>
         <translation>سجل الشاشة</translation>
     </message>
@@ -2352,17 +3123,19 @@
         <translation>عند انتهاء المحادثة، يضيف Jarvis إلى ذاكرته ما قلته عن نفسك من أشياء دائمة، ويعرض كلّ واحد منها في الدردشة</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Keep conversations and logs for</source>
         <translation>الاحتفاظ بالمحادثات والسجلات لمدة</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-198"/>
+        <location line="+200"/>
         <source>A week</source>
         <translation>أسبوع</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-199"/>
+        <location line="+199"/>
         <source>A month</source>
         <translation>شهر</translation>
     </message>
@@ -2382,12 +3155,13 @@
         <translation>دائمًا</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Press again to delete it all</source>
         <translation>اضغط مجددًا لحذف كل شيء</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-4"/>
+        <location line="+4"/>
         <source>Delete everything Jarvis keeps about me</source>
         <translation>حذف كل ما يحتفظ به Jarvis عني</translation>
     </message>
@@ -2397,12 +3171,13 @@
         <translation>تم الحذف. بقيت المفاتيح والحسابات والإعدادات.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-8"/>
+        <location line="+11"/>
         <source>Keys, account sign-ins and settings stay.</source>
         <translation>تبقى المفاتيح وتسجيلات الدخول إلى الحسابات والإعدادات.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Move to another computer</source>
         <translation>الانتقال إلى حاسوب آخر</translation>
     </message>
@@ -2412,22 +3187,25 @@
         <translation>ملف واحد يضم إعداداتك وذاكرتك وتذكيراتك ومهامك المجدولة وروتيناتك وملحقاتك ومحادثاتك والمقاطع التي تعلّم منها Jarvis صوتك. لا يتضمن المفاتيح وتسجيلات الدخول إلى الحسابات وWhatsApp وهاتفك: أعد إعدادها على الحاسوب الآخر.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+4"/>
+        <location line="+4"/>
         <source>Save a backup</source>
         <translation>حفظ نسخة احتياطية</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-4"/>
+        <location line="+7"/>
         <source>Bring one in</source>
         <translation>استيراد نسخة</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-7"/>
+        <location line="+8"/>
         <source>Bringing one in replaces what&apos;s on this computer (conversations are added), then Jarvis restarts.</source>
         <translation>يستبدل الاستيراد ما على هذا الحاسوب (وتُضاف المحادثات)، ثم يُعاد تشغيل Jarvis.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Save a Jarvis backup</source>
         <translation>حفظ نسخة احتياطية من Jarvis</translation>
     </message>
@@ -2458,7 +3236,62 @@
         <translation>تم الاستيراد: يُعاد تشغيل Jarvis</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+8"/>
+        <source>On other pages</source>
+        <translation>في صفحات أخرى</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>These are set on the page they belong to.</source>
+        <translation>تُضبط هذه في الصفحة الخاصة بكل منها.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Models and API keys</source>
+        <translation>النماذج ومفاتيح API</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Which model does each job (tasks, reading the screen, web search, pictures, the backup voice), the order they&apos;re tried in, and your keys</source>
+        <translation>أي نموذج يتولى كل مهمة (المهام، وقراءة الشاشة، والبحث في الويب، والصور، والصوت الاحتياطي)، وترتيب تجربتها، ومفاتيحك</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Background checks</source>
+        <translation>المراقبة في الخلفية</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis keeps an eye on for you (&quot;tell me if a payment fails&quot;), how often it looks, and which checks are paused</source>
+        <translation>ما يراقبه Jarvis لك («أخبرني إذا فشلت عملية دفع»)، وكم مرة يتحقق، وأي عمليات المراقبة متوقفة مؤقتًا</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis may do in each account</source>
+        <translation>ما يُسمح لـ Jarvis بفعله في كل حساب</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ask first, go ahead, read only or paused, for each account you connected</source>
+        <translation>السؤال أولًا، أو التنفيذ مباشرة، أو القراءة فقط، أو الإيقاف المؤقت، لكل حساب ربطته</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tools from other apps</source>
+        <translation>أدوات من تطبيقات أخرى</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The plugins (MCP servers) Jarvis can use: add one, or switch one on or off</source>
+        <translation>الملحقات (خوادم MCP) التي يستطيع Jarvis استخدامها: أضف ملحقًا، أو شغّل أحدها أو أوقفه</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>About Jarvis</source>
+        <translation>حول Jarvis</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>%1 is out (%2)</source>
         <translation>صدر الإصدار %1 (%2)</translation>
     </message>
@@ -2468,7 +3301,8 @@
         <translation>صدر الإصدار %1</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-10"/>
+        <location line="+11"/>
         <source>Up to date</source>
         <translation>محدَّث</translation>
     </message>
@@ -2478,22 +3312,34 @@
         <translation>جارٍ التحديث…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
+        <location line="+12"/>
         <source>Update now</source>
         <translation>التحديث الآن</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
+        <location line="+12"/>
         <source>Check for updates</source>
         <translation>البحث عن تحديثات</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Run the setup again</source>
         <translation>تشغيل الإعداد مجددًا</translation>
     </message>
     <message>
-        <location line="+116"/>
+        <location line="+0"/>
+        <source>First-run setup</source>
+        <translation>الإعداد الأولي</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Your Gemini key, microphone, Jarvis&apos;s voice and how careful it should be, one step at a time</source>
+        <translation>مفتاح Gemini والميكروفون وصوت Jarvis ومدى الحذر المطلوب منه، خطوة بخطوة</translation>
+    </message>
+    <message>
+        <location line="+256"/>
         <source>e.g. Keep answers short.</source>
         <translation>مثل: اجعل إجاباتك قصيرة.</translation>
     </message>
@@ -2557,8 +3403,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis keeps all of it on this computer.</source>
-        <translation>ما تقوله بعد «%1» أو تكتبه، والذاكرة والمحادثة الأخيرة اللتان تساعدان على الإجابة، ولقطات الشاشة حين تحتاج مهمة إلى الشاشة، تذهب إلى Google Gemini. تمر إجراءات الحسابات عبر Composio، وللحسابات التي تربطها فقط. ويحتفظ Jarvis بكل ذلك على هذا الحاسوب.</translation>
+        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis also keeps a copy of your conversations and memory on this computer.</source>
+        <translation>ما تقوله بعد «%1» أو تكتبه، والذاكرة والمحادثة الأخيرة اللتان تساعدان على الإجابة، ولقطات الشاشة حين تحتاج مهمة إلى الشاشة، كلها تذهب إلى Google Gemini. وتمر إجراءات الحسابات عبر Composio، للحسابات التي تربطها فقط. ويحتفظ Jarvis أيضًا بنسخة من محادثاتك وذاكرته على هذا الحاسوب.</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -2744,7 +3590,7 @@
 <context>
     <name>Theme</name>
     <message>
-        <location filename="../qml/Theme.qml" line="+58"/>
+        <location filename="../qml/Theme.qml" line="+59"/>
         <source>Listening</source>
         <translation>يستمع</translation>
     </message>
@@ -2765,9 +3611,17 @@
     </message>
 </context>
 <context>
+    <name>Toast</name>
+    <message>
+        <location filename="../qml/Toast.qml" line="+34"/>
+        <source>Close</source>
+        <translation>إغلاق</translation>
+    </message>
+</context>
+<context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+109"/>
+        <location filename="../qml/Today.qml" line="+135"/>
         <source>Feels %1 in %2</source>
         <translation>الحرارة المحسوسة %1 في %2</translation>
     </message>
@@ -2777,7 +3631,7 @@
         <translation>الحرارة المحسوسة %1</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+55"/>
         <source>Now playing</source>
         <translation>قيد التشغيل الآن</translation>
     </message>
@@ -2792,7 +3646,8 @@
         <translation>التالي</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-111"/>
+        <location line="+125"/>
         <source>Working on</source>
         <translation>قيد العمل</translation>
     </message>
@@ -2802,17 +3657,18 @@
         <translation>انتهت مؤخرًا</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+137"/>
         <source>Stop this task</source>
         <translation>إيقاف هذه المهمة</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="-92"/>
         <source>Finished at %1</source>
         <translation>انتهت الساعة %1</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="-154"/>
+        <location line="+171"/>
         <source>To do</source>
         <translation>المهام</translation>
     </message>
@@ -2822,7 +3678,7 @@
         <translation>لا شيء لتفعله هذا الأسبوع. جرّب «ذكّرني بعد 20 دقيقة بأداء تمارين الإطالة».</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+104"/>
         <source>No date</source>
         <translation>بلا تاريخ</translation>
     </message>
@@ -2837,12 +3693,12 @@
         <translation>وعدتَ بها %1</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+29"/>
         <source>Cancel this reminder</source>
         <translation>إلغاء هذا التذكير</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
         <source>Mark as done</source>
         <translation>تحديد كمنجز</translation>
     </message>
@@ -2852,12 +3708,53 @@
         <translation>فتح في Classroom</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-112"/>
         <source>Couldn&apos;t check %1 just now.</source>
         <translation>تعذّر التحقق من %1 الآن.</translation>
     </message>
+    <message numerus="yes">
+        <location line="-208"/>
+        <source>%n running</source>
+        <translation>
+            <numerusform>%n قيد العمل</numerusform>
+            <numerusform>%n قيد العمل</numerusform>
+            <numerusform>%n قيد العمل</numerusform>
+            <numerusform>%n قيد العمل</numerusform>
+            <numerusform>%n قيد العمل</numerusform>
+            <numerusform>%n قيد العمل</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+18"/>
+        <source>%n to do</source>
+        <translation>
+            <numerusform>%n مهمة</numerusform>
+            <numerusform>%n مهمة</numerusform>
+            <numerusform>%n مهمتان</numerusform>
+            <numerusform>%n مهام</numerusform>
+            <numerusform>%n مهمة</numerusform>
+            <numerusform>%n مهمة</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+13"/>
+        <location line="+186"/>
+        <source>Show fewer</source>
+        <translation>عرض أقل</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>+%n more</source>
+        <translation>
+            <numerusform>+%n أخرى</numerusform>
+            <numerusform>+%n أخرى</numerusform>
+            <numerusform>+%n أخرى</numerusform>
+            <numerusform>+%n أخرى</numerusform>
+            <numerusform>+%n أخرى</numerusform>
+            <numerusform>+%n أخرى</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+17"/>
         <source>This PC</source>
         <translation>هذا الحاسوب</translation>
     </message>
@@ -2891,11 +3788,16 @@
         <source>Last answer started %1 s after you finished</source>
         <translation>بدأت آخر إجابة بعد %1 ث من انتهاء كلامك</translation>
     </message>
+    <message>
+        <location line="+94"/>
+        <source>Click again to cancel it</source>
+        <translation>انقر مجددًا لإلغائه</translation>
+    </message>
 </context>
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+122"/>
+        <location filename="../jarvis.py" line="+124"/>
         <source>Open Jarvis</source>
         <translation>فتح Jarvis</translation>
     </message>

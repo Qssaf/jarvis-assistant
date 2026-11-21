@@ -1,10 +1,11 @@
 """Jarvis's window: Qt Quick (QML) drawn on the GPU, fed by a small Backend object. The QML calls the app's API through
 Backend.request (off the UI thread) and hears everything that happens through Backend.event. The notch stays in jarvis.py."""
-import json, os
+import json, os, re, stat, time
 from concurrent.futures import ThreadPoolExecutor
 
 from PySide6.QtCore import Property, QByteArray, QCoreApplication, QLocale, QObject, QRectF, Qt, QTimer, QTranslator, Signal, Slot, QUrl
-from PySide6.QtGui import QColor, QFont, QFontDatabase, QGuiApplication, QPainter, QPixmap, QWindow
+from PySide6.QtGui import (QColor, QFont, QFontDatabase, QGuiApplication, QImage, QPainter, QPalette, QPixmap, QTextBlockFormat,
+                           QTextCursor, QWindow)
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PySide6.QtQml import QJSEngine, QQmlApplicationEngine, QQmlNetworkAccessManagerFactory, qmlRegisterSingletonType
 from PySide6.QtQuick import QQuickImageProvider
@@ -26,6 +27,8 @@ ICONS = {
     "activity": S.format('<path d="M3 12h4l2.5-7 5 14 2.5-7h4"/>'),
     "accounts": S.format('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/>'
                          '<path d="M18.3 14.2A6.5 6.5 0 0 1 21.5 20"/>'),
+    "people": S.format('<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="10.8" r="2.3"/>'
+                       '<path d="M5.7 16.2a3.5 3.5 0 0 1 6.6 0M14.5 10h3.5M14.5 13.5h2.5"/>'),  # (a contact card: not Accounts' two heads)
     "plugins": S.format('<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/>'
                         '<rect x="3.5" y="13.5" width="7" height="7" rx="2"/><path d="M17 13.5v7M13.5 17h7"/>'),
     "memory": S.format('<path d="M12 3.5l2.4 5 5.4.7-4 3.8 1 5.4-4.8-2.6-4.8 2.6 1-5.4-4-3.8 5.4-.7z"/>'),
@@ -85,6 +88,7 @@ ICONS = {
     "snow": S.format('<path d="M7 15h10a3.8 3.8 0 0 0 .6-7.5 5.6 5.6 0 0 0-10.8 1.4A3.1 3.1 0 0 0 7 15z"/><path d="M8 18.5h.01M12 18.5h.01M16 18.5h.01M10 21h.01M14 21h.01"/>'),
     "storm": S.format('<path d="M7 15h10a3.8 3.8 0 0 0 .6-7.5 5.6 5.6 0 0 0-10.8 1.4A3.1 3.1 0 0 0 7 15z"/><path d="m12.8 15.5-2.3 3.5h3L11 22.5"/>'),
     "fog": S.format('<path d="M3.5 8h12M18.5 8h2M6 12h14.5M3.5 16h11M17.5 16h3"/>'),
+    "film": S.format('<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M10.2 9.4v5.2l4.4-2.6z"/>'),
     "folder": S.format('<path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/>'),
     "school": S.format('<path d="M2.5 9.5 12 5l9.5 4.5L12 14z"/><path d="M6.5 11.6V16c1.5 1.6 3.4 2.4 5.5 2.4s4-.8 5.5-2.4v-4.4M21.5 9.5V15"/>'),
     "git-branch": S.format('<circle cx="6.5" cy="5.5" r="2"/><circle cx="6.5" cy="18.5" r="2"/><circle cx="17.5" cy="7.5" r="2"/>'
@@ -153,6 +157,83 @@ def open_image(path):
     import brain, system
     if os.path.splitext(path)[1].lower() in brain.CHAT_PICTURES and os.path.isfile(path):
         system.open_target(path)
+
+
+# ---------------------------------------------------------------- files attached to a message
+PASTED_DIR = store.PASTED_DIR  # pictures pasted into the message box, attached from here
+# what the message box sends: "(attached: path)" notes after the words (prompt.md tells the agent so); an absolute path
+_PATH = r"(?:[A-Za-z]:[\\/]|/|\\\\)[^\n]*?"
+_NOTES = re.compile(rf"(?:\s*\(attached: {_PATH}\))+\s*$")
+_NOTE = re.compile(rf"\(attached: ({_PATH})\)(?=\s*\(attached: |\s*$)")
+VIDEO_TYPES = {".mp4", ".mkv", ".mov", ".avi", ".m4v", ".wmv"}
+
+
+def with_attached(text, files):
+    """A message with files attached, as it's sent."""
+    return " ".join([text.strip()] + [f"(attached: {path})" for path in files]).strip()
+
+
+def split_attached(text):
+    """A sent message's words and the files attached to it (the notes at its end only: words typed like a note stay)."""
+    notes = _NOTES.search(text)
+    return (text[:notes.start()].rstrip(), _NOTE.findall(notes[0])) if notes else (text, [])
+
+
+def file_info(path):
+    """What an attached file's tile shows: its name, type (the extension), size and kind (a picture gets a thumbnail).
+    A file that isn't there any more (or out of reach) is a plain tile: kind "file", no size."""
+    import brain
+    name = os.path.basename(os.path.normpath(path)) or path
+    ext = os.path.splitext(name)[1].lower()
+    info = {"exists": False, "name": name, "ext": ext[1:].upper(), "kind": "file", "size": ""}
+    try:
+        found = os.stat(path)
+    except OSError:
+        return info
+    if stat.S_ISDIR(found.st_mode):
+        return {**info, "exists": True, "kind": "folder"}
+    kind = ("picture" if ext in brain.CHAT_PICTURES else "audio" if ext in brain.AUDIO_TYPES else "video" if ext in VIDEO_TYPES
+            else "file")
+    unit = 1
+    while found.st_size >= unit * 1024 and unit < 1024 ** 4:
+        unit *= 1024
+    precise = 1 if unit > 1 and found.st_size < 10 * unit else 0  # ("2.4 MB", "242 kB": a tenth only says more below 10)
+    size = QLocale().formattedDataSize(found.st_size, precise, QLocale.DataSizeFormat.DataSizeTraditionalFormat)  # (in the window's language)
+    return {**info, "exists": True, "kind": kind, "size": size}
+
+
+def local_files(urls):
+    """The files and folders among these URLs (dropped, picked or copied) that are on this PC, as its paths."""
+    paths = (os.path.normpath(QUrl(url).toLocalFile()) for url in urls if QUrl(url).isLocalFile())
+    return [path for path in paths if os.path.exists(path)]
+
+
+def paste_files(mime, folder):
+    """What pasting this clipboard content attaches: files copied in a file manager, where they are; else a picture (a
+    screenshot, a browser's "Copy image") saved as a PNG in `folder`, named by time. [] for anything else, which pastes
+    as text. OSError if the picture can't be saved."""
+    files = local_files(mime.urls()) if mime.hasUrls() else []
+    if files or not mime.hasImage():
+        return files
+    image = mime.imageData()
+    image = image.toImage() if isinstance(image, QPixmap) else QImage(image)
+    os.makedirs(folder, exist_ok=True)
+    stem = time.strftime("pasted-%Y%m%d-%H%M%S")
+    path, n = os.path.join(folder, stem + ".png"), 2
+    while os.path.exists(path):
+        path, n = os.path.join(folder, f"{stem}-{n}.png"), n + 1
+    if image.isNull() or not image.save(path, "PNG"):
+        raise OSError(f"couldn't save it as {path}")
+    return [path]
+
+
+def open_file(path):
+    """An attached file, clicked: opened with its default app; a program only has its folder shown (a click in the chat
+    never runs one). FileNotFoundError if it's gone."""
+    import system
+    if not os.path.exists(path):
+        raise FileNotFoundError(path)
+    system.open_target(os.path.dirname(path) if system.is_program(path) else path)
 
 
 class Backend(QObject):
@@ -254,6 +335,54 @@ class Backend(QObject):
     def localPath(self, url):
         return local_path(url)
 
+    @Slot(result=list)
+    def paste(self):
+        """Ctrl+V in the message box: the files the clipboard attaches ([] when it's text, which pastes as usual)."""
+        try:
+            return paste_files(QGuiApplication.clipboard().mimeData(), PASTED_DIR)
+        except OSError as e:
+            print(f"[window] pasting a picture failed: {e}", flush=True)
+            self.toast(QCoreApplication.translate("Backend", "Couldn't paste the picture: %1").replace("%1", str(e)), True)
+            return []
+
+    @Slot(list, result=list)
+    def localFiles(self, urls):
+        return local_files(urls)
+
+    @Slot(str, result="QVariantMap")
+    def fileInfo(self, path):
+        return file_info(path)
+
+    @Slot(str, result="QVariantMap")
+    def attachedIn(self, text):
+        words, files = split_attached(text)
+        return {"text": words, "files": files}
+
+    @Slot(str, list, result=str)
+    def withAttached(self, text, files):
+        return with_attached(text, files)
+
+    @Slot(str)
+    def openFile(self, path):
+        name = os.path.basename(os.path.normpath(path))
+        if not os.path.exists(path):
+            self.toast(QCoreApplication.translate("Backend", "%1 isn't there any more").replace("%1", name), True)
+            return
+        try:
+            open_file(path)
+        except OSError as e:  # (no xdg-open, or no app for it on Windows)
+            print(f"[window] opening {path} failed: {e}", flush=True)
+            self.toast(QCoreApplication.translate("Backend", "Couldn't open %1: %2").replace("%1", name).replace("%2", str(e)), True)
+
+    @Slot(QObject, float)
+    def spaceLines(self, document, height):
+        """A reply's lines as far apart as a Text's lineHeight (`height`): the TextEdit that lets it be selected has none."""
+        cursor = QTextCursor(document.textDocument())
+        cursor.select(QTextCursor.SelectionType.Document)
+        spacing = QTextBlockFormat()
+        spacing.setLineHeight(height * 100, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
+        cursor.mergeBlockFormat(spacing)
+
     @Slot(str, bool)
     def toast(self, text, bad):
         self.toastRequested.emit(text, bad)
@@ -277,6 +406,10 @@ class Window:
         current[:] = [self]
         QFontDatabase.addApplicationFont(os.path.join(HERE, "assets", "InterVariable.ttf"))
         QGuiApplication.setFont(QFont("Inter Variable", 10))
+        palette = QGuiApplication.palette()  # (links in Markdown take this colour, whatever a Text's linkColor says: the
+        for role in (QPalette.ColorRole.Link, QPalette.ColorRole.LinkVisited):  # desktop's blue, unreadable on the navy)
+            palette.setColor(role, QColor("#3fd8ff"))  # (Theme.accent)
+        QGuiApplication.setPalette(palette)
         self.backend = Backend(get, post, tool_label, live, shown_state, version)
         self.backend.opener = self.open
         self.events = self.backend  # (jarvis.clients takes anything with put())

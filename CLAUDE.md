@@ -17,6 +17,7 @@ EVAL_RUNS=3 EVAL_OUT=/tmp/x.json ...                     # both: each case three
 .venv/bin/python evals/whatsapp_eval.py [case ...]       # made-up chats through WhatsApp auto-replies (REPLY_PROMPT)
 .venv/bin/python evals/proactive_eval.py [case ...]      # made-up sent messages through people.Tracker's promise prompt
 .venv/bin/python evals/learn_eval.py [case ...]          # made-up talks through Brain.learn's LEARN prompt (what's kept)
+.venv/bin/python evals/people_eval.py [case ...]         # made-up chats through Brain.profile_of (people.PROFILE_PROMPT)
 .venv/bin/python evals/wake_eval.py [max clips]          # the user's wake clips through openWakeWord, gated vs every frame (offline)
 .venv/bin/python evals/wake_vector.py                    # rewrites the app's WakeTest vector (wake.json) from openWakeWord
 (cd android && WAKE_MODELS=$PWD/../.venv/lib/python3.13/site-packages/openwakeword/resources/models ./gradlew testDebugUnitTest)
@@ -164,6 +165,8 @@ pyside6-lupdate -no-obsolete qml/*.qml jarvis.py window.py -ts translations/jarv
   user's relay; direct is an extra.
 - `Brain.person` and `waiting_on_me(skip=)` take a lone near match on purpose (`person("sam")` finds "Sam Lee", pinned
   in the tests); sending never does (`brain.pick` only lists them).
+- Home's side column is clock, Now playing, Working on, To do, This PC (pinned in the tests), and the notch and tray
+  say "speaking" in the listening cyan: both were changed on an audit's advice and the user had them put back.
 - An outside fork was reviewed (2026-11-01) and rejected but for its Windows save retry (`store._swap`, without
   its non-atomic `copyfile` fallback); its plain-HTTP location lookup and approval pop-ups stay out.
 - `screen_time` reads QHealth's database (`system.QHEALTH_DB`) read-only (`mode=ro`, 3 s timeout, schema checked by
@@ -394,6 +397,13 @@ available tool at call time:
 - Audio: PipeWire `pw-record`/`pw-play`, else sounddevice. The mic slider is the user's (calls, Discord): `MicLevel`
   in `voice_loop` brings speech back to ~4000 RMS whatever the slider or card gain (-20..+40 dB, adapting over ~3 s
   of talking, never on Jarvis's own voice), so the wake word, `feed`'s fixed thresholds and Gemini get a steady level.
+  The always-on recording never sits on a Bluetooth headset's mic while there's another: WirePlumber's
+  `autoswitch-bluetooth-profile` puts a headset in its call profile for as long as any capture stream is linked to its
+  `bluez_input` node, and that node is the default mic whenever the headset is connected. `mic_frames(pick=mic_choice)`
+  pins pw-record (`node.dont-move`) to `pick_mic`'s node (the default if it isn't Bluetooth, else the best other one; ""
+  = the default: no other mic, or the `bluetooth_mic` setting, `system.headset_mic`), `_follow_mic` asks again every
+  `MIC_CHECK` s and restarts it on another (`mic_choice` is None when PipeWire can't be asked: the recorder then stays); notes (`record_audio`) and `ec_module`'s capture use the same choice. Check
+  it for real with `pactl list cards` (the bluez card's Active Profile stays a2dp) and `pw-dump`'s links.
   A few seconds after each start `mic_source` logs the node pw-record really reads ("[voice] the microphone is ...");
   if that isn't the echo canceller, the echo-cancelled gate is switched off (half-duplex) instead of hearing itself.
 - Screenshots: KDE `jarvis-shot` helper → spectacle → grim → gnome-screenshot → mss.
@@ -538,7 +548,12 @@ reminder, the rest go on the evening list. `evals/proactive_eval.py` checks the 
 `Brain.waiting_on_me` are the tools (dispatched in `_dispatch`); `evening_digest` (jarvis.py) scans the day's sent
 mail, then tells `digest_text(waiting_on_me(listing=True))` once a day; `waiting.json` remembers that list's chats
 (`listed`: said apart next time if still waiting) and `skip`'s names (`leave_off`: hidden until a newer message or
-promise). `people.meeting` writes a calendar event with its guests matched to pages (`Brain.events` reads them). `Attention` (jarvis.py, `attention.json`): `announce(...,
+promise). Profiles (`Brain.profile`, `profile_of`: one request with `people.PROFILE_PROMPT`; the People page,
+`PeoplePage.qml`, `/api/people`): `people_pass` (hourly, `people_profiles`) writes `PROFILES_PER_PASS` of
+`due_profiles` (talked with in `ACTIVE_DAYS`, no profile or one older than `people_refresh_days` with messages since)
+from one-to-one chats only (`_chat_with`: never a group), nothing under `PROFILE_MIN` messages of theirs (`looked`:
+"few"/"empty" a day later, "forgot" never by itself); `scrub` and `hide_secrets` clean what's kept, the gist goes into
+`people.index`, and `evals/people_eval.py` checks the prompt. `people.meeting` writes a calendar event with its guests matched to pages (`Brain.events` reads them). `Attention` (jarvis.py, `attention.json`): `announce(...,
 kind=)` of a kind the user let pass three times in a row (no speech within `HEEDED` s) is only shown for a backoff;
 `loud` and `asked` (reminders, scheduled tasks) are never held back. Skills (`store.skills`, the `skill` tool): ways
 a screen task worked, offered in `_ask` through `matching_skills`; a task of 3+ screen steps that saved none gets one
@@ -569,11 +584,22 @@ QML gotchas: the engine loads local files only (`window.LocalOnly`): Qt fetches 
 itself, so a reply's image link could carry data out; a web picture is saved first (`system._web_art` for covers). File paths become URLs through `Backend.fileUrl`/`localPath` (`"file://" + path` broke on Windows); `AbstractButton` has a FINAL `icon` (ours is `symbol`); local
 `Label.qml`/`Page.qml` get shadowed by QtQuick.Controls (ours are `Txt`, `ScrollPage`); `#AARRGGBB` colours; font sizes go
 through `Theme.px(n)` (the text-size setting, rounded to whole pixels); QtSvg only reads `#rrggbb`; `window.py` forces the
-Basic style (Windows' native one ignores custom backgrounds). Buttons, switches and chips are `Qt.TabFocus` (Tab reaches
+Basic style (Windows' native one ignores custom backgrounds). A closed `ComboBox` with focus changes and emits
+`activated` on a typed letter or an arrow (a stray "l" saved `whatsapp_calls: off` and calls went unanswered):
+`Select.qml` swallows letters, opens the list on arrows and ignores the wheel. Buttons, switches and chips are `Qt.TabFocus` (Tab reaches
 them, a click doesn't move the typing) with `Focus { keyboard: true }` on `visualFocus` and Enter as `click()`; a chip
 that's only a label sets `Qt.NoFocus`; `ScrollPage` scrolls a control Tab reached into view. The first-run `SetupWizard` covers the window until
-`setup_done`. `ScrollPage`'s `index: true` (Settings) lists the page's `Section`s beside it (hidden in a narrow window) and
-jumps to one; Home's "Working on" (`Today.qml`) polls `/api/jobs` (`brain.running`) and stops one task with
+`setup_done`. Attaching lives in `Composer.qml` (file dialog, drop, Ctrl+V through `Backend.paste`: a clipboard picture is saved
+into `store.PASTED_DIR`, tidied with the conversations); `window.with_attached`/`split_attached` build and parse the
+"(attached: path)" notes the prompts rely on, and `Attachment.qml` draws a file in the box and in a sent message.
+On Linux `qt_args` adds `-platformtheme xdgdesktopportal` when Qt has that plugin (`system.portal_theme`), so file
+dialogs are the desktop's own. Deletes that can't be undone go through `ConfirmButton.qml` (two clicks). The Memory
+page saves with the text it loaded (`store.save_memory(text, was)`: lines Jarvis added meanwhile are kept). Activity
+lists the work log (`/api/work`, `work_entries`; `log_work` emits a live "work" event).
+Settings (`SettingsPage.qml`) is tabs plus a search over every tab: each row has its own `showing` (its label, hint,
+choices or its section's title holds every typed word), containers read their children's `showing`, never `visible` (an
+invisible parent makes every child's `visible` false), and a test fails when a `DEFAULT_SETTINGS` key appears in no QML:
+a new setting lands with its control. Home's "Working on" (`Today.qml`) polls `/api/jobs` (`brain.running`) and stops one task with
 `/api/jobs/<n>/stop`. Every user-visible QML text goes through `qsTr()` (`.arg()` for values, `%n` plurals; Python's tray/notch
 texts through `QCoreApplication.translate`); `window_languages` (priority list, `store.WINDOW_LANGUAGES`) installs
 `translations/jarvis_<code>.qm` up to the first `en` (`Window.languages`, live `retranslate`). After changing texts run
@@ -581,7 +607,9 @@ the lupdate/lrelease commands in window.py's `TRANSLATIONS` comment: the tests c
 mirrors the layout, so place things with anchors, not `x:` (a mirrored anchor against an unmirrored `x` ends up off
 screen); `Txt` aligns left by default so mirroring moves it. `docs/screens.py` takes `WINDOW_LANGUAGES="ar"` to render a
 language. Never start apps on a private `dbus-run-session` here: its AT-SPI launcher takes over the
-session's accessibility socket. Web fetches (`fetch`, the headless browser, `show_image`) go through the `Guard` proxy in brain.py. Over real HTTP,
+session's accessibility socket. Web fetches (`fetch`, the headless browser, `show_image`) go through the `Guard` proxy in brain.py. A picture
+written into an answer is shown only when it's a file (`reply_pictures`, `OUTSIDE_PICTURE`): an address stays a link,
+never fetched because an answer named it. Over real HTTP,
 `serve_app` only accepts `/api/listen`, `/api/show`, `/api/region`, `/api/task` and `/api/say`, and only with the per-run token and a
 matching Host header. `/api/task` (`jarvis --task`, `jarvis --mcp`) runs unattended, like a scheduled task.
 

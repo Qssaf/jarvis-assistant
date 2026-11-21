@@ -2737,10 +2737,13 @@ OWN_SETTINGS = {
     "whatsapp_calls": "calls the user misses: answer, decline or off", "whatsapp_note": "what you tell people who write (\"in class until 5\")",
     "whatsapp_share_free": "true: you may tell people when the user is busy (times only)", "discord_replies": "who you answer on Discord by yourself: friends or off",
     "screen_history": "a private timeline of the windows the user had open",
+    "people_profiles": "true: you get to know the people the user chats with one to one (a short profile of each, from their latest messages)",
+    "people_refresh_days": "days before a person's profile is written again, 1-60",
+    "bluetooth_mic": "true: you listen through a Bluetooth headset's own microphone (its sound then stays in call quality)",
 }
 # ...and the values that have Jarvis do more on its own, say more to people or record more: those wait for the user's yes
 DOES_MORE = {"whatsapp_replies": ("contacts",), "whatsapp_calls": ("answer",), "discord_replies": ("friends",),
-             "whatsapp_share_free": (True,), "screen_history": (True,), "whatsapp_note": None}
+             "whatsapp_share_free": (True,), "screen_history": (True,), "people_profiles": (True,), "whatsapp_note": None}
 TAKES_EFFECT_LATER = ("personality", "voice", "fast_voice", "end_of_speech_ms")  # (read when a voice session opens)
 
 
@@ -3086,8 +3089,42 @@ def tool_make_image(prompt, edit=""):
     return {"result": f"made the picture and showed it in the chat; saved as {path}"}
 
 
-def tool_show_image(source, caption=""):
-    """Show a picture (a file on this PC or a public web address) in the chat."""
+PICTURE_SEARCH = ("https://en.wikipedia.org/w/api.php?action=query&format=json&generator=search&gsrlimit=5&prop=pageimages"
+                  "&piprop=thumbnail&pithumbsize=1024&gsrsearch=")
+
+
+def find_picture(words):
+    """A photo of something real by its name: the picture of the best Wikipedia page for these words, as (its address,
+    the page's title), or None when no page found has one."""
+    r = fetch(PICTURE_SEARCH + quote(" ".join(str(words).split())))
+    pages = ((r.json() or {}).get("query") or {}).get("pages") or {} if r.ok else {}
+    for page in sorted(pages.values(), key=lambda p: p.get("index", 99)):  # (the search's own order)
+        if (page.get("thumbnail") or {}).get("source"):
+            return page["thumbnail"]["source"], page.get("title", "")
+    return None
+
+
+def tool_show_image(source="", caption="", search=""):
+    """Show a picture in the chat: a file on this PC, a public web address, what's on the screen now ("screen"), or
+    (search) a photo of something real found by its name."""
+    if search and not source:
+        try:
+            found = find_picture(search)
+        except (PermissionError, requests.RequestException, ValueError) as e:
+            return {"error": f"couldn't look for a picture just now ({describe(e)[:120]})"}
+        if not found:
+            return {"error": f"no picture of '{search}' was found: give a picture's own address or file, or paint one with make_image"}
+        source, caption = found[0], caption or f"{found[1]} (Wikipedia)"
+    if not source:
+        return {"error": "say what to show: source (a file, an address, or 'screen') or search (the name of something real)"}
+    if source.strip().lower() in ("screen", "screenshot"):
+        hide_overlays()
+        os.makedirs(IMAGE_DIR, exist_ok=True)
+        path = os.path.join(IMAGE_DIR, "screen " + time.strftime("%Y-%m-%d %H-%M-%S") + ".jpg")
+        with open(path, "wb") as f:
+            f.write(system.screenshot())
+        on_image[0](path, caption or "The screen")
+        return {"result": f"the screen as it is now is shown in the chat; saved as {path}"}
     if source.startswith(("http://", "https://")):
         try:
             r = fetch(source)
@@ -3174,8 +3211,12 @@ def tool_read_file(path, question=""):
 TOOLS["make_image"] = (tool_make_image, "Create a picture from a description (or edit an existing picture file given as `edit`); it "
                        "appears in the chat and is saved to ~/Pictures/Jarvis. Takes about 10 s.",
                        obj(prompt={"type": "string"}, edit={"type": "string"}, optional=("edit",)))
-TOOLS["show_image"] = (tool_show_image, "Show a picture in the chat window: a file on this PC or a public image address.",
-                       obj(source={"type": "string"}, caption={"type": "string"}, optional=("caption",)))
+TOOLS["show_image"] = (tool_show_image, "Show a picture in the chat window. source: a picture file on this PC, a public image "
+                       "address, or \"screen\" for what's on the screen right now. search: instead of a source, the name of "
+                       "something real (\"red panda\", \"Eiffel Tower\", a person, a place): its photo is found and shown. "
+                       "For something invented, make_image.",
+                       obj(source={"type": "string"}, caption={"type": "string"}, search={"type": "string"},
+                           optional=("source", "caption", "search")))
 TOOLS["read_file"] = (tool_read_file, "Read a file on this PC: pictures are described (ask a question about them), PDFs, Word "
                       "and PowerPoint files (.docx, .pptx) and text files are read, recordings are written down (a long one becomes notes), folders are listed. Use it for files the user attached or mentions.",
                       obj(path={"type": "string"}, question={"type": "string"}, optional=("question",)))
@@ -3505,12 +3546,14 @@ TOOLS["ask_user"] = (None, "Ask the user something only they can tell you, out l
                      "minutes), then carry on: which of two close matches they meant, the words to send, a yes before "
                      "something irreversible. Never for what you can find out yourself.", obj(question={"type": "string"}))
 TOOLS["person"] = (None, "Someone in the user's life (\"what's up with Sam?\", \"what did I promise Maya?\"): what Jarvis knows about "
-                    "them (notes, when they last wrote each way, the user's promises), with their latest WhatsApp and Discord messages "
-                    "and emails. note: save a fact about them (\"Sam is my cousin\", \"Maya's exam is on Friday\" with until: the day "
-                    "it stops being true, YYYY-MM-DD); use this, not remember, for facts about other people. forget: drop notes or "
-                    "promises with these words (\"*\": the whole page).",
+                    "them (notes, when they last wrote each way, the user's promises, and its profile of them: who they are to the "
+                    "user and how they write, from their chats), with their latest WhatsApp and Discord messages and emails. note: "
+                    "save a fact about them (\"Sam is my cousin\", \"Maya's exam is on Friday\" with until: the day it stops being "
+                    "true, YYYY-MM-DD); use this, not remember, for facts about other people. forget: drop notes or promises with "
+                    "these words (\"*\": the whole page). refresh: true writes the profile again now from their latest one-to-one "
+                    "messages (\"get to know Sam again\").",
                     obj(name={"type": "string"}, note={"type": "string"}, until={"type": "string"}, forget={"type": "string"},
-                        optional=("note", "until", "forget")))
+                        refresh={"type": "boolean"}, optional=("note", "until", "forget", "refresh")))
 TOOLS["waiting_on_me"] = (None, "Who's waiting on the user (WhatsApp and Discord chats whose last message is theirs, unread emails "
                           "from people), plus tomorrow's calendar (with who comes), Classroom work and reminders, and promises with "
                           "no time. hours: how old a message must be (default 2). skip: a name the user wants left off (\"leave Sam "
@@ -3992,8 +4035,10 @@ def about():
         "# About yourself\n"
         f"- You are Jarvis{' ' + app_version[0] if app_version[0] else ''}, a program on this PC that the user built and "
         "develops: your files, settings and memory are here, and only your models run elsewhere. Your window's pages: Home "
-        "(the day, tasks at work and finished lately), Chats, Activity (what you changed), Accounts, Plugins, Models, "
-        f"Memory (what you remember, people, checks), Cost, Health, Settings. The wake word is \"{store.wake_phrase(cfg)}\".\n"
+        "(the day, tasks at work and finished lately), Chats, People (who the user talks with: notes, promises, your profile "
+        "of each), Activity (what you changed), Accounts, Plugins, Models, "
+        f"Memory (what you remember, people, checks), Cost, Health, Settings (tabs Voice, Your day, Window, Messages, Phone, "
+        f"Your data, Advanced, and a search that finds any setting). The wake word is \"{store.wake_phrase(cfg)}\".\n"
         f"- Your models: the voice is {cfg['live_model']}; background tasks run on {names('agent')}; the screen is read by "
         f"{names('look', 2)}; pictures are made by {names('image', 2)}. A name like these, even misheard, is about you: answer "
         "from this, never a web search. The Models page changes them; Health shows which are answering.\n"
@@ -4004,7 +4049,11 @@ def about():
         f"misses: {said(CALL_MODES, 'whatsapp_calls')}; Discord: {said(REPLY_MODES, 'discord_replies')}; reminders, scheduled tasks and "
         "checks; " + ("" if cfg["learn_from_talk"] else "not ") + "keeping lasting facts from talk. Nothing else happens by "
         "itself: between requests only a reminder, check, watch, notes, task or coding job that was really started is at "
-        "work. Settings changes these (people_rules for one person)."
+        "work. Settings changes these (people_rules for one person).\n"
+        "- Your own parts on this PC: a microphone recording that's always on for the wake word (pw-record on Linux), on "
+        "the PC's own microphone and not a Bluetooth headset's (recording from that keeps a headset's sound in call "
+        "quality: the bluetooth_mic setting), and the WhatsApp helper (jarvis-wa). Asked what's using the microphone, or "
+        "why sound or a device changed by itself, check your own parts first."
         + (f"\n- The user's projects (git folders, the one worked in last first): {', '.join(projects)}. A project named "
            "loosely is one of these: never make a folder up." if projects else ""))
 
@@ -4251,11 +4300,11 @@ def chain():
 
 # what each job runs on: the "<job>_models" setting when it's set, else the built-in list (which local_backends.py may extend)
 MODEL_JOBS = {
-    "agent": ("Background tasks", "Long jobs handed off with do_task: they need the most thinking."),
-    "look": ("Reading the screen carefully", "Solving or judging what's on screen, the agent's screenshots, pictures in files."),
+    "agent": ("Background tasks", "Longer jobs Jarvis works on in the background: they need the most thinking."),
+    "look": ("Reading the screen carefully", "Solving or judging what's on screen, screenshots during tasks, pictures in files."),
     "point": ("Quick looks and clicks", "Finding where to click and quick questions about the screen: speed matters most."),
     "point_strong": ("Second try at finding a target", "Used when the quick model can't find what to click."),
-    "search": ("Web search answers", "Summing up Google results for web_search."),
+    "search": ("Web search answers", "Summing up Google results when Jarvis searches the web."),
     "image": ("Making pictures", "Pictures you ask Jarvis to make or edit."),
     "hear": ("Hearing you (backup voice)", "When Gemini Live can't be used: writes down what you say."),
     "speak": ("Speaking (backup voice)", "When Gemini Live can't be used: says the answers out loud."),
@@ -4703,9 +4752,10 @@ class Brain:
                 "reminders_today": [r["text"] + time.strftime(" at %H:%M", time.localtime(r["at"])) for r in store.reminders()
                                     if r["at"] < now + 86400 and not r.get("off")]}
 
-    def person(self, name, note="", until="", forget=""):
-        """Someone in the user's life: their page (notes, last messages each way, promises) plus their latest WhatsApp and
-        Discord messages and emails; note saves a fact about them (until: the day it stops being true)."""
+    def person(self, name, note="", until="", forget="", refresh=False):
+        """Someone in the user's life: their page (notes, last messages each way, promises, profile) plus their latest
+        WhatsApp and Discord messages and emails; note saves a fact about them (until: the day it stops being true);
+        refresh writes their profile again now."""
         import discord, people
         book = people.everyone()
         known, problem = pick(name, [{"name": k, "also": p.get("aka", [])} for k, p in book.items()])
@@ -4724,6 +4774,15 @@ class Brain:
                     return {"error": "until is a day, YYYY-MM-DD"}
             who = people.add_note(who, note, end)
             return {"result": f"noted about {who}", "page": people.page(who)}
+        said = {}
+        if refresh:
+            try:
+                said = {"result": f"wrote again what Jarvis understands about {who}" if self.profile(who) else
+                        f"too little in their chats to say more yet (fewer than {people.PROFILE_MIN} messages from them)"}
+            except (people.NotNow, ValueError) as e:
+                said = {"error": f"couldn't get to know {who} again now: {e}"}
+            except NoModel as e:
+                said = {"error": f"no model answered, so {who}'s profile wasn't written again: {e}"}
 
         def whatsapp():
             wa = whatsapp_link[0]
@@ -4763,7 +4822,89 @@ class Brain:
         for label, part in zip(("latest on whatsapp", "latest on discord", "recent emails", "meetings in the next two weeks"), got):
             if part:
                 out[label] = part
+        return {**said, **out}
+
+    def profile_sources(self):
+        """The apps a profile can read now: {app: None}, or why it can't ("WhatsApp is paused in Jarvis's Accounts page")."""
+        import discord
+        wa, out = whatsapp_link[0], {}
+        out["whatsapp"] = ("WhatsApp is paused in Jarvis's Accounts page" if account_block(WA_READ) else
+                           "WhatsApp isn't running" if not wa else "WhatsApp isn't linked (Settings → Messages)" if not wa.saved.get("linked")
+                           else "WhatsApp isn't connected right now" if wa.state != "connected" else None)
+        state = None if account_block(DC_READ) else discord.status()["state"]
+        out["discord"] = ("Discord is paused in Jarvis's Accounts page" if state is None else
+                          "Discord isn't open (Jarvis reads it through Vesktop)" if state == "off" else
+                          "Discord isn't connected (Settings → Messages → Restart Vesktop)" if state != "connected" else None)
         return out
+
+    def _chat_with(self, app, names):
+        """Their one-to-one chat on this app, by any of their names, as [{"at", "me", "text", "app"}] ([] if there's none).
+        Never a group: not a WhatsApp group, nor a Discord server, channel or group DM."""
+        if app == "whatsapp":
+            wa = whatsapp_link[0]
+            for name in names:
+                found, _ = wa.find(name)
+                if found and not found.get("group"):
+                    return [{"at": m["at"], "me": m["me"], "text": m["text"], "app": app} for m in wa.history(found["chat"], 150)]
+            return []
+        import discord
+        for name in names:
+            found, _ = discord.find(name)
+            if found and found["kind"] == "dm" and found.get("also"):  # (a group DM has no "also": it's no one's username)
+                got = discord.call("history", id=found["id"], kind="dm", count=100)
+                if len({m["by"] for m in got if not m["me"]}) > 1:  # (more than one other person wrote: a group after all)
+                    return []
+                return [{"at": m["at"], "me": m["me"], "text": m["text"], "app": app} for m in got]
+        return []
+
+    def profile_of(self, name, notes, messages):
+        """What the agent's models make of someone from the user's notes about them and their latest one-to-one messages
+        ([{"at", "me", "text", "app"}]): {"gist", "lines", "count", "upto"}, with saved keys, the passphrase, links,
+        emails and long numbers taken out; {} when the model found too little to go on; None, and no request, when fewer
+        than people.PROFILE_MIN of the messages are theirs. One request, nothing saved (evals/people_eval.py runs it)."""
+        import people
+        lines, them, upto = people.chat_lines(messages)
+        if them < people.PROFILE_MIN:
+            return None
+        parts = self._generate([{"role": "user", "parts": [{"text": people.profile_prompt(name, notes, lines)}]}])
+        got = people.parse_profile("".join(p.get("text", "") for p in parts if not p.get("thought")))
+        if got is None:
+            raise people.NotNow("the model's answer wasn't a profile")
+        if not got:
+            return {}
+        keys, hide = saved_secrets(), store.passphrase_hider()
+        clean = lambda text: people.scrub(hide(hide_secrets(text, keys)))
+        return {"gist": clean(got["gist"]), "lines": [clean(line) for line in got["lines"]], "count": len(lines), "upto": upto}
+
+    def profile(self, name, now=None):
+        """Get to know someone (again): their latest one-to-one WhatsApp and Discord messages (the apps they talk on that
+        can be read now) and the user's notes go to the agent's models, and what comes back is saved on their page. The
+        profile saved, or None when there was too little to go on (marked: read again a day later at the soonest). Raises
+        people.NotNow when none of their chats can be read now, NoModel when no model answered: nothing is marked then."""
+        import people
+        now = now or time.time()
+        key = people.known(name)
+        if not key:
+            raise ValueError(f"Jarvis has no page for {name}")
+        p = people.everyone()[key]
+        sources = self.profile_sources()
+        theirs = people.apps_of(p) or list(sources)
+        apps = [a for a in theirs if not sources.get(a)]
+        if not apps:
+            raise people.NotNow("; ".join(sources.get(a) or f"Jarvis can't read {a}" for a in theirs))
+        messages = []
+        for app in apps:
+            try:
+                messages += self._chat_with(app, [key, *p.get("aka", [])])
+            except (RuntimeError, OSError) as e:  # (the helper or Vesktop went away meanwhile, or timed out)
+                raise people.NotNow(f"couldn't read {people.APPS[app]}: {describe(e)}") from e
+        notes = [n["text"] for n in p.get("notes", []) if not n.get("until") or n["until"] > now]
+        got = self.profile_of(key, notes, messages)
+        if not got:
+            people.mark_looked(key, max([m["at"] for m in messages] or [now]), "few" if got is None else "empty", now)
+            return None
+        return people.set_profile(key, {"gist": got["gist"], "text": "\n".join(got["lines"]), "at": now, "upto": got["upto"],
+                                        "count": got["count"]})
 
     def waiting_on_me(self, hours=2, skip="", listing=False):
         """Who's waiting on the user (their message is the last one, at least `hours` old, under three days) and what's

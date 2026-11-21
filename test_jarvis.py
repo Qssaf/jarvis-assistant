@@ -1149,7 +1149,7 @@ live = jarvis.Live.__new__(jarvis.Live)
 live.mic, live.session, live.floor, live.voice_at, live.level = True, None, 100.0, 0.0, 0.0
 live.speaker, live.backlog = jarvis.Speaker(), collections.deque(maxlen=125)  # the real one: a fake hid a renamed attribute
 live.backup = jarvis.Backup(live)
-live.asking, live.doing, live.warned, live.sent_to = threading.Lock(), set(), None, {}
+live.asking, live.doing, live.warned, live.sent_to, live.tasks_stopped_at = threading.Lock(), set(), None, {}, 0.0
 frame = lambda rms: (np.random.default_rng(1).normal(0, rms, 1280)).astype(np.int16)
 for _ in range(50):
     live.feed(frame(60))  # quiet room
@@ -1370,6 +1370,73 @@ jarvis.clients.pop()
 assert logged_pass[0]["text"] == "yes, •••" and live.last_heard == "yes, bluebird 42"  # (typed counts too; never shown)
 del live._answer, live._send
 assert jarvis.api_post("/api/passphrase", {"passphrase": ""}, live, None) == {"passphrase": False} and not store.secret(store.PASSPHRASE)
+# the Memory page's Save sends the text it loaded (was): notes Jarvis added while the page was open (a "remember ...", the
+# learning pass) stay under the user's edit instead of being written over, and a save of "" doesn't wipe them either
+kept_memory = store.memory()
+store.set_memory("- a")
+store.remember("b")
+saved_memory = jarvis.api_post("/api/memory", {"memory": "- a2", "was": "- a"}, None, None)
+assert store.memory() == "- a2\n- b" and saved_memory == {"memory": "- a2\n- b", "merged": 1}, (store.memory(), saved_memory)
+assert jarvis.api_post("/api/memory", {"memory": "- a3", "was": "- a2\n- b"}, None, None) == {"memory": "- a3", "merged": 0}  # (b deleted on purpose)
+store.remember("c")
+assert jarvis.api_post("/api/memory", {"memory": "", "was": "- a3"}, None, None) == {"memory": "- c", "merged": 1} and store.memory() == "- c"
+store.remember("d")  # (one the user also typed meanwhile: there once)
+assert jarvis.api_post("/api/memory", {"memory": "- c\n- D", "was": "- c"}, None, None) == {"memory": "- c\n- D", "merged": 0}
+# the Memory page's rows change one line each ({"line": {old, new}}), on the memory as it is now: a note Jarvis forgot while
+# the page was open stays forgotten (a whole-text Save put it back), one it learnt stays, and every other line is untouched
+store.set_memory("- a\n- b\n- c")
+assert store.edit_memory_line("- b", "- B2") == "- a\n- B2\n- c" == store.memory()
+assert store.edit_memory_line("- a") == "- B2\n- c"  # (old only: deleted)
+assert store.edit_memory_line(new="- d") == "- B2\n- c\n- d"  # (new only: added at the end)
+assert store.edit_memory_line(new="-  D ") == "- B2\n- c\n- d"  # (there already: kept once, as remember does)
+def line_refused(old, new, why):
+    try:
+        store.edit_memory_line(old, new)
+    except ValueError as e:
+        assert why in str(e), e
+    else:
+        raise AssertionError(f"{old!r} -> {new!r} was done")
+for old, new in (("- gone", "- x"), ("- gone", None), ("- B", "- x"), ("", None), ("  ", "- x")):  # (gone, or never there)
+    line_refused(old, new, "isn't in")
+for new in ("", "   ", "- ", "-  Lesson:  ", "How to:", "* how TO : "):  # (a blank note is no note; deleting is old alone)
+    line_refused("- c", new, "write")
+    line_refused(None, new, "write")
+line_refused(None, None, "which note")
+assert store.memory() == "- B2\n- c\n- d"
+store.set_memory("- x\n- y\n- x")
+assert store.edit_memory_line("- x", "- z") == "- z\n- y\n- x"  # (a line there twice: only the first)
+assert store.edit_memory_line(" - x ") == "- z\n- y"
+assert store.edit_memory_line("- y", "- two\nlines") == "- z\n- two lines"  # (a note is one line)
+# odd memory: no newline at the end, blank lines, lines without a bullet, spaces inside lines, a Windows line end (each
+# remember after one added another "\r" there: Windows writes "\n" as "\r\n", and memory() handed the "\r" back)
+with open(store.MEMORY_FILE, "wb") as f:
+    f.write(b"First line, no bullet\n\n  - indented   spaces\n- b\r\n- Lesson: keep me \r\r\n\n\nlast")
+assert "\r" not in store.memory(), ascii(store.memory())
+store.edit_memory_line("- b", "- b2")
+with open(store.MEMORY_FILE, "rb") as f:  # (Windows writes its own line ends)
+    assert f.read().replace(os.linesep.encode(), b"\n") == b"First line, no bullet\n\n  - indented   spaces\n- b2\n- Lesson: keep me \n\n\nlast\n"
+store.edit_memory_line(new="- Lesson: new one")
+store.edit_memory_line("last")
+with open(store.MEMORY_FILE, "rb") as f:
+    assert f.read().replace(os.linesep.encode(), b"\n") == (b"First line, no bullet\n\n  - indented   spaces\n- b2\n- Lesson: keep me \n\n\n"
+                                                            b"- Lesson: new one\n")
+# through the window's API, with Jarvis forgetting one note and learning another while the page was open
+store.set_memory("- likes green tea\n- has a cat named Pixel")
+store.forget("cat named")
+store.remember("plays the cello")
+assert jarvis.api_post("/api/memory", {"line": {"old": "- likes green tea", "new": "- likes black tea"}}, None, None) == {
+    "memory": "- likes black tea\n- plays the cello"}
+for line in ({"old": "- has a cat named Pixel"}, {"old": "- plays the cello", "new": " "}, "- plays the cello", {}):
+    try:
+        jarvis.api_post("/api/memory", {"line": line}, None, None)
+        raise AssertionError(f"{line} was done")
+    except ValueError:
+        pass
+assert store.memory() == "- likes black tea\n- plays the cello"
+assert jarvis.api_post("/api/memory", {"line": {"old": "- plays the cello"}}, None, None) == {"memory": "- likes black tea"}
+assert jarvis.api_post("/api/memory", {"line": {"new": "- How to: tune it: A first"}}, None, None) == {
+    "memory": "- likes black tea\n- How to: tune it: A first"}
+store.set_memory(kept_memory)
 # while the agent works on the screen, the voice keeps its hands off it (both once sent the same Discord message)
 brain.screen_lock.acquire()
 assert "background task is using the screen" in asyncio.run(live._tool(types.SimpleNamespace(name="act", args={"steps": [{"keys": "Return"}]})))["error"]
@@ -1684,6 +1751,38 @@ assert "result" in b.approvals("allow", slug, task=phone) and not brain.needs_ye
 store.set_approval(slug)
 store.set_secret(store.PASSPHRASE, "")
 brain.user_said[0] = real_said
+# Accounts lists them in plain words with what the user said, newest first, and Ask again takes one back at once; nothing
+# in the window allows one (that stays the voice's, with its checks), and the phone reaches neither route
+store.write_json(store.APPROVALS_FILE, {slug: {"at": 1_700_000_000, "said": "don't ask me before marking emails read"},
+                                        "GOOGLECALENDAR_CREATE_EVENT": {"at": 1_700_000_300, "said": "no need to ask about calendar events"},
+                                        "GOOGLE_CLASSROOM_TURN_IN_ASSIGNMENT": {"at": 1_700_000_200},
+                                        "ACME_SYNC_ALL": {"at": 1_700_000_100, "said": "never ask about acme"}})
+allowed = jarvis.api_get("/api/approvals", None)
+assert [a["label"] for a in allowed] == ["Google Calendar: create event", "Google Classroom: turn in assignment", "Acme: sync all",
+                                         "Gmail: batch modify messages"], allowed
+assert allowed[-1] == {"tool": slug, "app": "gmail", "label": "Gmail: batch modify messages",
+                       "said": "don't ask me before marking emails read", "at": 1_700_000_000}
+assert allowed[1]["said"] == "" and allowed[1]["app"] == "google_classroom" and not brain.needs_yes(slug)
+assert jarvis.api_post("/api/approvals/revoke", {"tool": slug.lower()}, None, b) == allowed[:-1]
+assert brain.needs_yes(slug) and slug not in store.approvals()
+assert f"asks again before {slug}" in store.read_json(store.CHANGES_FILE, [])[-1]["what"]  # (recent_changes: "undo that")
+assert jarvis.api_post("/api/approvals/revoke", {"tool": slug}, None, b) == allowed[:-1]  # (clicked twice: nothing more to do)
+for path, data in (("/api/approvals/revoke", {"tool": " "}), ("/api/approvals/revoke", {})):
+    try:
+        jarvis.api_post(path, data, None, b)
+        raise AssertionError(f"{path} took {data}")
+    except ValueError:
+        pass
+for path in ("/api/approvals", "/api/approvals/allow", "/api/approvals/add"):
+    try:
+        jarvis.api_post(path, {"tool": slug, "said": "don't ask me before marking emails read"}, None, b)
+        raise AssertionError(f"{path} allowed one")
+    except KeyError:
+        pass
+assert brain.needs_yes(slug) and len(store.approvals()) == 3
+import phone as phone_mod
+assert "/api/approvals" not in phone_mod.PHONE_GET and not phone_mod.PHONE_POST.fullmatch("/api/approvals/revoke")
+store.write_json(store.APPROVALS_FILE, {})
 
 # a saved key never leaves in a tool call, and no tool result shows one to a model (a page or email can't ask for it)
 key, refresh = "AIza" + "k3y" * 12, "1//0g" + "t0ken" * 10
@@ -2600,6 +2699,22 @@ jarvis.sessions.current["work"].append({"who": "task", "text": "read_file -> Amt
 talk = jarvis.recent_talk().split("\n")
 assert len(talk) == 2 + len(jarvis.sessions.messages) and not [t for t in talk if re.match(r"\d\d:\d\d you: yes", t)], talk
 assert talk[-1].endswith("task: read_file -> Amt 12:00 you: yes, send it") and "\u2028" not in "".join(talk), talk
+# the Activity page lists the work log, newest first: each call's label, what it was asked and what came back, errors
+# apart, and a new line shows at once (it listed tool names only, never what a call did or that it failed)
+jarvis.sessions.current["work"].clear()
+seen = types.SimpleNamespace(events=[])
+seen.put = seen.events.append
+jarvis.clients.append(seen)
+jarvis.log_work("voice", "web_search", {"query": "flights to Lisbon"}, {"result": "three flights -> from 40 euros"})
+jarvis.log_work("task", "whatsapp_send", {"to": "Sam Lee", "text": "on my way -> home"}, {"error": "no chat is called Sam Lee"})
+jarvis.log_work("voice", "look", {}, {"result": "a chat"}, sid="a conversation left since")  # (not kept: not shown either)
+jarvis.clients.remove(seen)
+shown = [(w["who"], w["name"], w["label"], w["args"], w["result"], w["error"]) for w in jarvis.api_get("/api/work", None)]
+assert shown == [("task", "whatsapp_send", "Sending a WhatsApp message", "to: Sam Lee, text: on my way -> home", "no chat is called Sam Lee", True),
+                 ("voice", "web_search", "Searching the web", "query: flights to Lisbon", "three flights -> from 40 euros", False)], shown
+assert [(e["kind"], e["who"], e["label"], e["result"], e["error"]) for e in seen.events] == [
+    ("work", "voice", "Searching the web", "three flights -> from 40 euros", False), ("work", "task", "Sending a WhatsApp message", "no chat is called Sam Lee", True)]
+assert jarvis.work_parts("list_windows -> (nothing)") == {"name": "list_windows", "args": "", "result": "(nothing)", "error": False}
 jarvis.sessions = real_sessions
 # a damaged conversation file never keeps Jarvis from starting: only the newest one is read, and a bad one is said
 damaged = tempfile.mkdtemp()
@@ -2783,13 +2898,47 @@ os.environ["QT_QPA_PLATFORM"] = "offscreen"
 # Jarvis's own windows use XWayland through Qt's arguments, not the environment (every app and command it started
 # inherited that, and opened as an X11 app too)
 import inspect
+real_portal_theme, system.portal_theme = system.portal_theme, lambda plugins=None: False
 had_display, os.environ["DISPLAY"] = os.environ.get("DISPLAY"), ":0"
 assert jarvis.qt_args() == ["jarvis", "-platform", "xcb"] and os.environ["QT_QPA_PLATFORM"] == "offscreen"
 del os.environ["DISPLAY"]
 assert jarvis.qt_args() == ["jarvis"] and "environ[" not in inspect.getsource(jarvis.run_tray)
 assert "own_window[0] = window.on_screen" in inspect.getsource(jarvis.run_tray)  # (look leaves the window out)
+# ...and on Linux file dialogs go through xdg-desktop-portal: the desktop's own (KDE's, GNOME's), not Qt's plain one
+# (PySide6's Qt has no KDE theme); only when this Qt has that theme, and never on Windows (its dialogs are native)
+system.portal_theme = lambda plugins=None: True
+assert jarvis.qt_args() == ["jarvis", "-platformtheme", "xdgdesktopportal"]
+os.environ["DISPLAY"] = ":0"
+assert jarvis.qt_args() == ["jarvis", "-platform", "xcb", "-platformtheme", "xdgdesktopportal"]
+del os.environ["DISPLAY"]
+system.portal_theme = real_portal_theme
+qt_plugins = tempfile.mkdtemp()
+was_windows, system.IS_WINDOWS = system.IS_WINDOWS, False
+assert not system.portal_theme(qt_plugins)
+os.makedirs(os.path.join(qt_plugins, "platformthemes"))
+open(os.path.join(qt_plugins, "platformthemes", "libqxdgdesktopportal.so"), "w").close()
+assert system.portal_theme(qt_plugins)
+system.IS_WINDOWS = True
+assert not system.portal_theme(qt_plugins)
+system.IS_WINDOWS = was_windows
+if sys.platform.startswith("linux"):
+    assert system.portal_theme(), "this PySide6 has no xdgdesktopportal theme: file dialogs fall back to Qt's own"
 if had_display:
     os.environ["DISPLAY"] = had_display
+# a file clicked in the chat opens with its default app, but never runs: programs, scripts and launchers only have
+# their folder shown
+progs = tempfile.mkdtemp()
+for name, data in (("setup.exe", b"MZ"), ("Tool.AppImage", b"\x7fELF"), ("start.desktop", b"[Desktop Entry]"), ("x.ps1", b"ls"),
+                   ("notes.pdf", b"%PDF-1.7"), ("photo.png", b"\x89PNG"), ("readme", b"#! not run: not executable")):
+    with open(os.path.join(progs, name), "wb") as f:
+        f.write(data)
+assert [n for n in sorted(os.listdir(progs)) if system.is_program(os.path.join(progs, n))] == ["Tool.AppImage", "setup.exe", "start.desktop", "x.ps1"]
+if not sys.platform.startswith("win"):  # (executable files with no telling extension: a script or a binary runs, a PDF on
+    for name, data in (("run", b"#!/bin/sh\necho hi"), ("tool", b"\x7fELF\x02"), ("doc.pdf", b"%PDF-1.7")):  # a FAT stick doesn't)
+        with open(os.path.join(progs, name), "wb") as f:
+            f.write(data)
+        os.chmod(os.path.join(progs, name), 0o755)
+    assert [n for n in ("run", "tool", "doc.pdf", "readme") if system.is_program(os.path.join(progs, n))] == ["run", "tool"]
 from PySide6.QtCore import QtMsgType, qInstallMessageHandler
 from PySide6.QtGui import QColor
 from PySide6.QtQuick import QQuickWindow
@@ -2799,10 +2948,89 @@ qt = QApplication([])
 import window
 pix = window.icon_pixmap("home", QColor("#9c9ab0"), 48).toImage()
 assert any(pix.pixelColor(x, y).alpha() > 0 for x in range(48) for y in range(48)), "the line icons came out empty"
+
+# files attached to a message travel as "(attached: path)" notes at its end (the agent's prompt reads that form), and a
+# sent message shows them as tiles, not as those notes
+sent = window.with_attached("look at these", ["/home/a/My photo (1).png", "/home/a/notes.pdf"])
+assert sent == "look at these (attached: /home/a/My photo (1).png) (attached: /home/a/notes.pdf)", sent
+assert window.split_attached(sent) == ("look at these", ["/home/a/My photo (1).png", "/home/a/notes.pdf"])
+assert window.with_attached("  ", [r"C:\Users\a\b c.txt"]) == r"(attached: C:\Users\a\b c.txt)"
+assert window.split_attached(r"(attached: C:\Users\a\b c.txt)") == ("", [r"C:\Users\a\b c.txt"])
+assert window.with_attached("just words ", []) == "just words" and window.split_attached("just words") == ("just words", [])
+assert window.split_attached("I typed (attached: not a path) myself") == ("I typed (attached: not a path) myself", [])
+assert window.split_attached("first line\n(attached: /a.png) and more") == ("first line\n(attached: /a.png) and more", [])
+assert window.split_attached("see (attached: x) (attached: /a.png)") == ("see (attached: x)", ["/a.png"])
+# what a tile shows of a file: its kind (a picture gets a thumbnail), name, type and size; a file that's gone is a plain tile
+from PySide6.QtCore import QLocale, QMimeData, QUrl
+from PySide6.QtGui import QImage
+files_dir = tempfile.mkdtemp()
+shot, report, song = (os.path.join(files_dir, n) for n in ("shot.png", "Lab report.pdf", "voice.mp3"))
+picture = QImage(6, 4, QImage.Format.Format_RGB32)
+picture.fill(QColor("#3fd8ff"))
+assert picture.save(shot)
+for path, size in ((report, 3 * 1024 * 1024), (song, 10)):
+    with open(path, "wb") as f:
+        f.write(b"x" * size)
+info = window.file_info(report)
+assert info == {"exists": True, "name": "Lab report.pdf", "ext": "PDF", "kind": "file",
+                "size": QLocale().formattedDataSize(3 * 1024 * 1024, 1, QLocale.DataSizeFormat.DataSizeTraditionalFormat)}, info
+assert [window.file_info(p)["kind"] for p in (shot, song, files_dir)] == ["picture", "audio", "folder"]
+with open(os.path.join(files_dir, "big.bin"), "wb") as f:  # (a tenth only below 10 of a unit: "242 kB", not "242.2 kB")
+    f.truncate(250_000)
+assert window.file_info(os.path.join(files_dir, "big.bin"))["size"] == QLocale().formattedDataSize(
+    250_000, 0, QLocale.DataSizeFormat.DataSizeTraditionalFormat)
+gone = window.file_info(os.path.join(files_dir, "gone.png"))
+assert gone == {"exists": False, "name": "gone.png", "ext": "PNG", "kind": "file", "size": ""}, gone
+# pasting: a picture on the clipboard is saved as a PNG in Jarvis's own folder (named by time, never over another) and
+# attached; files copied in a file manager are attached where they are; anything else (text, a web link) pastes as text
+assert window.PASTED_DIR == os.path.join(store.DATA, "pasted")
+pasted_dir = os.path.join(tempfile.mkdtemp(), "pasted")
+clip = QMimeData()
+clip.setImageData(picture)
+first = window.paste_files(clip, pasted_dir)
+assert len(first) == 1 and os.path.dirname(first[0]) == pasted_dir and QImage(first[0]).size() == picture.size(), first
+assert re.fullmatch(r"pasted-\d{8}-\d{6}(?:-\d+)?\.png", os.path.basename(first[0])), first
+second = window.paste_files(clip, pasted_dir)
+assert second != first and len(os.listdir(pasted_dir)) == 2
+clip = QMimeData()
+clip.setUrls([QUrl.fromLocalFile(report), QUrl("https://example.com/cat.png"), QUrl.fromLocalFile(shot),
+              QUrl.fromLocalFile(os.path.join(files_dir, "gone.txt"))])
+clip.setText(report)
+assert window.paste_files(clip, pasted_dir) == [os.path.normpath(report), os.path.normpath(shot)]
+clip = QMimeData()
+clip.setText("plain words")
+assert window.paste_files(clip, pasted_dir) == []
+clip.setUrls([QUrl("https://example.com/page")])
+assert window.paste_files(clip, pasted_dir) == [] and len(os.listdir(pasted_dir)) == 2
+clip.setImageData(picture)  # (a browser's "Copy image": its web address and the picture)
+assert len(window.paste_files(clip, pasted_dir)) == 1 and len(os.listdir(pasted_dir)) == 3
+assert window.local_files([QUrl.fromLocalFile(shot).toString(), "https://example.com/x.png", QUrl.fromLocalFile(report).toString()]) == [
+    os.path.normpath(shot), os.path.normpath(report)]
+# an attached file, clicked, opens with its default app; a program only has its folder shown; a gone one says so
+opened, real_open_target = [], system.open_target
+system.open_target = opened.append  # (never the real desktop's apps)
+window.open_file(report)
+window.open_file(os.path.join(progs, "setup.exe"))
+assert opened == [report, progs], opened
+try:
+    window.open_file(os.path.join(files_dir, "gone.png"))
+    raise AssertionError("a missing file was opened")
+except FileNotFoundError:
+    pass
+system.open_target = real_open_target
 warnings = []
 qInstallMessageHandler(lambda kind, ctx, msg: warnings.append(msg) if kind != QtMsgType.QtDebugMsg and "portal" not in msg
                        and "Cannot find font directory" not in msg else None)  # (headless Windows: no font folder for the offscreen platform)
-stub = types.SimpleNamespace(plugin_status=lambda: [], workspaces=lambda: [], app_tools={}, model_jobs=brain.Brain.model_jobs, available_models=lambda: {
+# Home's ideas only offer what the accounts connected can do: which they are is known once the account tools have loaded
+# (before that, None: a guess would offer Gmail before it's there, or ask to connect what is)
+real_weather, jarvis.weather = jarvis.weather, lambda: ""
+today_brain = types.SimpleNamespace(plugin_status=lambda: [], app_tools={}, connected={"gmail", "github"}, tools_ready=threading.Event())
+assert jarvis.api_get("/api/today", today_brain)["connected"] is None
+today_brain.tools_ready.set()
+assert jarvis.api_get("/api/today", today_brain)["connected"] == ["github", "gmail"]
+jarvis.weather = real_weather
+stub = types.SimpleNamespace(plugin_status=lambda: [], workspaces=lambda: [], app_tools={}, connected=set(), tools_ready=threading.Event(),
+                             model_jobs=brain.Brain.model_jobs, available_models=lambda: {
     "backends": [{"name": "aistudio", "models": ["gemini-3.8-flash", "gemini-3.7-flash"]},
                  {"name": "openai", "models": [], "error": "no API key"}], "live": ["gemini-3.8-live"]})
 live.mic = False
@@ -2817,12 +3045,24 @@ canned = {"/api/health": {"checks": [{"name": "Microphone", "ok": False, "detail
           # (a check row with its Try now and the last look's line; a task that ended: a QML slip there showed no warning)
           "/api/checks": {"checks": [{"text": "tell me if a payment fails", "on": True}], "every": 60,
                           "last": {"at": time.time() - 600, "answered": time.time() - 4200, "ok": False, "found": "", "next": time.time() + 3000}},
-          "/api/jobs/done": [{"n": 2, "label": "summarise the reports", "at": time.time() - 300, "ok": True, "coding": False, "answer": "Done."}]}
+          "/api/jobs/done": [{"n": 2, "label": "summarise the reports", "at": time.time() - 300, "ok": True, "coding": False, "answer": "Done."}],
+          # (People: one with a profile, notes and a promise, one with only a note, one known by talk alone)
+          "/api/people": {"profiles": True, "refresh_days": 7, "people": [
+              {"name": "Maya Lee", "aka": ["mayal"], "apps": ["whatsapp", "discord"], "last": time.time() - 600,
+               "seen": {"whatsapp": time.time() - 600}, "wrote": {"discord": time.time() - 3600}, "forgot": False,
+               "notes": [{"text": "my cousin", "at": time.time() - 86400}, {"text": "exam on Friday", "at": time.time(), "until": time.time() + 86400}],
+               "promises": [{"what": "send Maya the photos", "due": time.time() + 7200, "at": time.time() - 60, "app": "whatsapp"}],
+               "profile": {"gist": "cousin; warm, teasing, writes in English", "lines": ["Cousin, close in age", "Writes short messages"],
+                           "at": time.time() - 3 * 86400, "upto": time.time() - 3 * 86400, "count": 120}},
+              {"name": "Noted Only", "aka": [], "apps": [], "last": 0, "seen": {}, "wrote": {}, "notes": [{"text": "the plumber", "at": 1}],
+               "promises": [], "profile": None, "forgot": False},
+              {"name": "Bo ✨ / B", "aka": [], "apps": ["discord"], "last": time.time() - 86400, "seen": {"discord": time.time() - 86400},
+               "wrote": {}, "notes": [], "promises": [], "profile": None, "forgot": True}]}}
 win = window.Window(get=lambda path: canned.get(path) or jarvis.api_get(path, stub), post=lambda path, data: {"ok": True}, tool_label=jarvis.tool_label,
                     live=live, shown_state=jarvis.shown_state, version="test", show=True)
 root = win.engine.rootObjects()[0]
 assert root.property("needsSetup") is not None
-for page in ("chats", "activity", "accounts", "plugins", "models", "memory", "cost", "settings", "health", "home"):
+for page in ("chats", "people", "activity", "accounts", "plugins", "models", "memory", "cost", "settings", "health", "home"):
     root.setProperty("page", page)
     qt.processEvents()
 end = time.time() + 1.5
@@ -2833,6 +3073,8 @@ assert window.on_screen() == "front"  # (where look is told the window is)
 from PySide6.QtCore import QObject
 cost_page = root.findChild(QObject, "costPage")  # (an unknown page name shows nothing, and no warning)
 assert cost_page is not None and cost_page.property("report") is not None, "the Cost page didn't load its report"
+people_page = root.findChild(QObject, "peoplePage")  # (the most recently talked with is shown first)
+assert people_page is not None and people_page.property("selected") == "Maya Lee", "the People page didn't load its people"
 # the backup voice answering shows in the polled state (Home's chip, the notch, the tray), and its chip loads cleanly
 assert win.backend.property("backup") is False
 jarvis.shown_state[1] = True
@@ -2867,6 +3109,7 @@ leak_qml.setData(f'''import QtQuick
 Window {{ visible: true; width: 300; height: 200
     Column {{
         Text {{ textFormat: Text.MarkdownText; text: "Done ![x]({web}/markdown?secret=1)" }}
+        TextEdit {{ textFormat: TextEdit.MarkdownText; readOnly: true; text: "Done ![x]({web}/reply?secret=1)" }}
         Text {{ text: "<b>Song</b><img src=\\"{web}/rich\\">" }}
         Image {{ source: "{web}/image" }}
     }}
@@ -2975,7 +3218,7 @@ def effective_align(item):
     return QQmlExpression(QQmlEngine.contextForObject(item), item, "effectiveHorizontalAlignment").evaluate()[0]
 for codes, word in ((["ar"], "الإعدادات"), (["ja", "de"], "設定")):
     win.languages(codes)
-    for page in ("chats", "activity", "accounts", "plugins", "models", "memory", "cost", "settings", "health", "home"):
+    for page in ("chats", "people", "activity", "accounts", "plugins", "models", "memory", "cost", "settings", "health", "home"):
         root.setProperty("page", page)
         qt.processEvents()
         if codes == ["ar"] and page == "settings":
@@ -3017,6 +3260,478 @@ root.setProperty("page", "memory")
 settle()
 assert notes.property("text") == "- an edit not saved yet", notes.property("text")
 root.setProperty("page", "home")
+# Memory's notes are rows: facts, then lessons and ways that worked under their own headings (blank lines and the like stay
+# in the file, unshown); a row's pencil edits it in place (Enter keeps it, Esc leaves it), its delete takes two clicks, the
+# field at the end adds one of the kind picked, and each sends its own line alone, on the memory as it is now; a refresh
+# never lands on a note being edited; past ten notes a filter shows; "Edit as text" is the box above, and Done saves it
+from PySide6.QtTest import QTest
+from PySide6.QtQuick import QQuickItem
+from PySide6.QtCore import QMetaObject
+memory_page = root.findChild(QQuickItem, "memoryPage")
+kept_memory, posted, real_post = store.memory(), [], win.backend.post
+def post_for_real(path, data):  # (the real API on the test's memory, and what the page sent)
+    posted.append((path, data))
+    return jarvis.api_post(path, data, None, None)
+win.backend.post = post_for_real
+store.set_memory("- Likes tea\n\nloose line, no bullet\n- Lesson: check the chat first\n- How to: export a design: Share, then Download\n"
+                 "- Lives by the sea")
+notes.setProperty("text", memory_page.property("saved"))  # (the edit above, let go)
+root.setProperty("page", "memory")
+settle()
+shown_notes = lambda: [i.property("text") for i in all_items(memory_page) if i.isVisible() and isinstance(i.property("text"), str)]
+seen = shown_notes()
+order = ["Likes tea", "Loose line, no bullet", "Lives by the sea", "Lessons", "Check the chat first", "Ways that worked",
+         "Export a design: Share, then Download"]
+assert [t for t in seen if t in order] == order and "Filter notes" not in [i.property("placeholderText") for i in all_items(memory_page)
+                                                                             if i.isVisible()], seen
+def note_row(text):  # a note's row: up from its words to the item holding its pencil
+    item = next(i for i in all_items(memory_page) if i.property("text") == text and i.isVisible())
+    while not any(i.property("tip") == "Edit" for i in all_items(item)):
+        item = item.parentItem()
+    return item
+press_on = lambda row, tip: QMetaObject.invokeMethod(next(i for i in all_items(row) if i.property("tip") == tip), "click")
+note_box = lambda: next((i for i in all_items(memory_page) if i.property("placeholderText") == "Write the note" and i.isVisible()), None)
+root.requestActivate()
+press_on(note_row("Likes tea"), "Edit")
+settle(0.2)
+assert note_box().property("text") == "Likes tea" and note_box().property("activeFocus") is True
+for ch in " daily":
+    QTest.keyClick(root, ch)
+QTest.keyClick(root, Qt.Key.Key_Return)
+settle()
+assert posted == [("/api/memory", {"line": {"old": "- Likes tea", "new": "- Likes tea daily"}})] and note_box() is None, posted
+press_on(note_row("Lives by the sea"), "Edit")
+settle(0.2)
+QTest.keyClick(root, "!")
+store.remember("plays the cello")  # (Jarvis learns one while the note is open: the refresh waits)
+QMetaObject.invokeMethod(memory_page, "readNotes")
+settle()
+assert note_box().property("text") == "Lives by the sea!" and "Plays the cello" not in shown_notes()
+QTest.keyClick(root, Qt.Key.Key_Escape)
+settle()
+assert note_box() is None and len(posted) == 1 and "Plays the cello" in shown_notes() and "Lives by the sea" in shown_notes()
+press_on(note_row("Loose line, no bullet"), "Delete")
+assert len(posted) == 1  # (the first click only arms it)
+press_on(note_row("Loose line, no bullet"), "Click again to delete")
+settle()
+assert posted[-1] == ("/api/memory", {"line": {"old": "loose line, no bullet"}}), posted[-1]
+add_box = next(i for i in all_items(memory_page) if i.property("placeholderText") == "Add a note")
+next(i for i in all_items(memory_page) if i.property("value") == "fact").setProperty("value", "lesson")
+add_box.setProperty("text", "use the dark theme ")
+add_box.forceActiveFocus()
+QTest.keyClick(root, Qt.Key.Key_Return)
+settle()
+assert posted[-1] == ("/api/memory", {"line": {"new": "- Lesson: use the dark theme"}}) and add_box.property("text") == "", posted[-1]
+assert store.memory() == ("- Likes tea daily\n\n- Lesson: check the chat first\n- How to: export a design: Share, then Download\n"
+                          "- Lives by the sea\n- plays the cello\n- Lesson: use the dark theme"), store.memory()
+seen = shown_notes()
+assert seen.index("Lessons") < seen.index("Use the dark theme") < seen.index("Ways that worked"), seen
+store.forget("by the sea")  # (Jarvis forgets one while the page shows it: deleting it then changes nothing else)
+press_on(note_row("Lives by the sea"), "Delete")
+press_on(note_row("Lives by the sea"), "Click again to delete")
+settle()
+assert posted[-1] == ("/api/memory", {"line": {"old": "- Lives by the sea"}}) and "Lives by the sea" not in shown_notes()
+assert store.memory().count("\n") == 5 and "Plays the cello" in shown_notes()
+store.set_memory("\n".join(f"- note {n}" for n in range(11)) + "\n- Lesson: one to find")
+QMetaObject.invokeMethod(memory_page, "readNotes")
+settle()
+note_filter = next(i for i in all_items(memory_page) if i.property("placeholderText") == "Filter notes")
+assert note_filter.isVisible()
+note_filter.setProperty("text", "LESSON find")
+settle(0.2)
+assert "One to find" in shown_notes() and "Note 3" not in shown_notes()
+note_filter.setProperty("text", "")
+QMetaObject.invokeMethod(next(i for i in all_items(memory_page) if i.property("text") == "Edit as text"), "click")
+settle(0.2)
+assert notes.isVisible() and note_filter.isVisible() is False and notes.property("text") == store.memory()
+notes.setProperty("text", notes.property("text") + "\n- typed in the box")
+QMetaObject.invokeMethod(next(i for i in all_items(memory_page) if i.property("text") == "Done"), "click")
+settle()
+assert posted[-1][0] == "/api/memory" and posted[-1][1]["was"] == store.memory().rsplit("\n", 1)[0] and not notes.isVisible()
+assert store.memory().endswith("- Lesson: one to find\n- typed in the box") and "Typed in the box" in shown_notes()
+store.set_memory(kept_memory)
+# Accounts shows what the user said not to ask before, and Ask again sends that action's revoke (the list comes back)
+canned["/api/approvals"] = [{"tool": "GMAIL_BATCH_MODIFY_MESSAGES", "app": "gmail", "label": "Gmail: batch modify messages",
+                             "said": "don't ask me before marking emails read", "at": time.time() - 86400}]
+win.backend.post = lambda path, data: posted.append((path, data)) or []
+root.setProperty("page", "accounts")
+settle()
+accounts_page = root.findChild(QQuickItem, "accountsPage")
+shown_here = lambda: [i.property("text") for i in all_items(accounts_page) if i.isVisible() and isinstance(i.property("text"), str)]
+assert "Jarvis no longer asks before…" in shown_here() and "Gmail: batch modify messages" in shown_here(), shown_here()
+assert any("don't ask me before marking emails read" in t for t in shown_here())
+QMetaObject.invokeMethod(next(i for i in all_items(accounts_page) if i.property("text") == "Ask again" and i.isVisible()), "click")
+settle()
+assert posted[-1] == ("/api/approvals/revoke", {"tool": "GMAIL_BATCH_MODIFY_MESSAGES"}) and "Gmail: batch modify messages" not in shown_here()
+del canned["/api/approvals"]
+win.backend.post = real_post
+root.setProperty("page", "home")
+settle(0.2)
+assert not warnings, ascii(warnings)[:4000]
+# Settings: a tab shows its own sections; a search shows what matches from every tab (each word in a row's own text,
+# its drop-down's choices or its section's title), and says so when nothing does; Ctrl+F reaches it, Esc clears it, and
+# the arrow keys move along the tabs
+from PySide6.QtTest import QTest
+from PySide6.QtQuick import QQuickItem
+root.setProperty("page", "settings")
+settle()
+settings_page, settings_search = root.findChild(QQuickItem, "settingsPage"), root.findChild(QObject, "settingsSearch")
+showing = lambda: {i.property("text") for i in all_items(settings_page) if i.isVisible() and isinstance(i.property("text"), str)}
+headings = lambda: {i.property("text") for i in all_items(settings_page) if i.isVisible() and i.property("kind") == "heading"}
+labels = lambda: {i.property("text") for i in all_items(settings_page) if i.isVisible() and i.property("kind") == "label"}  # (a setting's name)
+assert {"Voice", "Listening"} <= headings() and not {"WhatsApp", "Your data"} & headings(), headings()
+assert "Listen through a Bluetooth headset" in showing() or jarvis.system.IS_WINDOWS  # (bluetooth_mic, with no switch until now)
+settings_page.setProperty("tab", "messages")
+settle(0.2)
+assert {"WhatsApp", "Discord"} <= headings() and "Voice" not in headings(), headings()
+root.requestActivate()
+settle(0.2)
+QTest.keyClick(root, Qt.Key.Key_F, Qt.KeyboardModifier.ControlModifier)
+assert settings_search.property("activeFocus") is True
+for ch in "quiet HOURS":
+    QTest.keyClick(root, ch)
+settle(0.2)
+seen = showing()
+assert {"Quiet hours from (empty: none)", "Until (the morning briefing waits for it)"} <= labels() and "Morning briefing" not in seen, seen
+assert headings() == {"Your day", "WhatsApp", "Discord"}, headings()  # (their "always let through" rows say it; Voice says nothing of it)
+settings_search.setProperty("text", "decline")  # (a choice of WhatsApp's Calls)
+settle(0.2)
+assert labels() == {"Calls"} and headings() == {"WhatsApp"}, (headings(), labels())
+settings_search.setProperty("text", "telegram")  # (a section's title says it: all of it)
+settle(0.2)
+assert headings() == {"Jarvis on Telegram"} and "Paste it here." in showing(), headings()
+settings_search.setProperty("text", "tasks from anywhere")  # (only its description says that: not a reason to show a whole
+settle(0.2)                                                  # section; "wake" brought up all of Your data that way)
+assert headings() == set(), headings()
+settings_search.setProperty("text", "nothing is called this")
+settle(0.2)
+assert "No setting matches “nothing is called this”" in showing() and not headings() and not labels(), headings()
+QTest.keyClick(root, Qt.Key.Key_Escape)
+settle(0.2)
+assert settings_search.property("text") == "" and {"WhatsApp", "Discord"} <= headings(), headings()  # (back on its tab)
+next(i for i in all_items(settings_page) if i.objectName() == "tab-messages").forceActiveFocus(Qt.FocusReason.TabFocusReason)  # (a Repeater's: not findChild's)
+QTest.keyClick(root, Qt.Key.Key_Right)
+settle(0.2)
+assert settings_page.property("tab") == "phone" and "The Jarvis app" in headings(), settings_page.property("tab")
+# a drop-down that has the focus isn't changed by typing or the arrow keys while its list is closed: a letter picked
+# the choice starting with it and saved it at once ("l" for a search set WhatsApp calls to "Let them ring", and a
+# friend's calls rang unanswered and unannounced). The arrows open the list; a choice is made in the list
+settings_page.setProperty("tab", "messages")
+settle(0.3)
+calls_select = next(i for i in all_items(settings_page) if i.metaObject().className().startswith("Select") and i.property("value") == "answer")
+saves, plain_post = [], win.backend.post
+win.backend.post = lambda path, data: saves.append((path, data)) or jarvis.api_get("/api/settings", stub)
+calls_select.forceActiveFocus(Qt.FocusReason.TabFocusReason)
+for stray in ("L", "D", "C", "A"):
+    QTest.keyClick(root, stray)
+settle(0.2)
+assert calls_select.property("value") == "answer" and saves == [], (calls_select.property("value"), saves)
+QTest.keyClick(root, Qt.Key.Key_Down)
+settle(0.3)
+assert calls_select.property("value") == "answer" and saves == [] and calls_select.property("down") is True, saves  # (down: its list is open)
+QTest.keyClick(root, Qt.Key.Key_Down)  # (in the open list: the next choice, taken with Return)
+QTest.keyClick(root, Qt.Key.Key_Return)
+settle(0.3)
+assert saves == [("/api/settings", {"whatsapp_calls": "decline"})], saves
+win.backend.post = plain_post
+calls_select.setProperty("value", "answer")
+settings_page.setProperty("tab", "voice")
+root.setProperty("page", "home")
+assert not warnings, ascii(warnings)[:4000]
+# a page shown again asks for its data again (each loaded once, so a sign-in or key added elsewhere never showed); Health
+# only after a minute (it takes a screenshot)
+asked_paths, real_page_get, shown_pages = [], win.backend.get, ("/api/workspaces", "/api/plugins", "/api/models/jobs", "/api/health")
+win.backend.get = lambda path: (asked_paths.append(path), real_page_get(path))[1]
+asked_each = []
+for _ in range(2):
+    for page in ("accounts", "plugins", "models", "health", "home"):
+        root.setProperty("page", page)
+        settle(0.3)
+    asked_each.append([asked_paths.count(p) for p in shown_pages])
+win.backend.get = real_page_get
+assert [b > a for a, b in zip(*asked_each)] == [True, True, True, False] and asked_each[0][3] == 1, asked_each
+# an error toast (often the only word that a request failed) fits the window, up to three lines, and stays 8 s; it was one
+# line as wide as its 300 characters, gone in 3
+win.backend.toast("couldn't reach the service: " + "the server answered with something long " * 14, True)
+settle(0.3)
+toast_label = next(i for i in all_items() if str(i.property("text")).startswith("couldn't reach the service"))
+toast = toast_label.parentItem()
+assert toast.width() <= root.width() - 96 and 1 < toast_label.property("lineCount") <= 3 and toast_label.property("truncated"), \
+    (toast.width(), toast_label.property("lineCount"))
+assert next(c for c in toast.children() if c.metaObject().className() == "QQmlTimer").property("interval") == 8000
+# ...centred on the page beside the rail, never over it (centred on the whole window, a wide one ran over the rail); on
+# the whole window while the setup screen covers it all
+from PySide6.QtCore import QPointF
+rail = next(i for i in all_items() if i.property("floating") is True and i.width() == 76)
+rail_end, was_setup = rail.mapToScene(QPointF(rail.width(), 0)).x(), root.property("needsSetup")
+for setup, centre in ((False, (rail_end + root.width()) / 2), (True, root.width() / 2)):
+    root.setProperty("needsSetup", setup)
+    settle(0.1)
+    toast_from, toast_to = toast.mapToScene(QPointF(0, 0)).x(), toast.mapToScene(QPointF(toast.width(), 0)).x()
+    assert (setup or toast_from > rail_end + 8) and abs((toast_from + toast_to) / 2 - centre) < 1, (setup, rail_end, toast_from, toast_to)
+root.setProperty("needsSetup", was_setup)
+# the Headers field of a new plugin (a Bearer token goes there) shows dots, not the token
+root.setProperty("page", "plugins")
+settle(0.3)
+headers = next(i for i in all_items() if str(i.property("placeholderText")).startswith('JSON, e.g. {"Authorization"'))
+assert QQmlExpression(QQmlEngine.contextForObject(headers), headers, "echoMode === TextInput.PasswordEchoOnEdit").evaluate()[0] is True
+root.setProperty("page", "home")
+# a delete that can't be undone takes two clicks: the first only arms it, and left alone it disarms (provider keys, a
+# Google sign-in, reminders, routines and checks went at one click)
+confirm_qml = QQmlComponent(win.engine)
+confirm_qml.setData(b'''import QtQuick
+import Jarvis
+Window { id: w; visible: true; width: 200; height: 100
+    property int hits: 0
+    property alias armed: b.armed
+    ConfirmButton { id: b; label: "Delete it"; onConfirmed: w.hits += 1 }
+    function press() { b.clicked() }
+}''', QUrl.fromLocalFile(os.path.join(os.path.dirname(os.path.abspath(window.__file__)), "qml", "check.qml")))
+cw = confirm_qml.create()
+assert cw, confirm_qml.errorString()
+cw.press()
+assert cw.property("hits") == 0 and cw.property("armed") is True
+cw.press()
+assert cw.property("hits") == 1 and cw.property("armed") is False
+shiboken6.delete(cw)
+qt.processEvents()
+for name in ("ModelsPage.qml", "MemoryPage.qml", "Today.qml"):  # (each delete there goes through it)
+    src = open(os.path.join(os.path.dirname(os.path.abspath(window.__file__)), "qml", name), encoding="utf-8").read()
+    assert not re.search(r"onClicked: (?:Api\.post\(`/api/(?:providers|keys|reminders)|Api\.post\(\"/api/google/signout|page\.change\(\"/api/routines/delete)", src), name
+    assert "ConfirmButton" in src, name
+assert not warnings, ascii(warnings)[:4000]
+
+# the message box: Ctrl+V or Shift+Insert attaches a picture on the clipboard (saved in Jarvis's folder) or files copied in a
+# file manager, and text still pastes as text; each file shows as a tile (a picture as its thumbnail); Enter sends them as
+# "(attached: path)" notes, and the sent message shows tiles, never the notes
+from PySide6.QtCore import QMetaObject, QPointF
+from PySide6.QtGui import QContextMenuEvent, QGuiApplication
+settle(0.3)
+composer, box = root.findChild(QObject, "composer"), root.findChild(QObject, "composerInput")
+assert composer is not None and box is not None
+source_of = lambda item: item.property("source").toString() if isinstance(item.property("source"), QUrl) else ""
+attached_now = lambda: composer.property("files").toVariant()  # (a JS array)
+root.requestActivate()
+QMetaObject.invokeMethod(box, "forceActiveFocus")
+real_pasted_dir, window.PASTED_DIR = window.PASTED_DIR, pasted_dir
+def keys_to(key, mods=Qt.KeyboardModifier.NoModifier, text=""):
+    for kind in (QEvent.Type.KeyPress, QEvent.Type.KeyRelease):
+        qt.sendEvent(root, QKeyEvent(kind, key, mods, text))
+    settle(0.1)
+def clipboard(**data):
+    mime = QMimeData()
+    if "image" in data:
+        mime.setImageData(data["image"])
+    if "urls" in data:
+        mime.setUrls([QUrl.fromLocalFile(p) for p in data["urls"]])
+    if "text" in data:
+        mime.setText(data["text"])
+    QGuiApplication.clipboard().setMimeData(mime)
+clipboard(image=picture)
+keys_to(Qt.Key.Key_V, Qt.KeyboardModifier.ControlModifier)
+attached = attached_now()
+assert len(attached) == 1 and os.path.dirname(attached[0]) == pasted_dir and attached[0].endswith(".png"), attached
+clipboard(urls=[report, os.path.join(files_dir, "gone.txt")], text=report)
+keys_to(Qt.Key.Key_Insert, Qt.KeyboardModifier.ShiftModifier)
+assert attached_now() == attached + [os.path.normpath(report)], attached_now()
+clipboard(text="hello there")
+keys_to(Qt.Key.Key_V, Qt.KeyboardModifier.ControlModifier)
+assert box.property("text") == "hello there" and len(attached_now()) == 2, box.property("text")
+assert any(source_of(i).endswith(os.path.basename(attached[0])) for i in all_items()), "the picture has no thumbnail"
+assert "Lab report.pdf" in {i.property("text") for i in all_items()}
+sent_posts, real_post = [], win.backend.post
+win.backend.post = lambda path, data: sent_posts.append((path, data)) or {"ok": True}
+keys_to(Qt.Key.Key_Return, text="\r")
+end = time.time() + 3
+while not sent_posts and time.time() < end:
+    settle(0.05)
+win.backend.post = real_post
+assert sent_posts == [("/api/ask", {"text": f"hello there (attached: {attached[0]}) (attached: {os.path.normpath(report)})"})], sent_posts
+assert attached_now() == [] and box.property("text") == ""
+# ...and so does the box's right-click menu (Qt's own Paste took text only)
+clipboard(urls=[song])
+at = box.mapToScene(QPointF(8, 8)).toPoint()
+qt.sendEvent(root, QContextMenuEvent(QContextMenuEvent.Reason.Mouse, at, root.mapToGlobal(at)))
+settle(0.3)
+paste_item = next((i for i in all_items() if i.inherits("QQuickMenuItem") and i.property("text") == "Paste" and i.isVisible()), None)
+assert paste_item is not None, "no Paste in the message box's menu"
+QMetaObject.invokeMethod(paste_item, "click")
+settle(0.3)
+assert attached_now() == [os.path.normpath(song)], attached_now()
+composer.setProperty("files", [])
+win.backend.put({"kind": "log", "who": "you", "time": time.time(),
+                 "text": window.with_attached("hello there", [attached[0], report, os.path.join(files_dir, "gone.png")])})
+settle(0.4)
+shown = [i.property("text") for i in all_items() if i.inherits("QQuickText") and i.isVisible() and i.property("text")]  # (drawn text only)
+assert "hello there" in shown and "gone.png" in shown and not any("(attached:" in t for t in shown), [t for t in shown if "hello" in t or "attached" in t]
+assert sum(source_of(i).endswith(os.path.basename(attached[0])) for i in all_items()) == 1  # (the message's)
+assert not any(source_of(i).endswith("gone.png") for i in all_items())
+# a tile clicked opens its file (a gone one says so instead)
+toasts = []
+win.backend.toastRequested.connect(lambda text, bad: toasts.append(text))
+system.open_target = opened.append
+opened.clear()
+win.backend.openFile(report)
+win.backend.openFile(os.path.join(files_dir, "gone.png"))
+system.open_target = real_open_target
+assert opened == [report] and len(toasts) == 1, (opened, toasts)
+window.PASTED_DIR = real_pasted_dir
+QGuiApplication.clipboard().clear()  # (QMimeData handed to the clipboard and left there crashes Python's exit)
+assert not warnings, ascii(warnings)[:4000]
+
+# a reply can be selected and copied in part (only all of it could be, with Copy); its links still open in the default
+# app, web and mail ones only; Tab shows its Copy button; and Markdown's links are the theme's cyan (they took the
+# desktop's blue, whatever a Text's linkColor said: unreadable on the navy)
+from PySide6.QtCore import Q_ARG, Slot
+from PySide6.QtGui import QDesktopServices, QPalette
+assert QGuiApplication.palette().color(QPalette.ColorRole.Link).name() == "#3fd8ff"
+root.setProperty("page", "home")
+win.backend.put({"kind": "log", "who": "jarvis", "time": time.time(), "text": "Found **two** flights on https://example.com/flights"})
+settle(0.4)
+reply = [i for i in all_items() if i.objectName() == "reply"][-1]
+assert reply.property("readOnly") is True and reply.property("selectByMouse") is True
+root.requestActivate()
+reply.forceActiveFocus()
+QMetaObject.invokeMethod(reply, "select", Q_ARG(int, 6), Q_ARG(int, 17))
+QTest.keyClick(root, Qt.Key.Key_C, Qt.KeyboardModifier.ControlModifier)
+assert reply.property("selectedText") == QGuiApplication.clipboard().text() == "two flights", reply.property("selectedText")
+QGuiApplication.clipboard().clear()
+class Links(QObject):
+    opened = []
+    @Slot(QUrl)
+    def open(self, url):
+        Links.opened.append(url.toString())
+links = Links()
+for scheme in ("https", "ftp"):
+    QDesktopServices.setUrlHandler(scheme, links, "open")
+for link in ("https://example.com/flights", "ftp://example.com/x"):
+    QMetaObject.invokeMethod(reply, "linkActivated", Q_ARG(str, link))
+for scheme in ("https", "ftp"):
+    QDesktopServices.unsetUrlHandler(scheme)
+assert Links.opened == ["https://example.com/flights"], Links.opened
+copy_reply = next(i for i in all_items(reply.parentItem()) if i.property("tip") == "Copy")
+assert copy_reply.property("opacity") == 0
+root.requestActivate()
+copy_reply.forceActiveFocus(Qt.FocusReason.TabFocusReason)
+settle(0.3)
+assert copy_reply.property("opacity") == 1
+# Stop (which ends every task, coding jobs too) says so when more than one is at work, and its tip names them; Esc
+# (only the talk) isn't offered as the same
+home_today = next(i for i in all_items() if i.property("jobList") is not None)
+two_jobs = [{"n": 3, "label": "find flights to Rome", "since": time.time() - 60, "now": "", "coding": False},
+            {"n": 4, "label": "coding: fix the date test", "since": time.time() - 600, "now": "", "coding": True}]
+canned["/api/jobs"] = two_jobs
+QMetaObject.invokeMethod(home_today, "live")
+settle(0.3)
+shown_texts_now = {i.property("text") for i in all_items()}
+assert "Stop all (2)" in shown_texts_now and home_today.property("jobList") == "• find flights to Rome\n• coding: fix the date test"
+assert composer.property("tasks") == 2
+canned["/api/jobs"] = two_jobs[:1]
+QMetaObject.invokeMethod(home_today, "live")
+settle(0.3)
+assert "Stop" in {i.property("text") for i in all_items()} and "Stop all (2)" not in {i.property("text") for i in all_items()}
+# in a narrow window (no side column) the tasks at work and the to-dos are chips over the conversation, each opening
+# the column's rows: a task's own Stop, a to-do's action
+canned["/api/jobs"] = two_jobs
+QMetaObject.invokeMethod(home_today, "live")
+root.setProperty("width", 900)
+settle(0.5)
+running_chip, todo_chip = root.findChild(QObject, "runningChip"), root.findChild(QObject, "todoChip")
+# (the strip as wide as the column beside New chat: made narrow after it was a side column, it kept half the window's
+# width whatever that left room for, and cut its own end off)
+strip_room = QQmlExpression(QQmlEngine.contextForObject(home_today), home_today,
+                            "home.column - (fresh.visible ? fresh.width + 12 : 0) - (backup.visible ? backup.width + 12 : 0)").evaluate()[0]
+assert abs(home_today.width() - strip_room) < 1, (home_today.width(), strip_room)
+assert running_chip.isVisible() and running_chip.property("text") == "2 running" and todo_chip.property("text") == "3 to do"
+QMetaObject.invokeMethod(running_chip, "click")
+settle(0.3)
+running_drop = root.findChild(QObject, "runningDrop")
+assert running_drop.property("opened") is True
+stops = [i for i in all_items(running_drop.property("contentItem")) if i.property("tip") == "Stop this task"]
+posted = []
+win.backend.post = lambda path, data: posted.append(path) or {"ok": True}
+QMetaObject.invokeMethod(stops[1], "click")
+settle(0.3)
+win.backend.post = real_post
+assert len(stops) == 2 and posted == ["/api/jobs/4/stop"], posted
+# (Esc closes it, and only it, while Jarvis works: the window's own Esc stops the talk)
+jarvis.shown_state[0] = "thinking"
+win.backend.poll()
+root.requestActivate()
+settle(0.1)
+win.backend.post = lambda path, data: posted.append(path) or {"ok": True}
+QTest.keyClick(root, Qt.Key.Key_Escape)
+settle(0.3)
+win.backend.post = real_post
+assert running_drop.property("opened") is False and posted == ["/api/jobs/4/stop"], posted
+jarvis.shown_state[0] = "idle"
+win.backend.poll()
+QMetaObject.invokeMethod(running_drop, "close")
+canned["/api/jobs"] = []
+QMetaObject.invokeMethod(home_today, "live")
+settle(0.4)
+assert not running_chip.isVisible() and running_drop.property("visible") is False
+root.setProperty("width", 1220)
+del canned["/api/jobs"]
+# Home's ideas only offer what the accounts connected can do: with none of Google's, one idea opens Accounts instead
+def ideas():
+    return {i.property("title"): i for i in all_items() if i.objectName() == "idea"}
+for connected, want, unwanted in (([], {"Connect your accounts"}, {"Any new emails?", "What's due this week?"}),
+                                  (["gmail"], {"Any new emails?"}, {"Connect your accounts", "What's due this week?"}),
+                                  (None, {"Brief me"}, {"Connect your accounts", "Any new emails?"})):
+    canned["/api/today"] = {"weather": "", "wake": "Hey Jarvis", "reminders": [], "remembered": 0, "tools": 0, "connected": connected}
+    QMetaObject.invokeMethod(home_today, "load")
+    settle(0.3)
+    assert want <= set(ideas()) and not unwanted & set(ideas()), (connected, set(ideas()))
+canned["/api/today"]["connected"] = []
+QMetaObject.invokeMethod(home_today, "load")
+settle(0.3)
+QMetaObject.invokeMethod(ideas()["Connect your accounts"], "click")
+settle(0.2)
+assert root.property("page") == "accounts", root.property("page")
+canned.pop("/api/today")
+root.setProperty("page", "home")
+# the rail says what Jarvis is doing under its reactor (nothing while it waits for the wake word), and the reactor's tip
+# says what a click does. The colours stay the app's cyan and orange: a violet for speaking turned the notch purple
+state_label, rail_orb = root.findChild(QObject, "railState"), next(i for i in all_items() if i.property("does") is not None)
+for state, text in (("listening", "Listening"), ("speaking", "Speaking"), ("thinking", "Working"), ("idle", "")):
+    jarvis.shown_state[0] = state
+    win.backend.poll()
+    settle(0.05)
+    assert state_label.property("text") == text, (state, state_label.property("text"))
+assert QQmlExpression(QQmlEngine.contextForObject(state_label), state_label,
+                      '"" + Theme.stateColor("speaking") === "" + Theme.stateColor("listening")').evaluate()[0] is True
+theme_src = open(os.path.join(os.path.dirname(os.path.abspath(window.__file__)), "qml", "Theme.qml"), encoding="utf-8").read()
+speak_colour = re.search(r'property color speak: "(#\w+)"', theme_src)[1]
+assert inspect.getsource(jarvis.make_notch).count(f'"speaking": "{speak_colour}"') == 1  # (the notch: the same)
+assert rail_orb.property("does") == "Talk to Jarvis"
+live.mic = True
+win.backend.poll()
+assert rail_orb.property("does") == "Pause listening"
+live.mic = False
+win.backend.poll()
+# Chats: Tab stops at the conversation shown (with its ring), the arrow keys move along the list and show each one
+canned.update({"/api/sessions": {"current": "s1", "sessions": [{"id": f"s{n}", "title": f"Talk {n}", "updated": time.time() - n * 60, "count": n}
+                                                               for n in (1, 2, 3)]},
+               **{f"/api/sessions/s{n}": {"id": f"s{n}", "title": f"Talk {n}", "updated": time.time(), "messages": []} for n in (1, 2, 3)}})
+root.setProperty("page", "chats")
+settle(0.5)
+chats_page = root.findChild(QObject, "chatsPage")
+chat_rows = sorted((i for i in all_items(chats_page) if i.property("chosen") is not None), key=lambda i: i.y())
+assert chats_page.property("selected") == "s1" and [r.property("chosen") for r in chat_rows] == [True, False, False]
+chat_rows[0].forceActiveFocus(Qt.FocusReason.TabFocusReason)
+assert chat_rows[0].property("visualFocus") is True
+QTest.keyClick(root, Qt.Key.Key_Down)
+settle(0.3)
+assert chats_page.property("selected") == "s2" and chat_rows[1].property("visualFocus") is True, chats_page.property("selected")
+QTest.keyClick(root, Qt.Key.Key_Up)
+settle(0.3)
+assert chats_page.property("selected") == "s1" and chat_rows[0].property("activeFocus") is True
+for path in [p for p in canned if p.startswith("/api/sessions")]:
+    del canned[path]
+root.setProperty("page", "home")
+settle(0.2)
+assert not warnings, ascii(warnings)[:4000]
 
 # every function a page calls on itself exists (Settings lost its set() once, and every switch on it silently did nothing)
 import glob, re
@@ -3028,11 +3743,27 @@ for qml in glob.glob(os.path.join(os.path.dirname(os.path.abspath(jarvis.__file_
                    "requestActivate", "close", "forceActiveFocus"}  # (Qt's own, on Window and Item)
         for name in set(re.findall(rf"\b{root_id[1]}\.(\w+)\(", src)) - builtin:
             assert re.search(rf"(?:function|signal) {name}\b", src), f"{os.path.basename(qml)} calls {root_id[1]}.{name}() but has no {name}"
+# Home's side column, top to bottom: the time, what's playing, the tasks (at work, then to do), then the PC. The order
+# is the user's: a tidy-up put the tasks first, and it was asked back the same hour
+with open(os.path.join(os.path.dirname(os.path.abspath(jarvis.__file__)), "qml", "Today.qml"), encoding="utf-8") as f:
+    side = f.read()
+side = side[side.index("id: cards"):]
+column = [side.index(mark) for mark in ("id: clockCard", 'qsTr("Now playing")', 'qsTr("Working on")', 'qsTr("To do")', 'qsTr("This PC")')]
+assert column == sorted(column), column
+# every setting can be changed in the window, by its name in a page's code (bluetooth_mic shipped with no switch); the
+# exceptions are set through their page's own API or a name put together there
+all_qml = "\n".join(open(f, encoding="utf-8").read() for f in glob.glob(os.path.join(os.path.dirname(os.path.abspath(jarvis.__file__)), "qml", "*.qml")))
+elsewhere = {"checks": "Memory page, through /api/checks", "checks_paused": "Memory page: a check switched off, through /api/checks",
+             **{f"{job}_models": 'Models page, as job + "_models"' for job in brain.MODEL_JOBS}}
+assert '"/api/checks"' in all_qml and 'job + "_models"' in all_qml and set(elsewhere) <= set(store.DEFAULT_SETTINGS), elsewhere
+no_control = [k for k in store.DEFAULT_SETTINGS if k not in elsewhere and not re.search(rf"""["']{k}["']|[{{,]\s*{k}\s*:""", all_qml)]
+assert not no_control, f"settings nothing in the window changes: {no_control}"
 # every text the window shows goes through qsTr (a hint stayed English in every language), and every shipped translation
 # is finished (an unfinished text shows in English)
 for qml in glob.glob(os.path.join(os.path.dirname(os.path.abspath(jarvis.__file__)), "qml", "*.qml")):
     for n, line in enumerate(open(qml, encoding="utf-8"), 1):
         line = re.sub(r'qsTr\("(?:[^"\\]|\\.)*"(?:\s*,\s*"(?:[^"\\]|\\.)*")?', "qsTr(", line)
+        line = re.sub(r'qsTranslate\("\w+",\s*"(?:[^"\\]|\\.)*"(?:\s*,\s*"(?:[^"\\]|\\.)*")?', "qsTranslate(", line)  # (another page's text)
         for m in re.finditer(r"\b(?:placeholderText|placeholder|text|tip|hint|title|label|description|lead|detail)\s*:([^;\n]*)", line):
             for s in re.findall(r'"((?:[^"\\]|\\.)*)"', m[1]):  # (words with spaces between: not a name, an address, a command or a date format)
                 assert (" " not in s or len(re.findall(r"[A-Za-z]{3,}", s)) < 2 or s.startswith("npx ")
@@ -3347,6 +4078,24 @@ live.brain.interrupt = lambda: []
 said_now.clear()
 live.stop()
 assert said_now == []
+# ...but Escape stops only the talk: a task at work in the background goes on, and Stop (its buttons, the tray) ends it
+del live.brain.interrupt  # (the real one)
+flights = brain.Task("find flights to Rome")
+brain.running.append(flights)
+live.mic = True
+jarvis.api_post("/api/stop", {"talk": True}, live, live.brain)
+assert not flights.cancel.is_set() and said_now == [] and not live.mic and live.stopped
+jarvis.api_post("/api/stop", {}, live, live.brain)
+assert flights.cancel.is_set() and said_now == [("Stopped: find flights to Rome.", {"asked": True})], said_now
+brain.running.remove(flights)
+brain.reset_interrupt_act()
+# ...and a voice task's answer that comes after Escape is still said (Stop's is kept quiet, even one that beat it)
+for talk, scheduling in ((True, "WHEN_IDLE"), (False, "SILENT")):
+    live.working, live.stopped = 1, False
+    live.brain.ask = lambda text, *a, talk=talk, **kw: (live.stop(talk=talk), "Found three flights.")[1]
+    asyncio.run(live._task(fake_session, task_call("t8", "find flights")))
+    assert sent_responses[-1][0].scheduling == scheduling and live.stopped is not talk, (talk, sent_responses[-1][0].scheduling)
+said_now.clear()
 live.announce = real_announce
 del live.close
 
@@ -3657,6 +4406,14 @@ bk.stop()  # (Stop pressed while the agent works)
 gate.set()
 settle()
 assert ("jarvis", "Here you go.") not in logged and not bl.mic and bk.frames is None
+# (Escape instead: the agent goes on with the request, so what it did is shown when it's done, but not said)
+gate.clear()
+bl.brain.ask = lambda text, on_tool, on_thought=None, label="": gate.wait(2) and "Opened your notes."
+bk.ask("open my notes")
+bk.stop(talk=True)
+gate.set()
+settle()
+assert ("jarvis", "Opened your notes.") in logged and len(spoken) == 1 and not bl.mic and bk.frames is None, spoken
 bl.brain.ask = lambda text, on_tool, on_thought=None, label="": asks.append(text) or replies[0]
 # ...and Stop pressed while the request is still being written down: the agent is never given it (it ran it all, silently)
 real_hear, n = bl.brain.hear, len(asks)
@@ -3750,6 +4507,9 @@ class Recorder:
 
     def wait(self):
         return 0
+
+    def poll(self):
+        return 0
 recorders = [Recorder(b"\1\0" * 1280), Recorder(b"\2\0" * 1280)]
 real_mic = system.subprocess, system.time, system.have, system.IS_WINDOWS
 system.IS_WINDOWS = False  # (the pw-record path; Windows uses sounddevice)
@@ -3765,7 +4525,83 @@ next(system.mic_frames("jarvis-ec-source"))
 assert started[0][1:5] == ["--target", "jarvis-ec-source", "-P", "{ node.dont-move = true }"], started
 # raw samples in our byte order: to a pipe pw-record 1.6.10 writes big-endian .au, and loud speech came in as noise
 assert "--raw" in started[0], started
+# the always-on recording is pinned to the microphone picked for it (pick_mic below), so a Bluetooth headset that
+# connects later and becomes the default mic doesn't take the recording along; with nothing picked it follows the default
+started.clear()
+next(system.mic_frames(pick=lambda: "alsa_input.laptop"))
+next(system.mic_frames(pick=lambda: ""))
+assert started[0][1:5] == ["--target", "alsa_input.laptop", "-P", "{ node.dont-move = true }"] and "--target" not in started[1], started
 system.subprocess, system.time, system.have, system.IS_WINDOWS = real_mic
+# which microphone that is. A recording linked to a Bluetooth headset's mic makes WirePlumber switch the headset to its
+# call profile (mono, muffled) for as long as it runs: with the headset as the default mic, Jarvis's wake-word recording
+# kept it there for good, and switched it back each time the user chose high quality again. So: the default mic by name
+# when it isn't a Bluetooth one, else the best other one; only with no other mic (or when the user asks for the
+# headset's) the default, whatever it is
+def pw_node(name, kind="Audio/Source", **props):
+    return {"type": "PipeWire:Interface:Node", "info": {"props": {"node.name": name, "media.class": kind, **props}}}
+
+
+def pw_default(name):
+    return {"type": "PipeWire:Interface:Metadata", "metadata": [{"key": "default.audio.sink", "value": {"name": "alsa_output.x"}},
+                                                                 {"key": "default.audio.source", "value": {"name": name}}]}
+
+
+laptop_mic = pw_node("alsa_input.laptop", **{"priority.session": 2009})
+headset_mic = pw_node("bluez_input.AA:BB", **{"bluez5.loopback": True, "priority.session": 2010})
+usb_mic = pw_node("alsa_input.usb", **{"priority.session": 2100})
+assert system.pick_mic([laptop_mic, headset_mic, pw_default("bluez_input.AA:BB")]) == "alsa_input.laptop"
+assert system.pick_mic([laptop_mic, usb_mic, headset_mic, pw_default("bluez_input.AA:BB")]) == "alsa_input.usb"
+assert system.pick_mic([laptop_mic, usb_mic, headset_mic, pw_default("alsa_input.laptop")]) == "alsa_input.laptop"
+assert system.pick_mic([headset_mic, pw_default("bluez_input.AA:BB")]) == ""  # (the only mic there is)
+assert system.pick_mic([laptop_mic, headset_mic, pw_default("bluez_input.AA:BB")], headset=True) == ""
+assert system.pick_mic([pw_node("jarvis-ec-source"), pw_node("alsa_output.x", "Audio/Sink"), headset_mic, pw_default("bluez_input.AA:BB")]) == ""
+assert system.pick_mic([pw_node("headset.capture", **{"device.api": "bluez5"}), laptop_mic, pw_default("headset.capture")]) == "alsa_input.laptop"
+assert system.pick_mic([laptop_mic]) == "alsa_input.laptop" and system.pick_mic([]) == ""  # (no default known: the best there is)
+# ...and it's looked at again while recording: the recorder ends when another microphone is the one to use (the default
+# changed, the mic was unplugged, the setting), and the next one starts on that
+class Recording:
+    ended = False
+
+    def poll(self):
+        return 0 if self.ended else None
+
+    def terminate(self):
+        self.ended = True
+
+
+rec, moved, picks = Recording(), [], iter(["alsa_input.laptop", "alsa_input.usb"])
+system._follow_mic(rec, "alsa_input.laptop", lambda: next(picks), moved, every=0.01)
+assert rec.ended and moved == ["alsa_input.usb"], moved
+rec, moved = Recording(), []
+rec.ended = True  # (it stopped on its own: nothing to follow any more)
+system._follow_mic(rec, "alsa_input.laptop", lambda: "alsa_input.usb", moved, every=0.01)
+assert moved == []
+# PipeWire not answering for a moment (pw-dump timing out, or printing nothing while it restarts) isn't "the default
+# microphone": taken for that, the recording left the laptop's mic for the default one, the headset's, which went into
+# call quality until the next look
+rec, moved, picks = Recording(), [], iter([None, None, "alsa_input.laptop", "alsa_input.usb"])
+system._follow_mic(rec, "alsa_input.laptop", lambda: next(picks), moved, every=0.01)
+assert moved == ["alsa_input.usb"], moved
+real_run, real_have, was_windows = system.subprocess.run, system.have, system.IS_WINDOWS
+system.IS_WINDOWS, system.have = False, lambda name: True
+try:
+    for printed in ("", "[]", "not json", '{"a": 1}'):
+        system.subprocess.run = lambda *a, printed=printed, **kw: subprocess.CompletedProcess(a, 0, printed, "")
+        assert system.mic_choice() is None, printed
+
+    def hung(*a, **kw):
+        raise subprocess.TimeoutExpired("pw-dump", 5)
+    system.subprocess.run = hung
+    assert system.mic_choice() is None
+    system.subprocess.run = lambda *a, **kw: subprocess.CompletedProcess(a, 0, json.dumps([laptop_mic, headset_mic, pw_default("bluez_input.AA:BB")]), "")
+    assert system.mic_choice() == "alsa_input.laptop"
+    system.have = lambda name: False
+    assert system.mic_choice() == ""  # (no PipeWire here: the default one, as before)
+finally:
+    system.subprocess.run, system.have, system.IS_WINDOWS = real_run, real_have, was_windows
+assert store.DEFAULT_SETTINGS["bluetooth_mic"] is False and "bluetooth_mic" in brain.OWN_SETTINGS
+assert "target.object = \"alsa_input.laptop\"" in jarvis.ec_module("alsa_input.laptop") and "node.dont-move = true" in jarvis.ec_module("alsa_input.laptop")
+assert "target.object" not in jarvis.ec_module("") and "jarvis-ec-capture" in jarvis.ec_module("")
 
 # Windows echo cancelling: what the speakers played goes to the canceller, and its output is what Jarvis hears
 class Rec:
@@ -5003,7 +5839,13 @@ for sid, at in (("old", old), ("new", time.time())):
     store.write_json(os.path.join(store.SESSIONS_DIR, f"{sid}.json"), {"id": sid, "updated": at})
     os.utime(os.path.join(store.SESSIONS_DIR, f"{sid}.json"), (at, at))
 store.write_json(store.CHANGES_FILE, [{"at": old, "what": "old change"}, {"at": time.time(), "what": "new change"}])
+os.makedirs(store.PASTED_DIR, exist_ok=True)  # pictures pasted into the message box are the user's too: they go with
+for pasted_name, at in (("old.png", old), ("new.png", time.time())):  # keep_days and with Delete my data
+    with open(os.path.join(store.PASTED_DIR, pasted_name), "wb") as f:
+        f.write(b"\x89PNG")
+    os.utime(os.path.join(store.PASTED_DIR, pasted_name), (at, at))
 store.tidy()
+assert sorted(os.listdir(store.PASTED_DIR)) == ["new.png", "old.png"]  # (keep_days 0: kept for good)
 assert sorted(os.listdir(store.TEMP)) == ["jarvis-assistant", "jarvis-k9k9k9k9"], os.listdir(store.TEMP)
 assert [open(p).read() for p in (store.LOG_FILE, *store.OLD_LOGS[:2])] == ["", "x" * 20, "older"]
 assert sorted(os.listdir(store.SESSIONS_DIR)) == ["new.json", "old.json"] and len(store.changes()) == 2
@@ -5018,6 +5860,7 @@ store.LOG_LIMIT = real_limit  # (not rotated by size this time)
 store.update_settings({"keep_days": "30"})
 store.tidy()
 assert os.listdir(store.SESSIONS_DIR) == ["new.json"] and [c["what"] for c in store.changes()] == ["new change"]
+assert os.listdir(store.PASTED_DIR) == ["new.png"], os.listdir(store.PASTED_DIR)
 assert open(store.LOG_FILE).read() == f"--- {stamp(day_ago)}\n09:00:00 [you] new words\n"
 assert not any(os.path.exists(p) for p in store.OLD_LOGS)
 log = io.StringIO()
@@ -5033,6 +5876,7 @@ except ValueError:
 store.update_settings({"keep_days": 0})
 store.delete_data()
 assert not any(os.path.exists(p) for p in store.OLD_LOGS) and os.listdir(store.SESSIONS_DIR) == []
+assert not os.path.exists(store.PASTED_DIR) and window.PASTED_DIR == store.PASTED_DIR
 store.TEMP, store.LOG_LIMIT = real_temp, real_limit
 
 # Telegram: only the chat that sends the pairing code is answered; it gets the agent's reply, and the agent can't ask out loud
@@ -5328,12 +6172,21 @@ class Recorder:
     def wait(self, timeout=None):
         return 0
 system.subprocess.Popen, system.have, system.IS_WINDOWS = Recorder, (lambda program: True), False
+real_choice, system.mic_choice = system.mic_choice, lambda: ""  # (not this PC's microphones: the default one)
 mixed = os.path.join(store.DATA, "both.wav")
 system.stop_recording(system.record_audio(mixed, "both"))
 # a recorder ends by itself and with Jarvis: it writes to a file, so one outlived a restart and recorded for a day
 assert all(a[:4] == ["timeout", "-s", "INT", str(system.RECORD_LIMIT)] for a in spawned) and not system._recording
 left = system.record_audio(os.path.join(store.DATA, "left.wav"), "room")
 assert left in system._recording
+# (notes of the room record the picked microphone too, never a Bluetooth headset's when there's another)
+system.mic_choice = lambda: "alsa_input.laptop"
+spawned_before = len(spawned)
+system.stop_recording(system.record_audio(os.path.join(store.DATA, "pinned.wav"), "both"))
+assert [("--target" in a, "stream.capture.sink=true" in " ".join(a)) for a in spawned[spawned_before:]] == [(False, True), (True, False)], spawned[spawned_before:]
+system.mic_choice = real_choice
+del spawned[spawned_before:]
+os.remove(os.path.join(store.DATA, "pinned.wav"))
 system.end_recordings()  # (what quitting or restarting runs)
 assert not system._recording and os.path.exists(left.path)
 os.remove(left.path)
@@ -7118,7 +7971,7 @@ store.write_json(people.FILE, {"Sam Lee": {"aka": ["samlee"], "notes": [{"text":
 brain.app_version[0] = "9.9.9"
 itself = brain.about()
 assert "Jarvis 9.9.9, a program on this PC" in itself and store.settings()["live_model"] in itself and brain.chain()[0][1] in itself, itself
-assert "backup saves" in itself and "~/Projects/alpha" in itself and "jarvis.log" in itself and len(itself) < 2200, itself
+assert "backup saves" in itself and "~/Projects/alpha" in itself and "jarvis.log" in itself and "pw-record" in itself and len(itself) < 2600, itself
 store.update_settings({"whatsapp_replies": "off", "discord_replies": "friends"})
 assert "WhatsApp messages: off" in brain.about() and "Discord: you answer friends' direct messages" in brain.about()
 store.update_settings({"whatsapp_replies": "contacts", "discord_replies": "off"})
@@ -7290,6 +8143,287 @@ assert "meetings in the next two weeks" not in b.person("Maya")
 assert b.waiting_on_me()["tomorrow's calendar"] == ["13:00 Lunch, with Sam Lee (my cousin; exam on Monday), Bo", "18:00 Gym"]
 b.connected = set()
 brain.whatsapp_link[0], discord.call = real_wa, real_dc_call
+# people's profiles: what Jarvis understands about someone from the user's notes and their latest one-to-one messages
+# (WhatsApp and Discord, never a group), a couple of people a pass; too little to go on asks no model, and a turn that
+# couldn't read a chat or reach a model stamps nothing (it's simply due again next pass)
+import contextlib, io, json, time, types
+import discord, people, phone, whatsapp
+real_people_file, people.FILE = people.FILE, os.path.join(_home, "people-profiles.json")
+real_wa, real_dc_call, real_dc_status = brain.whatsapp_link[0], discord.call, discord.status
+# the settings: on by default, written again after 1-60 days; turning them on by voice waits for a yes
+assert store.DEFAULT_SETTINGS["people_profiles"] is True and store.DEFAULT_SETTINGS["people_refresh_days"] == 7
+for bad in (0, 61, "soon"):
+    try:
+        store.update_settings({"people_refresh_days": bad})
+        raise AssertionError(f"people_refresh_days {bad!r} was taken")
+    except ValueError:
+        pass
+assert store.update_settings({"people_refresh_days": "14"})["people_refresh_days"] == 14
+store.update_settings({"people_refresh_days": 7, "people_profiles": False})
+assert {"people_profiles", "people_refresh_days"} <= set(brain.OWN_SETTINGS)
+assert brain.tool_settings("set", "people_profiles", "on")["error"] == brain.NEEDS_YES and not store.settings()["people_profiles"]
+assert "error" not in brain.tool_settings("set", "people_profiles", "on", confirmed=True) and store.settings()["people_profiles"]
+# who's due: talked with lately and no profile yet, or one older than the setting with messages since; newest talk first
+day, t0 = 86400, 1_800_000_000.0  # (a fixed now, before the year 3000: Windows can't format later ones)
+prof = lambda at, upto: {"gist": "g", "text": "x", "at": at, "upto": upto, "count": 40}
+due_book = {
+    "New": {"seen": {"whatsapp": t0 - 3600}},
+    "Fresh": {"seen": {"whatsapp": t0 - 600}, "profile": prof(t0 - day, t0 - 7200)},
+    "Quiet": {"seen": {"discord": t0 - 9 * day}, "profile": prof(t0 - 8 * day, t0 - 9 * day + 60)},  # (nothing new since)
+    "Stale": {"wrote": {"whatsapp": t0 - 300}, "profile": prof(t0 - 8 * day, t0 - 8 * day)},
+    "Long ago": {"seen": {"whatsapp": t0 - 30 * day}},
+    "Noted only": {"notes": [{"text": "the plumber", "at": t0}]},
+    "Forgotten": {"seen": {"whatsapp": t0 - 60}, "looked": {"at": t0 - 20 * day, "upto": t0 - 20 * day, "why": "forgot"}},
+    "Few today": {"seen": {"whatsapp": t0 - 100}, "looked": {"at": t0 - 3600, "upto": t0 - 7200, "why": "few"}},
+    "Few before": {"seen": {"whatsapp": t0 - 200}, "looked": {"at": t0 - 2 * day, "upto": t0 - 2 * day, "why": "few"}},
+    "Discord only": {"seen": {"discord": t0 - 50}},
+}
+assert people.due_profiles(due_book, t0, 7) == ["Discord only", "Few before"], people.due_profiles(due_book, t0, 7)
+assert people.due_profiles(due_book, t0, 7, most=9) == ["Discord only", "Few before", "Stale", "New"]
+assert people.due_profiles(due_book, t0, 7, most=9, apps={"whatsapp"}) == ["Few before", "Stale", "New"]  # (Discord can't be read now)
+assert people.due_profiles(due_book, t0, 7, most=9, apps=set()) == [] and "Stale" not in people.due_profiles(due_book, t0, 10, most=9)
+# the messages as the model reads them: newest last, cut to the newest that fit
+cut_lines, cut_them, cut_upto = people.chat_lines([{"at": t0 + i * 60, "me": i % 4 == 0, "text": f"long {i} " + "x" * 290, "app": "whatsapp"}
+                                                   for i in range(120)])
+assert len("\n".join(cut_lines)) <= people.PROFILE_CHARS and "long 119 " in cut_lines[-1] and not any("long 0 " in l for l in cut_lines)
+assert cut_upto == t0 + 119 * 60 and cut_them == sum(" them: " in l for l in cut_lines) and " them: long 119" in cut_lines[-1]
+# a profile from made-up chats: the notes and both apps' one-to-one messages in one request, saved with what it read
+t1 = time.time()
+store.write_json(people.FILE, {"Maya Lee": {"aka": ["mayal"], "notes": [{"text": "my cousin", "at": t1 - day}],
+                                            "seen": {"whatsapp": t1 - 600}, "wrote": {"discord": t1 - 900}}}, private=True)
+wa_chats = [{"chat": "1@c.us", "name": "Maya Lee", "group": False}, {"chat": "2@c.us", "name": "Bo", "group": False},
+            {"chat": "g@g.us", "name": "Book Club", "group": True}]
+wa_msgs = [[{"id": f"w{i}", "me": i % 3 == 0, "text": f"whatsapp message {i}", "at": t1 - 7200 + i * 60, "by": None} for i in range(12)]]
+wa_calls = []
+
+
+def wa_page(cmd, timeout=30, **args):
+    wa_calls.append((cmd, args))
+    if cmd == "chats":
+        return wa_chats
+    if cmd == "history":
+        assert args["chat"] != "g@g.us", "a group was read"
+        return wa_msgs[0]
+    raise AssertionError(cmd)
+
+
+wa_p = whatsapp.WhatsApp(None)
+wa_p.ask, wa_p.state, wa_p.saved = wa_page, "connected", {"linked": True}
+brain.whatsapp_link[0] = wa_p
+dc_msgs = [[{"id": f"d{i}", "me": i % 2 == 0, "by": "Sam" if i % 2 == 0 else "Maya Lee", "text": f"discord message {i}",
+             "at": t1 - 3600 + i * 60} for i in range(6)]]
+
+
+dc_calls = []
+
+
+def dc_page(cmd, **args):
+    dc_calls.append(cmd)
+    if cmd == "targets":
+        return [{"id": "d1", "name": "Maya Lee", "also": ["mayal"], "kind": "dm"}, {"id": "s1", "name": "Chess", "kind": "server"}]
+    if cmd == "history":
+        return dc_msgs[0]
+    raise AssertionError(cmd)
+
+
+discord.call, discord.status = dc_page, lambda: {"state": "connected"}
+asked_profile = []
+reply = [json.dumps({"gist": "cousin; warm, teasing, writes in English",
+                     "lines": ["Cousin, close in age", "Writes short messages in English", "Lately: planning a trip", "Open: owes the user a photo"]})]
+pb = brain.Brain.__new__(brain.Brain)
+pb.connected = set()
+pb._generate = lambda contents, **kw: asked_profile.append(contents[0]["parts"][0]["text"]) or [{"text": reply[0]}]
+made = pb.profile("maya lee")
+asked = asked_profile[0]
+assert len(asked_profile) == 1 and "my cousin" in asked and "Maya Lee" in asked, asked
+assert "them: whatsapp message 1" in asked and "me: whatsapp message 0" in asked and "them: discord message 5" in asked, asked
+assert asked.index("whatsapp message 11") > asked.index("whatsapp message 10") and asked.index("discord message 0") > asked.index("whatsapp message 11")
+saved = people.everyone()["Maya Lee"]["profile"]
+assert saved["gist"] == "cousin; warm, teasing, writes in English" and saved["text"].split("\n") == json.loads(reply[0])["lines"], saved
+assert saved["count"] == 18 and saved["upto"] == dc_msgs[0][-1]["at"] and t1 <= saved["at"] <= time.time() and made == saved
+# a group is never read for it, nor a group DM on Discord
+store.write_json(people.FILE, {"Book Club": {"seen": {"whatsapp": t1 - 60, "discord": t1 - 60}}}, private=True)
+discord.call = lambda cmd, **args: ([{"id": "g1", "name": "Book Club", "also": [], "kind": "dm"}] if cmd == "targets" else
+                                    [{"id": "x", "me": False, "by": f"Member {i % 3}", "text": "hi", "at": t1 - i} for i in range(12)])
+n_asked = len(asked_profile)
+assert pb.profile("Book Club") is None and len(asked_profile) == n_asked and "profile" not in people.everyone()["Book Club"]
+discord.call = dc_page
+# too little to go on: no model request, and it isn't looked at again for a day (nothing new is the model's {} too)
+store.write_json(people.FILE, {"Bo": {"seen": {"whatsapp": t1 - 60}}}, private=True)
+dc_calls.clear()
+wa_msgs[0] = [{"id": f"b{i}", "me": i >= 7, "text": f"bo {i}", "at": t1 - 600 + i, "by": None} for i in range(12)]
+assert pb.profile("Bo") is None and len(asked_profile) == n_asked
+assert people.everyone()["Bo"]["looked"]["why"] == "few" and "profile" not in people.everyone()["Bo"]
+assert not dc_calls  # (Bo isn't on Discord: not looked for there)
+wa_msgs[0] = [{"id": f"b{i}", "me": False, "text": f"bo {i}", "at": t1 - 600 + i, "by": None} for i in range(9)]
+reply[0] = "{}"
+assert pb.profile("Bo") is None and len(asked_profile) == n_asked + 1 and people.everyone()["Bo"]["looked"]["why"] == "empty"
+# a turn that fails stamps nothing: the app isn't connected (nothing read, no model asked), no model answers, a reply
+# that isn't a profile, the helper failing mid-read, the account paused
+store.write_json(people.FILE, {"Bo": {"seen": {"whatsapp": t1 - 60}}}, private=True)
+untouched = lambda: people.everyone()["Bo"] == {"seen": {"whatsapp": t1 - 60}}
+wa_p.state = "connecting"
+try:
+    pb.profile("Bo")
+    raise AssertionError("profiled with WhatsApp not connected")
+except people.NotNow as e:
+    assert "WhatsApp" in str(e) and untouched() and len(asked_profile) == n_asked + 1, e
+wa_p.state = "connected"
+real_generate = pb._generate
+pb._generate = lambda contents, **kw: (_ for _ in ()).throw(brain.NoModel("no model answered"))
+try:
+    pb.profile("Bo")
+    raise AssertionError("no model, yet a profile")
+except brain.NoModel:
+    assert untouched()
+pb._generate = real_generate
+reply[0] = "Sorry, I can't describe people."
+try:
+    pb.profile("Bo")
+    raise AssertionError("a reply that isn't a profile was taken")
+except people.NotNow:
+    assert untouched()
+real_page = wa_p.ask
+wa_p.ask = lambda cmd, timeout=30, **args: wa_chats if cmd == "chats" else (_ for _ in ()).throw(RuntimeError("the helper stopped"))
+try:
+    pb.profile("Bo")
+    raise AssertionError("profiled from a chat that couldn't be read")
+except people.NotNow as e:
+    assert "the helper stopped" in str(e) and untouched(), e
+wa_p.ask = real_page
+store.set_connector_mode("whatsapp", "paused")
+wa_calls.clear()
+try:
+    pb.profile("Bo")
+    raise AssertionError("a paused account was read")
+except people.NotNow as e:
+    assert "paused" in str(e) and not [c for c in wa_calls if c[0] == "history"] and untouched(), e
+store.set_connector_mode("whatsapp", "ask")
+# saved keys, the passphrase, long numbers (codes, cards), emails and links never stay in a profile
+store.set_secret("telegram", "123456789:made-up-telegram-token-for-tests")
+store.set_secret(store.PASSPHRASE, "blue falcon")
+brain._secrets[0] = 0.0
+reply[0] = json.dumps({"gist": "friend; says Blue-Falcon a lot", "lines": [
+    "Sent the login code 482913 by mistake", "Pasted 123456789:made-up-telegram-token-for-tests once", "Email bo@example.com, site https://example.com/x",
+    "Card 4111 1111 1111 1111", "Plans a trip in 2027"]})
+hidden = pb.profile("Bo")
+shown = (hidden["gist"] + "\n" + hidden["text"]).lower()
+assert not any(s in shown for s in ("falcon", "made-up-telegram-token", "482913", "bo@example.com", "https://", "4111")) and "2027" in shown, shown
+store.set_secret("telegram", "")
+store.set_secret(store.PASSPHRASE, "")
+brain._secrets[0] = 0.0
+# the prompts' list of people: the gist first on a person's line, within the line's length
+store.write_json(people.FILE, {
+    "Maya": {"seen": {"discord": t1}, "notes": [{"text": "my cousin", "at": t1}],
+             "profile": {"gist": "close friend, jokes a lot, writes in English", "text": "Close friend", "at": t1, "upto": t1, "count": 30}},
+    "Bo": {"seen": {"whatsapp": t1 - 60}, "profile": {"gist": "classmate in Physics 2; " + "brief " * 30, "text": "x", "at": t1, "upto": t1, "count": 9}}},
+    private=True)
+listed = people.index(t1 + 1).splitlines()
+assert listed[0] == "- Maya (on Discord): close friend, jokes a lot, writes in English; my cousin", listed
+assert listed[1].startswith("- Bo (on WhatsApp): classmate in Physics 2; brief") and len(listed[1]) <= 120, listed
+# the person tool: the profile's lines and when; refresh writes it again now, and says why when it can't
+page_now = pb.person("Maya")
+assert page_now["profile"]["gist"] == "close friend, jokes a lot, writes in English" and page_now["profile"]["lines"] == ["Close friend"], page_now
+assert "messages" in page_now["profile"]["written"] and "30" in page_now["profile"]["written"], page_now
+assert "refresh" in brain.TOOLS["person"][2]["properties"] and "refresh" in brain.TOOLS["person"][1]
+store.write_json(people.FILE, {"Maya Lee": {"aka": ["mayal"], "notes": [], "seen": {"whatsapp": t1 - 600}}}, private=True)
+wa_msgs[0] = [{"id": f"w{i}", "me": False, "text": f"whatsapp message {i}", "at": t1 - 7200 + i * 60, "by": None} for i in range(10)]
+reply[0] = json.dumps({"gist": "cousin, writes long messages", "lines": ["Cousin", "Long messages", "Asks about exams", "Uses emoji"]})
+again = pb.person("Maya Lee", refresh=True)
+assert again["profile"]["gist"] == "cousin, writes long messages" and "result" in again and "error" not in again, again
+wa_p.state = "off"
+cant = pb.person("Maya Lee", refresh=True)
+assert "WhatsApp" in cant["error"] and cant["profile"]["gist"] == "cousin, writes long messages", cant  # (the old one stays)
+wa_p.state = "connected"
+assert not jarvis.voice_read("person", {"name": "Maya", "refresh": True}) and jarvis.voice_read("person", {"name": "Maya"})
+# the People page's API: everyone (most recently talked with first) with all of their page; notes saved, edited in place
+# and deleted; a profile refreshed, forgotten (and not written again by itself), a person forgotten. Names go in the body
+store.write_json(people.FILE, {
+    "Maya Lee": {"aka": ["mayal"], "notes": [{"text": "my cousin", "at": t1 - day}], "seen": {"whatsapp": t1 - 600}, "wrote": {"discord": t1 - 60},
+                 "profile": {"gist": "cousin", "text": "Cousin\nWrites in English", "at": t1 - day, "upto": t1 - day, "count": 12},
+                 "promises": [{"what": "send Maya the photos", "at": t1 - 3600, "app": "whatsapp"}]},
+    "Old Friend": {"seen": {"whatsapp": t1 - 40 * day}},
+    "Noted Only": {"notes": [{"text": "the plumber", "at": t1 - 7200}]},
+    "Sam / Lee ✨": {"seen": {"discord": t1 - 120}}}, private=True)
+everyone = jarvis.api_get("/api/people", pb)
+assert [p["name"] for p in everyone["people"]] == ["Maya Lee", "Sam / Lee ✨", "Old Friend", "Noted Only"], everyone
+assert everyone["profiles"] is True and everyone["refresh_days"] == 7
+maya = everyone["people"][0]
+assert maya["apps"] == ["discord", "whatsapp"] and maya["aka"] == ["mayal"] and maya["last"] == t1 - 60 and maya["wrote"]["discord"] == t1 - 60
+assert maya["profile"]["lines"] == ["Cousin", "Writes in English"] and maya["profile"]["count"] == 12 and maya["notes"][0]["text"] == "my cousin"
+assert maya["promises"] == [{"what": "send Maya the photos", "due": 0, "at": t1 - 3600, "app": "whatsapp"}], maya["promises"]
+jarvis.api_post("/api/people/note", {"name": "Maya Lee", "text": "  loves   chess "}, None, pb)
+jarvis.api_post("/api/people/note", {"name": "Maya Lee", "text": "loves board games", "old": "loves chess", "until": "2030-01-31"}, None, pb)
+notes_now = people.everyone()["Maya Lee"]["notes"]
+assert [n["text"] for n in notes_now] == ["my cousin", "loves board games"] and time.localtime(notes_now[1]["until"]).tm_mday == 31, notes_now
+for bad in ({"name": "Maya Lee", "text": "x", "until": "next week"}, {"name": "Maya Lee", "text": "   "}):
+    try:
+        jarvis.api_post("/api/people/note", bad, None, pb)
+        raise AssertionError(f"note {bad} was taken")
+    except ValueError:
+        pass
+assert jarvis.api_post("/api/people/note/delete", {"name": "Maya Lee", "text": "cousin"}, None, pb)["deleted"] == 0  # (the note as it is)
+assert jarvis.api_post("/api/people/note/delete", {"name": "Maya Lee", "text": "loves board games"}, None, pb)["deleted"] == 1
+assert [n["text"] for n in people.everyone()["Maya Lee"]["notes"]] == ["my cousin"]
+reply[0] = json.dumps({"gist": "cousin, plans trips", "lines": ["Cousin", "Plans trips", "Writes in English", "Quick to answer"]})
+fresh = jarvis.api_post("/api/people/refresh", {"name": "Maya Lee"}, None, pb)
+assert fresh["outcome"] == "updated" and fresh["person"]["profile"]["gist"] == "cousin, plans trips", fresh
+wa_msgs[0] = wa_msgs[0][:3]
+assert jarvis.api_post("/api/people/refresh", {"name": "Maya Lee"}, None, pb)["outcome"] == "few"
+wa_p.state, discord.status = "off", lambda: {"state": "off"}
+try:
+    jarvis.api_post("/api/people/refresh", {"name": "Maya Lee"}, None, pb)
+    raise AssertionError("a refresh with nothing to read worked")
+except ValueError as e:
+    assert "WhatsApp" in str(e), e
+wa_p.state, discord.status = "connected", lambda: {"state": "connected"}
+pb._generate = lambda contents, **kw: (_ for _ in ()).throw(brain.NoModel("every model is busy"))
+try:
+    wa_msgs[0] = [{"id": f"w{i}", "me": False, "text": f"m {i}", "at": t1 - 60 + i, "by": None} for i in range(9)]
+    jarvis.api_post("/api/people/refresh", {"name": "Maya Lee"}, None, pb)
+    raise AssertionError("a refresh with no model worked")
+except ValueError as e:
+    assert "model" in str(e), e
+pb._generate = real_generate
+jarvis.api_post("/api/people/profile/forget", {"name": "Maya Lee"}, None, pb)
+assert "profile" not in people.everyone()["Maya Lee"] and people.everyone()["Maya Lee"]["notes"]
+assert "Maya Lee" not in people.due_profiles(people.everyone(), time.time(), 7, most=9)  # (forgotten: not written again by itself)
+assert jarvis.api_post("/api/people/forget", {"name": "Sam / Lee ✨"}, None, pb)["forgot"] == 1 and "Sam / Lee ✨" not in people.everyone()
+assert not any(p.startswith("/api/people") for p in phone.PHONE_GET) and not any(
+    phone.PHONE_POST.fullmatch(p) for p in ("/api/people/forget", "/api/people/note", "/api/people/refresh", "/api/people/profile/forget"))
+# the pass: nothing while profiles are off; then the two most recently talked with, one request each, one log line each
+# (never the profile or the messages); a pass that couldn't reach a model stamps nothing and is due again
+store.write_json(people.FILE, {"Maya Lee": {"seen": {"whatsapp": t1 - 60}}, "Bo": {"seen": {"whatsapp": t1 - 120}},
+                               "Cy": {"seen": {"whatsapp": t1 - 180}}}, private=True)
+wa_chats.append({"chat": "3@c.us", "name": "Cy", "group": False})
+wa_msgs[0] = [{"id": f"w{i}", "me": False, "text": f"talk {i}", "at": t1 - 60 + i, "by": None} for i in range(9)]
+reply[0] = json.dumps({"gist": "a SECRET-GIST friend", "lines": ["one", "two", "three", "four"]})
+store.update_settings({"people_profiles": False})
+asked_profile.clear()
+wa_calls.clear()
+jarvis.people_pass(pb)
+assert not asked_profile and not wa_calls
+store.update_settings({"people_profiles": True})
+pb._generate = lambda contents, **kw: (_ for _ in ()).throw(brain.NoModel("no model answered"))
+with contextlib.redirect_stdout(io.StringIO()) as said:
+    jarvis.people_pass(pb)
+assert not any(p.get("profile") or p.get("looked") for p in people.everyone().values()) and "[people]" in said.getvalue(), said.getvalue()
+pb._generate = real_generate
+with contextlib.redirect_stdout(io.StringIO()) as said:
+    jarvis.people_pass(pb)
+log = said.getvalue()
+assert len(asked_profile) == 2 and [k for k, p in people.everyone().items() if p.get("profile")] == ["Maya Lee", "Bo"], people.everyone()
+assert log.count("[people]") == 2 and "SECRET-GIST" not in log and "talk " not in log, log
+jarvis.people_pass(pb)
+assert len(asked_profile) == 3 and people.everyone()["Cy"].get("profile")
+jarvis.people_pass(pb)
+assert len(asked_profile) == 3  # (everyone known lately has one now)
+# backups: a profile goes with its person's page, and a damaged one can't come in
+assert store.BACKUP_CHECKS["people.json"]({"Maya": {"notes": [], "profile": prof(1.0, 1.0), "looked": {"at": 1.0, "upto": 1.0, "why": "few"}}})
+assert not store.BACKUP_CHECKS["people.json"]({"Maya": {"profile": {"gist": 5, "text": "x", "at": 1.0, "upto": 1.0, "count": 1}}})
+assert not store.BACKUP_CHECKS["people.json"]({"Maya": {"profile": "nice"}})
+assert "People" in brain.about()
+people.FILE, brain.whatsapp_link[0], discord.call, discord.status = real_people_file, real_wa, real_dc_call, real_dc_status
 # what Jarvis says on its own and the user lets pass three times in a row is only shown for a while; a word back resets it
 jarvis.ATTENTION_FILE = os.path.join(_home, "attention-test.json")
 heed = jarvis.Attention()
@@ -7462,6 +8596,9 @@ store.update_settings({"keep_days": 0})
 # the first run says what goes to Gemini: memory and the talk too (it said they "stay on this computer"); WhatsApp is the helper
 wizard = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "qml", "SetupWizard.qml"), encoding="utf-8").read()
 assert "stay on this computer" not in wizard and "memory and recent conversation" in wizard
+assert "keeps all of it" not in wizard and "Jarvis also keeps a copy of your" in wizard  # (after "go to Google", "all of it" stays here contradicted it)
+# the Models page's hints are in the user's words: no tool names ("handed off with do_task", "for web_search")
+assert not [hint for _, hint in brain.MODEL_JOBS.values() if "_" in hint], brain.MODEL_JOBS
 assert "hidden browser" not in open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "PRIVACY.md"), encoding="utf-8").read()
 # screen time comes from QHealth (the user's screen-time app): its own database, opened read-only, never written
 import sqlite3, datetime
@@ -8044,6 +9181,59 @@ for kind, ok in (("image/png", True), ("image/jpeg; charset=binary", True), ("im
     out = brain.tool_show_image("https://pictures.example/x")
     assert ("error" not in out) == ok and len(shown) == ok, (kind, out)
     assert not ok or (os.path.dirname(shown[0]) == brain.IMAGE_DIR and os.path.splitext(shown[0])[1] in brain.CHAT_PICTURES), shown
+# "show me a picture of a red panda": a photo of something real is found by its name (Wikipedia's picture of the page),
+# and "show me my screen" puts what's on screen in the chat; it could only show a file or an address it already knew
+shown_as, asked_urls = [], []
+brain.on_image[0] = lambda path, caption: shown_as.append((path, caption))
+
+
+def wiki(url, **k):
+    asked_urls.append(url)
+    if "api.php" in url:
+        found = {"query": {"pages": {"7": {"index": 2, "title": "Panda (disambiguation)"},
+                                     "9": {"index": 1, "title": "Red panda", "thumbnail": {"source": "https://upload.example/red_panda.jpg"}}}}}
+        return types.SimpleNamespace(ok=True, status_code=200, json=lambda: found if "red+panda" in url or "red%20panda" in url else {})
+    return types.SimpleNamespace(ok=True, status_code=200, content=b"\xff\xd8jpeg", headers={"Content-Type": "image/jpeg"})
+
+
+brain.fetch = wiki
+found_one = brain.tool_show_image(search="red panda")
+assert "error" not in found_one and shown_as[-1][1] == "Red panda (Wikipedia)" and asked_urls[-1] == "https://upload.example/red_panda.jpg", (found_one, shown_as)
+assert os.path.dirname(shown_as[-1][0]) == brain.IMAGE_DIR and open(shown_as[-1][0], "rb").read() == b"\xff\xd8jpeg"
+none_found = brain.tool_show_image(search="zzqx nothing")
+assert "no picture" in none_found["error"] and "make_image" in none_found["error"] and len(shown_as) == 1, none_found
+assert "error" in brain.tool_show_image() and len(shown_as) == 1  # (neither a source nor a search)
+real_shot, system.screenshot = system.screenshot, lambda: b"\xff\xd8screen"
+on_screen = brain.tool_show_image("screen", "your desktop")
+system.screenshot = real_shot
+assert "error" not in on_screen and shown_as[-1][1] == "your desktop" and open(shown_as[-1][0], "rb").read() == b"\xff\xd8screen", on_screen
+assert os.path.dirname(shown_as[-1][0]) == brain.IMAGE_DIR and shown_as[-1][0].endswith(".jpg")
+# a picture file written into an answer ("![a chart](~/chart.png)", the way every model writes one) is shown as a picture
+# and taken out of the words, which are also what the voice says; a plain link stays a link. A picture at a web address
+# is never fetched because an answer names it: text from a page or a message could have the answer name an address that
+# carries something out ("![x](https://evil.example/?d=<what it read>)"). It's left as a link; show_image is how one is shown
+words, pictures = jarvis.reply_pictures("Here it is.\n\n![A chart](/home/sam/chart.png)\nUp a third, isn't it?")
+assert words == "Here it is.\n\nUp a third, isn't it?" and pictures == [("/home/sam/chart.png", "A chart")], (words, pictures)
+assert jarvis.reply_pictures("No pictures, [a link](https://example.org) only") == ("No pictures, [a link](https://example.org) only", [])
+assert jarvis.reply_pictures("![chart](~/Pictures/chart.png)") == ("", [("~/Pictures/chart.png", "chart")])
+assert len(jarvis.reply_pictures(" ".join(f"![p{i}](/tmp/made-up/{i}.png)" for i in range(9)))[1]) == jarvis.REPLY_PICTURES
+for outside in ("https://evil.example/log?d=the+users+notes", "http://evil.example/a.png", "//evil.example/a.png", "ftp://evil.example/a.png",
+                "file://evil.example/share/a.png", "data:image/png;base64,AAAA"):
+    words, pictures = jarvis.reply_pictures(f"Done.\n![a panda]({outside})")
+    assert pictures == [] and words == f"Done.\n[a panda]({outside})", (outside, words, pictures)
+shown_as.clear()
+real_show, brain.tool_show_image = brain.tool_show_image, lambda source="", caption="", search="": shown_as.append((source, caption)) or {"result": "shown in the chat"}
+real_sessions_pics, jarvis.sessions = jarvis.sessions, store.Sessions()
+jarvis.sessions.dir = tempfile.mkdtemp()
+jarvis.emit("log", who="jarvis", text="The chart is ready.\n![sales by month](/tmp/made-up/chart.png)")
+for _ in range(100):
+    if shown_as:
+        break
+    time.sleep(0.02)
+assert shown_as == [("/tmp/made-up/chart.png", "sales by month")] and jarvis.sessions.messages[-1]["text"] == "The chart is ready.", (shown_as, jarvis.sessions.messages[-1])
+jarvis.emit("log", who="you", text="![mine](/tmp/made-up/x.png)")  # (only Jarvis's own answers: what the user typed stays as typed)
+assert jarvis.sessions.messages[-1]["text"] == "![mine](/tmp/made-up/x.png)" and len(shown_as) == 1
+jarvis.sessions, brain.tool_show_image = real_sessions_pics, real_show
 brain.fetch, brain.IMAGE_DIR, brain.on_image[0] = real_fetch, real_dir, real_on_image
 # a notification that starts with a dash (a task's bulleted answer) still shows: notify-send took it for an option
 if not system.IS_WINDOWS:
@@ -8638,7 +9828,8 @@ async def tells(text, **kw):
 real_send, rl._send = rl._send, tells
 asyncio.run(rl._task(rl.session, again_task))
 assert len(told_voice) == 1 and "A task you started has finished" in told_voice[0] and "Both lectures are in ~/Uni." in told_voice[0]
-rl.stopped, rl.working = True, 1  # (after Stop its result isn't said)
+rl.stopped, rl.working = True, 1  # (after Stop, pressed while it worked, its result isn't said)
+rl.brain.ask = lambda *a, **k: setattr(rl, "tasks_stopped_at", time.time()) or "Both lectures are in ~/Uni."
 asyncio.run(rl._task(rl.session, again_task))
 assert len(told_voice) == 1
 rl.stopped, rl._send, VoiceSession.fails = False, real_send, False

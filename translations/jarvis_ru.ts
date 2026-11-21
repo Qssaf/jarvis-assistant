@@ -4,7 +4,7 @@
 <context>
     <name>AccountsPage</name>
     <message>
-        <location filename="../qml/AccountsPage.qml" line="+9"/>
+        <location filename="../qml/AccountsPage.qml" line="+10"/>
         <source>Accounts</source>
         <translation>Аккаунты</translation>
     </message>
@@ -14,7 +14,22 @@
         <translation>Подключите аккаунты, чтобы Jarvis мог читать их и действовать в них. Что ему можно делать с каждым, решаете вы.</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+14"/>
+        <source>Jarvis will ask again before “%1”</source>
+        <translation>Jarvis снова будет спрашивать перед «%1»</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>%1 connected</source>
+        <translation>%1: подключено</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>%1 isn&apos;t connected yet: press Refresh once you&apos;ve signed in</source>
+        <translation>%1: пока не подключено — нажмите «Обновить», когда войдёте</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Refresh</source>
         <translation>Обновить</translation>
     </message>
@@ -40,7 +55,7 @@
         <translation>Выберите, что Jarvis может делать с каждым аккаунтом.</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+36"/>
         <source>Sign in again</source>
         <translation>Войти снова</translation>
     </message>
@@ -50,7 +65,7 @@
         <translation>Страница входа открыта в браузере</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Click again to disconnect</source>
         <translation>Нажмите ещё раз, чтобы отключить</translation>
     </message>
@@ -86,6 +101,31 @@
     </message>
     <message>
         <location line="+11"/>
+        <source>Jarvis no longer asks before…</source>
+        <translation>Jarvis больше не спрашивает перед…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>You told Jarvis it may do these without asking first. Ask again takes that back.</source>
+        <translation>С вашего разрешения Jarvis делает это, не спрашивая. «Спрашивать снова» отменяет разрешение.</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>You said “%1” on %2</source>
+        <translation>Ваши слова: «%1», %2</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Since %1</source>
+        <translation>С %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Ask again</source>
+        <translation>Спрашивать снова</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>More accounts</source>
         <translation>Другие аккаунты</translation>
     </message>
@@ -100,7 +140,12 @@
         <translation>Выберите аккаунт, войдите в браузере и нажмите «Обновить».</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
+        <source>%1: waiting for sign-in…</source>
+        <translation>%1: ожидание входа…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Finish signing in in your browser, then press Refresh</source>
         <translation>Завершите вход в браузере и нажмите «Обновить»</translation>
     </message>
@@ -113,7 +158,7 @@
 <context>
     <name>ActivityPage</name>
     <message>
-        <location filename="../qml/ActivityPage.qml" line="+43"/>
+        <location filename="../qml/ActivityPage.qml" line="+79"/>
         <source>Activity</source>
         <translation>Активность</translation>
     </message>
@@ -123,14 +168,60 @@
         <translation>Каждый шаг Jarvis в этом разговоре — в реальном времени.</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>All</source>
+        <translation>Все</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Errors</source>
+        <translation>Ошибки</translation>
+    </message>
+    <message>
+        <location line="+0"/>
         <location line="+86"/>
+        <source>Voice</source>
+        <translation>Голос</translation>
+    </message>
+    <message>
+        <location line="-86"/>
+        <source>Tasks</source>
+        <translation>Задачи</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Failed: %1</source>
+        <translation>Не удалось: %1</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Task</source>
+        <translation>Задача</translation>
+    </message>
+    <message>
+        <location line="+19"/>
         <source>New steps appear at the top as Jarvis works</source>
         <translation>Новые шаги появляются сверху по ходу работы Jarvis</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+16"/>
         <source>Nothing yet: ask Jarvis something</source>
         <translation>Пока пусто: спросите что-нибудь у Jarvis</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing has failed in this conversation</source>
+        <translation>В этом разговоре ошибок нет</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The voice hasn&apos;t used a tool in this conversation yet</source>
+        <translation>Голос пока не использовал инструменты в этом разговоре</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No background task has used a tool in this conversation yet</source>
+        <translation>Фоновые задачи пока не использовали инструменты в этом разговоре</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -156,23 +247,66 @@
 <context>
     <name>Api</name>
     <message>
-        <location filename="../qml/Api.qml" line="+27"/>
+        <location filename="../qml/Api.qml" line="+19"/>
+        <source>Gemini API key</source>
+        <translation>Ключ API Gemini</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Google sign-in</source>
+        <translation>Вход через Google</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Something went wrong</source>
         <translation>Что-то пошло не так</translation>
     </message>
 </context>
 <context>
+    <name>Attachment</name>
+    <message>
+        <location filename="../qml/Attachment.qml" line="+17"/>
+        <source>Moved or deleted</source>
+        <translation>Перемещено или удалено</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Folder</source>
+        <translation>Папка</translation>
+    </message>
+    <message>
+        <location line="+71"/>
+        <source>Remove %1</source>
+        <translation>Убрать %1</translation>
+    </message>
+</context>
+<context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+243"/>
+        <location filename="../window.py" line="+324"/>
         <source>Copied</source>
         <translation>Скопировано</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>Couldn&apos;t paste the picture: %1</source>
+        <translation>Не удалось вставить картинку: %1</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>%1 isn&apos;t there any more</source>
+        <translation>%1 больше не существует</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Couldn&apos;t open %1: %2</source>
+        <translation>Не удалось открыть %1: %2</translation>
     </message>
 </context>
 <context>
     <name>ChatsPage</name>
     <message>
-        <location filename="../qml/ChatsPage.qml" line="+33"/>
+        <location filename="../qml/ChatsPage.qml" line="+41"/>
         <source>just now</source>
         <translation>только что</translation>
     </message>
@@ -215,7 +349,7 @@
         <translation>Поиск по разговорам</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+57"/>
         <source>Now</source>
         <translation>Сейчас</translation>
     </message>
@@ -267,39 +401,94 @@
 <context>
     <name>Composer</name>
     <message>
-        <location filename="../qml/Composer.qml" line="+45"/>
-        <source>Remove</source>
-        <translation>Убрать</translation>
+        <location filename="../qml/Composer.qml" line="+49"/>
+        <source>Attach files for Jarvis</source>
+        <translation>Прикрепить файлы для Jarvis</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Attach files (or drop them here)</source>
-        <translation>Прикрепить файлы (или перетащите их сюда)</translation>
+        <location line="+27"/>
+        <source>Drop to attach</source>
+        <translation>Отпустите, чтобы прикрепить</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+40"/>
+        <source>Attach files (or paste or drop them here)</source>
+        <translation>Прикрепить файлы (их также можно вставить или перетащить сюда)</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Ask Jarvis</source>
         <translation>Спросите Jarvis</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+34"/>
+        <source>Undo</source>
+        <translation>Отменить</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Redo</source>
+        <translation>Повторить</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cut</source>
+        <translation>Вырезать</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy</source>
+        <translation>Копировать</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Paste</source>
+        <translation>Вставить</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Delete</source>
+        <translation>Удалить</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Select all</source>
+        <translation>Выделить всё</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location filename="../qml/Main.qml" line="+105"/>
         <source>Pause listening</source>
         <translation>Приостановить прослушивание</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/Main.qml" line="+0"/>
         <source>Talk to Jarvis</source>
         <translation>Поговорить с Jarvis</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>Stop (Esc)</source>
         <translation>Остановить (Esc)</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-1"/>
         <source>Send (Enter)</source>
         <translation>Отправить (Enter)</translation>
+    </message>
+</context>
+<context>
+    <name>ConfirmButton</name>
+    <message>
+        <location filename="../qml/ConfirmButton.qml" line="+7"/>
+        <source>Delete</source>
+        <translation>Удалить</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Click again to delete</source>
+        <translation>Нажмите ещё раз, чтобы удалить</translation>
     </message>
 </context>
 <context>
@@ -401,17 +590,17 @@
     <name>HealthPage</name>
     <message>
         <location filename="../qml/HealthPage.qml" line="+9"/>
-        <location line="+16"/>
+        <location line="+18"/>
         <source>Health</source>
         <translation>Состояние</translation>
     </message>
     <message>
-        <location line="-15"/>
+        <location line="-17"/>
         <source>Checks the key, mic, screen, accounts and models, and how to fix them.</source>
         <translation>Проверяет ключ, микрофон, экран, аккаунты и модели и подсказывает, как исправить проблемы.</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+16"/>
         <source>Home</source>
         <translation>Главная</translation>
     </message>
@@ -451,7 +640,7 @@
         <translation>Настройки</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Copy a report</source>
         <translation>Скопировать отчёт</translation>
     </message>
@@ -537,12 +726,7 @@
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="../qml/HomePage.qml" line="+58"/>
-        <source>Attach files for Jarvis</source>
-        <translation>Прикрепить файлы для Jarvis</translation>
-    </message>
-    <message>
-        <location line="+36"/>
+        <location filename="../qml/HomePage.qml" line="+92"/>
         <source>Up late?</source>
         <translation>Не спится?</translation>
     </message>
@@ -587,7 +771,7 @@
         <translation>Уже делаю</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="-83"/>
         <source>Brief me</source>
         <translation>Что у меня сегодня?</translation>
     </message>
@@ -597,7 +781,17 @@
         <translation>Погода и расписание</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Connect your accounts</source>
+        <translation>Подключите аккаунты</translation>
+    </message>
+    <message>
         <location line="+0"/>
+        <source>Gmail, Calendar, Classroom</source>
+        <translation>Gmail, Календарь, Classroom</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>What&apos;s due this week?</source>
         <translation>Что нужно сдать на этой неделе?</translation>
     </message>
@@ -617,7 +811,7 @@
         <translation>Входящие Gmail</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+1"/>
         <source>What&apos;s on my screen?</source>
         <translation>Что у меня на экране?</translation>
     </message>
@@ -647,7 +841,7 @@
         <translation>Новая картинка</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+99"/>
         <source>New chat</source>
         <translation>Новый чат</translation>
     </message>
@@ -662,25 +856,31 @@
         <translation>Вместо Gemini Live отвечает запасной голос (страница «Модели»)</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+53"/>
         <source>Working on it…</source>
         <translation>Работаю…</translation>
     </message>
-    <message>
-        <location line="+5"/>
-        <source>Stop</source>
-        <translation>Остановить</translation>
+    <message numerus="yes">
+        <location filename="../qml/Composer.qml" line="+0"/>
+        <location filename="../qml/HomePage.qml" line="+8"/>
+        <source>Stop all (%n)</source>
+        <translation>
+            <numerusform>Остановить все (%n)</numerusform>
+            <numerusform>Остановить все (%n)</numerusform>
+            <numerusform>Остановить все (%n)</numerusform>
+        </translation>
     </message>
     <message>
-        <location line="+27"/>
-        <source>Drop to attach</source>
-        <translation>Отпустите, чтобы прикрепить</translation>
+        <location line="+1"/>
+        <location filename="../qml/HomePage.qml" line="+0"/>
+        <source>Stop</source>
+        <translation>Остановить</translation>
     </message>
 </context>
 <context>
     <name>Main</name>
     <message>
-        <location filename="../qml/Main.qml" line="+115"/>
+        <location filename="../qml/Main.qml" line="+32"/>
         <source>Home</source>
         <translation>Главная</translation>
     </message>
@@ -695,22 +895,31 @@
         <translation>Активность</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>People</source>
+        <translation>Люди</translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <location filename="../qml/SettingsPage.qml" line="+831"/>
         <source>Accounts</source>
         <translation>Аккаунты</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/SettingsPage.qml" line="+2"/>
         <source>Plugins</source>
         <translation>Плагины</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/SettingsPage.qml" line="-6"/>
         <source>Models</source>
         <translation>Модели</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/SettingsPage.qml" line="+2"/>
         <source>Memory</source>
         <translation>Память</translation>
     </message>
@@ -730,7 +939,7 @@
         <translation>Настройки</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+66"/>
         <source>Minimise</source>
         <translation>Свернуть</translation>
     </message>
@@ -753,7 +962,7 @@
 <context>
     <name>MemoryPage</name>
     <message>
-        <location filename="../qml/MemoryPage.qml" line="+10"/>
+        <location filename="../qml/MemoryPage.qml" line="+11"/>
         <source>Memory</source>
         <translation>Память</translation>
     </message>
@@ -763,23 +972,48 @@
         <translation>Jarvis читает это перед каждым разговором. Скажите ему «запомни…» или отредактируйте здесь.</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+126"/>
         <source>Saved</source>
         <translation>Сохранено</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+226"/>
+        <location line="+291"/>
+        <location line="+37"/>
         <source>Save</source>
         <translation>Сохранить</translation>
     </message>
     <message>
-        <location line="-225"/>
+        <location line="-420"/>
         <source>Memory saved</source>
         <translation>Память сохранена</translation>
     </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>Kept %n note(s) Jarvis added while you were editing</source>
+        <translation>
+            <numerusform>Сохранена %n заметка, которую Jarvis добавил, пока вы редактировали</numerusform>
+            <numerusform>Сохранены %n заметки, которые Jarvis добавил, пока вы редактировали</numerusform>
+            <numerusform>Сохранено %n заметок, которые Jarvis добавил, пока вы редактировали</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+5"/>
+        <location line="+40"/>
+        <source>Note added</source>
+        <translation>Заметка добавлена</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Edit as text</source>
+        <translation>Редактировать как текст</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Done</source>
+        <translation>Готово</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>What Jarvis knows about you</source>
         <translation>Что Jarvis знает о вас</translation>
     </message>
@@ -789,7 +1023,77 @@
         <translation>Простые заметки, по одной на строку. Jarvis дополняет их по ходу разговоров.</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+1"/>
+        <source>Nothing yet. Say “remember that I&apos;m vegetarian”, or add a note below.</source>
+        <translation>Пока ничего нет. Скажите «запомни, что я вегетарианец» или добавьте заметку ниже.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis adds to these as you talk. Hover over a note to change or delete it.</source>
+        <translation>Jarvis дополняет их по ходу разговоров. Наведите на заметку, чтобы изменить или удалить её.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Filter notes</source>
+        <translation>Фильтр заметок</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>No notes match “%1”.</source>
+        <translation>Ни одна заметка не подходит под «%1».</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Lessons</source>
+        <translation>Уроки</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>How you corrected the way Jarvis does things.</source>
+        <translation>Ваши поправки к тому, как Jarvis что-то делает.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ways that worked</source>
+        <translation>Сработавшие способы</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>How Jarvis got something tricky done, kept for next time.</source>
+        <translation>Как Jarvis справился с чем-то непростым — сохранено на будущее.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Add a note</source>
+        <translation>Добавить заметку</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Kind of note</source>
+        <translation>Тип заметки</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>About you</source>
+        <translation>О вас</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Lesson</source>
+        <translation>Урок</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Way that worked</source>
+        <translation>Сработавший способ</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Add</source>
+        <translation>Добавить</translation>
+    </message>
+    <message>
+        <location line="+18"/>
         <source>- Prefers to be called …
 - Studies …</source>
         <translation>- Просит называть себя …
@@ -826,12 +1130,18 @@
     </message>
     <message>
         <location line="+5"/>
-        <location line="+164"/>
+        <location line="+190"/>
+        <location line="+37"/>
         <source>Cancel</source>
         <translation>Отмена</translation>
     </message>
     <message>
-        <location line="-156"/>
+        <location line="-227"/>
+        <source>Click again to cancel it</source>
+        <translation>Нажмите ещё раз, чтобы отменить</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Add a reminder or task</source>
         <translation>Добавить напоминание или задачу</translation>
     </message>
@@ -943,7 +1253,17 @@
         <translation>12 часов</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+80"/>
+        <source>Note deleted</source>
+        <translation>Заметка удалена</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Write the note</source>
+        <translation>Напишите заметку</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Edit</source>
         <translation>Изменить</translation>
     </message>
@@ -1006,7 +1326,7 @@
 <context>
     <name>Message</name>
     <message>
-        <location filename="../qml/Message.qml" line="+71"/>
+        <location filename="../qml/Message.qml" line="+115"/>
         <source>Copy</source>
         <translation>Копировать</translation>
     </message>
@@ -1024,7 +1344,7 @@
         <translation>Выберите модели для каждой задачи. Модели пробуются по порядку сверху вниз: если одна занята или недоступна, её заменяет следующая.</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+40"/>
         <source>Looking up the models you can use…</source>
         <translation>Поиск доступных моделей…</translation>
     </message>
@@ -1038,7 +1358,7 @@
         </translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Refresh</source>
         <translation>Обновить</translation>
     </message>
@@ -1048,7 +1368,7 @@
         <translation>Модели для каждой задачи</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+59"/>
         <source>Jarvis&apos;s choice</source>
         <translation>Выбор Jarvis</translation>
     </message>
@@ -1057,17 +1377,8 @@
         <source>Use Jarvis&apos;s choice</source>
         <translation>Использовать выбор Jarvis</translation>
     </message>
-    <message numerus="yes">
-        <location line="+9"/>
-        <source>%1 · +%n fallback(s)</source>
-        <translation>
-            <numerusform>%1 · +%n запасная</numerusform>
-            <numerusform>%1 · +%n запасные</numerusform>
-            <numerusform>%1 · +%n запасных</numerusform>
-        </translation>
-    </message>
     <message>
-        <location line="+14"/>
+        <location line="+23"/>
         <source>Providers and keys</source>
         <translation>Провайдеры и ключи</translation>
     </message>
@@ -1127,12 +1438,22 @@
         <translation>Удалить этого провайдера</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Click again to remove it and its keys</source>
+        <translation>Нажмите ещё раз, чтобы удалить провайдера и его ключи</translation>
+    </message>
+    <message>
         <location line="+16"/>
         <source>Resting (rate limited or refused): the next key answers</source>
         <translation>Отдыхает (лимит или отказ): отвечает следующий ключ</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+1"/>
+        <source>Click again to remove this key</source>
+        <translation>Нажмите ещё раз, чтобы удалить этот ключ</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>More providers</source>
         <translation>Другие провайдеры</translation>
     </message>
@@ -1187,6 +1508,11 @@
         <translation>Выйти</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Click again to sign out</source>
+        <translation>Нажмите ещё раз, чтобы выйти</translation>
+    </message>
+    <message>
         <location line="+8"/>
         <source>First install the opencode-antigravity-auth plugin (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
         <translation>Сначала установите плагин opencode-antigravity-auth (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis входит с его данными. Или укажите ANTIGRAVITY_CLIENT_ID и ANTIGRAVITY_CLIENT_SECRET в env-файле Jarvis.</translation>
@@ -1217,13 +1543,22 @@
         <translation>Пробовать раньше</translation>
     </message>
     <message>
-        <location line="-137"/>
-        <location line="+139"/>
+        <location line="-138"/>
+        <location line="+140"/>
         <source>Remove</source>
         <translation>Убрать</translation>
     </message>
+    <message numerus="yes">
+        <location line="-221"/>
+        <source>%1 · +%n backup(s)</source>
+        <translation>
+            <numerusform>%1 · +%n в запасе</numerusform>
+            <numerusform>%1 · +%n в запасе</numerusform>
+            <numerusform>%1 · +%n в запасе</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+4"/>
+        <location line="+225"/>
         <source>Add a model</source>
         <translation>Добавить модель</translation>
     </message>
@@ -1231,7 +1566,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3543"/>
+        <location filename="../jarvis.py" line="+3789"/>
         <source>LISTENING</source>
         <translation>СЛУШАЮ</translation>
     </message>
@@ -1262,6 +1597,297 @@
     </message>
 </context>
 <context>
+    <name>PeoplePage</name>
+    <message>
+        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <source>just now</source>
+        <translation>только что</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n min ago</source>
+        <translation>
+            <numerusform>%n мин назад</numerusform>
+            <numerusform>%n мин назад</numerusform>
+            <numerusform>%n мин назад</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n h ago</source>
+        <translation>
+            <numerusform>%n ч назад</numerusform>
+            <numerusform>%n ч назад</numerusform>
+            <numerusform>%n ч назад</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n day(s) ago</source>
+        <translation>
+            <numerusform>%n день назад</numerusform>
+            <numerusform>%n дня назад</numerusform>
+            <numerusform>%n дней назад</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>%1: they wrote %2, you wrote %3</source>
+        <translation>%1: получено %2, отправлено %3</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1: they wrote %2</source>
+        <translation>%1: получено %2</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1: you wrote %2</source>
+        <translation>%1: отправлено %2</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Talked %1</source>
+        <translation>Общались %1</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Not enough messages from them yet to say much. Jarvis tries again once you&apos;ve talked more.</source>
+        <translation>Пока слишком мало сообщений от этого человека, чтобы что-то сказать. Jarvis попробует снова, когда вы больше пообщаетесь.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Something went wrong</source>
+        <translation>Что-то пошло не так</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>People</source>
+        <translation>Люди</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Who you talk with, what Jarvis understands of them from your chats, and what you&apos;ve noted or promised.</source>
+        <translation>С кем вы общаетесь, что Jarvis понимает о них из ваших чатов, а также ваши заметки и обещания.</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <location line="+1"/>
+        <source>Search people</source>
+        <translation>Поиск людей</translation>
+    </message>
+    <message>
+        <location line="+89"/>
+        <source>No one matches that</source>
+        <translation>Никто не подходит</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No one here yet</source>
+        <translation>Здесь пока никого нет</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Also %1</source>
+        <translation>Также %1</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>You haven&apos;t chatted with them one to one on WhatsApp or Discord since Jarvis was linked.</source>
+        <translation>С тех пор как Jarvis подключён, вы не переписывались один на один в WhatsApp или Discord.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>What Jarvis understands</source>
+        <translation>Что понимает Jarvis</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Reading your chats…</source>
+        <translation>Чтение ваших чатов…</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Refresh</source>
+        <translation>Обновить</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Write it again now from your latest one-to-one messages with them</source>
+        <translation>Переписать сейчас по последним личным сообщениям с этим человеком</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Forget this</source>
+        <translation>Забыть</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Click again to forget it</source>
+        <translation>Нажмите ещё раз, чтобы забыть</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Profile forgotten</source>
+        <translation>Профиль забыт</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+23"/>
+        <source>Updated %1, from %n message(s)</source>
+        <translation>
+            <numerusform>Обновлено %1, по %n сообщению</numerusform>
+            <numerusform>Обновлено %1, по %n сообщениям</numerusform>
+            <numerusform>Обновлено %1, по %n сообщениям</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>You had Jarvis forget what it understood of them. It won&apos;t write it again unless you press Refresh.</source>
+        <translation>По вашей просьбе Jarvis забыл, что понял об этом человеке. Он не напишет это снова, пока вы не нажмёте «Обновить».</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing yet. Every so often Jarvis reads your latest one-to-one messages with someone and writes a short profile of them, once there are enough messages.</source>
+        <translation>Пока ничего нет. Время от времени Jarvis читает ваши последние личные сообщения с кем-то и пишет о нём короткий профиль, когда сообщений достаточно.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis doesn&apos;t read your chats to understand people: profiles are off.</source>
+        <translation>Jarvis не читает ваши чаты, чтобы понимать людей: профили выключены.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Profiles are off, so this one isn&apos;t updated.</source>
+        <translation>Профили выключены, поэтому этот не обновляется.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Turn them on in Settings</source>
+        <translation>Включите их в настройках</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Reading your latest messages with %1 and asking your model…</source>
+        <translation>%1: чтение последних сообщений и запрос к вашей модели…</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Notes</source>
+        <translation>Заметки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Add a note</source>
+        <translation>Добавить заметку</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>None yet. Tell Jarvis “Sam is my cousin”, or add one here.</source>
+        <translation>Пока нет. Скажите Jarvis «Sam — мой двоюродный брат» или добавьте здесь.</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Until %1</source>
+        <translation>До %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Edit</source>
+        <translation>Изменить</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Promises</source>
+        <translation>Обещания</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Nothing open. When you write them “I&apos;ll send it tomorrow”, Jarvis keeps it here.</source>
+        <translation>Открытых нет. Когда вы пишете человеку «пришлю завтра», Jarvis сохраняет это здесь.</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Due %1</source>
+        <translation>Срок: %1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No time set: it&apos;s on your evening list</source>
+        <translation>Время не задано: это в вашем вечернем списке</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Done</source>
+        <translation>Выполнено</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mark this promise as kept</source>
+        <translation>Отметить обещание как выполненное</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <location line="+5"/>
+        <source>Forget this person</source>
+        <translation>Забыть этого человека</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>Their notes, promises and profile go. If you chat with them again, Jarvis starts a new page.</source>
+        <translation>Заметки, обещания и профиль этого человека будут удалены. Если вы снова начнёте переписку, Jarvis заведёт новую страницу.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Click again to forget them</source>
+        <translation>Нажмите ещё раз, чтобы забыть этого человека</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Forgot %1</source>
+        <translation>Забыто: %1</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Pick someone to see what Jarvis knows about them</source>
+        <translation>Выберите человека, чтобы увидеть, что о нём знает Jarvis</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>People appear here when you chat with someone one to one on WhatsApp or Discord, or when you tell Jarvis about them: “Sam is my cousin”.</source>
+        <translation>Люди появляются здесь, когда вы переписываетесь с кем-то один на один в WhatsApp или Discord или рассказываете о ком-то Jarvis: «Sam — мой двоюродный брат».</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>e.g. My cousin, studies medicine in Lyon</source>
+        <translation>например: Мой двоюродный брат, учится на медицинском в Лионе</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Until (optional)</source>
+        <translation>До (необязательно)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The last day it&apos;s true, like 2026-12-31</source>
+        <translation>Последний день, когда это верно, например 2026-12-31</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>A date like 2026-12-31 makes the note go after that day.</source>
+        <translation>С датой вроде 2026-12-31 заметка исчезнет после этого дня.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Save</source>
+        <translation>Сохранить</translation>
+    </message>
+</context>
+<context>
     <name>PluginsPage</name>
     <message>
         <location filename="../qml/PluginsPage.qml" line="+9"/>
@@ -1274,7 +1900,7 @@
         <translation>Дайте Jarvis новые инструменты через MCP-серверы: по веб-адресу или командой, которая запускается на этом ПК.</translation>
     </message>
     <message numerus="yes">
-        <location line="+7"/>
+        <location line="+9"/>
         <source>%n min</source>
         <translation>
             <numerusform>%n мин</numerusform>
@@ -1302,7 +1928,7 @@
         <translation>Установленные</translation>
     </message>
     <message numerus="yes">
-        <location line="+34"/>
+        <location line="+40"/>
         <source>%n tool(s)</source>
         <translation>
             <numerusform>%n инструмент</numerusform>
@@ -1311,7 +1937,7 @@
         </translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+17"/>
         <source>%1 · trying again in %2</source>
         <translation>%1 · повтор через %2</translation>
     </message>
@@ -1351,7 +1977,7 @@
         <translation>Плагин удалён</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+18"/>
         <source>Add a plugin</source>
         <translation>Добавить плагин</translation>
     </message>
@@ -1450,17 +2076,17 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="+11"/>
+        <location filename="../qml/SettingsPage.qml" line="-677"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>Изменения сохраняются сразу. Модели и ключи API — на странице «Модели».</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="-109"/>
         <source>Checking…</source>
         <translation>Проверка…</translation>
     </message>
@@ -1485,12 +2111,50 @@
         <translation>Кодовая фраза удалена</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
+        <location line="+130"/>
         <source>Voice</source>
         <translation>Голос</translation>
     </message>
     <message>
+        <location line="-129"/>
+        <source>Window</source>
+        <translation>Окно</translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <source>Phone</source>
+        <translation>Телефон</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Advanced</source>
+        <translation>Дополнительно</translation>
+    </message>
+    <message>
+        <location line="+68"/>
+        <location line="+1"/>
+        <source>Search settings</source>
+        <translation>Поиск настроек</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <location line="+39"/>
+        <source>Clear the search</source>
+        <translation>Очистить поиск</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>No setting matches “%1”</source>
+        <translation>Нет настроек по запросу «%1»</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Try another word, or pick a tab above.</source>
+        <translation>Попробуйте другое слово или выберите вкладку выше.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>How Jarvis sounds and talks to you. Changes apply from the next conversation.</source>
         <translation>Как звучит Jarvis и как он с вами говорит. Изменения вступят в силу со следующего разговора.</translation>
     </message>
@@ -1545,12 +2209,12 @@
         <translation>Отвечать без обдумывания: примерно на 0,3 с быстрее, но чуть менее точно</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Speak replies to typed messages</source>
         <translation>Озвучивать ответы на текстовые сообщения</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Always use the backup voice</source>
         <translation>Всегда использовать запасной голос</translation>
     </message>
@@ -1560,7 +2224,7 @@
         <translation>Слушать и говорить через модели со страницы «Модели» вместо Gemini Live — для ключей без доступа к нему. Если выключено, запасной голос отвечает, только пока Gemini Live недоступен</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Listening</source>
         <translation>Прослушивание</translation>
     </message>
@@ -1651,7 +2315,7 @@
         <translation>Отменённые вами активации учат Jarvis отличать чужие голоса</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Only wake for my voice</source>
         <translation>Откликаться только на мой голос</translation>
     </message>
@@ -1671,7 +2335,7 @@
         <translation>Если фразу активации скажет кто-то другой, Jarvis не проснётся. Кнопка разговора и «Нажми и говори» работают всегда</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Echo cancelling</source>
         <translation>Эхоподавление</translation>
     </message>
@@ -1686,7 +2350,17 @@
         <translation>Не пускает звук самого ПК (Jarvis, игры, видео, звонки) в микрофон, чтобы он не принимался за ваш голос, и позволяет говорить поверх Jarvis (PipeWire; чтобы применить, перезапустите Jarvis)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Listen through a Bluetooth headset</source>
+        <translation>Слушать через Bluetooth-гарнитуру</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>When a Bluetooth headset&apos;s microphone is the default one, Jarvis listens through it, and the headset stays in call quality (mono and muffled) while Jarvis runs. Off, Jarvis uses the PC&apos;s own microphone and the headset keeps its sound</source>
+        <translation>Когда микрофон Bluetooth-гарнитуры выбран по умолчанию, Jarvis слушает через него, и пока Jarvis работает, гарнитура остаётся в режиме звонка (моно и глухой звук). Если выключено, Jarvis использует микрофон самого ПК, а гарнитура сохраняет нормальный звук</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Spoken passphrase: asked for with every yes said out loud (sends, calls, account changes, risky commands). Never shown or said back</source>
         <translation>Кодовая фраза: нужна при каждом «да», сказанном вслух (отправка, звонки, изменения в аккаунтах, рискованные команды). Никогда не показывается и не произносится</translation>
     </message>
@@ -1702,39 +2376,44 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+138"/>
-        <location line="+56"/>
+        <location line="+290"/>
+        <location line="+117"/>
         <source>Save</source>
         <translation>Сохранить</translation>
     </message>
     <message>
-        <location line="-192"/>
+        <location line="-405"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>Убрать</translation>
     </message>
     <message>
-        <location line="-76"/>
+        <location line="-82"/>
+        <location line="+7"/>
         <source>Push to talk</source>
         <translation>Нажми и говори</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-7"/>
+        <location line="+9"/>
         <source>Bind these to keyboard shortcuts (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</source>
         <translation>Назначьте эти команды на сочетания клавиш (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-8"/>
+        <location line="+10"/>
         <source>Start listening</source>
         <translation>Начать слушать</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-10"/>
+        <location line="+11"/>
         <source>Drag over part of the screen and ask about it</source>
         <translation>Выделите часть экрана и спросите о ней</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-249"/>
+        <location line="+256"/>
         <source>Your day</source>
         <translation>Ваш день</translation>
     </message>
@@ -1764,7 +2443,7 @@
         <translation>При первом утреннем запуске Jarvis рассказывает о вашем дне</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Do not disturb</source>
         <translation>Не беспокоить</translation>
     </message>
@@ -1774,7 +2453,7 @@
         <translation>Jarvis не заговаривает сам: напоминания, результаты и сообщения приходят только в чат, уведомления и на телефон. На ваши вопросы он по-прежнему отвечает (также в меню трея)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Quiet over full-screen apps</source>
         <translation>Тишина при полноэкранных приложениях</translation>
     </message>
@@ -1784,7 +2463,7 @@
         <translation>Пока игра или фильм открыты на весь экран, Jarvis оставляет то, что сказал бы сам, только в чате и уведомлениях. Напоминания он всё равно произносит</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Classroom deadlines</source>
         <translation>Сроки в Classroom</translation>
     </message>
@@ -1794,7 +2473,7 @@
         <translation>Напоминания за день и за два часа до срока сдачи (не приходят, если работа уже сдана)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Calendar heads-up</source>
         <translation>Напоминания календаря</translation>
     </message>
@@ -1804,7 +2483,7 @@
         <translation>Напоминание за десять минут до каждого события Google Календаря</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Keep track of my promises</source>
         <translation>Следить за моими обещаниями</translation>
     </message>
@@ -1825,11 +2504,12 @@
     </message>
     <message>
         <location line="+5"/>
+        <location line="+3"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>Тихие часы с (пусто — нет)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-2"/>
         <source>e.g. 22:00</source>
         <translation>например, 22:00</translation>
     </message>
@@ -1844,7 +2524,7 @@
         <translation>например, 07:00</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Window &amp; behavior</source>
         <translation>Окно и поведение</translation>
     </message>
@@ -1894,12 +2574,12 @@
         <translation>Показывать в чате ход мыслей Jarvis</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Start Jarvis when I log in</source>
         <translation>Запускать Jarvis при входе в систему</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Ask before risky actions</source>
         <translation>Спрашивать перед рискованными действиями</translation>
     </message>
@@ -1909,7 +2589,7 @@
         <translation>Команды удаления, установки и выключения, а также изменения в аккаунтах (отправка писем, новые события) ждут вашего «да», если вы не просили именно об этом</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Your instructions</source>
         <translation>Ваши инструкции</translation>
     </message>
@@ -1919,7 +2599,56 @@
         <translation>Как должен вести себя Jarvis и что ему нужно знать о вас.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+116"/>
+        <source>People</source>
+        <translation>Люди</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis gets to know the people you chat with one to one, so it knows who someone is when you mention them. The People page shows what it understood, with your notes and promises.</source>
+        <translation>Jarvis знакомится с людьми, с которыми вы переписываетесь один на один, чтобы понимать, о ком речь, когда вы их упоминаете. На странице «Люди» видно, что он понял, вместе с вашими заметками и обещаниями.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Understand the people I chat with</source>
+        <translation>Понимать людей, с которыми я переписываюсь</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Now and then, the latest messages of your one-to-one WhatsApp and Discord chats go to your model to write a short profile of each person: who they are to you, how they write, what&apos;s open between you. Kept on this PC; groups are never read</source>
+        <translation>Время от времени последние сообщения ваших личных чатов в WhatsApp и Discord отправляются вашей модели, чтобы она написала короткий профиль каждого человека: кем он вам приходится, как пишет, что между вами не решено. Хранится на этом PC; группы никогда не читаются</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Write a profile again after</source>
+        <translation>Переписывать профиль через</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>refresh profiles days</source>
+        <translation>обновить профили дни</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>3 days</source>
+        <translation>3 дня</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Two weeks</source>
+        <translation>Две недели</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n day(s)</source>
+        <translation>
+            <numerusform>%n день</numerusform>
+            <numerusform>%n дня</numerusform>
+            <numerusform>%n дней</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+145"/>
         <source>Jarvis on Telegram</source>
         <translation>Jarvis в Telegram</translation>
     </message>
@@ -1929,7 +2658,7 @@
         <translation>Отправляйте Jarvis задачи откуда угодно через Telegram.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>In Telegram, message &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, send /newbot and copy the token it gives you.</source>
         <translation>В Telegram напишите &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, отправьте /newbot и скопируйте выданный токен.</translation>
     </message>
@@ -1939,7 +2668,8 @@
         <translation>Вставьте его сюда.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-6"/>
+        <location line="+7"/>
         <source>Send your new bot the code below. Only that chat is answered.</source>
         <translation>Отправьте новому боту код ниже. Бот будет отвечать только в этом чате.</translation>
     </message>
@@ -1949,7 +2679,8 @@
         <translation>Токен бота сохранён · вставьте новый, чтобы заменить</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-13"/>
+        <location line="+13"/>
         <source>Paste your bot&apos;s token</source>
         <translation>Вставьте токен бота</translation>
     </message>
@@ -1964,18 +2695,21 @@
         <translation>Отправьте боту этот код: %1</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <location line="+89"/>
+        <location line="-93"/>
+        <location line="+19"/>
+        <location line="+52"/>
+        <location line="+28"/>
         <source>Unpair</source>
         <translation>Отвязать</translation>
     </message>
     <message>
-        <location line="-88"/>
+        <location line="-28"/>
+        <location line="+29"/>
         <source>Remove the bot</source>
         <translation>Удалить бота</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-171"/>
         <source>The Jarvis app</source>
         <translation>Приложение Jarvis</translation>
     </message>
@@ -1985,7 +2719,7 @@
         <translation>Приложение Jarvis для Android связывается с этим ПК откуда угодно через ваш личный ретранслятор. Связь защищена сквозным шифрованием: ретранслятор передаёт только зашифрованные данные, а на этом ПК ничего не открыто в интернет.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Connect directly on your own network</source>
         <translation>Подключаться напрямую в своей сети</translation>
     </message>
@@ -1995,22 +2729,25 @@
         <translation>В той же сети Wi-Fi или через VPN вроде Tailscale сопряжённые телефоны связываются с этим ПК без ретранслятора, и для сопряжения он тоже не нужен. Возможно, брандмауэру нужно разрешить Jarvis</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+12"/>
         <source>Setting up…</source>
         <translation>Настройка…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-6"/>
+        <location line="+6"/>
         <source>Set up my relay</source>
         <translation>Настроить ретранслятор</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-6"/>
+        <location line="+9"/>
         <source>Signs in to your free Cloudflare account in your browser, puts the relay online and saves its address.</source>
         <translation>Входит в ваш бесплатный аккаунт Cloudflare через браузер, запускает ретранслятор и сохраняет его адрес.</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="-8"/>
+        <location line="+17"/>
         <source>Or by hand</source>
         <translation>Или вручную</translation>
     </message>
@@ -2030,7 +2767,8 @@
         <translation>Вставьте сюда адрес, который выведет команда.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-20"/>
+        <location line="+26"/>
         <source>Your relay&apos;s address, like https://jarvis-relay.you.workers.dev</source>
         <translation>Адрес ретранслятора, например https://jarvis-relay.you.workers.dev</translation>
     </message>
@@ -2040,7 +2778,8 @@
         <translation>Отмена</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+6"/>
+        <location line="+16"/>
         <source>Connected</source>
         <translation>Подключено</translation>
     </message>
@@ -2050,22 +2789,26 @@
         <translation>Подключение…</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-16"/>
+        <location line="+19"/>
         <source>Change</source>
         <translation>Изменить</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+32"/>
+        <location line="+3"/>
         <source>Pair another phone</source>
         <translation>Привязать ещё телефон</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-3"/>
+        <location line="+3"/>
         <source>Pair a phone</source>
         <translation>Привязать телефон</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="-3"/>
+        <location line="+19"/>
         <source>Scan to pair</source>
         <translation>Отсканируйте для привязки</translation>
     </message>
@@ -2075,7 +2818,7 @@
         <translation>В приложении Jarvis нажмите «Pair» и отсканируйте этот код. Он одноразовый и действует десять минут.</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="-246"/>
         <source>WhatsApp</source>
         <translation>WhatsApp</translation>
     </message>
@@ -2085,7 +2828,8 @@
         <translation>Jarvis подключается к вашему WhatsApp так же, как WhatsApp Web. Он отвечает на сообщения контактов, которые не требуют вашего участия, представляясь вашим помощником, и берёт трубку, если вы не ответили, чтобы принять сообщение. Это не официальная функция WhatsApp: WhatsApp может заблокировать номера, которые ведут себя как боты, поэтому Jarvis отвечает только сохранённым контактам и никогда — в группах.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
+        <location line="+1"/>
         <source>Link WhatsApp</source>
         <translation>Подключить WhatsApp</translation>
     </message>
@@ -2100,7 +2844,8 @@
         <translation>Получение кода от WhatsApp…</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-4"/>
+        <location line="+18"/>
         <source>Scan with WhatsApp</source>
         <translation>Отсканируйте в WhatsApp</translation>
     </message>
@@ -2125,18 +2870,20 @@
         <translation>Подключено</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-28"/>
+        <location line="+29"/>
         <source>Unlink</source>
         <translation>Отключить</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <location line="+45"/>
+        <location line="-387"/>
+        <location line="+392"/>
+        <location line="+51"/>
         <source>Messages</source>
         <translation>Сообщения</translation>
     </message>
     <message>
-        <location line="-43"/>
+        <location line="-49"/>
         <source>Answer my contacts</source>
         <translation>Отвечать моим контактам</translation>
     </message>
@@ -2147,12 +2894,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+44"/>
+        <location line="+50"/>
         <source>Just show them to me</source>
         <translation>Только показывать мне</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-48"/>
         <source>Jarvis writes a reply to your contacts&apos; messages that don&apos;t need you and tells you. Nothing is sent until you say &quot;send it&quot;.</source>
         <translation>Jarvis пишет ответ на сообщения контактов, которые не требуют вашего участия, и сообщает вам. Ничего не отправляется, пока вы не скажете «отправляй».</translation>
     </message>
@@ -2183,23 +2930,23 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+38"/>
+        <location line="+44"/>
         <source>e.g. Alex</source>
         <translation>например, Саша</translation>
     </message>
     <message>
-        <location line="-37"/>
+        <location line="-43"/>
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
         <translation>Никогда не отвечать (по одному имени на строку): Jarvis не отвечает на их сообщения и звонки, а только показывает сообщения в чате</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+38"/>
+        <location line="+44"/>
         <source>e.g. Sam</source>
         <translation>например, Дима</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-42"/>
         <source>What Jarvis tells people</source>
         <translation>Что Jarvis говорит людям</translation>
     </message>
@@ -2209,7 +2956,7 @@
         <translation>например: я на занятиях до 5, отвечу позже</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Tell people when I&apos;m busy</source>
         <translation>Сообщать людям, когда я занят</translation>
     </message>
@@ -2219,7 +2966,7 @@
         <translation>Из Google Календаря: только время, никогда не то, чем вы заняты</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+11"/>
         <source>Discord</source>
         <translation>Discord</translation>
     </message>
@@ -2229,7 +2976,8 @@
         <translation>Jarvis читает и отправляет за вас сообщения Discord через Vesktop, в вашем собственном Discord: спросите, что нового, или попросите написать, ответить или поставить реакцию в ЛС или канале сервера. Новые ЛС и упоминания появляются в чате Jarvis.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
+        <location line="+1"/>
         <source>Connected to Vesktop</source>
         <translation>Подключено к Vesktop</translation>
     </message>
@@ -2249,12 +2997,13 @@
         <translation>Vesktop нужно перезапустить с включённым подключением Jarvis (звонок в Vesktop прервётся).</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-9"/>
+        <location line="+10"/>
         <source>Restart Vesktop</source>
         <translation>Перезапустить Vesktop</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Answer my friends&apos; DMs (Discord may ban accounts that act like bots)</source>
         <translation>Отвечать на ЛС друзей (Discord может блокировать аккаунты, которые ведут себя как боты)</translation>
     </message>
@@ -2274,7 +3023,8 @@
         <translation>Ответы используют то, что Jarvis говорит людям, из раздела WhatsApp. Можно и просто сказать «не отвечай Сэму» или «скажи, когда Алекс напишет».</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="-452"/>
+        <location line="+658"/>
         <source>Your data</source>
         <translation>Ваши данные</translation>
     </message>
@@ -2284,7 +3034,7 @@
         <translation>На этом ПК Jarvis хранит то, что помнит о вас, ваши разговоры, напоминания и сценарии, короткие записи фразы активации (чтобы запомнить ваш голос) и журнал. Сказанное после фразы активации и снимки экрана, когда задаче нужен экран, отправляются в Google Gemini; действия в аккаунтах идут через Composio.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Screen history</source>
         <translation>История экрана</translation>
     </message>
@@ -2304,17 +3054,19 @@
         <translation>Когда разговор закончен, Jarvis добавляет в память то постоянное, что вы рассказали о себе, и показывает каждый пункт в чате</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Keep conversations and logs for</source>
         <translation>Хранить разговоры и журналы</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-198"/>
+        <location line="+200"/>
         <source>A week</source>
         <translation>Неделю</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-199"/>
+        <location line="+199"/>
         <source>A month</source>
         <translation>Месяц</translation>
     </message>
@@ -2334,12 +3086,13 @@
         <translation>Всегда</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Press again to delete it all</source>
         <translation>Нажмите ещё раз, чтобы удалить всё</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-4"/>
+        <location line="+4"/>
         <source>Delete everything Jarvis keeps about me</source>
         <translation>Удалить всё, что Jarvis хранит обо мне</translation>
     </message>
@@ -2349,12 +3102,13 @@
         <translation>Удалено. Ключи, аккаунты и настройки сохранены.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-8"/>
+        <location line="+11"/>
         <source>Keys, account sign-ins and settings stay.</source>
         <translation>Ключи, входы в аккаунты и настройки останутся.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Move to another computer</source>
         <translation>Перенос на другой компьютер</translation>
     </message>
@@ -2364,22 +3118,25 @@
         <translation>Один файл с настройками, памятью, напоминаниями, запланированными задачами, сценариями, плагинами, разговорами и записями, по которым Jarvis запомнил ваш голос. Ключей, входов в аккаунты, WhatsApp и телефона в нём нет: настройте их заново на другом компьютере.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+4"/>
+        <location line="+4"/>
         <source>Save a backup</source>
         <translation>Сохранить копию</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-4"/>
+        <location line="+7"/>
         <source>Bring one in</source>
         <translation>Загрузить копию</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-7"/>
+        <location line="+8"/>
         <source>Bringing one in replaces what&apos;s on this computer (conversations are added), then Jarvis restarts.</source>
         <translation>Загрузка копии заменяет данные на этом компьютере (разговоры добавляются), после чего Jarvis перезапускается.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Save a Jarvis backup</source>
         <translation>Сохранить резервную копию Jarvis</translation>
     </message>
@@ -2410,7 +3167,62 @@
         <translation>Загружено: Jarvis перезапускается</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+8"/>
+        <source>On other pages</source>
+        <translation>На других страницах</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>These are set on the page they belong to.</source>
+        <translation>Эти параметры настраиваются на своих страницах.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Models and API keys</source>
+        <translation>Модели и ключи API</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Which model does each job (tasks, reading the screen, web search, pictures, the backup voice), the order they&apos;re tried in, and your keys</source>
+        <translation>Какая модель за что отвечает (задачи, чтение экрана, веб-поиск, картинки, запасной голос), в каком порядке они пробуются, и ваши ключи</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Background checks</source>
+        <translation>Фоновые проверки</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis keeps an eye on for you (&quot;tell me if a payment fails&quot;), how often it looks, and which checks are paused</source>
+        <translation>За чем Jarvis следит для вас («сообщи, если платёж не пройдёт»), как часто проверяет и какие проверки приостановлены</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis may do in each account</source>
+        <translation>Что Jarvis может делать в каждом аккаунте</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ask first, go ahead, read only or paused, for each account you connected</source>
+        <translation>Сначала спрашивать, действовать сразу, только чтение или пауза — для каждого подключённого аккаунта</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tools from other apps</source>
+        <translation>Инструменты из других приложений</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The plugins (MCP servers) Jarvis can use: add one, or switch one on or off</source>
+        <translation>Плагины (MCP-серверы), которые может использовать Jarvis: добавляйте их, включайте и выключайте</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>About Jarvis</source>
+        <translation>О Jarvis</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>%1 is out (%2)</source>
         <translation>Вышла версия %1 (%2)</translation>
     </message>
@@ -2420,7 +3232,8 @@
         <translation>Вышла версия %1</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-10"/>
+        <location line="+11"/>
         <source>Up to date</source>
         <translation>Последняя версия</translation>
     </message>
@@ -2430,22 +3243,34 @@
         <translation>Обновление…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
+        <location line="+12"/>
         <source>Update now</source>
         <translation>Обновить сейчас</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
+        <location line="+12"/>
         <source>Check for updates</source>
         <translation>Проверить обновления</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Run the setup again</source>
         <translation>Пройти настройку заново</translation>
     </message>
     <message>
-        <location line="+116"/>
+        <location line="+0"/>
+        <source>First-run setup</source>
+        <translation>Первоначальная настройка</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Your Gemini key, microphone, Jarvis&apos;s voice and how careful it should be, one step at a time</source>
+        <translation>Ключ Gemini, микрофон, голос Jarvis и насколько осторожным ему быть — шаг за шагом</translation>
+    </message>
+    <message>
+        <location line="+256"/>
         <source>e.g. Keep answers short.</source>
         <translation>например: отвечай кратко.</translation>
     </message>
@@ -2509,8 +3334,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis keeps all of it on this computer.</source>
-        <translation>Сказанное после «%1» или набранное, память и недавний разговор, которые помогают ответить, и снимки экрана, когда задаче нужен экран, отправляются в Google Gemini. Действия в аккаунтах идут через Composio и только для подключённых вами аккаунтов. Всё это Jarvis хранит на этом компьютере.</translation>
+        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis also keeps a copy of your conversations and memory on this computer.</source>
+        <translation>Сказанное после «%1» или набранное, память и недавний разговор, которые помогают ответить, и снимки экрана, когда задаче нужен экран, отправляются в Google Gemini. Действия в аккаунтах идут через Composio и только для подключённых вами аккаунтов. Кроме того, Jarvis хранит копию ваших разговоров и памяти на этом компьютере.</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -2696,7 +3521,7 @@
 <context>
     <name>Theme</name>
     <message>
-        <location filename="../qml/Theme.qml" line="+58"/>
+        <location filename="../qml/Theme.qml" line="+59"/>
         <source>Listening</source>
         <translation>Слушаю</translation>
     </message>
@@ -2717,9 +3542,17 @@
     </message>
 </context>
 <context>
+    <name>Toast</name>
+    <message>
+        <location filename="../qml/Toast.qml" line="+34"/>
+        <source>Close</source>
+        <translation>Закрыть</translation>
+    </message>
+</context>
+<context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+109"/>
+        <location filename="../qml/Today.qml" line="+135"/>
         <source>Feels %1 in %2</source>
         <translation>%2: ощущается как %1</translation>
     </message>
@@ -2729,7 +3562,7 @@
         <translation>Ощущается как %1</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+55"/>
         <source>Now playing</source>
         <translation>Сейчас играет</translation>
     </message>
@@ -2744,7 +3577,8 @@
         <translation>Следующий</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-111"/>
+        <location line="+125"/>
         <source>Working on</source>
         <translation>В работе</translation>
     </message>
@@ -2754,17 +3588,18 @@
         <translation>Недавно завершённые</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+137"/>
         <source>Stop this task</source>
         <translation>Остановить эту задачу</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="-92"/>
         <source>Finished at %1</source>
         <translation>Завершено в %1</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="-154"/>
+        <location line="+171"/>
         <source>To do</source>
         <translation>Дела</translation>
     </message>
@@ -2774,7 +3609,7 @@
         <translation>На этой неделе дел нет. Попробуйте «напомни через 20 минут размяться».</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+104"/>
         <source>No date</source>
         <translation>Без даты</translation>
     </message>
@@ -2789,12 +3624,12 @@
         <translation>Обещано: %1</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+29"/>
         <source>Cancel this reminder</source>
         <translation>Отменить это напоминание</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
         <source>Mark as done</source>
         <translation>Отметить как выполненное</translation>
     </message>
@@ -2804,12 +3639,44 @@
         <translation>Открыть в Classroom</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-112"/>
         <source>Couldn&apos;t check %1 just now.</source>
         <translation>Сейчас не удалось проверить: %1.</translation>
     </message>
+    <message numerus="yes">
+        <location line="-208"/>
+        <source>%n running</source>
+        <translation>
+            <numerusform>В работе: %n</numerusform>
+            <numerusform>В работе: %n</numerusform>
+            <numerusform>В работе: %n</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+18"/>
+        <source>%n to do</source>
+        <translation>
+            <numerusform>Дела: %n</numerusform>
+            <numerusform>Дела: %n</numerusform>
+            <numerusform>Дела: %n</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+13"/>
+        <location line="+186"/>
+        <source>Show fewer</source>
+        <translation>Свернуть</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>+%n more</source>
+        <translation>
+            <numerusform>Ещё %n</numerusform>
+            <numerusform>Ещё %n</numerusform>
+            <numerusform>Ещё %n</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+17"/>
         <source>This PC</source>
         <translation>Этот ПК</translation>
     </message>
@@ -2843,11 +3710,16 @@
         <source>Last answer started %1 s after you finished</source>
         <translation>Последний ответ начался через %1 с после вашей фразы</translation>
     </message>
+    <message>
+        <location line="+94"/>
+        <source>Click again to cancel it</source>
+        <translation>Нажмите ещё раз, чтобы отменить</translation>
+    </message>
 </context>
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+122"/>
+        <location filename="../jarvis.py" line="+124"/>
         <source>Open Jarvis</source>
         <translation>Открыть Jarvis</translation>
     </message>

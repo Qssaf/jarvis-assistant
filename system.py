@@ -168,9 +168,63 @@ def projects(home=None, limit=20):
 
 
 # ---------------------------------------------------------------- microphone and speaker
-def mic_frames(target=None, on_source=None):
+headset_mic = [lambda: False]  # set by the app: the user's "listen through my Bluetooth headset's microphone" setting
+MIC_CHECK = 10  # seconds between looks at which microphone to record from, while recording (_follow_mic)
+
+
+def pick_mic(objects, headset=False):
+    """The microphone for a recording that's always on, from PipeWire's objects (pw-dump): its node's name, or "" for
+    the default one, whatever it is. A recording linked to a Bluetooth headset's microphone makes WirePlumber switch
+    the headset to its call profile (mono, muffled) for as long as it runs, so with the headset as the default mic,
+    Jarvis's wake-word recording kept it there for good. So it's the default mic by name while that isn't a Bluetooth
+    one (by name: pinned, a headset connecting later doesn't take the recording along), else the best other one; only
+    with no other microphone, or when the user wants the headset's (headset), the default."""
+    if headset:
+        return ""
+    props = [(o.get("info") or {}).get("props") or {} for o in objects if str(o.get("type", "")).endswith(":Node")]
+    wireless = lambda p: (str(p.get("bluez5.loopback")).lower() == "true" or p.get("device.api") == "bluez5"
+                          or str(p.get("node.name", "")).startswith("bluez_"))
+    mics = [p for p in props if p.get("media.class") == "Audio/Source" and p.get("node.name") and not wireless(p)
+            and not str(p["node.name"]).startswith("jarvis-ec-")]
+    default = next((m["value"].get("name", "") for o in objects for m in o.get("metadata") or []
+                    if m.get("key") == "default.audio.source" and isinstance(m.get("value"), dict)), "")
+    if any(p["node.name"] == default for p in mics):
+        return default
+    best = max(mics, key=lambda p: int(p.get("priority.session") or 0), default=None)
+    return best["node.name"] if best else ""
+
+
+def mic_choice():
+    """pick_mic for this PC right now ("" where there's no PipeWire). None when PipeWire can't be asked just now (it's
+    restarting, or slow): that isn't "the default one", which may be the headset's."""
+    if IS_WINDOWS or not have("pw-dump"):
+        return ""
+    try:
+        objects = json.loads(subprocess.run(["pw-dump"], capture_output=True, text=True, timeout=5).stdout or "[]")
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        return None
+    return pick_mic(objects, headset_mic[0]()) if isinstance(objects, list) and objects else None
+
+
+def _follow_mic(proc, now, pick, moved, every=None):
+    """While a recorder runs on the microphone `now`: every MIC_CHECK seconds, which one it should be (the default
+    changed, its mic was unplugged, the user's setting). When that's another, the recorder is ended (mic_frames starts
+    the next on it) and moved gets its name."""
+    wait = threading.Event()
+    while not wait.wait(every or MIC_CHECK):
+        if proc.poll() is not None:
+            return
+        new = pick()
+        if new is not None and new != now:  # (None: it couldn't be asked, so the recorder stays where it is)
+            moved.append(new)
+            proc.terminate()
+            return
+
+
+def mic_frames(target=None, on_source=None, pick=None):
     """16 kHz mono int16 frames of 80 ms (1280 samples): PipeWire's pw-record when there (it can use the echo canceller),
-    otherwise PortAudio through sounddevice (Windows, PulseAudio/ALSA systems). on_source gets the name of the node
+    otherwise PortAudio through sounddevice (Windows, PulseAudio/ALSA systems). pick: with no target, the node to record
+    from ("" for the default one), asked again while recording (mic_choice). on_source gets the name of the node
     pw-record really reads, a few seconds after each start. On Windows any target means the echo canceller below,
     and on_source hears about it only if that can't start (then it's the plain mic)."""
     import numpy as np
@@ -192,18 +246,26 @@ def mic_frames(target=None, on_source=None):
         while True:  # pw-record quits when PipeWire restarts (an update, a new device): start it again, or Jarvis goes deaf
             # dont-move: otherwise WirePlumber's "follow the default mic" (target.node -1 in its metadata) moves the stream
             # off the echo canceller onto the raw mic, and Jarvis hears its own voice with nothing taken out
-            pin = ["--target", target, "-P", "{ node.dont-move = true }"] if target else []
+            pinned = target or (pick() if pick else "") or ""
+            pin = ["--target", pinned, "-P", "{ node.dont-move = true }"] if pinned else []
             # --raw: to a pipe pw-record otherwise writes an .au stream, big-endian since PipeWire 1.6.10. Read as ours,
             # quiet sound came through and anything loud enough for a call was noise: Jarvis went deaf as the mic went up
             p = subprocess.Popen(["pw-record", *pin, "--raw", "--rate", "16000", "--channels", "1",
                                   "--format", "s16", "-"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             if on_source:
                 threading.Timer(3, lambda pid=p.pid: on_source(mic_source(pid))).start()
+            moved = []
+            if pick and not target:
+                threading.Thread(target=_follow_mic, args=(p, pinned, pick, moved), daemon=True).start()
             started = time.time()
             while chunk := p.stdout.read(2560):
                 if len(chunk) == 2560:
                     yield np.frombuffer(chunk, np.int16)
-            print(f"[voice] the microphone stream stopped (pw-record exit {p.wait()}): starting it again", flush=True)
+            code = p.wait()
+            if moved:  # (ended here, for another microphone: the next one starts on it at once)
+                print(f"[voice] another microphone is the one to use now: {moved[0] or 'the default one'}", flush=True)
+                continue
+            print(f"[voice] the microphone stream stopped (pw-record exit {code}): starting it again", flush=True)
             time.sleep(1 if time.time() - started > 10 else 10)  # (failing at once: wait longer, don't spin)
     import sounddevice as sd
     with sd.InputStream(samplerate=16000, channels=1, dtype="int16", blocksize=1280) as stream:
@@ -326,7 +388,8 @@ def record_audio(path, source="pc"):
         raise RuntimeError("recording needs PipeWire (Linux)")
     if source == "both":
         return {"path": path, "parts": [record_audio(path + ".pc.wav", "pc"), record_audio(path + ".mic.wav", "room")]}
-    what = ["-P", "{ stream.capture.sink=true }"] if source == "pc" else []
+    mic = "" if source == "pc" else mic_choice()  # (never a Bluetooth headset's mic when there's another: see pick_mic)
+    what = ["-P", "{ stream.capture.sink=true }"] if source == "pc" else ["--target", mic] if mic else []
     limit = ["timeout", "-s", "INT", str(RECORD_LIMIT)] if have("timeout") else []
     proc = subprocess.Popen([*limit, "pw-record", *what, "--rate", "16000", "--channels", "1", "--format", "s16", path],
                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -1117,6 +1180,38 @@ def open_target(target):
         os.startfile(target)
     else:
         subprocess.Popen(["xdg-open", target], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
+
+# what the default app would run rather than show (Windows starts these; KDE runs a .desktop file or an AppImage)
+PROGRAM_TYPES = {".exe", ".com", ".bat", ".cmd", ".msi", ".msp", ".lnk", ".url", ".scr", ".pif", ".cpl", ".msc", ".hta", ".reg",
+                 ".ps1", ".vbs", ".vbe", ".js", ".jse", ".wsf", ".wsh", ".jar", ".py", ".pyw", ".desktop", ".appimage", ".run",
+                 ".sh", ".bin", ".command"}
+
+
+def is_program(path):
+    """Whether opening this file with its default app could run it (a program, script or launcher) instead of showing it.
+    Linux: an executable file is one only if it starts like one (a PDF on a FAT stick is executable too)."""
+    if os.path.splitext(path)[1].lower() in PROGRAM_TYPES:
+        return True
+    if IS_WINDOWS or not os.path.isfile(path) or not os.access(path, os.X_OK):
+        return False
+    try:
+        with open(path, "rb") as f:
+            start = f.read(4)
+    except OSError:  # (unreadable: nothing could show it either, so it's taken for one)
+        return True
+    return start == b"\x7fELF" or start.startswith(b"#!")
+
+
+def portal_theme(plugins=None):
+    """Linux: whether this Qt can ask xdg-desktop-portal for file dialogs (the desktop's own: KDE's, GNOME's), that is,
+    whether its xdgdesktopportal platform theme is in `plugins` (Qt's plugin folder)."""
+    if IS_WINDOWS:
+        return False
+    if plugins is None:
+        from PySide6.QtCore import QLibraryInfo
+        plugins = QLibraryInfo.path(QLibraryInfo.LibraryPath.PluginsPath)
+    return os.path.isfile(os.path.join(plugins, "platformthemes", "libqxdgdesktopportal.so"))
 
 
 def shell(command, timeout=30):

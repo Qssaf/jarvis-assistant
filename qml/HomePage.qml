@@ -1,16 +1,29 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Dialogs
 import Jarvis
 
 // The conversation (or, before it starts, Jarvis's reactor and some ideas), the message box, and today at a glance.
 Item {
     id: home
-    property var attachments: []
     property string wake: "Hey Jarvis"
     property real latency: -1
     readonly property bool wide: width > 1000  // (narrower, today folds into a strip above the conversation)
-    readonly property real column: Math.min(760, talk.width - 2 * Theme.margin)
+    // (from the page's width, not talk's: talk ends where today begins, and today's margins are worked out from the column)
+    readonly property real column: Math.min(760, (wide ? width - 300 - 12 - 8 : width) - 2 * Theme.margin)
+    signal goTo(string key)  // another page: Accounts, from the idea to connect them
+    // the ideas before anything is said: the accounts' own only once they're connected (null: not known yet, so neither
+    // those nor the one to connect them)
+    readonly property var connected: today.info.connected || null
+    readonly property var ideas: {
+        const has = slug => !!connected && connected.includes(slug)
+        return [["sun", qsTr("Brief me"), qsTr("Weather and your schedule")]]
+            .concat(connected && !["gmail", "googlecalendar", "google_classroom"].some(has)
+                    ? [["accounts", qsTr("Connect your accounts"), qsTr("Gmail, Calendar, Classroom"), "accounts"]] : [])
+            .concat(has("google_classroom") ? [["calendar", qsTr("What's due this week?"), qsTr("From Google Classroom")]] : [])
+            .concat(has("gmail") ? [["mail", qsTr("Any new emails?"), qsTr("Your Gmail inbox")]] : [])
+            .concat([["screen", qsTr("What's on my screen?"), qsTr("Jarvis takes a look")],
+                     ["timer", qsTr("Set a 10 minute timer"), qsTr("With a notification")], ["image", qsTr("Paint a rainy city"), qsTr("Make a picture")]])
+    }
 
     function reload() {
         Api.get("/api/conversation", c => {
@@ -25,12 +38,9 @@ Item {
         if (!["you", "jarvis", "tool", "system", "thinking", "image"].includes(m.who)) return
         messages.append({ who: m.who, text: String(m.text || ""), caption: String(m.caption || ""), time: m.time || Date.now() / 1000 })
     }
-    function send(text) {
-        text = text.trim()
-        if (!text && !attachments.length) return
-        const note = attachments.map(p => `(attached: ${p})`).join(" ")
-        Backend.send((text + " " + note).trim())
-        attachments = []
+    function send(text, files) {  // (files go as "(attached: path)" notes: the agent reads them so)
+        if (text.trim() || files.length)
+            Backend.send(Backend.withAttached(text, files))
     }
     Component.onCompleted: reload()
 
@@ -45,18 +55,6 @@ Item {
                 if (atEnd) Qt.callLater(list.positionViewAtEnd)
             } else if (e.kind === "latency") home.latency = e.seconds
         }
-    }
-
-    DropArea {
-        id: drop
-        anchors.fill: parent
-        onDropped: drop => { home.attachments = home.attachments.concat(drop.urls.map(u => Backend.localPath(String(u)))) }
-    }
-    FileDialog {
-        id: picker
-        fileMode: FileDialog.OpenFiles
-        title: qsTr("Attach files for Jarvis")
-        onAccepted: home.attachments = home.attachments.concat(selectedFiles.map(u => Backend.localPath(String(u))))
     }
 
     // ---- the conversation
@@ -110,11 +108,9 @@ Item {
                     columns: width > 640 ? 3 : 2
                     spacing: 12
                     Repeater {
-                        model: [["sun", qsTr("Brief me"), qsTr("Weather and your schedule")], ["calendar", qsTr("What's due this week?"), qsTr("From Google Classroom")],
-                                ["mail", qsTr("Any new emails?"), qsTr("Your Gmail inbox")], ["screen", qsTr("What's on my screen?"), qsTr("Jarvis takes a look")],
-                                ["timer", qsTr("Set a 10 minute timer"), qsTr("With a notification")], ["image", qsTr("Paint a rainy city"), qsTr("Make a picture")]]
+                        model: home.ideas
                         Suggestion { required property var modelData; width: (ideas.width - (ideas.columns - 1) * ideas.spacing) / ideas.columns
-                                     symbol: modelData[0]; title: modelData[1]; hint: modelData[2] }
+                                     symbol: modelData[0]; title: modelData[1]; hint: modelData[2]; page: modelData[3] || "" }
                     }
                 }
             }
@@ -150,6 +146,10 @@ Item {
             bottomMargin: 16
             boundsBehavior: Flickable.StopAtBounds
             ScrollBar.vertical: Scroller {}
+            // (the latest stays in view when the message box grows: attaching a file hid it behind the box's new height)
+            property bool following: true
+            onContentYChanged: following = atYEnd
+            onHeightChanged: if (following) Qt.callLater(positionViewAtEnd)
             delegate: Message { width: ListView.view.width; column: home.column }
             add: Transition {
                 NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 220; easing.type: Easing.OutCubic }
@@ -190,8 +190,15 @@ Item {
                                   font.pixelSize: Theme.px(13); wrapMode: Text.NoWrap }
                         }
                     }
-                    Chip { anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                           symbol: "stop"; text: qsTr("Stop"); ink: Theme.warm; onClicked: Backend.stop() }
+                    Chip {  // (it ends every task, coding jobs too: with more than one it says so, and its tip names them)
+                        id: stopAll
+                        readonly property int tasks: today.jobs.length
+                        anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                        symbol: "stop"; text: tasks > 1 ? qsTr("Stop all (%n)", "", tasks) : qsTr("Stop"); ink: Theme.warm
+                        onClicked: Backend.stop()
+                        Accessible.description: tasks > 1 ? today.jobList : ""
+                        Tip { text: today.jobList; visible: stopAll.tasks > 1 && (stopAll.hovered || stopAll.visualFocus) }
+                    }
                 }
             }
         }
@@ -201,34 +208,21 @@ Item {
             anchors { bottom: parent.bottom; bottomMargin: 24; horizontalCenter: parent.horizontalCenter }
             width: home.column
             stopShown: list.visible && Backend.state === "thinking"  // (the Stop chip under the conversation)
-            attachments: home.attachments
-            onSubmitted: text => home.send(text)
-            onAttach: picker.open()
-            onRemoved: path => home.attachments = home.attachments.filter(p => p !== path)
-        }
-
-        Rectangle {  // dragging files over Jarvis
-            anchors { fill: parent; topMargin: 46; margins: 16 }
-            visible: drop.containsDrag
-            radius: Theme.radius
-            color: Theme.alpha(Theme.accentSoft, 0.6)
-            border.width: 1
-            border.color: Theme.alpha(Theme.accent, 0.5)
-            Column {
-                anchors.centerIn: parent
-                spacing: 10
-                Icon { anchors.horizontalCenter: parent.horizontalCenter; name: "attach"; size: 28; color: Theme.accent }
-                Txt { kind: "heading"; text: qsTr("Drop to attach") }
-            }
+            tasks: today.jobs.length
+            taskList: today.jobList
+            dropArea: home  // (files dropped anywhere on the page)
+            onSubmitted: (text, files) => home.send(text, files)
         }
     }
 
     Today {
         id: today
-        anchors { left: home.wide ? undefined : parent.left; right: home.wide ? parent.right : undefined; rightMargin: 12
-                  leftMargin: (home.width - home.column) / 2 + (backup.visible ? backup.width + 12 : 0) }  // (anchors: they mirror)
+        // (anchors, so they mirror; both sides always: swapping one for the other set both for a moment, and Qt then
+        // dropped the width binding for good)
+        anchors { left: parent.left; right: parent.right
+                  leftMargin: home.wide ? home.width - 300 - 12 : (home.width - home.column) / 2 + (backup.visible ? backup.width + 12 : 0)
+                  rightMargin: home.wide ? 12 : (home.width - home.column) / 2 + (fresh.visible ? fresh.width + 12 : 0) }
         y: 52
-        width: home.wide ? 300 : home.column - (fresh.visible ? fresh.width + 12 : 0) - (backup.visible ? backup.width + 12 : 0)
         height: home.wide ? home.height - y - 24 : 56
         compact: !home.wide
         latency: home.latency
@@ -237,15 +231,17 @@ Item {
 
     component Suggestion: AbstractButton {
         id: s
+        objectName: "idea"
         property string symbol
         property string title
         property string hint
+        property string page: ""  // a page it opens instead of asking Jarvis
         hoverEnabled: true
         focusPolicy: Qt.TabFocus  // (Tab reaches it; a click leaves the typing where it was)
         Keys.onReturnPressed: click()
         Keys.onEnterPressed: click()
         implicitHeight: 76
-        onClicked: Backend.send(title)
+        onClicked: page ? home.goTo(page) : Backend.send(title)
         background: Glass {
             color: s.hovered ? Theme.glassHover : Theme.glass
             border.color: s.hovered ? Theme.alpha(Theme.accent, 0.3) : Theme.stroke

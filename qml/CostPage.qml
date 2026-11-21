@@ -136,7 +136,7 @@ ScrollPage {
                             Txt { text: row.parts.slice(1).join(" ") || row.modelData.key; weight: 500; elide: Text.ElideRight
                                   wrapMode: Text.NoWrap; Layout.fillWidth: true }
                             Txt { kind: "small"; color: Theme.text3; Layout.fillWidth: true
-                                  text: qsTr("%1 · %n request(s)", "", row.modelData.requests).arg(row.parts[0]) }
+                                  text: qsTr("%1 · %n request(s)", "", row.modelData.requests).arg(Api.provider(row.parts[0])) }
                         }
                         Txt { kind: "small"; font.features: { "tnum": 1 }
                               text: qsTr("%1 in · %2 out").arg(page.count(row.modelData.input)).arg(page.count(row.modelData.output)) }

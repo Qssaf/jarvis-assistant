@@ -136,8 +136,8 @@ Rectangle {
                         title: qsTr("What leaves this PC")
                         detail: qsTr("What you say after “%1” or type, the memory and recent conversation that help answer "
                                      + "it, and screenshots when a task needs the screen go to Google Gemini. Account actions go "
-                                     + "through Composio, only for the accounts you connect. Jarvis keeps all of it on this "
-                                     + "computer.").arg(wiz.wake)
+                                     + "through Composio, only for the accounts you connect. Jarvis also keeps a copy of your "
+                                     + "conversations and memory on this computer.").arg(wiz.wake)
                     }
                 }
 

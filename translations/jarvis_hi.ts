@@ -4,7 +4,7 @@
 <context>
     <name>AccountsPage</name>
     <message>
-        <location filename="../qml/AccountsPage.qml" line="+9"/>
+        <location filename="../qml/AccountsPage.qml" line="+10"/>
         <source>Accounts</source>
         <translation>खाते</translation>
     </message>
@@ -14,7 +14,22 @@
         <translation>अपने खाते जोड़ें ताकि Jarvis उन्हें पढ़ सके और उन पर काम कर सके। हर खाते में वह क्या कर सकता है, यह आप तय करते हैं।</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+14"/>
+        <source>Jarvis will ask again before “%1”</source>
+        <translation>Jarvis “%1” से पहले फिर से पूछेगा</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>%1 connected</source>
+        <translation>%1 जुड़ गया</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>%1 isn&apos;t connected yet: press Refresh once you&apos;ve signed in</source>
+        <translation>%1 अभी नहीं जुड़ा है: साइन इन करने के बाद रीफ़्रेश दबाएँ</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Refresh</source>
         <translation>रीफ़्रेश करें</translation>
     </message>
@@ -40,7 +55,7 @@
         <translation>चुनें कि Jarvis हर खाते में क्या कर सकता है।</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+36"/>
         <source>Sign in again</source>
         <translation>फिर से साइन इन करें</translation>
     </message>
@@ -50,7 +65,7 @@
         <translation>आपके ब्राउज़र में साइन-इन खुल गया है</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Click again to disconnect</source>
         <translation>डिस्कनेक्ट करने के लिए फिर क्लिक करें</translation>
     </message>
@@ -86,6 +101,31 @@
     </message>
     <message>
         <location line="+11"/>
+        <source>Jarvis no longer asks before…</source>
+        <translation>Jarvis अब इनसे पहले नहीं पूछता…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>You told Jarvis it may do these without asking first. Ask again takes that back.</source>
+        <translation>आपने Jarvis से कहा था कि वह ये काम पहले पूछे बिना कर सकता है। “फिर से पूछें” इसे वापस ले लेता है।</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>You said “%1” on %2</source>
+        <translation>आपने %2 को “%1” कहा था</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Since %1</source>
+        <translation>%1 से</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Ask again</source>
+        <translation>फिर से पूछें</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>More accounts</source>
         <translation>और खाते</translation>
     </message>
@@ -100,7 +140,12 @@
         <translation>ब्राउज़र में साइन इन करने के लिए एक चुनें, फिर रीफ़्रेश दबाएँ।</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
+        <source>%1: waiting for sign-in…</source>
+        <translation>%1: साइन-इन का इंतज़ार…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Finish signing in in your browser, then press Refresh</source>
         <translation>ब्राउज़र में साइन इन पूरा करें, फिर रीफ़्रेश दबाएँ</translation>
     </message>
@@ -113,7 +158,7 @@
 <context>
     <name>ActivityPage</name>
     <message>
-        <location filename="../qml/ActivityPage.qml" line="+43"/>
+        <location filename="../qml/ActivityPage.qml" line="+79"/>
         <source>Activity</source>
         <translation>गतिविधि</translation>
     </message>
@@ -123,14 +168,60 @@
         <translation>इस बातचीत में Jarvis जो भी कदम उठाता है, वह यहाँ उसी समय दिखता है।</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>All</source>
+        <translation>सभी</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Errors</source>
+        <translation>त्रुटियाँ</translation>
+    </message>
+    <message>
+        <location line="+0"/>
         <location line="+86"/>
+        <source>Voice</source>
+        <translation>आवाज़</translation>
+    </message>
+    <message>
+        <location line="-86"/>
+        <source>Tasks</source>
+        <translation>काम</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Failed: %1</source>
+        <translation>विफल: %1</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Task</source>
+        <translation>काम</translation>
+    </message>
+    <message>
+        <location line="+19"/>
         <source>New steps appear at the top as Jarvis works</source>
         <translation>Jarvis के काम करते समय नए कदम सबसे ऊपर दिखते हैं</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+16"/>
         <source>Nothing yet: ask Jarvis something</source>
         <translation>अभी कुछ नहीं: Jarvis से कुछ पूछें</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing has failed in this conversation</source>
+        <translation>इस बातचीत में कुछ भी विफल नहीं हुआ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The voice hasn&apos;t used a tool in this conversation yet</source>
+        <translation>इस बातचीत में आवाज़ ने अभी तक कोई टूल इस्तेमाल नहीं किया</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No background task has used a tool in this conversation yet</source>
+        <translation>इस बातचीत में अभी तक किसी बैकग्राउंड काम ने कोई टूल इस्तेमाल नहीं किया</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -155,23 +246,66 @@
 <context>
     <name>Api</name>
     <message>
-        <location filename="../qml/Api.qml" line="+27"/>
+        <location filename="../qml/Api.qml" line="+19"/>
+        <source>Gemini API key</source>
+        <translation>Gemini API कुंजी</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Google sign-in</source>
+        <translation>Google साइन-इन</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Something went wrong</source>
         <translation>कुछ गड़बड़ हो गई</translation>
     </message>
 </context>
 <context>
+    <name>Attachment</name>
+    <message>
+        <location filename="../qml/Attachment.qml" line="+17"/>
+        <source>Moved or deleted</source>
+        <translation>हटाया गया या कहीं और ले जाया गया</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Folder</source>
+        <translation>फ़ोल्डर</translation>
+    </message>
+    <message>
+        <location line="+71"/>
+        <source>Remove %1</source>
+        <translation>%1 हटाएँ</translation>
+    </message>
+</context>
+<context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+243"/>
+        <location filename="../window.py" line="+324"/>
         <source>Copied</source>
         <translation>कॉपी हो गया</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>Couldn&apos;t paste the picture: %1</source>
+        <translation>तस्वीर पेस्ट नहीं हो सकी: %1</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>%1 isn&apos;t there any more</source>
+        <translation>%1 अब वहाँ नहीं है</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Couldn&apos;t open %1: %2</source>
+        <translation>%1 नहीं खुल सका: %2</translation>
     </message>
 </context>
 <context>
     <name>ChatsPage</name>
     <message>
-        <location filename="../qml/ChatsPage.qml" line="+33"/>
+        <location filename="../qml/ChatsPage.qml" line="+41"/>
         <source>just now</source>
         <translation>अभी-अभी</translation>
     </message>
@@ -212,7 +346,7 @@
         <translation>बातचीत खोजें</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+57"/>
         <source>Now</source>
         <translation>अभी</translation>
     </message>
@@ -263,39 +397,94 @@
 <context>
     <name>Composer</name>
     <message>
-        <location filename="../qml/Composer.qml" line="+45"/>
-        <source>Remove</source>
-        <translation>हटाएँ</translation>
+        <location filename="../qml/Composer.qml" line="+49"/>
+        <source>Attach files for Jarvis</source>
+        <translation>Jarvis के लिए फ़ाइलें अटैच करें</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Attach files (or drop them here)</source>
-        <translation>फ़ाइलें जोड़ें (या यहाँ छोड़ें)</translation>
+        <location line="+27"/>
+        <source>Drop to attach</source>
+        <translation>अटैच करने के लिए छोड़ें</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+40"/>
+        <source>Attach files (or paste or drop them here)</source>
+        <translation>फ़ाइलें अटैच करें (या यहाँ पेस्ट करें या छोड़ें)</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Ask Jarvis</source>
         <translation>Jarvis से पूछें</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+34"/>
+        <source>Undo</source>
+        <translation>पूर्ववत करें</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Redo</source>
+        <translation>फिर से करें</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cut</source>
+        <translation>काटें</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy</source>
+        <translation>कॉपी करें</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Paste</source>
+        <translation>पेस्ट करें</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Delete</source>
+        <translation>हटाएँ</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Select all</source>
+        <translation>सब चुनें</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location filename="../qml/Main.qml" line="+105"/>
         <source>Pause listening</source>
         <translation>सुनना रोकें</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/Main.qml" line="+0"/>
         <source>Talk to Jarvis</source>
         <translation>Jarvis से बात करें</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>Stop (Esc)</source>
         <translation>रोकें (Esc)</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-1"/>
         <source>Send (Enter)</source>
         <translation>भेजें (Enter)</translation>
+    </message>
+</context>
+<context>
+    <name>ConfirmButton</name>
+    <message>
+        <location filename="../qml/ConfirmButton.qml" line="+7"/>
+        <source>Delete</source>
+        <translation>हटाएँ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Click again to delete</source>
+        <translation>हटाने के लिए फिर क्लिक करें</translation>
     </message>
 </context>
 <context>
@@ -394,17 +583,17 @@
     <name>HealthPage</name>
     <message>
         <location filename="../qml/HealthPage.qml" line="+9"/>
-        <location line="+16"/>
+        <location line="+18"/>
         <source>Health</source>
         <translation>स्थिति</translation>
     </message>
     <message>
-        <location line="-15"/>
+        <location line="-17"/>
         <source>Checks the key, mic, screen, accounts and models, and how to fix them.</source>
         <translation>कुंजी, माइक, स्क्रीन, खाते और मॉडल जाँचता है, और बताता है कि उन्हें कैसे ठीक करें।</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+16"/>
         <source>Home</source>
         <translation>होम</translation>
     </message>
@@ -444,7 +633,7 @@
         <translation>सेटिंग्स</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Copy a report</source>
         <translation>रिपोर्ट कॉपी करें</translation>
     </message>
@@ -527,12 +716,7 @@
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="../qml/HomePage.qml" line="+58"/>
-        <source>Attach files for Jarvis</source>
-        <translation>Jarvis के लिए फ़ाइलें जोड़ें</translation>
-    </message>
-    <message>
-        <location line="+36"/>
+        <location filename="../qml/HomePage.qml" line="+92"/>
         <source>Up late?</source>
         <translation>देर तक जाग रहे हैं?</translation>
     </message>
@@ -577,7 +761,7 @@
         <translation>कर रहा हूँ</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="-83"/>
         <source>Brief me</source>
         <translation>आज का हाल बताओ</translation>
     </message>
@@ -587,7 +771,17 @@
         <translation>मौसम और आपका शेड्यूल</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Connect your accounts</source>
+        <translation>अपने खाते जोड़ें</translation>
+    </message>
+    <message>
         <location line="+0"/>
+        <source>Gmail, Calendar, Classroom</source>
+        <translation>Gmail, Calendar, Classroom</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>What&apos;s due this week?</source>
         <translation>इस हफ़्ते क्या-क्या जमा करना है?</translation>
     </message>
@@ -607,7 +801,7 @@
         <translation>आपका Gmail इनबॉक्स</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+1"/>
         <source>What&apos;s on my screen?</source>
         <translation>मेरी स्क्रीन पर क्या है?</translation>
     </message>
@@ -637,7 +831,7 @@
         <translation>एक तस्वीर बनाएँ</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+99"/>
         <source>New chat</source>
         <translation>नई चैट</translation>
     </message>
@@ -652,25 +846,30 @@
         <translation>Gemini Live की जगह बैकअप आवाज़ (मॉडल पेज) जवाब देती है</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+53"/>
         <source>Working on it…</source>
         <translation>काम चल रहा है…</translation>
     </message>
-    <message>
-        <location line="+5"/>
-        <source>Stop</source>
-        <translation>रोकें</translation>
+    <message numerus="yes">
+        <location filename="../qml/Composer.qml" line="+0"/>
+        <location filename="../qml/HomePage.qml" line="+8"/>
+        <source>Stop all (%n)</source>
+        <translation>
+            <numerusform>सभी रोकें (%n)</numerusform>
+            <numerusform>सभी रोकें (%n)</numerusform>
+        </translation>
     </message>
     <message>
-        <location line="+27"/>
-        <source>Drop to attach</source>
-        <translation>जोड़ने के लिए छोड़ें</translation>
+        <location line="+1"/>
+        <location filename="../qml/HomePage.qml" line="+0"/>
+        <source>Stop</source>
+        <translation>रोकें</translation>
     </message>
 </context>
 <context>
     <name>Main</name>
     <message>
-        <location filename="../qml/Main.qml" line="+115"/>
+        <location filename="../qml/Main.qml" line="+32"/>
         <source>Home</source>
         <translation>होम</translation>
     </message>
@@ -685,22 +884,31 @@
         <translation>गतिविधि</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>People</source>
+        <translation>लोग</translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <location filename="../qml/SettingsPage.qml" line="+831"/>
         <source>Accounts</source>
         <translation>खाते</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/SettingsPage.qml" line="+2"/>
         <source>Plugins</source>
         <translation>प्लगइन</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/SettingsPage.qml" line="-6"/>
         <source>Models</source>
         <translation>मॉडल</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/SettingsPage.qml" line="+2"/>
         <source>Memory</source>
         <translation>मेमोरी</translation>
     </message>
@@ -720,7 +928,7 @@
         <translation>सेटिंग्स</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+66"/>
         <source>Minimise</source>
         <translation>छोटा करें</translation>
     </message>
@@ -743,7 +951,7 @@
 <context>
     <name>MemoryPage</name>
     <message>
-        <location filename="../qml/MemoryPage.qml" line="+10"/>
+        <location filename="../qml/MemoryPage.qml" line="+11"/>
         <source>Memory</source>
         <translation>मेमोरी</translation>
     </message>
@@ -753,23 +961,47 @@
         <translation>Jarvis हर बातचीत से पहले इसे पढ़ता है। उससे “याद रखना…” कहें या यहाँ बदलें।</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+126"/>
         <source>Saved</source>
         <translation>सहेजा गया</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+226"/>
+        <location line="+291"/>
+        <location line="+37"/>
         <source>Save</source>
         <translation>सहेजें</translation>
     </message>
     <message>
-        <location line="-225"/>
+        <location line="-420"/>
         <source>Memory saved</source>
         <translation>मेमोरी सहेजी गई</translation>
     </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>Kept %n note(s) Jarvis added while you were editing</source>
+        <translation>
+            <numerusform>आपके बदलाव करते समय Jarvis ने जो %n नोट जोड़ा, वह रखा गया</numerusform>
+            <numerusform>आपके बदलाव करते समय Jarvis ने जो %n नोट जोड़े, वे रखे गए</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+5"/>
+        <location line="+40"/>
+        <source>Note added</source>
+        <translation>नोट जोड़ा गया</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Edit as text</source>
+        <translation>टेक्स्ट के रूप में बदलें</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Done</source>
+        <translation>हो गया</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>What Jarvis knows about you</source>
         <translation>Jarvis आपके बारे में क्या जानता है</translation>
     </message>
@@ -779,7 +1011,77 @@
         <translation>सादे नोट्स, हर पंक्ति में एक। आपकी बातचीत के साथ Jarvis इनमें जोड़ता जाता है।</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+1"/>
+        <source>Nothing yet. Say “remember that I&apos;m vegetarian”, or add a note below.</source>
+        <translation>अभी कुछ नहीं। कहें “याद रखना कि मैं शाकाहारी हूँ”, या नीचे नोट जोड़ें।</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis adds to these as you talk. Hover over a note to change or delete it.</source>
+        <translation>आपकी बातचीत के साथ Jarvis इनमें जोड़ता जाता है। किसी नोट को बदलने या हटाने के लिए उस पर माउस ले जाएँ।</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Filter notes</source>
+        <translation>नोट्स फ़िल्टर करें</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>No notes match “%1”.</source>
+        <translation>“%1” से मेल खाता कोई नोट नहीं।</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Lessons</source>
+        <translation>सबक</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>How you corrected the way Jarvis does things.</source>
+        <translation>आपने Jarvis के काम करने के तरीके को कैसे सुधारा।</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ways that worked</source>
+        <translation>जो तरीके काम आए</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>How Jarvis got something tricky done, kept for next time.</source>
+        <translation>Jarvis ने कोई मुश्किल काम कैसे किया, अगली बार के लिए सहेजा गया।</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Add a note</source>
+        <translation>नोट जोड़ें</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Kind of note</source>
+        <translation>नोट का प्रकार</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>About you</source>
+        <translation>आपके बारे में</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Lesson</source>
+        <translation>सबक</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Way that worked</source>
+        <translation>काम आया तरीका</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Add</source>
+        <translation>जोड़ें</translation>
+    </message>
+    <message>
+        <location line="+18"/>
         <source>- Prefers to be called …
 - Studies …</source>
         <translation>- चाहते हैं कि उन्हें … कहा जाए
@@ -815,12 +1117,18 @@
     </message>
     <message>
         <location line="+5"/>
-        <location line="+164"/>
+        <location line="+190"/>
+        <location line="+37"/>
         <source>Cancel</source>
         <translation>रद्द करें</translation>
     </message>
     <message>
-        <location line="-156"/>
+        <location line="-227"/>
+        <source>Click again to cancel it</source>
+        <translation>रद्द करने के लिए फिर क्लिक करें</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Add a reminder or task</source>
         <translation>रिमाइंडर या काम जोड़ें</translation>
     </message>
@@ -932,7 +1240,17 @@
         <translation>12 घंटे</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+80"/>
+        <source>Note deleted</source>
+        <translation>नोट हटाया गया</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Write the note</source>
+        <translation>नोट लिखें</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Edit</source>
         <translation>बदलें</translation>
     </message>
@@ -995,7 +1313,7 @@
 <context>
     <name>Message</name>
     <message>
-        <location filename="../qml/Message.qml" line="+71"/>
+        <location filename="../qml/Message.qml" line="+115"/>
         <source>Copy</source>
         <translation>कॉपी करें</translation>
     </message>
@@ -1013,7 +1331,7 @@
         <translation>हर काम के लिए मॉडल चुनें। हर सूची ऊपर से नीचे आज़माई जाती है: कोई व्यस्त या बंद हो तो अगला संभाल लेता है।</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+40"/>
         <source>Looking up the models you can use…</source>
         <translation>आपके लिए उपलब्ध मॉडल खोजे जा रहे हैं…</translation>
     </message>
@@ -1026,7 +1344,7 @@
         </translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Refresh</source>
         <translation>रीफ़्रेश करें</translation>
     </message>
@@ -1036,7 +1354,7 @@
         <translation>हर काम किससे होता है</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+59"/>
         <source>Jarvis&apos;s choice</source>
         <translation>Jarvis की पसंद</translation>
     </message>
@@ -1045,16 +1363,8 @@
         <source>Use Jarvis&apos;s choice</source>
         <translation>Jarvis की पसंद इस्तेमाल करें</translation>
     </message>
-    <message numerus="yes">
-        <location line="+9"/>
-        <source>%1 · +%n fallback(s)</source>
-        <translation>
-            <numerusform>%1 · +%n विकल्प</numerusform>
-            <numerusform>%1 · +%n विकल्प</numerusform>
-        </translation>
-    </message>
     <message>
-        <location line="+14"/>
+        <location line="+23"/>
         <source>Providers and keys</source>
         <translation>प्रदाता और कुंजियाँ</translation>
     </message>
@@ -1114,12 +1424,22 @@
         <translation>यह प्रदाता हटाएँ</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Click again to remove it and its keys</source>
+        <translation>इसे इसकी कुंजियों समेत हटाने के लिए फिर क्लिक करें</translation>
+    </message>
+    <message>
         <location line="+16"/>
         <source>Resting (rate limited or refused): the next key answers</source>
         <translation>विराम पर (सीमा पूरी या अस्वीकृत): अगली कुंजी जवाब देती है</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+1"/>
+        <source>Click again to remove this key</source>
+        <translation>यह कुंजी हटाने के लिए फिर क्लिक करें</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>More providers</source>
         <translation>और प्रदाता</translation>
     </message>
@@ -1174,6 +1494,11 @@
         <translation>साइन आउट करें</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Click again to sign out</source>
+        <translation>साइन आउट करने के लिए फिर क्लिक करें</translation>
+    </message>
+    <message>
         <location line="+8"/>
         <source>First install the opencode-antigravity-auth plugin (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
         <translation>पहले opencode-antigravity-auth प्लगइन इंस्टॉल करें (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis उसकी जानकारी से साइन इन करता है। या Jarvis की env फ़ाइल में ANTIGRAVITY_CLIENT_ID और ANTIGRAVITY_CLIENT_SECRET डालें।</translation>
@@ -1204,13 +1529,21 @@
         <translation>इसे पहले आज़माएँ</translation>
     </message>
     <message>
-        <location line="-137"/>
-        <location line="+139"/>
+        <location line="-138"/>
+        <location line="+140"/>
         <source>Remove</source>
         <translation>हटाएँ</translation>
     </message>
+    <message numerus="yes">
+        <location line="-221"/>
+        <source>%1 · +%n backup(s)</source>
+        <translation>
+            <numerusform>%1 · +%n बैकअप</numerusform>
+            <numerusform>%1 · +%n बैकअप</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+4"/>
+        <location line="+225"/>
         <source>Add a model</source>
         <translation>मॉडल जोड़ें</translation>
     </message>
@@ -1218,7 +1551,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3543"/>
+        <location filename="../jarvis.py" line="+3789"/>
         <source>LISTENING</source>
         <translation>सुन रहा</translation>
     </message>
@@ -1249,6 +1582,293 @@
     </message>
 </context>
 <context>
+    <name>PeoplePage</name>
+    <message>
+        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <source>just now</source>
+        <translation>अभी-अभी</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n min ago</source>
+        <translation>
+            <numerusform>%n मिनट पहले</numerusform>
+            <numerusform>%n मिनट पहले</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n h ago</source>
+        <translation>
+            <numerusform>%n घंटे पहले</numerusform>
+            <numerusform>%n घंटे पहले</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n day(s) ago</source>
+        <translation>
+            <numerusform>%n दिन पहले</numerusform>
+            <numerusform>%n दिन पहले</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>%1: they wrote %2, you wrote %3</source>
+        <translation>%1: उन्होंने %2 लिखा, आपने %3</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1: they wrote %2</source>
+        <translation>%1: उन्होंने %2 लिखा</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1: you wrote %2</source>
+        <translation>%1: आपने %2 लिखा</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Talked %1</source>
+        <translation>आख़िरी बात %1</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Not enough messages from them yet to say much. Jarvis tries again once you&apos;ve talked more.</source>
+        <translation>अभी उनके इतने संदेश नहीं हैं कि ज़्यादा कुछ कहा जा सके। आप दोनों की और बात होने पर Jarvis फिर कोशिश करेगा।</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Something went wrong</source>
+        <translation>कुछ गड़बड़ हो गई</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>People</source>
+        <translation>लोग</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Who you talk with, what Jarvis understands of them from your chats, and what you&apos;ve noted or promised.</source>
+        <translation>आप किनसे बात करते हैं, आपकी चैट से Jarvis उनके बारे में क्या समझता है, और आपने क्या नोट किया या वादा किया है।</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <location line="+1"/>
+        <source>Search people</source>
+        <translation>लोग खोजें</translation>
+    </message>
+    <message>
+        <location line="+89"/>
+        <source>No one matches that</source>
+        <translation>कोई मेल नहीं खाता</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No one here yet</source>
+        <translation>अभी यहाँ कोई नहीं</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Also %1</source>
+        <translation>उर्फ़ %1</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>You haven&apos;t chatted with them one to one on WhatsApp or Discord since Jarvis was linked.</source>
+        <translation>Jarvis के जुड़ने के बाद से आपने WhatsApp या Discord पर उनसे निजी चैट नहीं की है।</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>What Jarvis understands</source>
+        <translation>Jarvis क्या समझता है</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Reading your chats…</source>
+        <translation>आपकी चैट पढ़ी जा रही हैं…</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Refresh</source>
+        <translation>रीफ़्रेश करें</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Write it again now from your latest one-to-one messages with them</source>
+        <translation>उनके साथ आपके सबसे नए निजी संदेशों से इसे अभी फिर से लिखें</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Forget this</source>
+        <translation>इसे भूल जाएँ</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Click again to forget it</source>
+        <translation>भूलने के लिए फिर से क्लिक करें</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Profile forgotten</source>
+        <translation>प्रोफ़ाइल भुला दी गई</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+23"/>
+        <source>Updated %1, from %n message(s)</source>
+        <translation>
+            <numerusform>%1 अपडेट हुई, %n संदेश से</numerusform>
+            <numerusform>%1 अपडेट हुई, %n संदेशों से</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>You had Jarvis forget what it understood of them. It won&apos;t write it again unless you press Refresh.</source>
+        <translation>आपने Jarvis से वह भुलवा दिया जो उसने उनके बारे में समझा था। जब तक आप रीफ़्रेश नहीं दबाते, वह इसे फिर नहीं लिखेगा।</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing yet. Every so often Jarvis reads your latest one-to-one messages with someone and writes a short profile of them, once there are enough messages.</source>
+        <translation>अभी कुछ नहीं। Jarvis समय-समय पर किसी के साथ आपके सबसे नए निजी संदेश पढ़ता है और पर्याप्त संदेश होने पर उनकी एक छोटी प्रोफ़ाइल लिखता है।</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis doesn&apos;t read your chats to understand people: profiles are off.</source>
+        <translation>Jarvis लोगों को समझने के लिए आपकी चैट नहीं पढ़ता: प्रोफ़ाइल बंद हैं।</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Profiles are off, so this one isn&apos;t updated.</source>
+        <translation>प्रोफ़ाइल बंद हैं, इसलिए यह अपडेट नहीं होती।</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Turn them on in Settings</source>
+        <translation>सेटिंग्स में चालू करें</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Reading your latest messages with %1 and asking your model…</source>
+        <translation>%1 के साथ आपके सबसे नए संदेश पढ़े जा रहे हैं और आपके मॉडल से पूछा जा रहा है…</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Notes</source>
+        <translation>नोट्स</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Add a note</source>
+        <translation>नोट जोड़ें</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>None yet. Tell Jarvis “Sam is my cousin”, or add one here.</source>
+        <translation>अभी कोई नहीं। Jarvis से कहें “Sam मेरा कज़िन है”, या यहाँ जोड़ें।</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Until %1</source>
+        <translation>%1 तक</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Edit</source>
+        <translation>बदलें</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Promises</source>
+        <translation>वादे</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Nothing open. When you write them “I&apos;ll send it tomorrow”, Jarvis keeps it here.</source>
+        <translation>कुछ बाकी नहीं। जब आप उन्हें “कल भेज दूँगा” लिखते हैं, Jarvis उसे यहाँ रखता है।</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Due %1</source>
+        <translation>समय-सीमा: %1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No time set: it&apos;s on your evening list</source>
+        <translation>कोई समय तय नहीं: यह आपकी शाम की सूची में है</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Done</source>
+        <translation>हो गया</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mark this promise as kept</source>
+        <translation>इस वादे को पूरा हुआ मार्क करें</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <location line="+5"/>
+        <source>Forget this person</source>
+        <translation>इस व्यक्ति को भूल जाएँ</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>Their notes, promises and profile go. If you chat with them again, Jarvis starts a new page.</source>
+        <translation>उनके नोट्स, वादे और प्रोफ़ाइल हट जाएँगे। अगर आप उनसे फिर चैट करते हैं, तो Jarvis नया पेज शुरू करेगा।</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Click again to forget them</source>
+        <translation>उन्हें भूलने के लिए फिर से क्लिक करें</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Forgot %1</source>
+        <translation>%1 को भुला दिया</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Pick someone to see what Jarvis knows about them</source>
+        <translation>किसी को चुनें और देखें कि Jarvis उनके बारे में क्या जानता है</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>People appear here when you chat with someone one to one on WhatsApp or Discord, or when you tell Jarvis about them: “Sam is my cousin”.</source>
+        <translation>जब आप WhatsApp या Discord पर किसी से निजी चैट करते हैं, या Jarvis को किसी के बारे में बताते हैं (“Sam मेरा कज़िन है”), तब लोग यहाँ दिखते हैं।</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>e.g. My cousin, studies medicine in Lyon</source>
+        <translation>जैसे: मेरा कज़िन, लियोन में मेडिकल पढ़ता है</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Until (optional)</source>
+        <translation>तक (वैकल्पिक)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The last day it&apos;s true, like 2026-12-31</source>
+        <translation>आख़िरी दिन जब तक यह सही है, जैसे 2026-12-31</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>A date like 2026-12-31 makes the note go after that day.</source>
+        <translation>2026-12-31 जैसी तारीख़ देने पर नोट उस दिन के बाद हट जाता है।</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cancel</source>
+        <translation>रद्द करें</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Save</source>
+        <translation>सहेजें</translation>
+    </message>
+</context>
+<context>
     <name>PluginsPage</name>
     <message>
         <location filename="../qml/PluginsPage.qml" line="+9"/>
@@ -1261,7 +1881,7 @@
         <translation>MCP सर्वर से Jarvis को और टूल दें: कोई वेब पता, या इस PC पर चलने वाली कोई कमांड।</translation>
     </message>
     <message numerus="yes">
-        <location line="+7"/>
+        <location line="+9"/>
         <source>%n min</source>
         <translation>
             <numerusform>%n मिनट</numerusform>
@@ -1287,7 +1907,7 @@
         <translation>इंस्टॉल किए गए</translation>
     </message>
     <message numerus="yes">
-        <location line="+34"/>
+        <location line="+40"/>
         <source>%n tool(s)</source>
         <translation>
             <numerusform>%n टूल</numerusform>
@@ -1295,7 +1915,7 @@
         </translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+17"/>
         <source>%1 · trying again in %2</source>
         <translation>%1 · %2 में फिर कोशिश</translation>
     </message>
@@ -1335,7 +1955,7 @@
         <translation>प्लगइन हटा दिया गया</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+18"/>
         <source>Add a plugin</source>
         <translation>प्लगइन जोड़ें</translation>
     </message>
@@ -1434,17 +2054,17 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="+11"/>
+        <location filename="../qml/SettingsPage.qml" line="-677"/>
         <source>Settings</source>
         <translation>सेटिंग्स</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>बदलाव तुरंत सहेजे जाते हैं। मॉडल और API कुंजियाँ मॉडल पेज पर हैं।</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="-109"/>
         <source>Checking…</source>
         <translation>जाँच हो रही है…</translation>
     </message>
@@ -1469,12 +2089,50 @@
         <translation>पासफ़्रेज़ हटाया गया</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
+        <location line="+130"/>
         <source>Voice</source>
         <translation>आवाज़</translation>
     </message>
     <message>
+        <location line="-129"/>
+        <source>Window</source>
+        <translation>विंडो</translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <source>Phone</source>
+        <translation>फ़ोन</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Advanced</source>
+        <translation>उन्नत</translation>
+    </message>
+    <message>
+        <location line="+68"/>
+        <location line="+1"/>
+        <source>Search settings</source>
+        <translation>सेटिंग्स खोजें</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <location line="+39"/>
+        <source>Clear the search</source>
+        <translation>खोज साफ़ करें</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>No setting matches “%1”</source>
+        <translation>“%1” से मेल खाती कोई सेटिंग नहीं</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Try another word, or pick a tab above.</source>
+        <translation>कोई और शब्द आज़माएँ, या ऊपर से कोई टैब चुनें।</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>How Jarvis sounds and talks to you. Changes apply from the next conversation.</source>
         <translation>Jarvis कैसा सुनाई देता है और आपसे कैसे बात करता है। बदलाव अगली बातचीत से लागू होंगे।</translation>
     </message>
@@ -1529,12 +2187,12 @@
         <translation>पहले सोचे बिना जवाब दें: लगभग 0.3 सेकंड तेज़, थोड़ा कम सटीक</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Speak replies to typed messages</source>
         <translation>लिखे संदेशों के जवाब बोलकर दें</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Always use the backup voice</source>
         <translation>हमेशा बैकअप आवाज़ इस्तेमाल करें</translation>
     </message>
@@ -1544,7 +2202,7 @@
         <translation>Gemini Live के बजाय मॉडल पेज के मॉडल से सुनें और बोलें, उन कुंजियों के लिए जिनमें यह नहीं है। बंद होने पर बैकअप आवाज़ सिर्फ़ तभी जवाब देती है जब Gemini Live तक नहीं पहुँचा जा सकता</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Listening</source>
         <translation>सुनना</translation>
     </message>
@@ -1635,7 +2293,7 @@
         <translation>आप जिन वेक-अप को खारिज करते हैं, उनसे Jarvis सीखता है कि कौन-सी आवाज़ आपकी नहीं है</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Only wake for my voice</source>
         <translation>सिर्फ़ मेरी आवाज़ पर जागें</translation>
     </message>
@@ -1655,7 +2313,7 @@
         <translation>कोई और वेक वर्ड बोले तो Jarvis नहीं जागता। बात करें बटन और पुश टू टॉक हमेशा काम करते हैं</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Echo cancelling</source>
         <translation>इको कैंसलिंग</translation>
     </message>
@@ -1670,7 +2328,17 @@
         <translation>PC की अपनी आवाज़ (Jarvis, गेम, वीडियो, कॉल) को माइक से बाहर रखता है, ताकि उसे आपकी आवाज़ न समझा जाए और Jarvis के बोलते समय भी आप बोल सकें (PipeWire; लागू करने के लिए Jarvis फिर से शुरू करें)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Listen through a Bluetooth headset</source>
+        <translation>Bluetooth हेडसेट के माइक से सुनें</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>When a Bluetooth headset&apos;s microphone is the default one, Jarvis listens through it, and the headset stays in call quality (mono and muffled) while Jarvis runs. Off, Jarvis uses the PC&apos;s own microphone and the headset keeps its sound</source>
+        <translation>जब Bluetooth हेडसेट का माइक्रोफ़ोन डिफ़ॉल्ट हो, तो Jarvis उसी से सुनता है, और जब तक Jarvis चलता है, हेडसेट कॉल क्वालिटी (मोनो और दबी हुई आवाज़) में रहता है। बंद होने पर Jarvis PC का अपना माइक्रोफ़ोन इस्तेमाल करता है और हेडसेट की आवाज़ पहले जैसी रहती है</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Spoken passphrase: asked for with every yes said out loud (sends, calls, account changes, risky commands). Never shown or said back</source>
         <translation>बोला जाने वाला पासफ़्रेज़: हर बार ज़ोर से हाँ कहने पर पूछा जाता है (भेजना, कॉल, खाते में बदलाव, जोखिम भरी कमांड)। कभी दिखाया या दोहराया नहीं जाता</translation>
     </message>
@@ -1686,39 +2354,44 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+138"/>
-        <location line="+56"/>
+        <location line="+290"/>
+        <location line="+117"/>
         <source>Save</source>
         <translation>सहेजें</translation>
     </message>
     <message>
-        <location line="-192"/>
+        <location line="-405"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>हटाएँ</translation>
     </message>
     <message>
-        <location line="-76"/>
+        <location line="-82"/>
+        <location line="+7"/>
         <source>Push to talk</source>
         <translation>पुश टू टॉक</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-7"/>
+        <location line="+9"/>
         <source>Bind these to keyboard shortcuts (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</source>
         <translation>इन्हें कीबोर्ड शॉर्टकट से जोड़ें (KDE: System Settings → Keyboard → Shortcuts → Add New → Command)।</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-8"/>
+        <location line="+10"/>
         <source>Start listening</source>
         <translation>सुनना शुरू करें</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-10"/>
+        <location line="+11"/>
         <source>Drag over part of the screen and ask about it</source>
         <translation>स्क्रीन के किसी हिस्से पर खींचें और उसके बारे में पूछें</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-249"/>
+        <location line="+256"/>
         <source>Your day</source>
         <translation>आपका दिन</translation>
     </message>
@@ -1748,7 +2421,7 @@
         <translation>सुबह पहली बार शुरू होने पर Jarvis आपको आपके दिन के बारे में बताता है</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Do not disturb</source>
         <translation>परेशान न करें</translation>
     </message>
@@ -1758,7 +2431,7 @@
         <translation>Jarvis खुद से नहीं बोलता: रिमाइंडर, नतीजे और संदेश सिर्फ़ चैट, सूचनाओं और आपके फ़ोन पर जाते हैं। वह फिर भी आपको जवाब देता है (ट्रे मेनू में भी)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Quiet over full-screen apps</source>
         <translation>फ़ुल-स्क्रीन ऐप्स पर शांत</translation>
     </message>
@@ -1768,7 +2441,7 @@
         <translation>जब कोई गेम या फ़िल्म फ़ुल स्क्रीन पर हो, Jarvis जो खुद से कहता वह चैट और सूचनाओं में ही रखता है। रिमाइंडर फिर भी बोले जाते हैं</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Classroom deadlines</source>
         <translation>Classroom की समय-सीमाएँ</translation>
     </message>
@@ -1778,7 +2451,7 @@
         <translation>काम जमा करने की तारीख से एक दिन और दो घंटे पहले रिमाइंडर (जमा कर देने पर नहीं)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Calendar heads-up</source>
         <translation>कैलेंडर अलर्ट</translation>
     </message>
@@ -1788,7 +2461,7 @@
         <translation>हर Google Calendar इवेंट से दस मिनट पहले रिमाइंडर</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Keep track of my promises</source>
         <translation>मेरे वादों का ध्यान रखें</translation>
     </message>
@@ -1809,11 +2482,12 @@
     </message>
     <message>
         <location line="+5"/>
+        <location line="+3"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>शांत समय कब से (खाली: कोई नहीं)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-2"/>
         <source>e.g. 22:00</source>
         <translation>जैसे 22:00</translation>
     </message>
@@ -1828,7 +2502,7 @@
         <translation>जैसे 07:00</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Window &amp; behavior</source>
         <translation>विंडो और व्यवहार</translation>
     </message>
@@ -1878,12 +2552,12 @@
         <translation>चैट में Jarvis की सोच दिखाएँ</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Start Jarvis when I log in</source>
         <translation>लॉग इन करने पर Jarvis शुरू करें</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Ask before risky actions</source>
         <translation>जोखिम भरे कामों से पहले पूछें</translation>
     </message>
@@ -1893,7 +2567,7 @@
         <translation>हटाने, इंस्टॉल करने या बंद करने वाली कमांड, और खातों में बदलाव (ईमेल भेजना, नए इवेंट) आपकी हाँ का इंतज़ार करते हैं, जब तक आपने ठीक वही न कहा हो</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Your instructions</source>
         <translation>आपके निर्देश</translation>
     </message>
@@ -1903,7 +2577,55 @@
         <translation>Jarvis को कैसे पेश आना चाहिए, और आपके बारे में उसे क्या पता होना चाहिए।</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+116"/>
+        <source>People</source>
+        <translation>लोग</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis gets to know the people you chat with one to one, so it knows who someone is when you mention them. The People page shows what it understood, with your notes and promises.</source>
+        <translation>Jarvis उन लोगों को जानने लगता है जिनसे आप निजी चैट करते हैं, ताकि जब आप किसी का ज़िक्र करें तो उसे पता हो कि वह कौन है। लोग पेज पर दिखता है कि उसने क्या समझा, साथ में आपके नोट्स और वादे।</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Understand the people I chat with</source>
+        <translation>जिनसे मेरी चैट होती है, उन लोगों को समझें</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Now and then, the latest messages of your one-to-one WhatsApp and Discord chats go to your model to write a short profile of each person: who they are to you, how they write, what&apos;s open between you. Kept on this PC; groups are never read</source>
+        <translation>समय-समय पर, आपकी WhatsApp और Discord की निजी चैट के सबसे नए संदेश आपके मॉडल को भेजे जाते हैं ताकि वह हर व्यक्ति की एक छोटी प्रोफ़ाइल लिखे: वे आपके क्या लगते हैं, कैसे लिखते हैं, आप दोनों के बीच क्या बाकी है। इसी PC पर रहती है; ग्रुप कभी नहीं पढ़े जाते</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Write a profile again after</source>
+        <translation>प्रोफ़ाइल फिर से लिखें, इतने समय बाद</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>refresh profiles days</source>
+        <translation>प्रोफ़ाइल रीफ़्रेश दिन</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>3 days</source>
+        <translation>3 दिन</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Two weeks</source>
+        <translation>दो हफ़्ते</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n day(s)</source>
+        <translation>
+            <numerusform>%n दिन</numerusform>
+            <numerusform>%n दिन</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+145"/>
         <source>Jarvis on Telegram</source>
         <translation>Telegram पर Jarvis</translation>
     </message>
@@ -1913,7 +2635,7 @@
         <translation>Telegram से कहीं से भी Jarvis को काम भेजें।</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>In Telegram, message &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, send /newbot and copy the token it gives you.</source>
         <translation>Telegram में &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt; को संदेश भेजें, /newbot भेजें और वह जो टोकन दे उसे कॉपी करें।</translation>
     </message>
@@ -1923,7 +2645,8 @@
         <translation>उसे यहाँ पेस्ट करें।</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-6"/>
+        <location line="+7"/>
         <source>Send your new bot the code below. Only that chat is answered.</source>
         <translation>अपने नए बॉट को नीचे दिया कोड भेजें। सिर्फ़ उसी चैट को जवाब दिया जाता है।</translation>
     </message>
@@ -1933,7 +2656,8 @@
         <translation>बॉट टोकन सहेजा गया · बदलने के लिए नया पेस्ट करें</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-13"/>
+        <location line="+13"/>
         <source>Paste your bot&apos;s token</source>
         <translation>अपने बॉट का टोकन पेस्ट करें</translation>
     </message>
@@ -1948,18 +2672,21 @@
         <translation>अपने बॉट को यह कोड भेजें: %1</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <location line="+89"/>
+        <location line="-93"/>
+        <location line="+19"/>
+        <location line="+52"/>
+        <location line="+28"/>
         <source>Unpair</source>
         <translation>अलग करें</translation>
     </message>
     <message>
-        <location line="-88"/>
+        <location line="-28"/>
+        <location line="+29"/>
         <source>Remove the bot</source>
         <translation>बॉट हटाएँ</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-171"/>
         <source>The Jarvis app</source>
         <translation>Jarvis ऐप</translation>
     </message>
@@ -1969,7 +2696,7 @@
         <translation>Jarvis Android ऐप आपके अपने निजी रिले के ज़रिए कहीं से भी इस PC तक पहुँचता है। यह एंड-टू-एंड एन्क्रिप्टेड है: रिले सिर्फ़ ऐसा डेटा आगे भेजता है जिसे वह पढ़ नहीं सकता, और इस PC पर कुछ भी इंटरनेट के लिए खुला नहीं है।</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Connect directly on your own network</source>
         <translation>अपने नेटवर्क पर सीधे कनेक्ट करें</translation>
     </message>
@@ -1979,22 +2706,25 @@
         <translation>एक ही Wi-Fi पर, या Tailscale जैसे VPN से, जोड़े गए फ़ोन रिले के बिना इस PC तक पहुँचते हैं, और जोड़ने के लिए भी रिले नहीं चाहिए। हो सकता है आपके फ़ायरवॉल में Jarvis को अनुमति देनी पड़े</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+12"/>
         <source>Setting up…</source>
         <translation>सेट अप हो रहा है…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-6"/>
+        <location line="+6"/>
         <source>Set up my relay</source>
         <translation>मेरा रिले सेट अप करें</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-6"/>
+        <location line="+9"/>
         <source>Signs in to your free Cloudflare account in your browser, puts the relay online and saves its address.</source>
         <translation>आपके ब्राउज़र में आपके मुफ़्त Cloudflare खाते से साइन इन करता है, रिले को ऑनलाइन करता है और उसका पता सहेजता है।</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="-8"/>
+        <location line="+17"/>
         <source>Or by hand</source>
         <translation>या खुद करें</translation>
     </message>
@@ -2014,7 +2744,8 @@
         <translation>वह जो पता दिखाए उसे यहाँ पेस्ट करें।</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-20"/>
+        <location line="+26"/>
         <source>Your relay&apos;s address, like https://jarvis-relay.you.workers.dev</source>
         <translation>आपके रिले का पता, जैसे https://jarvis-relay.you.workers.dev</translation>
     </message>
@@ -2024,7 +2755,8 @@
         <translation>रद्द करें</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+6"/>
+        <location line="+16"/>
         <source>Connected</source>
         <translation>जुड़ा हुआ</translation>
     </message>
@@ -2034,22 +2766,26 @@
         <translation>जुड़ रहा है…</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-16"/>
+        <location line="+19"/>
         <source>Change</source>
         <translation>बदलें</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+32"/>
+        <location line="+3"/>
         <source>Pair another phone</source>
         <translation>एक और फ़ोन जोड़ें</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-3"/>
+        <location line="+3"/>
         <source>Pair a phone</source>
         <translation>फ़ोन जोड़ें</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="-3"/>
+        <location line="+19"/>
         <source>Scan to pair</source>
         <translation>जोड़ने के लिए स्कैन करें</translation>
     </message>
@@ -2059,7 +2795,7 @@
         <translation>Jarvis ऐप में Pair पर टैप करें और यह कोड स्कैन करें। यह एक बार, दस मिनट तक काम करता है।</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="-246"/>
         <source>WhatsApp</source>
         <translation>WhatsApp</translation>
     </message>
@@ -2069,7 +2805,8 @@
         <translation>Jarvis आपके अपने WhatsApp से WhatsApp Web की तरह जुड़ता है। आपके संपर्कों के जिन संदेशों में आपकी ज़रूरत नहीं, उनका जवाब वह यह बताकर देता है कि वह आपका सहायक है, और छूटी कॉल उठाकर संदेश ले लेता है। यह WhatsApp की आधिकारिक सुविधा नहीं है: WhatsApp बॉट जैसा व्यवहार करने वाले नंबर ब्लॉक कर सकता है, इसलिए Jarvis सिर्फ़ सहेजे गए संपर्कों को जवाब देता है, ग्रुप को कभी नहीं।</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
+        <location line="+1"/>
         <source>Link WhatsApp</source>
         <translation>WhatsApp जोड़ें</translation>
     </message>
@@ -2084,7 +2821,8 @@
         <translation>WhatsApp से कोड लिया जा रहा है…</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-4"/>
+        <location line="+18"/>
         <source>Scan with WhatsApp</source>
         <translation>WhatsApp से स्कैन करें</translation>
     </message>
@@ -2109,18 +2847,20 @@
         <translation>जुड़ा हुआ</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-28"/>
+        <location line="+29"/>
         <source>Unlink</source>
         <translation>अलग करें</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <location line="+45"/>
+        <location line="-387"/>
+        <location line="+392"/>
+        <location line="+51"/>
         <source>Messages</source>
         <translation>संदेश</translation>
     </message>
     <message>
-        <location line="-43"/>
+        <location line="-49"/>
         <source>Answer my contacts</source>
         <translation>मेरे संपर्कों को जवाब दें</translation>
     </message>
@@ -2131,12 +2871,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+44"/>
+        <location line="+50"/>
         <source>Just show them to me</source>
         <translation>बस मुझे दिखाएँ</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-48"/>
         <source>Jarvis writes a reply to your contacts&apos; messages that don&apos;t need you and tells you. Nothing is sent until you say &quot;send it&quot;.</source>
         <translation>Jarvis आपके संपर्कों के उन संदेशों का जवाब लिखता है जिनमें आपकी ज़रूरत नहीं, और आपको बताता है। जब तक आप “भेज दो” नहीं कहते, कुछ नहीं भेजा जाता।</translation>
     </message>
@@ -2167,23 +2907,23 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+38"/>
+        <location line="+44"/>
         <source>e.g. Alex</source>
         <translation>जैसे Alex</translation>
     </message>
     <message>
-        <location line="-37"/>
+        <location line="-43"/>
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
         <translation>कभी जवाब न दें (हर पंक्ति में एक नाम): Jarvis कभी जवाब नहीं देता या कॉल नहीं उठाता, और उनके संदेश सिर्फ़ चैट में दिखाता है</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+38"/>
+        <location line="+44"/>
         <source>e.g. Sam</source>
         <translation>जैसे Sam</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-42"/>
         <source>What Jarvis tells people</source>
         <translation>Jarvis लोगों से क्या कहे</translation>
     </message>
@@ -2193,7 +2933,7 @@
         <translation>जैसे मैं 5 बजे तक क्लास में हूँ, उसके बाद बात करते हैं</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Tell people when I&apos;m busy</source>
         <translation>लोगों को बताएँ कि मैं कब व्यस्त हूँ</translation>
     </message>
@@ -2203,7 +2943,7 @@
         <translation>आपके Google Calendar से: सिर्फ़ समय, कभी नहीं कि आप क्या कर रहे हैं</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+11"/>
         <source>Discord</source>
         <translation>Discord</translation>
     </message>
@@ -2213,7 +2953,8 @@
         <translation>Jarvis Vesktop के ज़रिए, आपके अपने Discord में, आपके लिए Discord संदेश पढ़ता और भेजता है: पूछें कि नया क्या है, या DM या सर्वर चैनल में संदेश भेजने, जवाब देने या प्रतिक्रिया देने को कहें। नए DM और मेंशन Jarvis की चैट में दिखते हैं।</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
+        <location line="+1"/>
         <source>Connected to Vesktop</source>
         <translation>Vesktop से जुड़ा है</translation>
     </message>
@@ -2233,12 +2974,13 @@
         <translation>Vesktop को Jarvis का कनेक्शन चालू करके फिर से शुरू करना होगा (Vesktop में चल रही कॉल कट जाएगी)।</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-9"/>
+        <location line="+10"/>
         <source>Restart Vesktop</source>
         <translation>Vesktop फिर से शुरू करें</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Answer my friends&apos; DMs (Discord may ban accounts that act like bots)</source>
         <translation>मेरे दोस्तों के DM का जवाब दें (Discord बॉट जैसा व्यवहार करने वाले खातों पर रोक लगा सकता है)</translation>
     </message>
@@ -2258,7 +3000,8 @@
         <translation>जवाब WhatsApp सेक्शन में लिखी बात का इस्तेमाल करते हैं जो Jarvis लोगों को बताता है। आप बस यह भी कह सकते हैं: &quot;Sam को जवाब मत देना&quot; या &quot;Alex का संदेश आए तो बताना&quot;।</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="-452"/>
+        <location line="+658"/>
         <source>Your data</source>
         <translation>आपका डेटा</translation>
     </message>
@@ -2268,7 +3011,7 @@
         <translation>इस PC पर Jarvis रखता है: आपके बारे में जो याद रखता है, आपकी बातचीत, रिमाइंडर और रूटीन, आपके वेक वर्ड की छोटी क्लिप (आपकी आवाज़ सीखने के लिए) और एक लॉग। वेक वर्ड के बाद आप जो कहते हैं, और जब किसी काम के लिए स्क्रीन चाहिए तो स्क्रीनशॉट, Google Gemini को जाते हैं; खातों के काम Composio से होते हैं।</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Screen history</source>
         <translation>स्क्रीन इतिहास</translation>
     </message>
@@ -2288,17 +3031,19 @@
         <translation>बातचीत ख़त्म होने पर Jarvis आपके द्वारा अपने बारे में बताई गई स्थायी बातें अपनी याददाश्त में जोड़ता है और हर एक को चैट में दिखाता है</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Keep conversations and logs for</source>
         <translation>बातचीत और लॉग कितने समय रखें</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-198"/>
+        <location line="+200"/>
         <source>A week</source>
         <translation>एक हफ़्ता</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-199"/>
+        <location line="+199"/>
         <source>A month</source>
         <translation>एक महीना</translation>
     </message>
@@ -2318,12 +3063,13 @@
         <translation>हमेशा</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Press again to delete it all</source>
         <translation>सब हटाने के लिए फिर दबाएँ</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-4"/>
+        <location line="+4"/>
         <source>Delete everything Jarvis keeps about me</source>
         <translation>Jarvis मेरे बारे में जो भी रखता है, सब हटाएँ</translation>
     </message>
@@ -2333,12 +3079,13 @@
         <translation>हटा दिया गया। कुंजियाँ, खाते और सेटिंग्स बनी रहेंगी।</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-8"/>
+        <location line="+11"/>
         <source>Keys, account sign-ins and settings stay.</source>
         <translation>कुंजियाँ, खातों के साइन-इन और सेटिंग्स बनी रहेंगी।</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Move to another computer</source>
         <translation>दूसरे कंप्यूटर पर ले जाएँ</translation>
     </message>
@@ -2348,22 +3095,25 @@
         <translation>एक फ़ाइल जिसमें आपकी सेटिंग्स, मेमोरी, रिमाइंडर, शेड्यूल किए गए काम, रूटीन, प्लगइन, बातचीत और वे क्लिप हैं जिनसे Jarvis ने आपकी आवाज़ सीखी। कुंजियाँ, खातों के साइन-इन, WhatsApp और आपका फ़ोन इसमें नहीं हैं: उन्हें दूसरे कंप्यूटर पर फिर से सेट करें।</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+4"/>
+        <location line="+4"/>
         <source>Save a backup</source>
         <translation>बैकअप सहेजें</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-4"/>
+        <location line="+7"/>
         <source>Bring one in</source>
         <translation>बैकअप लाएँ</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-7"/>
+        <location line="+8"/>
         <source>Bringing one in replaces what&apos;s on this computer (conversations are added), then Jarvis restarts.</source>
         <translation>बैकअप लाने से इस कंप्यूटर पर जो है वह बदल जाता है (बातचीत जोड़ी जाती हैं), फिर Jarvis फिर से शुरू होता है।</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Save a Jarvis backup</source>
         <translation>Jarvis बैकअप सहेजें</translation>
     </message>
@@ -2394,7 +3144,62 @@
         <translation>बैकअप लाया गया: Jarvis फिर से शुरू हो रहा है</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+8"/>
+        <source>On other pages</source>
+        <translation>दूसरे पेजों पर</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>These are set on the page they belong to.</source>
+        <translation>ये अपने-अपने पेज पर सेट किए जाते हैं।</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Models and API keys</source>
+        <translation>मॉडल और API कुंजियाँ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Which model does each job (tasks, reading the screen, web search, pictures, the backup voice), the order they&apos;re tried in, and your keys</source>
+        <translation>कौन-सा मॉडल कौन-सा काम करता है (काम, स्क्रीन पढ़ना, वेब खोज, तस्वीरें, बैकअप आवाज़), उन्हें किस क्रम में आज़माया जाता है, और आपकी कुंजियाँ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Background checks</source>
+        <translation>बैकग्राउंड जाँचें</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis keeps an eye on for you (&quot;tell me if a payment fails&quot;), how often it looks, and which checks are paused</source>
+        <translation>Jarvis आपके लिए किन चीज़ों पर नज़र रखता है (“अगर कोई पेमेंट फ़ेल हो तो बताना”), कितनी बार देखता है, और कौन-सी जाँचें रुकी हुई हैं</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis may do in each account</source>
+        <translation>Jarvis हर खाते में क्या कर सकता है</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ask first, go ahead, read only or paused, for each account you connected</source>
+        <translation>जोड़े गए हर खाते के लिए: पहले पूछें, सीधे करें, केवल पढ़ना या रुका हुआ</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tools from other apps</source>
+        <translation>दूसरे ऐप्स के टूल</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The plugins (MCP servers) Jarvis can use: add one, or switch one on or off</source>
+        <translation>Jarvis जिन प्लगइन (MCP सर्वर) का इस्तेमाल कर सकता है: कोई जोड़ें, या उन्हें चालू या बंद करें</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>About Jarvis</source>
+        <translation>Jarvis के बारे में</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>%1 is out (%2)</source>
         <translation>%1 आ गया है (%2)</translation>
     </message>
@@ -2404,7 +3209,8 @@
         <translation>%1 आ गया है</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-10"/>
+        <location line="+11"/>
         <source>Up to date</source>
         <translation>नवीनतम है</translation>
     </message>
@@ -2414,22 +3220,34 @@
         <translation>अपडेट हो रहा है…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
+        <location line="+12"/>
         <source>Update now</source>
         <translation>अभी अपडेट करें</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
+        <location line="+12"/>
         <source>Check for updates</source>
         <translation>अपडेट देखें</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Run the setup again</source>
         <translation>सेटअप फिर से चलाएँ</translation>
     </message>
     <message>
-        <location line="+116"/>
+        <location line="+0"/>
+        <source>First-run setup</source>
+        <translation>पहली बार का सेटअप</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Your Gemini key, microphone, Jarvis&apos;s voice and how careful it should be, one step at a time</source>
+        <translation>आपकी Gemini कुंजी, माइक्रोफ़ोन, Jarvis की आवाज़ और उसे कितना सावधान रहना चाहिए, एक-एक कदम में</translation>
+    </message>
+    <message>
+        <location line="+256"/>
         <source>e.g. Keep answers short.</source>
         <translation>जैसे जवाब छोटे रखो।</translation>
     </message>
@@ -2493,8 +3311,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis keeps all of it on this computer.</source>
-        <translation>“%1” के बाद आप जो कहते हैं या टाइप करते हैं, जवाब देने में मदद करने वाली मेमोरी और हाल की बातचीत, और जब किसी काम के लिए स्क्रीन चाहिए तो स्क्रीनशॉट, Google Gemini को जाते हैं। खातों के काम Composio से होते हैं, सिर्फ़ उन खातों के लिए जो आप जोड़ते हैं। Jarvis यह सब इसी कंप्यूटर पर रखता है।</translation>
+        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis also keeps a copy of your conversations and memory on this computer.</source>
+        <translation>“%1” के बाद आप जो कहते या टाइप करते हैं, जवाब देने में मदद करने वाली मेमोरी और हाल की बातचीत, और जब किसी काम के लिए स्क्रीन चाहिए तो स्क्रीनशॉट, Google Gemini को जाते हैं। खातों के काम Composio से होते हैं, सिर्फ़ उन खातों के लिए जिन्हें आप जोड़ते हैं। Jarvis आपकी बातचीत और मेमोरी की एक कॉपी इस कंप्यूटर पर भी रखता है।</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -2680,7 +3498,7 @@
 <context>
     <name>Theme</name>
     <message>
-        <location filename="../qml/Theme.qml" line="+58"/>
+        <location filename="../qml/Theme.qml" line="+59"/>
         <source>Listening</source>
         <translation>सुन रहा है</translation>
     </message>
@@ -2701,9 +3519,17 @@
     </message>
 </context>
 <context>
+    <name>Toast</name>
+    <message>
+        <location filename="../qml/Toast.qml" line="+34"/>
+        <source>Close</source>
+        <translation>बंद करें</translation>
+    </message>
+</context>
+<context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+109"/>
+        <location filename="../qml/Today.qml" line="+135"/>
         <source>Feels %1 in %2</source>
         <translation>%2 में %1 जैसा लगता है</translation>
     </message>
@@ -2713,7 +3539,7 @@
         <translation>%1 जैसा लगता है</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+55"/>
         <source>Now playing</source>
         <translation>अभी चल रहा है</translation>
     </message>
@@ -2728,7 +3554,8 @@
         <translation>अगला</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-111"/>
+        <location line="+125"/>
         <source>Working on</source>
         <translation>चल रहे काम</translation>
     </message>
@@ -2738,17 +3565,18 @@
         <translation>हाल में पूरे हुए</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+137"/>
         <source>Stop this task</source>
         <translation>यह काम रोकें</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="-92"/>
         <source>Finished at %1</source>
         <translation>%1 पर पूरा हुआ</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="-154"/>
+        <location line="+171"/>
         <source>To do</source>
         <translation>करने के काम</translation>
     </message>
@@ -2758,7 +3586,7 @@
         <translation>इस हफ़्ते कुछ करने को नहीं। आज़माएँ “20 मिनट बाद स्ट्रेच करने की याद दिलाना”।</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+104"/>
         <source>No date</source>
         <translation>कोई तारीख नहीं</translation>
     </message>
@@ -2773,12 +3601,12 @@
         <translation>%1 से वादा किया</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+29"/>
         <source>Cancel this reminder</source>
         <translation>यह रिमाइंडर रद्द करें</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
         <source>Mark as done</source>
         <translation>पूरा हुआ चिह्नित करें</translation>
     </message>
@@ -2788,12 +3616,41 @@
         <translation>Classroom में खोलें</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-112"/>
         <source>Couldn&apos;t check %1 just now.</source>
         <translation>अभी %1 जाँच नहीं सका।</translation>
     </message>
+    <message numerus="yes">
+        <location line="-208"/>
+        <source>%n running</source>
+        <translation>
+            <numerusform>%n चल रहा</numerusform>
+            <numerusform>%n चल रहे</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+18"/>
+        <source>%n to do</source>
+        <translation>
+            <numerusform>%n काम बाकी</numerusform>
+            <numerusform>%n काम बाकी</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+13"/>
+        <location line="+186"/>
+        <source>Show fewer</source>
+        <translation>कम दिखाएँ</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>+%n more</source>
+        <translation>
+            <numerusform>+%n और</numerusform>
+            <numerusform>+%n और</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+17"/>
         <source>This PC</source>
         <translation>यह PC</translation>
     </message>
@@ -2827,11 +3684,16 @@
         <source>Last answer started %1 s after you finished</source>
         <translation>पिछला जवाब आपके बोलना खत्म करने के %1 सेकंड बाद शुरू हुआ</translation>
     </message>
+    <message>
+        <location line="+94"/>
+        <source>Click again to cancel it</source>
+        <translation>रद्द करने के लिए फिर क्लिक करें</translation>
+    </message>
 </context>
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+122"/>
+        <location filename="../jarvis.py" line="+124"/>
         <source>Open Jarvis</source>
         <translation>Jarvis खोलें</translation>
     </message>

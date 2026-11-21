@@ -3,10 +3,11 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Jarvis
 
-// What Jarvis remembers about you (edit it freely), and what it does for you: reminders and scheduled tasks, routines
-// and the checks it keeps on things. Each row's pencil opens its editor in place, one at a time.
+// What Jarvis remembers about you (a row per note, or all of it as text), and what it does for you: reminders and
+// scheduled tasks, routines and the checks it keeps on things. Each row's pencil opens its editor in place, one at a time.
 ScrollPage {
     id: page
+    objectName: "memoryPage"
     title: qsTr("Memory")
     hint: qsTr("Jarvis reads this before every conversation. Tell it “remember…” or edit it here.")
     property var reminders: []
@@ -15,12 +16,88 @@ ScrollPage {
     property int checksEvery: 60
     property var checksLast: null  // how the last background look went: {at, answered, ok, found, next}
     property var tried: ({})  // Try now, by check: {busy} while it looks, then {answer} or {error}
-    property string saved: ""
-    property string editing: ""  // the row whose editor is open ("reminder <id>", "routine new"...)
+    property string saved: ""  // the notes as last loaded or saved: what an edit in the box was made on
+    property bool loaded: false  // (no "Nothing yet" before the notes have come)
+    property string editing: ""  // the row whose editor is open ("reminder <id>", "routine new", "note 0 - Likes tea"...)
+    property bool asText: false  // all the notes in one box, for many changes at once ("Edit as text")
+    property string draft: ""  // what the open note's editor holds (kept when a change elsewhere redraws the rows)
+    readonly property bool noteOpen: editing.startsWith("note ")
+    readonly property var noteRows: parse(saved)
+    readonly property int filterFrom: 10  // more notes than this, and a filter shows above them
+    readonly property var words: noteRows.length > filterFrom && !asText ? noteFilter.text.toLowerCase().split(/\s+/).filter(w => w) : []
+    readonly property var shownRows: noteRows.filter(n => words.every(w => n.line.toLowerCase().includes(w)))  // ("lesson" finds lessons)
 
     function load() {
-        Api.get("/api/memory", d => { if (notes.text === saved) notes.text = d.memory; saved = d.memory })  // (unsaved edits stay)
+        readNotes()
         lists()
+    }
+    // (unsaved edits stay, and so does what they were made on: Save adds what Jarvis learnt since; an open note too)
+    function readNotes() {
+        Api.get("/api/memory", d => { if (notes.text === saved && !noteOpen) { show(d.memory); saved = d.memory } loaded = true })
+    }
+    function show(text) {  // new notes in the box, the cursor where it was
+        if (notes.text === text) return
+        const at = notes.cursorPosition
+        notes.text = text
+        notes.cursorPosition = Math.min(at, notes.length)
+    }
+    // Sends the text it was made on (was): notes Jarvis added meanwhile are kept under the edit, never written over.
+    function saveNotes(then) {
+        const sent = notes.text
+        Api.post("/api/memory", { memory: sent, was: saved }, d => {
+            if (notes.text === sent) { show(d.memory); saved = d.memory }
+            else saved = sent  // (typed on while it saved: the next Save adds Jarvis's notes again)
+            Backend.toast(d.merged ? qsTr("Kept %n note(s) Jarvis added while you were editing", "", d.merged) : qsTr("Memory saved"), false)
+            if (then) then()
+        })
+    }
+    // The notes as rows: a line's bullet and kind ("Lesson:", "How to:") are kept apart, so an edit changes only its words.
+    // Blank lines and the rest stay in the file as they are, unshown.
+    function parse(text) {
+        const out = [], seen = {}
+        text.split("\n").forEach(line => {
+            const m = /^(\s*(?:[-*•]\s*)?)((?:lesson|how to)\s*:\s*)?(.*)$/i.exec(line)
+            const body = m[3].trim()
+            if (!body) return
+            seen[line] = (seen[line] || 0) + 1
+            out.push({ line: line, nth: seen[line], lead: m[1], prefix: m[2] || "", text: body,
+                       kind: !m[2] ? "fact" : /^lesson/i.test(m[2]) ? "lesson" : "howto" })
+        })
+        return out
+    }
+    function shown(text) { return text.charAt(0).toUpperCase() + text.slice(1) }
+    // A row's change: that line alone is sent, and changed on the memory as it is now (what Jarvis learnt or forgot while
+    // the page was open stays so); a note that's gone meanwhile is said, and the rows show what's there.
+    function noteLine(line, said, close) {
+        Api.post("/api/memory", { line: line }, d => {
+            const clean = notes.text === saved
+            saved = d.memory
+            if (clean) show(d.memory)
+            if (close) closeNote()
+            if (said) Backend.toast(said, false)
+        }, e => { Backend.toast(e.error, true); if (close) closeNote(); else readNotes() })
+    }
+    function openNote(n, key) { draft = n.text; editing = key }
+    function closeNote() { editing = ""; draft = ""; readNotes() }
+    function saveNote(n) {
+        const text = draft.trim()
+        if (text === n.text) closeNote()
+        else if (text) noteLine({ old: n.line, new: n.lead + n.prefix + text }, "", true)
+    }
+    function addNote() {
+        const text = newNote.text.trim()
+        if (!text) return
+        noteLine({ new: "- " + { fact: "", lesson: "Lesson: ", howto: "How to: " }[newKind.value] + text }, qsTr("Note added"), false)
+        newNote.text = ""
+    }
+    function editAsText() {
+        if (noteOpen) closeNote()
+        asText = true
+        notes.forceActiveFocus()
+    }
+    function doneAsText() {  // (an edit not saved yet is saved first: the rows show what's in the file)
+        if (notes.text === saved) { asText = false; readNotes() }
+        else saveNotes(() => asText = false)
     }
     function lists() {  // (not the notes: they may have unsaved edits)
         Api.get("/api/reminders", d => reminders = d)
@@ -42,26 +119,74 @@ ScrollPage {
     function change(path, body) { Api.post(path, body, lists, e => { Backend.toast(e.error, true); lists() }) }
     Component.onCompleted: load()
     onVisibleChanged: if (visible) load()
+    Timer {  // what Jarvis learns while the page is open shows up, unless the box has an edit not saved yet (or a note has)
+        interval: 30000; repeat: true; running: page.visible && notes.text === page.saved && !page.noteOpen
+        onTriggered: page.readNotes()
+    }
 
     actions: [
+        Pill {
+            visible: !page.asText
+            text: qsTr("Edit as text"); kind: "ghost"; symbol: "edit"
+            onClicked: page.editAsText()
+        },
         RowLayout {  // a quiet status while nothing is unsaved; the button only when there's something to save
-            visible: notes.text === page.saved
+            visible: page.asText && notes.text === page.saved
             height: 40
             spacing: 6
             Icon { name: "check"; size: 14; color: Theme.text3; Layout.preferredWidth: 14; Layout.preferredHeight: 14 }
             Txt { kind: "small"; text: qsTr("Saved"); color: Theme.text3; wrapMode: Text.NoWrap }
         },
         Pill {
-            visible: notes.text !== page.saved
+            visible: page.asText && notes.text !== page.saved
             text: qsTr("Save"); kind: "primary"; symbol: "check"
-            onClicked: Api.post("/api/memory", { memory: notes.text }, () => { page.saved = notes.text; Backend.toast(qsTr("Memory saved"), false) })
+            onClicked: page.saveNotes()
+        },
+        Pill {
+            visible: page.asText
+            text: qsTr("Done"); kind: "ghost"
+            onClicked: page.doneAsText()
         }
     ]
 
     Section {
         title: qsTr("What Jarvis knows about you")
-        description: qsTr("Plain notes, one per line. Jarvis adds to them as you talk.")
+        description: page.asText ? qsTr("Plain notes, one per line. Jarvis adds to them as you talk.")
+                     : page.loaded && !page.noteRows.length ? qsTr("Nothing yet. Say “remember that I'm vegetarian”, or add a note below.")
+                     : qsTr("Jarvis adds to these as you talk. Hover over a note to change or delete it.")
+        Field {
+            id: noteFilter
+            Layout.fillWidth: true
+            visible: page.noteRows.length > page.filterFrom && !page.asText
+            placeholderText: qsTr("Filter notes")
+            Keys.onShortcutOverride: e => e.accepted = e.key === Qt.Key_Escape && text !== ""  // (Esc clears it rather than stopping Jarvis)
+            Keys.onEscapePressed: clear()
+        }
+        Txt {
+            kind: "small"; Layout.fillWidth: true
+            visible: !page.asText && page.noteRows.length > 0 && !page.shownRows.length
+            text: qsTr("No notes match “%1”.").arg(noteFilter.text.trim())
+        }
+        NoteGroup { kind: "fact" }
+        NoteGroup { kind: "lesson"; title: qsTr("Lessons"); hint: qsTr("How you corrected the way Jarvis does things.") }
+        NoteGroup { kind: "howto"; title: qsTr("Ways that worked"); hint: qsTr("How Jarvis got something tricky done, kept for next time.") }
+        RowLayout {  // a new note goes at the end, as one Jarvis remembers would
+            visible: !page.asText
+            Layout.fillWidth: true
+            spacing: 10
+            Field { id: newNote; Layout.fillWidth: true; placeholderText: qsTr("Add a note"); onAccepted: page.addNote() }
+            Select {
+                id: newKind
+                Layout.preferredWidth: 190
+                Accessible.name: qsTr("Kind of note")
+                value: "fact"
+                model: [{ value: "fact", label: qsTr("About you") }, { value: "lesson", label: qsTr("Lesson") },
+                        { value: "howto", label: qsTr("Way that worked") }]
+            }
+            Pill { text: qsTr("Add"); symbol: "plus"; enabled: newNote.text.trim() !== ""; onClicked: page.addNote() }
+        }
         Rectangle {
+            visible: page.asText
             Layout.fillWidth: true
             Layout.preferredHeight: Math.min(Math.max(notes.implicitHeight + 2, 140), 420)  // (grows with the notes, then scrolls)
             radius: Theme.radiusControl
@@ -114,8 +239,8 @@ ScrollPage {
                                  onToggled: page.change("/api/reminders", { id: modelData.id, text: modelData.text, at: modelData.edit_at, was: modelData.edit_at,
                                                       repeat: modelData.repeat, task: !!modelData.task, on: checked }) }
                         Edit { onClicked: page.editing = "reminder " + modelData.id }
-                        Remove { tip: qsTr("Cancel")
-                                 onClicked: page.change(`/api/reminders/${modelData.id}/cancel`, {}) }
+                        Remove { label: qsTr("Cancel"); again: qsTr("Click again to cancel it")
+                                 onConfirmed: page.change(`/api/reminders/${modelData.id}/cancel`, {}) }
                     }
                     ReminderForm { r: modelData; key: "reminder " + modelData.id }
                 }
@@ -144,8 +269,8 @@ ScrollPage {
                         title: modelData.name.charAt(0).toUpperCase() + modelData.name.slice(1)
                         detail: modelData.steps
                         Edit { onClicked: page.editing = "routine " + modelData.name }
-                        Remove { tip: qsTr("Delete")
-                                 onClicked: page.change("/api/routines/delete", { name: modelData.name }) }
+                        Remove { label: qsTr("Delete")
+                                 onConfirmed: page.change("/api/routines/delete", { name: modelData.name }) }
                     }
                     RoutineForm { r: modelData; key: "routine " + modelData.name }
                 }
@@ -182,7 +307,7 @@ ScrollPage {
                         Toggle { checked: modelData.on; Layout.preferredWidth: 44; Accessible.name: modelData.text
                                  onToggled: page.change("/api/checks", { text: modelData.text, old: modelData.text, on: checked }) }
                         Edit { onClicked: page.editing = "check " + modelData.text }
-                        Remove { tip: qsTr("Delete"); onClicked: page.change("/api/checks", { text: "", old: modelData.text }) }
+                        Remove { label: qsTr("Delete"); onConfirmed: page.change("/api/checks", { text: "", old: modelData.text }) }
                     }
                     CheckForm { r: modelData; key: "check " + modelData.text }
                 }
@@ -245,12 +370,75 @@ ScrollPage {
             RowLayout { id: tail; spacing: 10 }
         }
     }
+    // One kind of note (facts, lessons, ways that worked): its heading, then a row per note; hidden with none to show.
+    component NoteGroup: ColumnLayout {
+        id: group
+        property string kind
+        property string title
+        property string hint
+        readonly property var rows: page.asText ? [] : page.shownRows.filter(n => n.kind === kind)
+        visible: rows.length > 0
+        Layout.fillWidth: true
+        spacing: 0
+        Txt { text: group.title; weight: 600; visible: text !== ""; Layout.fillWidth: true }
+        Txt { kind: "small"; text: group.hint; visible: text !== ""; Layout.fillWidth: true; Layout.topMargin: 2; Layout.bottomMargin: 4 }
+        Repeater { model: group.rows; NoteRow {} }
+    }
+    // A note: its words (wrapped), and its pencil and delete, shown on hover or when Tab reaches them. The pencil turns
+    // the row into a field: Enter or Save keeps the change, Esc or Cancel leaves it.
+    component NoteRow: ColumnLayout {
+        id: row
+        required property var modelData
+        required property int index
+        readonly property string key: "note " + modelData.nth + " " + modelData.line
+        readonly property bool open: page.editing === key
+        readonly property bool lit: hover.hovered || pen.activeFocus || bin.activeFocus || bin.armed
+        Layout.fillWidth: true
+        spacing: 0
+        onOpenChanged: if (open) { box.text = page.draft; box.forceActiveFocus() }
+        Component.onCompleted: if (open) box.text = page.draft  // (redrawn while open: what was typed is still there)
+        HoverHandler { id: hover }
+        Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Theme.stroke; visible: row.index > 0 }
+        RowLayout {
+            visible: !row.open
+            Layout.fillWidth: true
+            Layout.minimumHeight: 32
+            Layout.topMargin: 6; Layout.bottomMargin: 6
+            spacing: 12
+            Txt { text: page.shown(row.modelData.text); Layout.fillWidth: true }
+            RowLayout {
+                spacing: 2
+                Layout.alignment: Qt.AlignTop
+                opacity: row.lit ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: Theme.fast } }
+                Edit { id: pen; Accessible.description: row.modelData.text; onClicked: page.openNote(row.modelData, row.key) }
+                Remove { id: bin; Accessible.description: row.modelData.text; onConfirmed: page.noteLine({ old: row.modelData.line }, qsTr("Note deleted"), false) }
+            }
+        }
+        RowLayout {
+            visible: row.open
+            Layout.fillWidth: true
+            Layout.topMargin: 6; Layout.bottomMargin: 6
+            spacing: 10
+            Field {
+                id: box
+                Layout.fillWidth: true
+                placeholderText: qsTr("Write the note")
+                onTextEdited: page.draft = text
+                onAccepted: page.saveNote(row.modelData)
+                Keys.onShortcutOverride: e => e.accepted = e.key === Qt.Key_Escape  // (Esc leaves the edit rather than stopping Jarvis)
+                Keys.onEscapePressed: page.closeNote()
+            }
+            Pill { text: qsTr("Cancel"); kind: "ghost"; onClicked: page.closeNote() }
+            Pill { text: qsTr("Save"); kind: "primary"; symbol: "check"; enabled: box.text.trim() !== ""; onClicked: page.saveNote(row.modelData) }
+        }
+    }
     component List: ColumnLayout {  // the rows of a list card
         Layout.fillWidth: true
         Layout.topMargin: -6; Layout.bottomMargin: -8
         spacing: 0
     }
-    component Remove: IconButton { symbol: "trash"; size: 32; glyph: 18; color: Theme.text3; iconColor: hovered ? Theme.red : color }
+    component Remove: ConfirmButton { glyph: 18 }
     component Edit: IconButton { symbol: "edit"; tip: qsTr("Edit"); size: 32; glyph: 18; color: Theme.text3 }
     component Add: Pill {  // opens the editor for a new one, which takes the button's place
         property string key

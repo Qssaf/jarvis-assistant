@@ -7,6 +7,7 @@ Card {
     property string title
     property string description
     default property alias body: col.data
+    property alias rows: col.children  // (the heading's column first; Settings' search reads which rows show)
     property alias spacing: col.spacing
     Layout.fillWidth: true
     ColumnLayout {

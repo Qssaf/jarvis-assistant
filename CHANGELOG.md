@@ -3,6 +3,18 @@
 ## Unreleased
 
 ### Added
+- **A People page:** everyone you chat with one to one on WhatsApp or Discord, and everyone you've told Jarvis about,
+  each with what Jarvis understands of them (who they are to you, how they write, what you talk about lately, what's
+  open between you), your notes (add, edit, delete, with an end date) and the promises you made them. The profile is
+  written from your latest one-to-one messages with them, about hourly for a couple of people, and again after a week
+  once you've talked since (Settings → Messages → People: off, or 1-60 days); *Refresh* writes it now and *Forget this*
+  drops it for good. Groups are never read, and links, emails and long numbers never stay in one. Both models get each
+  person's one-line gist, so Jarvis knows who someone is when you mention them.
+- **Memory page as notes, not one text box:** what Jarvis remembers is a list (about you, lessons, ways that worked)
+  you filter, edit or delete one line at a time, and add to; *Edit as text* is still there. A change touches only its
+  own line, so what Jarvis learns meanwhile stays.
+- **Accounts shows what Jarvis no longer asks about:** the account actions you told it to do without asking, with what
+  you said and when; *Ask again* takes one back.
 - **Knows the people you talk to:** the people you wrote with on WhatsApp or Discord in the last two weeks are in
   what both models know (name, other names, which app), not only the ones with notes. A misheard name now has
   something to be matched against, and *"send him this"* goes to the app you talk in.
@@ -17,6 +29,22 @@
 - **Research goes to the agent:** a question that takes reading through chats (*"go through my Discord and tell me who
   I talk to most"*) is handed to a background task after a few looks, and the agent reads whole chats before judging.
   The voice used to read five messages of three chats and say it found nothing, three times running.
+- **Settings, rebuilt:** tabs (Voice, Your day, Window, Messages, Phone, Your data, Advanced) and a search that finds
+  a setting on any tab by its name, its hint or its choices (Ctrl+F; Esc clears). Every setting now has a control in
+  the window, including *Listen through a Bluetooth headset*, and Advanced has the way to the pages that hold the rest
+  (models and keys, background checks, accounts, plugins).
+- **Attachments you can see:** attached pictures show as thumbnails and other files as tiles with their type and size,
+  in the message box and in the message once sent (it showed the raw "(attached: /path)" text). Paste a picture or
+  copied files with Ctrl+V, drop them, or pick them in your desktop's own file dialog (KDE's, GNOME's) instead of Qt's
+  plain one. Clicking a tile opens the file.
+- **Activity shows what happened:** each step lists what Jarvis asked for and what came back, failures in red, with
+  filters for errors, the voice and background tasks. It used to be a list of labels.
+- **Home's side column:** what Jarvis is working on and your to-do list come first, the clock and weather share one
+  line, a long to-do list says "+N more" instead of dropping the rest, and a finished task opens to its full answer.
+- **Pictures in the chat:** *"show me a picture of a red panda"* finds a photo of the real thing (Wikipedia's) and puts
+  it in the chat, *"show me my screen"* puts the screen there, and a picture file Jarvis writes into an answer (a chart it
+  drew) shows as a picture instead of a link. A picture at a web address named in an answer stays a link: it's only
+  fetched when Jarvis shows it on purpose (text read from a page or a message could otherwise make it call an address). Invented pictures are still painted with *make_image*.
 - **"Keep answering him for me":** for the time you say (half an hour unless you say, three hours at most) Jarvis
   answers one person's WhatsApp or Discord chat by itself, as Jarvis and the way you asked (*"keep it light, sign as
   Jarvis"*), also while you write there yourself and with auto-replies off. Each answer shows in the chat, it tells you
@@ -197,6 +225,25 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
+- **A stray key could change a setting:** after a click on a drop-down in Settings, a typed letter or an arrow key
+  changed it and saved at once (an "l" put missed WhatsApp calls on *Let them ring*, and calls went unanswered and
+  unmentioned). Letters do nothing on a closed drop-down now, arrows open the list, and the mouse wheel doesn't turn it.
+- Saving the Memory page no longer deletes what Jarvis learned while it was open: notes added meanwhile are kept, and
+  the page says how many.
+- Deleting an API key, a provider, a reminder, a routine or a check, and signing out of Google, now take a second
+  click (one click deleted them for good).
+- Error messages at the bottom of the window can be read: they wrap, stay eight seconds, pause while the pointer is on
+  them and have a close button (a long one ran off the window after three seconds).
+- Accounts, Plugins, Models and Health show fresh data when you come back to them, and Accounts notices by itself when
+  a sign-in in the browser has finished.
+- The Models, Cost and Health pages say "Gemini API key" and "Google sign-in" instead of internal names, and a
+  plugin's secret header is hidden as you leave the field.
+- **Bluetooth headsets keep their sound quality:** with a headset's microphone as the default one, Jarvis's always-on
+  wake-word recording made the system switch the headset to call quality (mono, muffled) for as long as Jarvis ran, and
+  back again every time you chose high quality. Jarvis now records from the PC's own microphone and stays on it when a
+  headset connects (notes and echo cancelling too). With no other microphone it still uses the headset's; to have it
+  listen through the headset anyway, say *"listen through my headset's microphone"* (the `bluetooth_mic` setting). A
+  sound system that doesn't answer for a moment no longer moves the recording onto the headset either.
 - A shell command that changes git's settings for every project (`git config --global ...`) now waits for your yes:
   Jarvis had set a global name and a wrong email by itself to get a test job going.
 - A message to someone you had just named was refused as "you didn't say who" when your next words didn't repeat the

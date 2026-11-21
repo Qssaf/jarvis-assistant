@@ -19,6 +19,21 @@ ComboBox {
     onCountChanged: Qt.callLater(sync)
     Component.onCompleted: sync()
     onActivated: i => { value = valueAt(i); picked(value) }
+    // With the list closed, a key never changes the choice: a ComboBox takes a typed letter for the item starting with
+    // it and saves it at once ("l" set calls to "Let them ring"). The arrows open the list, where a choice is made.
+    Keys.onPressed: event => {
+        if (popup.visible)
+            return
+        if (event.key === Qt.Key_Up || event.key === Qt.Key_Down) {
+            popup.open()
+            event.accepted = true
+        } else if (event.text !== "" && event.key !== Qt.Key_Space && event.key !== Qt.Key_Return && event.key !== Qt.Key_Enter
+                   && event.key !== Qt.Key_Tab && event.key !== Qt.Key_Backtab && event.key !== Qt.Key_Escape
+                   && !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier))) {
+            event.accepted = true
+        }
+    }
+    wheelEnabled: false
     background: Rectangle {
         radius: Theme.radiusControl
         color: c.hovered || c.popup.visible ? Theme.glassHover : Theme.glass

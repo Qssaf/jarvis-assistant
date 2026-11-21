@@ -4,7 +4,7 @@
 <context>
     <name>AccountsPage</name>
     <message>
-        <location filename="../qml/AccountsPage.qml" line="+9"/>
+        <location filename="../qml/AccountsPage.qml" line="+10"/>
         <source>Accounts</source>
         <translation>계정</translation>
     </message>
@@ -14,7 +14,22 @@
         <translation>계정을 연결하면 Jarvis가 내용을 읽고 작업할 수 있어요. 계정마다 무엇을 허용할지 직접 정하세요.</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+14"/>
+        <source>Jarvis will ask again before “%1”</source>
+        <translation>Jarvis가 “%1” 전에 다시 물어볼게요</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>%1 connected</source>
+        <translation>%1 연결됨</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>%1 isn&apos;t connected yet: press Refresh once you&apos;ve signed in</source>
+        <translation>%1이(가) 아직 연결되지 않았어요. 로그인한 뒤 새로고침을 누르세요</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Refresh</source>
         <translation>새로고침</translation>
     </message>
@@ -40,7 +55,7 @@
         <translation>계정마다 Jarvis가 할 수 있는 일을 정하세요.</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+36"/>
         <source>Sign in again</source>
         <translation>다시 로그인</translation>
     </message>
@@ -50,7 +65,7 @@
         <translation>브라우저에서 로그인 창이 열렸어요</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Click again to disconnect</source>
         <translation>한 번 더 클릭하면 연결이 해제돼요</translation>
     </message>
@@ -86,6 +101,31 @@
     </message>
     <message>
         <location line="+11"/>
+        <source>Jarvis no longer asks before…</source>
+        <translation>Jarvis가 더 이상 묻지 않는 작업…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>You told Jarvis it may do these without asking first. Ask again takes that back.</source>
+        <translation>먼저 묻지 않고 해도 된다고 Jarvis에게 말한 작업이에요. “다시 묻기”를 누르면 취소돼요.</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>You said “%1” on %2</source>
+        <translation>%2에 “%1”라고 말했어요</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Since %1</source>
+        <translation>%1부터</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Ask again</source>
+        <translation>다시 묻기</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>More accounts</source>
         <translation>다른 계정</translation>
     </message>
@@ -100,7 +140,12 @@
         <translation>하나를 골라 브라우저에서 로그인한 뒤 새로고침을 누르세요.</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
+        <source>%1: waiting for sign-in…</source>
+        <translation>%1: 로그인 기다리는 중…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Finish signing in in your browser, then press Refresh</source>
         <translation>브라우저에서 로그인을 마친 뒤 새로고침을 누르세요</translation>
     </message>
@@ -113,7 +158,7 @@
 <context>
     <name>ActivityPage</name>
     <message>
-        <location filename="../qml/ActivityPage.qml" line="+43"/>
+        <location filename="../qml/ActivityPage.qml" line="+79"/>
         <source>Activity</source>
         <translation>활동</translation>
     </message>
@@ -123,14 +168,60 @@
         <translation>이 대화에서 Jarvis가 거치는 모든 단계를 실시간으로 보여 줘요.</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>All</source>
+        <translation>전체</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Errors</source>
+        <translation>오류</translation>
+    </message>
+    <message>
+        <location line="+0"/>
         <location line="+86"/>
+        <source>Voice</source>
+        <translation>음성</translation>
+    </message>
+    <message>
+        <location line="-86"/>
+        <source>Tasks</source>
+        <translation>작업</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Failed: %1</source>
+        <translation>실패: %1</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Task</source>
+        <translation>작업</translation>
+    </message>
+    <message>
+        <location line="+19"/>
         <source>New steps appear at the top as Jarvis works</source>
         <translation>Jarvis가 작업하는 동안 새 단계가 맨 위에 나타나요</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+16"/>
         <source>Nothing yet: ask Jarvis something</source>
         <translation>아직 없어요. Jarvis에게 무엇이든 물어보세요</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing has failed in this conversation</source>
+        <translation>이 대화에서는 실패한 단계가 없어요</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The voice hasn&apos;t used a tool in this conversation yet</source>
+        <translation>이 대화에서 음성이 아직 도구를 사용하지 않았어요</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No background task has used a tool in this conversation yet</source>
+        <translation>이 대화에서 아직 도구를 사용한 백그라운드 작업이 없어요</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -154,23 +245,66 @@
 <context>
     <name>Api</name>
     <message>
-        <location filename="../qml/Api.qml" line="+27"/>
+        <location filename="../qml/Api.qml" line="+19"/>
+        <source>Gemini API key</source>
+        <translation>Gemini API 키</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Google sign-in</source>
+        <translation>Google 로그인</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Something went wrong</source>
         <translation>문제가 발생했어요</translation>
     </message>
 </context>
 <context>
+    <name>Attachment</name>
+    <message>
+        <location filename="../qml/Attachment.qml" line="+17"/>
+        <source>Moved or deleted</source>
+        <translation>이동되었거나 삭제됨</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Folder</source>
+        <translation>폴더</translation>
+    </message>
+    <message>
+        <location line="+71"/>
+        <source>Remove %1</source>
+        <translation>%1 제거</translation>
+    </message>
+</context>
+<context>
     <name>Backend</name>
     <message>
-        <location filename="../window.py" line="+243"/>
+        <location filename="../window.py" line="+324"/>
         <source>Copied</source>
         <translation>복사됨</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>Couldn&apos;t paste the picture: %1</source>
+        <translation>이미지를 붙여넣지 못했어요: %1</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>%1 isn&apos;t there any more</source>
+        <translation>%1이(가) 더 이상 없어요</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Couldn&apos;t open %1: %2</source>
+        <translation>%1을(를) 열지 못했어요: %2</translation>
     </message>
 </context>
 <context>
     <name>ChatsPage</name>
     <message>
-        <location filename="../qml/ChatsPage.qml" line="+33"/>
+        <location filename="../qml/ChatsPage.qml" line="+41"/>
         <source>just now</source>
         <translation>방금</translation>
     </message>
@@ -209,7 +343,7 @@
         <translation>대화 검색</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+57"/>
         <source>Now</source>
         <translation>지금</translation>
     </message>
@@ -259,39 +393,94 @@
 <context>
     <name>Composer</name>
     <message>
-        <location filename="../qml/Composer.qml" line="+45"/>
-        <source>Remove</source>
-        <translation>제거</translation>
+        <location filename="../qml/Composer.qml" line="+49"/>
+        <source>Attach files for Jarvis</source>
+        <translation>Jarvis에게 파일 첨부</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <source>Attach files (or drop them here)</source>
-        <translation>파일 첨부 (또는 여기에 끌어다 놓기)</translation>
+        <location line="+27"/>
+        <source>Drop to attach</source>
+        <translation>놓으면 첨부돼요</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+40"/>
+        <source>Attach files (or paste or drop them here)</source>
+        <translation>파일 첨부 (여기에 붙여넣거나 끌어다 놓아도 돼요)</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Ask Jarvis</source>
         <translation>Jarvis에게 물어보기</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+34"/>
+        <source>Undo</source>
+        <translation>실행 취소</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Redo</source>
+        <translation>다시 실행</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cut</source>
+        <translation>잘라내기</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy</source>
+        <translation>복사</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Paste</source>
+        <translation>붙여넣기</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Delete</source>
+        <translation>삭제</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Select all</source>
+        <translation>모두 선택</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location filename="../qml/Main.qml" line="+105"/>
         <source>Pause listening</source>
         <translation>듣기 일시 중지</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/Main.qml" line="+0"/>
         <source>Talk to Jarvis</source>
         <translation>Jarvis와 대화</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>Stop (Esc)</source>
         <translation>중지 (Esc)</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-1"/>
         <source>Send (Enter)</source>
         <translation>보내기 (Enter)</translation>
+    </message>
+</context>
+<context>
+    <name>ConfirmButton</name>
+    <message>
+        <location filename="../qml/ConfirmButton.qml" line="+7"/>
+        <source>Delete</source>
+        <translation>삭제</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Click again to delete</source>
+        <translation>한 번 더 클릭하면 삭제돼요</translation>
     </message>
 </context>
 <context>
@@ -387,17 +576,17 @@
     <name>HealthPage</name>
     <message>
         <location filename="../qml/HealthPage.qml" line="+9"/>
-        <location line="+16"/>
+        <location line="+18"/>
         <source>Health</source>
         <translation>진단</translation>
     </message>
     <message>
-        <location line="-15"/>
+        <location line="-17"/>
         <source>Checks the key, mic, screen, accounts and models, and how to fix them.</source>
         <translation>키, 마이크, 화면, 계정, 모델을 점검하고 해결 방법을 알려 줘요.</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+16"/>
         <source>Home</source>
         <translation>홈</translation>
     </message>
@@ -437,7 +626,7 @@
         <translation>설정</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Copy a report</source>
         <translation>보고서 복사</translation>
     </message>
@@ -517,12 +706,7 @@
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="../qml/HomePage.qml" line="+58"/>
-        <source>Attach files for Jarvis</source>
-        <translation>Jarvis에게 파일 첨부</translation>
-    </message>
-    <message>
-        <location line="+36"/>
+        <location filename="../qml/HomePage.qml" line="+92"/>
         <source>Up late?</source>
         <translation>아직 안 주무세요?</translation>
     </message>
@@ -567,7 +751,7 @@
         <translation>처리 중이에요</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="-83"/>
         <source>Brief me</source>
         <translation>브리핑해 줘</translation>
     </message>
@@ -577,7 +761,17 @@
         <translation>날씨와 일정</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Connect your accounts</source>
+        <translation>계정 연결하기</translation>
+    </message>
+    <message>
         <location line="+0"/>
+        <source>Gmail, Calendar, Classroom</source>
+        <translation>Gmail, 캘린더, Classroom</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>What&apos;s due this week?</source>
         <translation>이번 주 마감인 과제 있어?</translation>
     </message>
@@ -597,7 +791,7 @@
         <translation>Gmail 받은편지함</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+1"/>
         <source>What&apos;s on my screen?</source>
         <translation>내 화면에 뭐가 있어?</translation>
     </message>
@@ -627,7 +821,7 @@
         <translation>그림 만들기</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+99"/>
         <source>New chat</source>
         <translation>새 채팅</translation>
     </message>
@@ -642,25 +836,29 @@
         <translation>Gemini Live 대신 백업 음성(모델 페이지)이 답해요</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+53"/>
         <source>Working on it…</source>
         <translation>작업 중…</translation>
     </message>
-    <message>
-        <location line="+5"/>
-        <source>Stop</source>
-        <translation>중지</translation>
+    <message numerus="yes">
+        <location filename="../qml/Composer.qml" line="+0"/>
+        <location filename="../qml/HomePage.qml" line="+8"/>
+        <source>Stop all (%n)</source>
+        <translation>
+            <numerusform>모두 중지 (%n)</numerusform>
+        </translation>
     </message>
     <message>
-        <location line="+27"/>
-        <source>Drop to attach</source>
-        <translation>놓으면 첨부돼요</translation>
+        <location line="+1"/>
+        <location filename="../qml/HomePage.qml" line="+0"/>
+        <source>Stop</source>
+        <translation>중지</translation>
     </message>
 </context>
 <context>
     <name>Main</name>
     <message>
-        <location filename="../qml/Main.qml" line="+115"/>
+        <location filename="../qml/Main.qml" line="+32"/>
         <source>Home</source>
         <translation>홈</translation>
     </message>
@@ -675,22 +873,31 @@
         <translation>활동</translation>
     </message>
     <message>
+        <location line="+0"/>
+        <source>People</source>
+        <translation>사람들</translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <location filename="../qml/SettingsPage.qml" line="+831"/>
         <source>Accounts</source>
         <translation>계정</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/SettingsPage.qml" line="+2"/>
         <source>Plugins</source>
         <translation>플러그인</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location filename="../qml/SettingsPage.qml" line="-6"/>
         <source>Models</source>
         <translation>모델</translation>
     </message>
     <message>
         <location line="+1"/>
+        <location filename="../qml/SettingsPage.qml" line="+2"/>
         <source>Memory</source>
         <translation>기억</translation>
     </message>
@@ -710,7 +917,7 @@
         <translation>설정</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+66"/>
         <source>Minimise</source>
         <translation>최소화</translation>
     </message>
@@ -733,7 +940,7 @@
 <context>
     <name>MemoryPage</name>
     <message>
-        <location filename="../qml/MemoryPage.qml" line="+10"/>
+        <location filename="../qml/MemoryPage.qml" line="+11"/>
         <source>Memory</source>
         <translation>기억</translation>
     </message>
@@ -743,23 +950,46 @@
         <translation>Jarvis는 대화를 시작할 때마다 이 내용을 읽어요. “기억해 줘…”라고 말하거나 여기서 직접 고치세요.</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+126"/>
         <source>Saved</source>
         <translation>저장됨</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+226"/>
+        <location line="+291"/>
+        <location line="+37"/>
         <source>Save</source>
         <translation>저장</translation>
     </message>
     <message>
-        <location line="-225"/>
+        <location line="-420"/>
         <source>Memory saved</source>
         <translation>기억을 저장했어요</translation>
     </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>Kept %n note(s) Jarvis added while you were editing</source>
+        <translation>
+            <numerusform>편집하는 동안 Jarvis가 추가한 메모 %n개도 남겨 두었어요</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+5"/>
+        <location line="+40"/>
+        <source>Note added</source>
+        <translation>메모를 추가했어요</translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>Edit as text</source>
+        <translation>텍스트로 편집</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Done</source>
+        <translation>완료</translation>
+    </message>
+    <message>
+        <location line="+6"/>
         <source>What Jarvis knows about you</source>
         <translation>Jarvis가 아는 내 정보</translation>
     </message>
@@ -769,7 +999,77 @@
         <translation>한 줄에 하나씩 쓰는 간단한 메모예요. 대화하는 동안 Jarvis가 덧붙여요.</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+1"/>
+        <source>Nothing yet. Say “remember that I&apos;m vegetarian”, or add a note below.</source>
+        <translation>아직 없어요. “내가 채식주의자라는 걸 기억해”라고 말하거나 아래에 메모를 추가하세요.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis adds to these as you talk. Hover over a note to change or delete it.</source>
+        <translation>대화하는 동안 Jarvis가 덧붙여요. 메모에 마우스를 올리면 바꾸거나 삭제할 수 있어요.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Filter notes</source>
+        <translation>메모 필터</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>No notes match “%1”.</source>
+        <translation>“%1”에 맞는 메모가 없어요.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Lessons</source>
+        <translation>교훈</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>How you corrected the way Jarvis does things.</source>
+        <translation>Jarvis가 일하는 방식을 바로잡아 준 내용이에요.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ways that worked</source>
+        <translation>효과 있었던 방법</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>How Jarvis got something tricky done, kept for next time.</source>
+        <translation>Jarvis가 까다로운 일을 해낸 방법이에요. 다음을 위해 남겨 둬요.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Add a note</source>
+        <translation>메모 추가</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Kind of note</source>
+        <translation>메모 종류</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>About you</source>
+        <translation>나에 대해</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Lesson</source>
+        <translation>교훈</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Way that worked</source>
+        <translation>효과 있었던 방법</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Add</source>
+        <translation>추가</translation>
+    </message>
+    <message>
+        <location line="+18"/>
         <source>- Prefers to be called …
 - Studies …</source>
         <translation>- 원하는 호칭: …
@@ -804,12 +1104,18 @@
     </message>
     <message>
         <location line="+5"/>
-        <location line="+164"/>
+        <location line="+190"/>
+        <location line="+37"/>
         <source>Cancel</source>
         <translation>취소</translation>
     </message>
     <message>
-        <location line="-156"/>
+        <location line="-227"/>
+        <source>Click again to cancel it</source>
+        <translation>한 번 더 클릭하면 취소돼요</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Add a reminder or task</source>
         <translation>알림 또는 작업 추가</translation>
     </message>
@@ -921,7 +1227,17 @@
         <translation>12시간</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+80"/>
+        <source>Note deleted</source>
+        <translation>메모를 삭제했어요</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Write the note</source>
+        <translation>메모를 입력하세요</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Edit</source>
         <translation>편집</translation>
     </message>
@@ -984,7 +1300,7 @@
 <context>
     <name>Message</name>
     <message>
-        <location filename="../qml/Message.qml" line="+71"/>
+        <location filename="../qml/Message.qml" line="+115"/>
         <source>Copy</source>
         <translation>복사</translation>
     </message>
@@ -1002,7 +1318,7 @@
         <translation>작업마다 쓸 모델을 고르세요. 목록은 위에서부터 차례로 시도하며, 하나가 바쁘거나 멈추면 다음 모델이 이어받아요.</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+40"/>
         <source>Looking up the models you can use…</source>
         <translation>사용할 수 있는 모델을 찾는 중…</translation>
     </message>
@@ -1014,7 +1330,7 @@
         </translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Refresh</source>
         <translation>새로고침</translation>
     </message>
@@ -1024,7 +1340,7 @@
         <translation>작업별 모델</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+59"/>
         <source>Jarvis&apos;s choice</source>
         <translation>Jarvis 추천</translation>
     </message>
@@ -1033,15 +1349,8 @@
         <source>Use Jarvis&apos;s choice</source>
         <translation>Jarvis 추천 사용</translation>
     </message>
-    <message numerus="yes">
-        <location line="+9"/>
-        <source>%1 · +%n fallback(s)</source>
-        <translation>
-            <numerusform>%1 · 대체 모델 +%n개</numerusform>
-        </translation>
-    </message>
     <message>
-        <location line="+14"/>
+        <location line="+23"/>
         <source>Providers and keys</source>
         <translation>제공업체와 키</translation>
     </message>
@@ -1101,12 +1410,22 @@
         <translation>이 제공업체 제거</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Click again to remove it and its keys</source>
+        <translation>한 번 더 클릭하면 제공업체와 키가 제거돼요</translation>
+    </message>
+    <message>
         <location line="+16"/>
         <source>Resting (rate limited or refused): the next key answers</source>
         <translation>쉬는 중(한도 초과 또는 거부됨): 다음 키가 응답합니다</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+1"/>
+        <source>Click again to remove this key</source>
+        <translation>한 번 더 클릭하면 이 키가 제거돼요</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>More providers</source>
         <translation>다른 제공업체</translation>
     </message>
@@ -1161,6 +1480,11 @@
         <translation>로그아웃</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Click again to sign out</source>
+        <translation>한 번 더 클릭하면 로그아웃돼요</translation>
+    </message>
+    <message>
         <location line="+8"/>
         <source>First install the opencode-antigravity-auth plugin (github:Qssaf/opencode-antigravity-auth-desktop): Jarvis signs in with its details. Or put ANTIGRAVITY_CLIENT_ID and ANTIGRAVITY_CLIENT_SECRET in Jarvis&apos;s env file.</source>
         <translation>먼저 opencode-antigravity-auth 플러그인을 설치하세요(github:Qssaf/opencode-antigravity-auth-desktop). Jarvis가 그 정보로 로그인해요. 또는 Jarvis의 env 파일에 ANTIGRAVITY_CLIENT_ID와 ANTIGRAVITY_CLIENT_SECRET을 넣으세요.</translation>
@@ -1191,13 +1515,20 @@
         <translation>이 모델을 더 먼저 시도</translation>
     </message>
     <message>
-        <location line="-137"/>
-        <location line="+139"/>
+        <location line="-138"/>
+        <location line="+140"/>
         <source>Remove</source>
         <translation>제거</translation>
     </message>
+    <message numerus="yes">
+        <location line="-221"/>
+        <source>%1 · +%n backup(s)</source>
+        <translation>
+            <numerusform>%1 · 백업 +%n</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+4"/>
+        <location line="+225"/>
         <source>Add a model</source>
         <translation>모델 추가</translation>
     </message>
@@ -1205,7 +1536,7 @@
 <context>
     <name>Notch</name>
     <message>
-        <location filename="../jarvis.py" line="+3543"/>
+        <location filename="../jarvis.py" line="+3789"/>
         <source>LISTENING</source>
         <translation>듣는 중</translation>
     </message>
@@ -1236,6 +1567,289 @@
     </message>
 </context>
 <context>
+    <name>PeoplePage</name>
+    <message>
+        <location filename="../qml/PeoplePage.qml" line="+47"/>
+        <source>just now</source>
+        <translation>방금</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n min ago</source>
+        <translation>
+            <numerusform>%n분 전</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>%n h ago</source>
+        <translation>
+            <numerusform>%n시간 전</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>%n day(s) ago</source>
+        <translation>
+            <numerusform>%n일 전</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>%1: they wrote %2, you wrote %3</source>
+        <translation>%1: 받은 메시지 %2, 보낸 메시지 %3</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1: they wrote %2</source>
+        <translation>%1: 받은 메시지 %2</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>%1: you wrote %2</source>
+        <translation>%1: 보낸 메시지 %2</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Talked %1</source>
+        <translation>마지막 대화 %1</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Not enough messages from them yet to say much. Jarvis tries again once you&apos;ve talked more.</source>
+        <translation>아직 메시지가 적어서 말할 게 많지 않아요. 더 대화하면 Jarvis가 다시 시도해요.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Something went wrong</source>
+        <translation>문제가 발생했어요</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>People</source>
+        <translation>사람들</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Who you talk with, what Jarvis understands of them from your chats, and what you&apos;ve noted or promised.</source>
+        <translation>대화하는 사람들, 채팅에서 Jarvis가 이해한 내용, 그리고 내가 적어 두거나 약속한 것들이에요.</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <location line="+1"/>
+        <source>Search people</source>
+        <translation>사람 검색</translation>
+    </message>
+    <message>
+        <location line="+89"/>
+        <source>No one matches that</source>
+        <translation>일치하는 사람이 없어요</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>No one here yet</source>
+        <translation>아직 아무도 없어요</translation>
+    </message>
+    <message>
+        <location line="+46"/>
+        <source>Also %1</source>
+        <translation>다른 이름: %1</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>You haven&apos;t chatted with them one to one on WhatsApp or Discord since Jarvis was linked.</source>
+        <translation>Jarvis를 연결한 뒤로 WhatsApp이나 Discord에서 이 사람과 1:1로 채팅한 적이 없어요.</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>What Jarvis understands</source>
+        <translation>Jarvis가 이해한 내용</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Reading your chats…</source>
+        <translation>채팅을 읽는 중…</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Refresh</source>
+        <translation>새로고침</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Write it again now from your latest one-to-one messages with them</source>
+        <translation>이 사람과의 최근 1:1 메시지로 지금 다시 작성</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Forget this</source>
+        <translation>이 내용 잊기</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Click again to forget it</source>
+        <translation>한 번 더 클릭하면 잊어요</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Profile forgotten</source>
+        <translation>프로필을 잊었어요</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+23"/>
+        <source>Updated %1, from %n message(s)</source>
+        <translation>
+            <numerusform>%1 업데이트, 메시지 %n개 기반</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>You had Jarvis forget what it understood of them. It won&apos;t write it again unless you press Refresh.</source>
+        <translation>Jarvis가 이 사람에 대해 이해한 내용을 잊게 했어요. 새로고침을 누르지 않으면 다시 작성하지 않아요.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Nothing yet. Every so often Jarvis reads your latest one-to-one messages with someone and writes a short profile of them, once there are enough messages.</source>
+        <translation>아직 없어요. Jarvis는 가끔 누군가와의 최근 1:1 메시지를 읽고, 메시지가 충분히 쌓이면 그 사람의 짧은 프로필을 작성해요.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis doesn&apos;t read your chats to understand people: profiles are off.</source>
+        <translation>Jarvis는 사람을 이해하려고 채팅을 읽지 않아요: 프로필이 꺼져 있어요.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Profiles are off, so this one isn&apos;t updated.</source>
+        <translation>프로필이 꺼져 있어서 이 프로필은 업데이트되지 않아요.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Turn them on in Settings</source>
+        <translation>설정에서 켜기</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Reading your latest messages with %1 and asking your model…</source>
+        <translation>%1 님과의 최근 메시지를 읽고 모델에 묻는 중…</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Notes</source>
+        <translation>메모</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Add a note</source>
+        <translation>메모 추가</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>None yet. Tell Jarvis “Sam is my cousin”, or add one here.</source>
+        <translation>아직 없어요. Jarvis에게 “Sam은 내 사촌이야”라고 말하거나 여기에 추가하세요.</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Until %1</source>
+        <translation>%1까지</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Edit</source>
+        <translation>편집</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Promises</source>
+        <translation>약속</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Nothing open. When you write them “I&apos;ll send it tomorrow”, Jarvis keeps it here.</source>
+        <translation>남은 약속이 없어요. 상대에게 “내일 보낼게”라고 쓰면 Jarvis가 여기에 남겨 둬요.</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Due %1</source>
+        <translation>기한: %1</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No time set: it&apos;s on your evening list</source>
+        <translation>시간 미정: 저녁 목록에 있어요</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Done</source>
+        <translation>완료</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Mark this promise as kept</source>
+        <translation>이 약속을 지킨 것으로 표시</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <location line="+5"/>
+        <source>Forget this person</source>
+        <translation>이 사람 잊기</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>Their notes, promises and profile go. If you chat with them again, Jarvis starts a new page.</source>
+        <translation>이 사람의 메모, 약속, 프로필이 사라져요. 다시 채팅하면 Jarvis가 새 페이지를 만들어요.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Click again to forget them</source>
+        <translation>한 번 더 클릭하면 이 사람을 잊어요</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Forgot %1</source>
+        <translation>%1 님을 잊었어요</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Pick someone to see what Jarvis knows about them</source>
+        <translation>사람을 선택하면 Jarvis가 그 사람에 대해 아는 내용을 볼 수 있어요</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>People appear here when you chat with someone one to one on WhatsApp or Discord, or when you tell Jarvis about them: “Sam is my cousin”.</source>
+        <translation>WhatsApp이나 Discord에서 누군가와 1:1로 채팅하거나 Jarvis에게 누군가에 대해 말하면(“Sam은 내 사촌이야”) 여기에 나타나요.</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>e.g. My cousin, studies medicine in Lyon</source>
+        <translation>예: 사촌, 리옹에서 의학 공부 중</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Until (optional)</source>
+        <translation>종료일(선택)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The last day it&apos;s true, like 2026-12-31</source>
+        <translation>사실인 마지막 날, 예: 2026-12-31</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>A date like 2026-12-31 makes the note go after that day.</source>
+        <translation>2026-12-31 같은 날짜를 넣으면 그날이 지나고 메모가 사라져요.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cancel</source>
+        <translation>취소</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Save</source>
+        <translation>저장</translation>
+    </message>
+</context>
+<context>
     <name>PluginsPage</name>
     <message>
         <location filename="../qml/PluginsPage.qml" line="+9"/>
@@ -1248,7 +1862,7 @@
         <translation>MCP 서버로 Jarvis에 도구를 더하세요. 웹 주소나 이 PC에서 실행되는 명령을 쓸 수 있어요.</translation>
     </message>
     <message numerus="yes">
-        <location line="+7"/>
+        <location line="+9"/>
         <source>%n min</source>
         <translation>
             <numerusform>%n분</numerusform>
@@ -1272,14 +1886,14 @@
         <translation>설치됨</translation>
     </message>
     <message numerus="yes">
-        <location line="+34"/>
+        <location line="+40"/>
         <source>%n tool(s)</source>
         <translation>
             <numerusform>도구 %n개</numerusform>
         </translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+17"/>
         <source>%1 · trying again in %2</source>
         <translation>%1 · %2 후 다시 시도</translation>
     </message>
@@ -1319,7 +1933,7 @@
         <translation>플러그인을 제거했어요</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+18"/>
         <source>Add a plugin</source>
         <translation>플러그인 추가</translation>
     </message>
@@ -1418,17 +2032,17 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="+11"/>
+        <location filename="../qml/SettingsPage.qml" line="-677"/>
         <source>Settings</source>
         <translation>설정</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Changes are saved at once. Models and API keys are on the Models page.</source>
         <translation>변경 사항은 바로 저장돼요. 모델과 API 키는 모델 페이지에 있어요.</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="-109"/>
         <source>Checking…</source>
         <translation>확인 중…</translation>
     </message>
@@ -1453,12 +2067,50 @@
         <translation>암호 문구를 제거했어요</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+5"/>
+        <location line="+130"/>
         <source>Voice</source>
         <translation>음성</translation>
     </message>
     <message>
+        <location line="-129"/>
+        <source>Window</source>
+        <translation>창</translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <source>Phone</source>
+        <translation>휴대폰</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Advanced</source>
+        <translation>고급</translation>
+    </message>
+    <message>
+        <location line="+68"/>
+        <location line="+1"/>
+        <source>Search settings</source>
+        <translation>설정 검색</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <location line="+39"/>
+        <source>Clear the search</source>
+        <translation>검색어 지우기</translation>
+    </message>
+    <message>
+        <location line="-3"/>
+        <source>No setting matches “%1”</source>
+        <translation>“%1”에 맞는 설정이 없어요</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Try another word, or pick a tab above.</source>
+        <translation>다른 단어로 찾거나 위의 탭을 고르세요.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>How Jarvis sounds and talks to you. Changes apply from the next conversation.</source>
         <translation>Jarvis의 목소리와 말투예요. 변경 사항은 다음 대화부터 적용돼요.</translation>
     </message>
@@ -1513,12 +2165,12 @@
         <translation>먼저 생각하지 않고 답해요. 약 0.3초 빠르지만 조금 덜 정확해요</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Speak replies to typed messages</source>
         <translation>입력한 메시지에도 소리 내어 답하기</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Always use the backup voice</source>
         <translation>항상 백업 음성 사용</translation>
     </message>
@@ -1528,7 +2180,7 @@
         <translation>Gemini Live를 쓸 수 없는 키라면 Gemini Live 대신 모델 페이지의 모델로 듣고 말해요. 끄면 Gemini Live에 연결할 수 없을 때만 백업 음성이 답해요</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Listening</source>
         <translation>듣기</translation>
     </message>
@@ -1619,7 +2271,7 @@
         <translation>취소한 호출로 Jarvis가 내 목소리가 아닌 소리를 배워요</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Only wake for my voice</source>
         <translation>내 목소리에만 반응</translation>
     </message>
@@ -1639,7 +2291,7 @@
         <translation>다른 사람이 호출어를 말해도 Jarvis가 깨어나지 않아요. 말하기와 눌러서 말하기는 항상 작동해요</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Echo cancelling</source>
         <translation>에코 제거</translation>
     </message>
@@ -1654,7 +2306,17 @@
         <translation>PC에서 나는 소리(Jarvis, 게임, 동영상, 통화)가 마이크로 들어가 내 목소리로 인식되지 않게 막아, Jarvis가 말하는 중에도 말할 수 있어요(PipeWire, 적용하려면 Jarvis 재시작)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
+        <source>Listen through a Bluetooth headset</source>
+        <translation>Bluetooth 헤드셋으로 듣기</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>When a Bluetooth headset&apos;s microphone is the default one, Jarvis listens through it, and the headset stays in call quality (mono and muffled) while Jarvis runs. Off, Jarvis uses the PC&apos;s own microphone and the headset keeps its sound</source>
+        <translation>Bluetooth 헤드셋 마이크가 기본 마이크이면 Jarvis가 그 마이크로 듣고, Jarvis가 실행되는 동안 헤드셋은 통화 음질(모노, 먹먹한 소리)로 유지돼요. 끄면 Jarvis가 PC 자체 마이크를 쓰고 헤드셋은 원래 음질을 유지해요</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Spoken passphrase: asked for with every yes said out loud (sends, calls, account changes, risky commands). Never shown or said back</source>
         <translation>음성 암호 문구: 소리 내어 승인할 때마다(보내기, 통화, 계정 변경, 위험한 명령) 물어봐요. 화면에 표시하거나 다시 말하지 않아요</translation>
     </message>
@@ -1670,39 +2332,44 @@
     </message>
     <message>
         <location line="+2"/>
-        <location line="+138"/>
-        <location line="+56"/>
+        <location line="+290"/>
+        <location line="+117"/>
         <source>Save</source>
         <translation>저장</translation>
     </message>
     <message>
-        <location line="-192"/>
+        <location line="-405"/>
         <location line="+86"/>
         <source>Remove</source>
         <translation>제거</translation>
     </message>
     <message>
-        <location line="-76"/>
+        <location line="-82"/>
+        <location line="+7"/>
         <source>Push to talk</source>
         <translation>눌러서 말하기</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-7"/>
+        <location line="+9"/>
         <source>Bind these to keyboard shortcuts (KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</source>
         <translation>이 명령을 키보드 단축키에 연결하세요(KDE: System Settings → Keyboard → Shortcuts → Add New → Command).</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-8"/>
+        <location line="+10"/>
         <source>Start listening</source>
         <translation>듣기 시작</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-10"/>
+        <location line="+11"/>
         <source>Drag over part of the screen and ask about it</source>
         <translation>화면 일부를 드래그해서 질문하기</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-249"/>
+        <location line="+256"/>
         <source>Your day</source>
         <translation>나의 하루</translation>
     </message>
@@ -1732,7 +2399,7 @@
         <translation>아침에 Jarvis가 처음 시작되면 오늘 하루를 알려 줘요</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Do not disturb</source>
         <translation>방해 금지</translation>
     </message>
@@ -1742,7 +2409,7 @@
         <translation>Jarvis가 먼저 말하지 않아요. 알림, 작업 결과, 메시지는 채팅, 시스템 알림, 휴대폰으로만 보내요. 물어보면 계속 답해요(트레이 메뉴에서도 켤 수 있어요)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Quiet over full-screen apps</source>
         <translation>전체 화면 앱에서는 조용히</translation>
     </message>
@@ -1752,7 +2419,7 @@
         <translation>게임이나 영화가 전체 화면일 때 Jarvis는 스스로 말할 내용을 채팅과 알림에만 남깁니다. 알림 예약은 그래도 말해요</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Classroom deadlines</source>
         <translation>Classroom 마감</translation>
     </message>
@@ -1762,7 +2429,7 @@
         <translation>과제 마감 하루 전과 두 시간 전에 알려 줘요(제출하면 건너뛰어요)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Calendar heads-up</source>
         <translation>캘린더 미리 알림</translation>
     </message>
@@ -1772,7 +2439,7 @@
         <translation>Google Calendar 일정마다 10분 전에 알려 줘요</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Keep track of my promises</source>
         <translation>내 약속 챙기기</translation>
     </message>
@@ -1793,11 +2460,12 @@
     </message>
     <message>
         <location line="+5"/>
+        <location line="+3"/>
         <source>Quiet hours from (empty: none)</source>
         <translation>조용한 시간 시작 (비우면 없음)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-2"/>
         <source>e.g. 22:00</source>
         <translation>예: 22:00</translation>
     </message>
@@ -1812,7 +2480,7 @@
         <translation>예: 07:00</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Window &amp; behavior</source>
         <translation>창과 동작</translation>
     </message>
@@ -1862,12 +2530,12 @@
         <translation>채팅에 Jarvis의 생각 과정 표시</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Start Jarvis when I log in</source>
         <translation>로그인할 때 Jarvis 시작</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Ask before risky actions</source>
         <translation>위험한 작업 전에 확인</translation>
     </message>
@@ -1877,7 +2545,7 @@
         <translation>삭제, 설치, 종료 명령과 계정 변경(이메일 보내기, 새 일정)은 정확히 그것을 요청한 경우가 아니면 승인을 기다려요</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Your instructions</source>
         <translation>나의 지침</translation>
     </message>
@@ -1887,7 +2555,54 @@
         <translation>Jarvis가 어떻게 행동할지, 그리고 알아 두어야 할 내 정보예요.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+116"/>
+        <source>People</source>
+        <translation>사람들</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Jarvis gets to know the people you chat with one to one, so it knows who someone is when you mention them. The People page shows what it understood, with your notes and promises.</source>
+        <translation>Jarvis가 1:1로 채팅하는 사람들을 알아 가서, 누군가를 언급하면 누구인지 알아요. 사람들 페이지에서 Jarvis가 이해한 내용을 메모, 약속과 함께 볼 수 있어요.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Understand the people I chat with</source>
+        <translation>채팅하는 사람들 이해하기</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Now and then, the latest messages of your one-to-one WhatsApp and Discord chats go to your model to write a short profile of each person: who they are to you, how they write, what&apos;s open between you. Kept on this PC; groups are never read</source>
+        <translation>가끔 WhatsApp과 Discord 1:1 채팅의 최근 메시지가 모델로 보내져 각 사람의 짧은 프로필을 작성해요: 나와 어떤 사이인지, 어떻게 글을 쓰는지, 서로 남은 일이 무엇인지. 이 PC에 보관되며, 그룹은 절대 읽지 않아요</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Write a profile again after</source>
+        <translation>프로필 다시 작성 주기</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>refresh profiles days</source>
+        <translation>새로고침 프로필 일</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>3 days</source>
+        <translation>3일</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Two weeks</source>
+        <translation>2주</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+2"/>
+        <source>%n day(s)</source>
+        <translation>
+            <numerusform>%n일</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+145"/>
         <source>Jarvis on Telegram</source>
         <translation>Telegram의 Jarvis</translation>
     </message>
@@ -1897,7 +2612,7 @@
         <translation>Telegram으로 어디서든 Jarvis에게 작업을 보내세요.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>In Telegram, message &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;, send /newbot and copy the token it gives you.</source>
         <translation>Telegram에서 &lt;a href=&quot;https://t.me/BotFather&quot;&gt;@BotFather&lt;/a&gt;에게 /newbot을 보내고, 받은 토큰을 복사하세요.</translation>
     </message>
@@ -1907,7 +2622,8 @@
         <translation>여기에 붙여 넣으세요.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-6"/>
+        <location line="+7"/>
         <source>Send your new bot the code below. Only that chat is answered.</source>
         <translation>새 봇에게 아래 코드를 보내세요. 그 채팅에만 답해요.</translation>
     </message>
@@ -1917,7 +2633,8 @@
         <translation>봇 토큰 저장됨 · 바꾸려면 새 토큰을 붙여 넣으세요</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-13"/>
+        <location line="+13"/>
         <source>Paste your bot&apos;s token</source>
         <translation>봇 토큰 붙여 넣기</translation>
     </message>
@@ -1932,18 +2649,21 @@
         <translation>봇에게 이 코드를 보내세요: %1</translation>
     </message>
     <message>
-        <location line="+6"/>
-        <location line="+89"/>
+        <location line="-93"/>
+        <location line="+19"/>
+        <location line="+52"/>
+        <location line="+28"/>
         <source>Unpair</source>
         <translation>페어링 해제</translation>
     </message>
     <message>
-        <location line="-88"/>
+        <location line="-28"/>
+        <location line="+29"/>
         <source>Remove the bot</source>
         <translation>봇 제거</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="-171"/>
         <source>The Jarvis app</source>
         <translation>Jarvis 앱</translation>
     </message>
@@ -1953,7 +2673,7 @@
         <translation>Jarvis Android 앱은 나만의 비공개 릴레이를 거쳐 어디서든 이 PC에 연결해요. 종단 간 암호화되어 릴레이는 알아볼 수 없는 데이터만 전달하고, 이 PC는 인터넷에 열려 있지 않아요.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Connect directly on your own network</source>
         <translation>내 네트워크에서 직접 연결</translation>
     </message>
@@ -1963,22 +2683,25 @@
         <translation>같은 Wi-Fi나 Tailscale 같은 VPN에서는 페어링된 휴대폰이 릴레이 없이 이 PC에 연결되며, 페어링에도 릴레이가 필요 없습니다. 방화벽에서 Jarvis를 허용해야 할 수도 있습니다</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+12"/>
         <source>Setting up…</source>
         <translation>설정 중…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-6"/>
+        <location line="+6"/>
         <source>Set up my relay</source>
         <translation>릴레이 설정</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-6"/>
+        <location line="+9"/>
         <source>Signs in to your free Cloudflare account in your browser, puts the relay online and saves its address.</source>
         <translation>브라우저에서 무료 Cloudflare 계정에 로그인해 릴레이를 온라인에 올리고 주소를 저장해요.</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="-8"/>
+        <location line="+17"/>
         <source>Or by hand</source>
         <translation>직접 설정</translation>
     </message>
@@ -1998,7 +2721,8 @@
         <translation>출력된 주소를 여기에 붙여 넣으세요.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-20"/>
+        <location line="+26"/>
         <source>Your relay&apos;s address, like https://jarvis-relay.you.workers.dev</source>
         <translation>릴레이 주소, 예: https://jarvis-relay.you.workers.dev</translation>
     </message>
@@ -2008,7 +2732,8 @@
         <translation>취소</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+6"/>
+        <location line="+16"/>
         <source>Connected</source>
         <translation>연결됨</translation>
     </message>
@@ -2018,22 +2743,26 @@
         <translation>연결 중…</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-16"/>
+        <location line="+19"/>
         <source>Change</source>
         <translation>변경</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+32"/>
+        <location line="+3"/>
         <source>Pair another phone</source>
         <translation>다른 휴대폰 페어링</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-3"/>
+        <location line="+3"/>
         <source>Pair a phone</source>
         <translation>휴대폰 페어링</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="-3"/>
+        <location line="+19"/>
         <source>Scan to pair</source>
         <translation>스캔해서 페어링</translation>
     </message>
@@ -2043,7 +2772,7 @@
         <translation>Jarvis 앱에서 Pair를 누르고 이 코드를 스캔하세요. 10분 동안 한 번만 쓸 수 있어요.</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="-246"/>
         <source>WhatsApp</source>
         <translation>WhatsApp</translation>
     </message>
@@ -2053,7 +2782,8 @@
         <translation>Jarvis는 WhatsApp Web처럼 내 WhatsApp에 연결돼요. 내가 직접 답할 필요가 없는 연락처의 메시지에는 비서라고 밝히고 답하며, 받지 못한 전화는 대신 받아 메시지를 남겨 둬요. WhatsApp의 공식 기능이 아니에요. WhatsApp은 봇처럼 동작하는 번호를 차단할 수 있어서, Jarvis는 저장된 연락처에만 답하고 그룹에는 답하지 않아요.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
+        <location line="+1"/>
         <source>Link WhatsApp</source>
         <translation>WhatsApp 연결</translation>
     </message>
@@ -2068,7 +2798,8 @@
         <translation>WhatsApp에서 코드를 받는 중…</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-4"/>
+        <location line="+18"/>
         <source>Scan with WhatsApp</source>
         <translation>WhatsApp으로 스캔</translation>
     </message>
@@ -2093,18 +2824,20 @@
         <translation>연결됨</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-28"/>
+        <location line="+29"/>
         <source>Unlink</source>
         <translation>연결 해제</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <location line="+45"/>
+        <location line="-387"/>
+        <location line="+392"/>
+        <location line="+51"/>
         <source>Messages</source>
         <translation>메시지</translation>
     </message>
     <message>
-        <location line="-43"/>
+        <location line="-49"/>
         <source>Answer my contacts</source>
         <translation>연락처에 답하기</translation>
     </message>
@@ -2115,12 +2848,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+44"/>
+        <location line="+50"/>
         <source>Just show them to me</source>
         <translation>나에게만 보여 주기</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-48"/>
         <source>Jarvis writes a reply to your contacts&apos; messages that don&apos;t need you and tells you. Nothing is sent until you say &quot;send it&quot;.</source>
         <translation>Jarvis가 내가 직접 답할 필요가 없는 연락처의 메시지에 답장을 써 두고 알려 줘요. “보내 줘”라고 말하기 전에는 아무것도 보내지 않아요.</translation>
     </message>
@@ -2151,23 +2884,23 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+38"/>
+        <location line="+44"/>
         <source>e.g. Alex</source>
         <translation>예: 민준</translation>
     </message>
     <message>
-        <location line="-37"/>
+        <location line="-43"/>
         <source>Never answer (one name per line): Jarvis never replies or picks up, and only shows their messages in the chat</source>
         <translation>답하지 않기 (한 줄에 이름 하나씩): Jarvis가 답장하거나 전화를 받지 않고, 메시지를 채팅에만 보여 줘요</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+38"/>
+        <location line="+44"/>
         <source>e.g. Sam</source>
         <translation>예: 서연</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-42"/>
         <source>What Jarvis tells people</source>
         <translation>Jarvis가 상대에게 전할 말</translation>
     </message>
@@ -2177,7 +2910,7 @@
         <translation>예: 5시까지 수업 중이라 끝나고 답할게요</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Tell people when I&apos;m busy</source>
         <translation>바쁜 시간을 상대에게 알리기</translation>
     </message>
@@ -2187,7 +2920,7 @@
         <translation>Google 캘린더에서: 시간만 알리고, 무엇을 하는지는 절대 알리지 않아요</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+11"/>
         <source>Discord</source>
         <translation>Discord</translation>
     </message>
@@ -2197,7 +2930,8 @@
         <translation>Jarvis가 Vesktop을 통해 내 Discord에서 메시지를 읽고 보내 줍니다. 새 소식을 묻거나 DM이나 서버 채널에서 보내기, 답장, 반응을 부탁하세요. 새 DM과 멘션은 Jarvis 채팅에 표시됩니다.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
+        <location line="+1"/>
         <source>Connected to Vesktop</source>
         <translation>Vesktop에 연결됨</translation>
     </message>
@@ -2217,12 +2951,13 @@
         <translation>Jarvis 연결을 켠 상태로 Vesktop을 다시 시작해야 합니다(Vesktop의 통화는 끊깁니다).</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-9"/>
+        <location line="+10"/>
         <source>Restart Vesktop</source>
         <translation>Vesktop 다시 시작</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Answer my friends&apos; DMs (Discord may ban accounts that act like bots)</source>
         <translation>친구의 DM에 답장(Discord는 봇처럼 행동하는 계정을 차단할 수 있습니다)</translation>
     </message>
@@ -2242,7 +2977,8 @@
         <translation>답장에는 WhatsApp 섹션의 &apos;Jarvis가 사람들에게 전할 말&apos;이 쓰입니다. &quot;Sam에게는 답장하지 마&quot;나 &quot;Alex가 메시지 보내면 알려 줘&quot;라고 말해도 됩니다.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="-452"/>
+        <location line="+658"/>
         <source>Your data</source>
         <translation>내 데이터</translation>
     </message>
@@ -2252,7 +2988,7 @@
         <translation>Jarvis는 이 PC에 나에 대해 기억한 내용, 대화, 알림과 루틴, 호출어 짧은 녹음(목소리 학습용), 로그를 보관해요. 호출어 뒤에 말한 내용과 작업에 화면이 필요할 때의 스크린샷은 Google Gemini로 전송되고, 계정 작업은 Composio를 거쳐요.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Screen history</source>
         <translation>화면 기록</translation>
     </message>
@@ -2272,17 +3008,19 @@
         <translation>대화가 끝나면 Jarvis가 직접 말씀하신 자신에 대한 오래 유지될 내용을 기억에 추가하고, 각각을 채팅에 보여 줍니다</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Keep conversations and logs for</source>
         <translation>대화와 로그 보관 기간</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-198"/>
+        <location line="+200"/>
         <source>A week</source>
         <translation>1주</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-199"/>
+        <location line="+199"/>
         <source>A month</source>
         <translation>1개월</translation>
     </message>
@@ -2302,12 +3040,13 @@
         <translation>영구</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Press again to delete it all</source>
         <translation>한 번 더 누르면 모두 삭제돼요</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-4"/>
+        <location line="+4"/>
         <source>Delete everything Jarvis keeps about me</source>
         <translation>Jarvis가 보관한 내 정보 모두 삭제</translation>
     </message>
@@ -2317,12 +3056,13 @@
         <translation>삭제했어요. 키, 계정, 설정은 유지돼요.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-8"/>
+        <location line="+11"/>
         <source>Keys, account sign-ins and settings stay.</source>
         <translation>키, 계정 로그인, 설정은 남아요.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+8"/>
         <source>Move to another computer</source>
         <translation>다른 컴퓨터로 옮기기</translation>
     </message>
@@ -2332,22 +3072,25 @@
         <translation>설정, 기억, 알림, 예약 작업, 루틴, 플러그인, 대화, 그리고 Jarvis가 목소리를 학습한 녹음을 파일 하나에 담아요. 키, 계정 로그인, WhatsApp, 휴대폰 연결은 포함되지 않으니 다른 컴퓨터에서 다시 설정하세요.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+4"/>
+        <location line="+4"/>
         <source>Save a backup</source>
         <translation>백업 저장</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-4"/>
+        <location line="+7"/>
         <source>Bring one in</source>
         <translation>백업 가져오기</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-7"/>
+        <location line="+8"/>
         <source>Bringing one in replaces what&apos;s on this computer (conversations are added), then Jarvis restarts.</source>
         <translation>가져오면 이 컴퓨터의 내용이 대체되고(대화는 추가돼요) Jarvis가 다시 시작돼요.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Save a Jarvis backup</source>
         <translation>Jarvis 백업 저장</translation>
     </message>
@@ -2378,7 +3121,62 @@
         <translation>가져왔어요. Jarvis를 다시 시작하는 중</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+8"/>
+        <source>On other pages</source>
+        <translation>다른 페이지</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>These are set on the page they belong to.</source>
+        <translation>이 항목들은 각자의 페이지에서 설정해요.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Models and API keys</source>
+        <translation>모델과 API 키</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Which model does each job (tasks, reading the screen, web search, pictures, the backup voice), the order they&apos;re tried in, and your keys</source>
+        <translation>어떤 모델이 어떤 일을 맡는지(작업, 화면 읽기, 웹 검색, 그림, 백업 음성), 시도하는 순서, 내 키</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Background checks</source>
+        <translation>백그라운드에서 지켜볼 항목</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis keeps an eye on for you (&quot;tell me if a payment fails&quot;), how often it looks, and which checks are paused</source>
+        <translation>Jarvis가 대신 지켜볼 항목(“결제가 실패하면 알려 줘”), 확인 주기, 일시 중지된 항목</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>What Jarvis may do in each account</source>
+        <translation>계정마다 Jarvis가 할 수 있는 일</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Ask first, go ahead, read only or paused, for each account you connected</source>
+        <translation>연결한 계정마다 변경 전에 확인, 전체 권한, 읽기 전용, 일시 중지 중에서 골라요</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Tools from other apps</source>
+        <translation>다른 앱의 도구</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The plugins (MCP servers) Jarvis can use: add one, or switch one on or off</source>
+        <translation>Jarvis가 쓸 수 있는 플러그인(MCP 서버): 추가하거나 켜고 끌 수 있어요</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>About Jarvis</source>
+        <translation>Jarvis 정보</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>%1 is out (%2)</source>
         <translation>%1 버전 출시 (%2)</translation>
     </message>
@@ -2388,7 +3186,8 @@
         <translation>%1 버전 출시</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-10"/>
+        <location line="+11"/>
         <source>Up to date</source>
         <translation>최신 버전이에요</translation>
     </message>
@@ -2398,22 +3197,34 @@
         <translation>업데이트 중…</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
+        <location line="+12"/>
         <source>Update now</source>
         <translation>지금 업데이트</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
+        <location line="+12"/>
         <source>Check for updates</source>
         <translation>업데이트 확인</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Run the setup again</source>
         <translation>설정 마법사 다시 실행</translation>
     </message>
     <message>
-        <location line="+116"/>
+        <location line="+0"/>
+        <source>First-run setup</source>
+        <translation>초기 설정</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Your Gemini key, microphone, Jarvis&apos;s voice and how careful it should be, one step at a time</source>
+        <translation>Gemini 키, 마이크, Jarvis 목소리, 얼마나 조심할지를 한 단계씩 설정해요</translation>
+    </message>
+    <message>
+        <location line="+256"/>
         <source>e.g. Keep answers short.</source>
         <translation>예: 답은 짧게 해 줘.</translation>
     </message>
@@ -2477,8 +3288,8 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis keeps all of it on this computer.</source>
-        <translation>“%1” 뒤에 말하거나 입력한 내용, 답하는 데 도움이 되는 기억과 최근 대화, 작업에 화면이 필요할 때의 스크린샷은 Google Gemini로 전송돼요. 계정 작업은 연결한 계정에 한해 Composio를 거쳐요. Jarvis는 이 모든 것을 이 컴퓨터에 보관해요.</translation>
+        <source>What you say after “%1” or type, the memory and recent conversation that help answer it, and screenshots when a task needs the screen go to Google Gemini. Account actions go through Composio, only for the accounts you connect. Jarvis also keeps a copy of your conversations and memory on this computer.</source>
+        <translation>“%1” 뒤에 말하거나 입력한 내용, 답하는 데 도움이 되는 기억과 최근 대화, 작업에 화면이 필요할 때의 스크린샷은 Google Gemini로 전송돼요. 계정 작업은 연결한 계정에 한해 Composio를 거쳐요. Jarvis는 대화와 기억의 사본도 이 컴퓨터에 보관해요.</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -2664,7 +3475,7 @@
 <context>
     <name>Theme</name>
     <message>
-        <location filename="../qml/Theme.qml" line="+58"/>
+        <location filename="../qml/Theme.qml" line="+59"/>
         <source>Listening</source>
         <translation>듣는 중</translation>
     </message>
@@ -2685,9 +3496,17 @@
     </message>
 </context>
 <context>
+    <name>Toast</name>
+    <message>
+        <location filename="../qml/Toast.qml" line="+34"/>
+        <source>Close</source>
+        <translation>닫기</translation>
+    </message>
+</context>
+<context>
     <name>Today</name>
     <message>
-        <location filename="../qml/Today.qml" line="+109"/>
+        <location filename="../qml/Today.qml" line="+135"/>
         <source>Feels %1 in %2</source>
         <translation>%2 체감 %1</translation>
     </message>
@@ -2697,7 +3516,7 @@
         <translation>체감 %1</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+55"/>
         <source>Now playing</source>
         <translation>재생 중</translation>
     </message>
@@ -2712,7 +3531,8 @@
         <translation>다음 곡</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-111"/>
+        <location line="+125"/>
         <source>Working on</source>
         <translation>작업 중</translation>
     </message>
@@ -2722,17 +3542,18 @@
         <translation>최근 완료</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+137"/>
         <source>Stop this task</source>
         <translation>이 작업 중지</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="-92"/>
         <source>Finished at %1</source>
         <translation>%1에 완료</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="-154"/>
+        <location line="+171"/>
         <source>To do</source>
         <translation>할 일</translation>
     </message>
@@ -2742,7 +3563,7 @@
         <translation>이번 주에 할 일이 없어요. “20분 뒤에 스트레칭하라고 알려 줘”라고 해 보세요.</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+104"/>
         <source>No date</source>
         <translation>날짜 없음</translation>
     </message>
@@ -2757,12 +3578,12 @@
         <translation>%1에게 약속함</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+29"/>
         <source>Cancel this reminder</source>
         <translation>이 알림 취소</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-12"/>
         <source>Mark as done</source>
         <translation>완료로 표시</translation>
     </message>
@@ -2772,12 +3593,38 @@
         <translation>Classroom에서 열기</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-112"/>
         <source>Couldn&apos;t check %1 just now.</source>
         <translation>지금은 %1을(를) 확인하지 못했어요.</translation>
     </message>
+    <message numerus="yes">
+        <location line="-208"/>
+        <source>%n running</source>
+        <translation>
+            <numerusform>%n개 실행 중</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+18"/>
+        <source>%n to do</source>
+        <translation>
+            <numerusform>할 일 %n개</numerusform>
+        </translation>
+    </message>
     <message>
-        <location line="+13"/>
+        <location line="+186"/>
+        <source>Show fewer</source>
+        <translation>접기</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+0"/>
+        <source>+%n more</source>
+        <translation>
+            <numerusform>%n개 더 보기</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+17"/>
         <source>This PC</source>
         <translation>이 PC</translation>
     </message>
@@ -2811,11 +3658,16 @@
         <source>Last answer started %1 s after you finished</source>
         <translation>마지막 응답은 말을 마친 뒤 %1초 만에 시작됐어요</translation>
     </message>
+    <message>
+        <location line="+94"/>
+        <source>Click again to cancel it</source>
+        <translation>한 번 더 클릭하면 취소돼요</translation>
+    </message>
 </context>
 <context>
     <name>Tray</name>
     <message>
-        <location filename="../jarvis.py" line="+122"/>
+        <location filename="../jarvis.py" line="+124"/>
         <source>Open Jarvis</source>
         <translation>Jarvis 열기</translation>
     </message>

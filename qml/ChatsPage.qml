@@ -7,6 +7,7 @@ import Jarvis
 // Past conversations: search them, read one, pick it up where it left off, or delete it.
 Item {
     id: page
+    objectName: "chatsPage"
     signal opened()
     property var items: []
     property string current: ""
@@ -27,6 +28,13 @@ Item {
         selected = id
         confirming = false
         Api.get("/api/sessions/" + id, s => preview = s)
+    }
+    function step(i) {  // the arrow keys in the list: the conversation above or below, shown, with the keyboard's ring on it
+        if (i < 0 || i >= items.length) return
+        pick(items[i].id)
+        list.positionViewAtIndex(i, ListView.Contain)
+        const row = list.itemAtIndex(i)
+        if (row) row.forceActiveFocus(Qt.TabFocusReason)
     }
     function ago(t) {
         const s = Date.now() / 1000 - t
@@ -90,6 +98,13 @@ Item {
                             width: ListView.view.width
                             height: 58
                             hoverEnabled: true
+                            // (one Tab stop, the one shown: the arrows move along; kept while it has the focus, which Qt requires)
+                            focusPolicy: chosen || activeFocus ? Qt.TabFocus : Qt.NoFocus
+                            Keys.onReturnPressed: click()
+                            Keys.onEnterPressed: click()
+                            Keys.onUpPressed: page.step(index - 1)
+                            Keys.onDownPressed: page.step(index + 1)
+                            Accessible.name: modelData.title
                             onClicked: page.pick(modelData.id)
                             background: Item {
                                 Rectangle {
@@ -97,6 +112,8 @@ Item {
                                     radius: Theme.radiusControl
                                     color: row.chosen ? Theme.accentSoft : row.hovered ? Theme.glassHover : "transparent"
                                     Behavior on color { ColorAnimation { duration: Theme.fast } }
+                                    // (inside the row: the list clips what's outside it)
+                                    Focus { keyboard: true; anchors.margins: 1; radius: parent.radius - 1; visible: row.visualFocus }
                                 }
                                 Rectangle {
                                     anchors { left: parent.left; right: parent.right; bottom: parent.bottom; leftMargin: 12; rightMargin: 12 }

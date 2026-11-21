@@ -1,10 +1,17 @@
 """Renders the window's pages to PNGs with made-up data, off screen (nothing of the real user's shows: own config
 dirs, canned API answers). For design work and the README's pictures:
 
-    .venv/bin/python docs/screens.py OUT_DIR [home home-empty chats activity accounts plugins models memory cost
-                                               cost-month settings health setup] [--size 1280x820] [--state idle|listening|thinking|speaking]
+    .venv/bin/python docs/screens.py OUT_DIR [home home-empty home-new home-attach home-running chats people activity accounts
+                                               plugins models memory cost cost-month settings health setup] [--size 1280x820]
+                                               [--state idle|listening|thinking|speaking]
 
-WINDOW_LANGUAGES="ar" (or "ja de"...) renders it in those languages.
+home-attach: files attached in the message box and in a sent message (a picture, a PDF, a recording, one that's gone).
+home-new: before anything is said, with no account connected yet. home-running: the tasks at work, opened from their
+chip (a narrow window: --size 900x700).
+
+WINDOW_LANGUAGES="ar" (or "ja de"...) renders it in those languages. Settings' tabs: settings-voice, settings-day,
+settings-window, settings-messages, settings-phone, settings-data, settings-advanced; settings-search with
+--search "words" (a tall --size, like 1280x2400, shows a whole tab).
 """
 import json, os, sys, tempfile, time, types
 
@@ -53,7 +60,7 @@ CANNED = {
     "/api/today": {"weather": {"place": "Springfield", "icon": "⛅", "condition": "Partly cloudy", "temp": "21°C", "feels": "20°C"},
                    "wake": "Hey Jarvis", "reminders": [{"id": "a1", "text": "Call the dentist", "when": "Today 15:30"},
                                                        {"id": "a2", "text": "Start the problem set", "when": "Tomorrow 18:00"}],
-                   "remembered": 7, "tools": 41},
+                   "remembered": 7, "tools": 41, "connected": ["github", "gmail", "google_classroom", "googlecalendar", "googledrive"]},
     "/api/media": {"player": "org.mpris.MediaPlayer2.spotify", "app": "Spotify", "status": "Playing", "title": "Neon Tides",
                    "artist": "The Arcs of Light", "art": "", "length": 214.0},
     "/api/jobs": [{"n": 3, "label": "Find flights to Lisbon for the first week of June", "since": NOW - 187, "now": "web_search", "coding": False},
@@ -65,7 +72,16 @@ CANNED = {
     "/api/conversation": {"id": SESSIONS[0]["id"], "title": "What's due this week?", "created": NOW - 600, "updated": NOW - 50,
                           "messages": CONVERSATION, "agent": []},
     "/api/memory": {"memory": "- Prefers to be called Sam.\n- Lives in Springfield.\n- Studies computer science, second year.\n"
-                              "- Likes lo-fi while studying.\n- Lesson: in Discord, check the open chat before sending."},
+                              "- Likes lo-fi while studying.\n- Allergic to peanuts.\n- Has a cat named Pixel.\n"
+                              "- Works at the campus library on Tuesday and Thursday evenings, so no calls between 6 and 10 then.\n"
+                              "- Lesson: in Discord, check the open chat before sending.\n- Lesson: never press Check answer on homework sites.\n"
+                              "- Lesson: say times in the 12-hour clock.\n"
+                              "- How to: export a Canva design: Share, then Download, not File.\n"
+                              "- How to: join the lab Wi-Fi: forget the network first, then sign in with the student account."},
+    "/api/approvals": [{"tool": "GMAIL_BATCH_MODIFY_MESSAGES", "app": "gmail", "label": "Gmail: batch modify messages",
+                        "said": "don't ask me before marking emails read", "at": NOW - 3 * 86400},
+                       {"tool": "GOOGLECALENDAR_CREATE_EVENT", "app": "googlecalendar", "label": "Google Calendar: create event",
+                        "said": "you don't have to ask before putting study blocks in my calendar", "at": NOW - 12 * 86400}],
     "/api/reminders": [{"id": "a1", "text": "Call the dentist", "when": "Today 15:30", "edit_at": "2026-10-28 15:30"},
                        {"id": "a2", "text": "Start the problem set", "when": "Tomorrow 18:00", "edit_at": "2026-10-29 18:00"},
                        {"id": "a3", "text": "Check my inbox and tell me what matters", "when": "Thu 29 Oct, 08:00 · weekdays",
@@ -101,6 +117,26 @@ CANNED = {
         {"what": "Stretch", "due": time.time() + 20 * 60, "kind": "reminder", "place": "", "source": "reminder", "id": "r1"},
         {"what": "send Sam the trip photos", "due": None, "kind": "promise", "place": "Sam Lee", "source": "promise to Sam Lee"}]},
 }
+HOUR, DAY = 3600, 86400
+PEOPLE = {  # (the People page: people.json as Jarvis keeps it, made up)
+    "Maya Lee": {"aka": ["mayalee"], "seen": {"whatsapp": NOW - 25 * 60}, "wrote": {"whatsapp": NOW - 40 * 60, "discord": NOW - 2 * DAY},
+                 "notes": [{"text": "My cousin, studies medicine in Lyon", "at": NOW - 30 * DAY},
+                           {"text": "Anatomy exam on Friday", "at": NOW - 2 * DAY, "until": NOW + 3 * DAY}],
+                 "promises": [{"what": "send Maya the trip photos", "at": NOW - 5 * HOUR, "due": NOW + 20 * HOUR, "app": "whatsapp"}],
+                 "profile": {"gist": "cousin; warm and teasing, writes in French and English", "at": NOW - 3 * DAY, "upto": NOW - 3 * DAY, "count": 120,
+                             "text": "Cousin, close in age; you talk most evenings\nWrites short bursts in French, switches to English for jokes\n"
+                                     "Lots of emoji, rarely formal\nLately: her anatomy exam, and the summer trip to Porto\n"
+                                     "Open: she asked for the trip photos; you said you'd send them\nCareful: exam stress, don't bring up grades"}},
+    "Omar Haddad": {"seen": {"discord": NOW - 3 * HOUR}, "wrote": {"discord": NOW - 3 * HOUR},
+                    "notes": [], "profile": {"gist": "classmate in Physics 2; brief, plans study sessions", "at": NOW - DAY, "upto": NOW - DAY,
+                                             "count": 64, "text": "Classmate in Physics 2\nShort, practical messages in English\n"
+                                                                  "Lately: the lab report and Thursday's study session\nOpen: waiting on your half of the lab data"}},
+    "Sam Okafor": {"seen": {"whatsapp": NOW - 26 * HOUR}, "notes": [{"text": "Landlord", "at": NOW - 60 * DAY}]},
+    "Alex Rivera": {"aka": ["alexr"], "seen": {"discord": NOW - 4 * DAY}, "wrote": {"discord": NOW - 4 * DAY},
+                    "profile": {"gist": "friend from the climbing gym; jokes a lot, long voice notes", "at": NOW - 6 * DAY, "upto": NOW - 6 * DAY,
+                                "count": 88, "text": "Friend from the climbing gym\nJokes a lot, sends long voice notes\nLately: a weekend climbing trip"}},
+    "Dr. Chen": {"notes": [{"text": "Dentist, Tuesdays and Thursdays", "at": NOW - 9 * DAY}]},
+}
 STUB = types.SimpleNamespace(
     plugin_status=lambda: [{"name": "composio", "config": {"url": "https://connect.composio.dev/mcp"}, "enabled": True, "status": "ready",
                             "error": "", "tools": ["COMPOSIO_SEARCH_TOOLS", "COMPOSIO_MULTI_EXECUTE_TOOL"]},
@@ -126,6 +162,39 @@ def cost(days):
                         "cost": None if c is None else round(c * sum(spread), 6)} for k, r, i, o, c in day]}
 
 
+def made_up_files():
+    """A photo, a report, a recording and a file that's gone, in the temp dir: what home-attach shows attached."""
+    from PySide6.QtCore import QPointF, Qt
+    from PySide6.QtGui import QColor, QImage, QLinearGradient, QPainter, QPainterPath
+    folder = os.path.join(tmp, "files")
+    os.makedirs(folder, exist_ok=True)
+    photo = QImage(1200, 800, QImage.Format.Format_RGB32)
+    p = QPainter(photo)
+    p.setRenderHint(QPainter.RenderHint.Antialiasing)
+    sky = QLinearGradient(0, 0, 0, 800)
+    for at, colour in ((0, "#2b2d6e"), (0.55, "#e9677a"), (0.8, "#ffb36b")):
+        sky.setColorAt(at, QColor(colour))
+    p.fillRect(photo.rect(), sky)
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor("#ffe0a3"))
+    p.drawEllipse(QPointF(760, 560), 90, 90)
+    for colour, top in (("#3a2f5b", 520), ("#1d1a33", 610)):
+        hills = QPainterPath(QPointF(0, 800))
+        hills.lineTo(0, top)
+        hills.cubicTo(300, top - 120, 700, top + 90, 1200, top - 40)
+        hills.lineTo(1200, 800)
+        p.setBrush(QColor(colour))
+        p.drawPath(hills)
+    p.end()
+    paths = [os.path.join(folder, n) for n in ("sunset-at-the-lake.png", "Lab report - final draft (v3).pdf", "Physics lecture 14.m4a",
+                                                "Pasted screenshot.png")]
+    photo.save(paths[0])
+    for path, size in ((paths[1], 248_000), (paths[2], 31_400_000)):
+        with open(path, "wb") as f:
+            f.truncate(size)
+    return paths  # (the last one is never made)
+
+
 def get(path):
     if path in CANNED:
         return CANNED[path]
@@ -140,23 +209,22 @@ def get(path):
 
 def main():
     args = sys.argv[1:]
-    if not args or any(a.startswith("-") and a not in ("--size", "--state") for a in args):
+    options = {"--size": "1280x820", "--state": "idle", "--search": "wake"}
+    for name in options:
+        if name in args:
+            options[name] = args.pop(args.index(name) + 1)
+            args.remove(name)
+    if not args or any(a.startswith("-") for a in args):
         sys.exit(__doc__)
     out = args.pop(0)
-    size, state = "1280x820", "idle"
-    if "--size" in args:
-        size = args.pop(args.index("--size") + 1)
-        args.remove("--size")
-    if "--state" in args:
-        state = args.pop(args.index("--state") + 1)
-        args.remove("--state")
+    size, state, query = options["--size"], options["--state"], options["--search"]
     pages = args or ["home", "home-empty", "chats", "activity", "accounts", "plugins", "models", "memory", "cost", "cost-month", "settings",
                      "health", "setup"]
     os.makedirs(out, exist_ok=True)
     if len(pages) > 1:  # (one window per process: Qt allows only one)
         import subprocess
         for page in pages:
-            subprocess.run([sys.executable, __file__, out, page, "--size", size, "--state", state])
+            subprocess.run([sys.executable, __file__, out, page, "--size", size, "--state", state, "--search", query])
         return
     page = pages[0]
     from PySide6.QtQuick import QQuickWindow
@@ -166,22 +234,41 @@ def main():
     import window
     w, h = (int(n) for n in size.split("x"))
     live = types.SimpleNamespace(mic=state == "listening", level=0.6 if state in ("listening", "speaking") else 0.0, raw_level=0.3)
-    if page == "home-empty":
+    if page in ("home-empty", "home-new"):
         CANNED["/api/conversation"] = {**CANNED["/api/conversation"], "messages": []}
+    if page == "home-new":
+        CANNED["/api/today"] = {**CANNED["/api/today"], "connected": []}
+    if page == "people":
+        jarvis.store.write_json(os.path.join(jarvis.store.DATA, "people.json"), PEOPLE, private=True)
+    if page == "home-attach":
+        files = made_up_files()
+        sent = {"who": "you", "time": NOW - 20, "text": window.with_attached("Summarise the report, and where was this taken?",
+                                                                             [files[0], files[1], files[3]])}
+        CANNED["/api/conversation"] = {**CANNED["/api/conversation"], "messages": CONVERSATION[3:] + [sent]}
     win = window.Window(get=get, post=lambda p, d: {"ok": True}, tool_label=jarvis.tool_label, live=live,
                         shown_state=[state, False], version="2.1.0", show=True)
     root = win.engine.rootObjects()[0]
     root.setProperty("width", w)
     root.setProperty("height", h)
     root.setProperty("needsSetup", page == "setup")
-    root.setProperty("page", "home" if page in ("home-empty", "setup") else "cost" if page == "cost-month" else page)
+    root.setProperty("page", "home" if page in ("home-empty", "home-new", "home-attach", "home-running", "setup") else "cost" if page == "cost-month"
+                     else "settings" if page.startswith("settings") else page)
     settle = time.time() + 2.0
     while time.time() < settle:
         qt.processEvents()
         time.sleep(0.02)
+    from PySide6.QtCore import QObject
     if page == "cost-month":  # (the 30 days chip, pressed)
-        from PySide6.QtCore import QObject
         root.findChild(QObject, "costPage").setProperty("days", 30)
+    if page == "home-attach":  # (a picture, a report and a recording waiting in the message box)
+        root.findChild(QObject, "composer").setProperty("files", files[:3])
+    if page == "home-running":  # (its chip, clicked)
+        from PySide6.QtCore import QMetaObject
+        QMetaObject.invokeMethod(root.findChild(QObject, "runningChip"), "click")
+    if page == "settings-search":
+        root.findChild(QObject, "settingsSearch").setProperty("text", query)
+    elif page.startswith("settings-"):
+        root.findChild(QObject, "settingsPage").setProperty("tab", page.partition("-")[2])
     root.setProperty("needsSetup", page == "setup")  # (the window asks the settings once it's up)
     settle = time.time() + 0.5
     while time.time() < settle:
