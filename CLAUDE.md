@@ -37,7 +37,9 @@ pyside6-lupdate -no-obsolete qml/*.qml jarvis.py window.py -ts translations/jarv
   asset's `digest`: keep that name. `packaging/aur` is the Arch package (/opt install, per-user venv on first run).
   Pushing a tag publishes a public release: ask first. release.yml fails a `v*` tag unless `VERSION` in jarvis.py is
   that version and `## Unreleased` in CHANGELOG.md has been renamed `## <version> ` (bump both together first; lines
-  once landed under the already-released 2.1.0).
+  once landed under the already-released 2.1.0). A release also bumps `versionName`/`versionCode` in
+  `android/app/build.gradle.kts` and `pkgver` in `packaging/aur/PKGBUILD` (its tarball sum `SKIP` until the tag exists,
+  then `updpkgsums` and `.SRCINFO` again); the next change after a release starts a new `## Unreleased`.
 - The GitHub repo is public again (while private from 2026-11-13 the updater, the AUR package and the update check found
   nothing new): every push and tag is visible.
 - `packaging/aur`: after changing PKGBUILD run `makepkg --printsrcinfo > .SRCINFO`; the tests fail when `.SRCINFO`'s

@@ -251,7 +251,7 @@ def main():
                                                                              [files[0], files[1], files[3]])}
         CANNED["/api/conversation"] = {**CANNED["/api/conversation"], "messages": CONVERSATION[3:] + [sent]}
     win = window.Window(get=get, post=lambda p, d: {"ok": True}, tool_label=jarvis.tool_label, live=live,
-                        shown_state=[state, False], version="2.1.0", show=True)
+                        shown_state=[state, False], version="2.5.0", show=True)
     root = win.engine.rootObjects()[0]
     root.setProperty("width", w)
     root.setProperty("height", h)

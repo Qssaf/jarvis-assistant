@@ -12,8 +12,8 @@ android {
         applicationId = "com.jarvis.assistant"
         minSdk = 26
         targetSdk = 34
-        versionCode = 4
-        versionName = "2.2.0"
+        versionCode = 5
+        versionName = "2.5.0"
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }  // (ONNX Runtime's libraries: phones only, half the size)
     }
     testOptions.unitTests.all { test ->  // WakeTest: where the wake word's models are (see its comment)

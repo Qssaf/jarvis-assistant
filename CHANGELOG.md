@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.5.0 — 2026-11-21
 
 ### Added
 - **Your say over the People page:** per person, *Let Jarvis get to know them* off (what it understood is forgotten and
