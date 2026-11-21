@@ -240,6 +240,10 @@
   scikit-learn, SciPy and the training's peak don't stay in Jarvis's memory after every few wake-ups.
 
 ### Fixed
+- **One person, two entries on the People page:** a Discord friend who changed their display name got a second page the
+  next time you wrote to them, so hiding them left the other entry in the list (and their next message landed on it).
+  A person's pages are one now, hiding someone hides every page that's theirs, and one left in the open isn't shown and
+  joins the hidden one the next time you give the secret password.
 - **Sending in a chat was checked whatever the spelling of Return:** a plan pressing "return", "ret" or "kp_enter",
   or one filling the box with set_text, skipped the "which chat is open?" check and the voice's one-message-per-request
   check; a sent "ctrl+a Return" wasn't remembered as sent.

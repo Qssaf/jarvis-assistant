@@ -129,6 +129,7 @@ JS = r"""async (cmd, a) => {
       if (c.guild_id ? mine || !(m.mentions || []).some(u => u.id === me) : C.MessageRequestStore.isMessageRequest(c.id)) return;
       window.jarvisDiscord(JSON.stringify({id: m.id, channel: c.id, chat: title(c), server: !!c.guild_id, group: c.type === 3,
         me: mine, from: who(m.author, c.guild_id), user: m.author.username, friend: C.RelationshipStore.isFriend(m.author.id),
+        peer: c.type === 1 ? C.UserStore.getUser(c.recipients?.[0])?.username : undefined,
         muted: !!muted(c), text: text(m, c.guild_id)}));
     } catch (err) { console.error("[jarvis]", err); } };
     C.FluxDispatcher.subscribe("MESSAGE_CREATE", on);
@@ -280,8 +281,8 @@ class Listener:
             if (e["channel"], e["text"]) not in self.mine:
                 self.user_wrote[e["channel"]] = time.time()
                 self._cancel(e["channel"])
-                if one:
-                    people.talked(e["chat"], "discord", True)
+                if one:  # (with who the chat is with by username: by its title alone, a friend who changed their display
+                    people.talked(e["chat"], "discord", True, aka=e.get("peer") or "")  # name got a second page)
                     people.tracker[0] and people.tracker[0].heard("discord", e["chat"], e["text"])
             return
         if one and e["friend"]:

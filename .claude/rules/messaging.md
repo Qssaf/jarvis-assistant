@@ -94,7 +94,11 @@ the page's search box posts its text to `/api/people/reveal` (`REVEAL_EVERY`: on
 logged), and nothing in the API or page says anyone is hidden (no count: the user asked for that). `jarvis --reset-people-lock`
 takes both hashes off and leaves the part encrypted; a later secret password adopts it when the old one is typed once
 (`hold(current=True)`),
-and nobody new is hidden meanwhile (`EARLIER`). `people_pass` logs "someone hidden", never the name. `people.meeting` writes a calendar event with its guests matched to pages (`Brain.events` reads them). `Attention` (jarvis.py, `attention.json`): `announce(...,
+and nobody new is hidden meanwhile (`EARLIER`). `people_pass` logs "someone hidden", never the name. One person had two pages: Discord's own-message event gave only the
+chat's title (a display name, which changes), so `listen` sends `peer` (the DM partner's username) and a message that
+names both makes the pages one (`_update` with `aka`: `_same`, `_merged`); hiding merges every page sharing a name with
+the one hidden; and a page of a hidden person left in the open isn't listed, told or looked up with no key (`_shown`:
+`listing`, `index`, `page`), takes nothing new (`_update` waits), and `hold` folds it in. `people.meeting` writes a calendar event with its guests matched to pages (`Brain.events` reads them). `Attention` (jarvis.py, `attention.json`): `announce(...,
 kind=)` of a kind the user let pass three times in a row (no speech within `HEEDED` s) is only shown for a backoff;
 `loud` and `asked` (reminders, scheduled tasks) are never held back. Skills (`store.skills`, the `skill` tool): ways
 a screen task worked, offered in `_ask` through `matching_skills`; a task of 3+ screen steps that saved none gets one

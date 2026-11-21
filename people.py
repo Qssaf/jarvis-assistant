@@ -117,8 +117,12 @@ def hold(password, current=False):
                 _keys["other"] = _keys["other"] or current
                 return False
         _keys["other"] = False
-        if any(isinstance(p, dict) and p.get("hidden") for k, p in _raw().items() if k != HIDDEN):
-            _save(everyone())  # (marked hidden in the open before there was a key: encrypted now)
+        book, doubles = everyone(), False
+        for k in [k for k, p in book.items() if p.get("hidden")]:  # (a page of theirs left in the open: in with the rest)
+            others = [o for o in _same(book, k, *book[k].get("aka", [])) if o != k and o in book] if k in book else []
+            doubles = bool(others and _merged(book, k, others)) or doubles
+        if doubles or any(isinstance(p, dict) and p.get("hidden") for k, p in _raw().items() if k != HIDDEN):
+            _save(book)  # (...and one marked hidden in the open before there was a key: encrypted now)
         waited, _waiting[:] = _waiting[:], []
         for name, change, aka in waited:
             _update(name, change, aka)
@@ -170,18 +174,64 @@ def _key(book, name):
     return next((k for k, p in book.items() if want and (k.lower() == want or want in (a.lower() for a in p.get("aka", [])))), None)
 
 
+def _same(book, *names):
+    """The pages that are this person's: every one whose name or other name is one of these."""
+    want = {" ".join(str(n).split()).lower() for n in names if n}
+    return [k for k, p in book.items() if want & {k.lower(), *(a.lower() for a in p.get("aka", []))}]
+
+
+def _merged(book, keep, others):
+    """A person's other pages folded into one (book[keep]): their names become its other names, nothing of theirs is
+    lost, and a say of the user's on any of them (hidden, not to be understood) holds for the one."""
+    page = book[keep]
+    for k in others:
+        other = book.pop(k)
+        for a in (k, *other.get("aka", [])):
+            if a.lower() != keep.lower() and a.lower() not in (x.lower() for x in page.get("aka", [])):
+                page.setdefault("aka", []).append(a)
+        for field in ("seen", "wrote"):
+            for app, at in (other.get(field) or {}).items():
+                page.setdefault(field, {})[app] = max(at, page.get(field, {}).get(app, 0))
+        for field, said in (("notes", "text"), ("promises", "what")):
+            have = {x[said].lower() for x in page.get(field, [])}
+            more = [x for x in other.get(field, []) if x[said].lower() not in have]
+            if more:
+                page[field] = page.get(field, []) + more
+        if other.get("profile") and not page.get("profile"):
+            page["profile"] = other["profile"]
+        for flag in FLAGS:
+            if other.get(flag):
+                page[flag] = True
+    return page
+
+
+def _shut(env=None):
+    """The file's encrypted part when it can't be opened now (no key held, another password's), else None."""
+    env = _raw().get(HIDDEN) if env is None else env
+    return env if env is not None and _opened(env) is None else None
+
+
+def _shown():
+    """everyone(), without a page in the open that's a hidden person's while their key isn't held: until the secret
+    password is given it isn't listed, told to the models or read as theirs (hold then puts it in with the rest)."""
+    book, env = everyone(), _shut()
+    return {k: p for k, p in book.items() if not _is_hidden(env, k, *p.get("aka", []))} if env else book
+
+
 def _update(name, change, aka=""):
     """Change a person's page (made if it's new) under the lock; returns the name it's kept under. Someone hidden whose
-    key isn't held gets no page in the open: the change waits for the password (hold)."""
+    key isn't held gets nothing in the open, not even on a page of theirs that's there: the change waits for the secret
+    password (hold). A message that names them twice (aka: their username) makes their pages one: Discord's display
+    names change, and each new one had started a page of its own."""
     with _lock:
         book = everyone()
-        key = _key(book, name) or _key(book, aka)
-        env = _raw().get(HIDDEN)
-        if not key and env is not None and _opened(env) is None and _is_hidden(env, name, aka):
+        if _is_hidden(_shut(), name, aka):
             _waiting.append((name, change, aka))
             del _waiting[:-500]
             return " ".join(name.split())
-        key = key or " ".join(name.split())
+        key = _key(book, name) or _key(book, aka) or " ".join(name.split())
+        if aka and key in book:
+            _merged(book, key, [k for k in _same(book, name, aka) if k != key])
         page = book.setdefault(key, {})
         if aka and aka.lower() != key.lower() and aka.lower() not in (a.lower() for a in page.get("aka", [])):
             page.setdefault("aka", []).append(aka)
@@ -278,7 +328,7 @@ def _ago(t, now):
 def page(name, now=None):
     """What Jarvis knows about someone: notes still true, when they last wrote each way, promises; None if nobody's page."""
     now = now or time.time()
-    book = everyone()
+    book = _shown()
     key = _key(book, name)
     if not key:
         return None
@@ -352,7 +402,7 @@ def index(now=None, limit=40):
         return f" ({'; '.join(x for x in (aka, on) if x)})" if aka or on else ""
 
     noted, active = [], []
-    for k, p in everyone().items():
+    for k, p in _shown().items():
         notes = [n["text"] for n in p.get("notes", []) if not n.get("until") or n["until"] > now]
         gist = ((p.get("profile") or {}).get("gist") or "").strip()
         if notes:
@@ -592,6 +642,8 @@ def set_flag(name, flag, on):
         if not key:
             return None
         if on:
+            if flag == "hidden":  # (every page that's theirs: one left in the open under another name gave them away)
+                _merged(book, key, [k for k in _same(book, key, *book[key].get("aka", [])) if k != key])
             if flag == "hidden" and (_keys["key"] is None or hidden_stored() and _opened(_raw()[HIDDEN]) is None):
                 raise Locked(EARLIER if _keys["other"] else
                              "type your secret password in the People page's search box first: someone hidden is encrypted with it"
@@ -638,7 +690,7 @@ def listing(now=None, hidden=False):
     from the page too."""
     now = now or time.time()
     out = []
-    for k, p in everyone().items():
+    for k, p in _shown().items():
         if p.get("hidden") and not hidden:
             continue
         prof = p.get("profile")

@@ -9053,6 +9053,56 @@ assert people.hold("nut loaf 3") is False and "Cy" not in people.everyone()
 people.add_note("Bo", "still here")
 assert json.loads(open(people.FILE, encoding="utf-8").read())[people.HIDDEN] == broken[people.HIDDEN]
 store.write_json(people.FILE, {k: v for k, v in sound.items() if k != people.HIDDEN} | {"Cy": book["Cy"]}, private=True)
+# one person, two pages. Discord filed the user's own message under the chat's title with no username, so a friend who
+# changed their display name got a second page beside the one their username already had; hiding one left the other in
+# the list, and with no key their next message landed on it in the open ("the person had another username and is
+# included"). A message that names both (display name and username) is one person: their pages become one
+some = lambda who: {"me": False, "channel": "c9", "chat": who, "server": False, "group": False, "from": who, "user": "sam_dc", "friend": True,
+                    "muted": True, "text": "hi", "id": "m1"}
+store.write_json(people.FILE, {"Old Name": {"aka": ["sam_dc"], "seen": {"discord": t1 - 500}, "notes": [{"text": "plays chess", "at": t1 - day}]},
+                               "Bo": {"seen": {"whatsapp": t1 - 120}}}, private=True)
+people._stamped.clear()
+dl = discord.Listener(types.SimpleNamespace(), notify=lambda text: None, tell=lambda text, **kw: None)
+dl.message({**some("New Name"), "me": True, "from": "Me", "user": "me_", "peer": "sam_dc"})  # (the user writes, after the rename)
+assert set(people.everyone()) == {"Old Name", "Bo"} and "discord" in people.everyone()["Old Name"]["wrote"], people.everyone()
+assert '"peer"' not in discord.JS and "peer:" in discord.JS  # (the page says who a one-to-one chat is with, by username)
+store.write_json(people.FILE, {
+    "Old Name": {"aka": ["sam_dc"], "seen": {"discord": t1 - 500}, "notes": [{"text": "plays chess", "at": t1 - day}], "no_profile": True},
+    "New Name": {"aka": ["sam_dc", "sammy"], "wrote": {"discord": t1 - 100}, "notes": [{"text": "plays chess", "at": t1}, {"text": "moved to Lyon", "at": t1}],
+                 "promises": [{"what": "send Sam the file", "at": t1 - 60, "app": "discord"}]},
+    "Bo": {"seen": {"whatsapp": t1 - 120}}}, private=True)
+people._stamped.clear()
+people.talked("New Name", "discord", False, aka="sam_dc")
+book = people.everyone()
+assert set(book) == {"New Name", "Bo"}, set(book)  # (kept under the name they have now)
+one = book["New Name"]
+assert set(one["aka"]) == {"sam_dc", "sammy", "Old Name"} and [n["text"] for n in one["notes"]] == ["plays chess", "moved to Lyon"], one
+assert one["wrote"]["discord"] == t1 - 100 and one["seen"]["discord"] > t1 - 500 and one["no_profile"] is True and one["promises"][0]["what"] == "send Sam the file"
+people.add_note("Old Name", "a note by the old name")  # (a name alone merges nothing, and still finds them)
+assert set(people.everyone()) == {"New Name", "Bo"} and people.everyone()["New Name"]["notes"][-1]["text"] == "a note by the old name"
+# hiding someone hides every page that's theirs (two that never met in one message, too)
+store.write_json(people.FILE, {"Old Name": {"aka": ["sam_dc"], "seen": {"discord": t1 - 500}}, "New Name": {"aka": ["sam_dc"], "wrote": {"discord": t1 - 100}},
+                               "Bo": {"seen": {"whatsapp": t1 - 120}}}, private=True)
+people.forget_keys()
+people.hold("nut loaf 3")
+assert people.set_flag("Old Name", "hidden", True) == "Old Name"
+assert not any(word in in_the_open() for word in ("Old Name", "New Name", "sam_dc")) and "Bo" in in_the_open(), in_the_open()
+hid = [p for p in people.everyone().values() if p.get("hidden")]
+assert len(hid) == 1 and "New Name" in hid[0]["aka"] and hid[0]["wrote"]["discord"] == t1 - 100, hid
+# ...and a page of theirs left in the open by the day that didn't (the user's own file): with no key it isn't listed,
+# isn't told to the models, takes nothing new, and the next time the secret password is given it goes in with the rest
+left = json.loads(open(people.FILE, encoding="utf-8").read())
+store.write_json(people.FILE, {**left, "Newer Name": {"aka": ["sam_dc"], "seen": {"discord": t1 - 50}, "notes": [{"text": "left in the open", "at": t1}]}}, private=True)
+people.forget_keys()
+assert [e["name"] for e in people.listing(hidden=True)] == ["Bo"] and "Newer Name" not in people.index(t1) and people.page("Newer Name") is None
+people._stamped.clear()
+dl.message(some("Newer Name"))
+assert json.loads(open(people.FILE, encoding="utf-8").read())["Newer Name"]["seen"]["discord"] == t1 - 50  # (it waits for the key)
+assert people.hold("nut loaf 3") is True and not any(word in in_the_open() for word in ("Newer Name", "sam_dc", "left in the open")), in_the_open()
+hid = [p for p in people.everyone().values() if p.get("hidden")]
+assert len(hid) == 1 and {"New Name", "Newer Name", "sam_dc"} <= set(hid[0]["aka"]) and hid[0]["seen"]["discord"] > t1 - 50, hid
+assert hid[0]["notes"][0]["text"] == "left in the open"
+store.write_json(people.FILE, {"Bo": {"seen": {"whatsapp": t1 - 120}}}, private=True)
 for which in (store.PEOPLE_LOCK, store.PEOPLE_SECRET):
     store.set_secret(which, "")
 people.forget_keys()
